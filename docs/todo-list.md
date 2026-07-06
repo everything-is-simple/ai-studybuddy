@@ -10,6 +10,24 @@
 
 ---
 
+## Phase 0：开源底座决策固化（已完成，后续执行约束）
+
+### 0.1 开源底座 SoT
+
+- [x] **任务描述**：确定“不 fork 大系统，保留自有架构，模块化参考开源项目”的最终路线。
+- [x] **输出**：`docs/open-source-foundation.md`
+- [x] **最终决定**：KaoBuddy 第一参考，MiaowTest 补刷题/错题/统计，考试粥助手补轻量 MVP，RAGFlow/Dify 只做 AI 工作流参考，SenseVoice/FunASR/PaddleOCR 做底层能力。
+
+### 0.2 后续开发搬运顺序
+
+- [ ] **第一步**：按 KaoBuddy 复刻“资料 → 知识点 → 计划 → 练习/模拟考 → 错题”学习闭环。
+- [ ] **第二步**：按 MiaowTest 思路完善题库、练习记录、错题统计和管理视图。
+- [ ] **第三步**：按考试粥助手校准 MVP 体验，保证资料上传、AI 笔记、练习、错题追踪能先跑通。
+- [ ] **第四步**：按 RAGFlow/Dify 思路抽象 AI Workflow，但不替换本项目业务后端。
+- [ ] **第五步**：以 SenseVoice/FunASR/PaddleOCR 独立服务方式接入 ASR/OCR。
+
+
+
 ## Phase 1：MVP — AI 整理模块（2-3周）
 
 **目标**：学生上传录音/文本 → AI 输出结构化笔记 + 思维导图 + 重点高亮

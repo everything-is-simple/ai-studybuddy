@@ -53,6 +53,22 @@ describe('AuthService')
 
 ---
 
+### 1.4 开源底座决策回归测试
+
+> 详细 SoT：`docs/open-source-foundation.md`
+
+每次引入或参考开源项目时，必须增加边界测试或审查记录：
+
+| 测试项 | 验收标准 |
+|---|---|
+| 主架构未漂移 | 仍使用 React Native Expo + Fastify + PostgreSQL/pgvector + Redis/BullMQ |
+| 外部能力 Adapter 化 | RAG/ASR/OCR/AI Workflow 只能通过 Provider/Adapter/Worker 接入 |
+| 许可证记录 | 复制代码片段必须记录来源 URL、License、修改说明 |
+| 家长隐私边界 | 家长 API 和页面不返回题目、答案、分数、具体错因 |
+| 错题统一沉淀 | 平时练习、作业、真题、模拟卷错题都进入同一 error-book 流程 |
+| AI 解析安全 | 学生端展示教学解析步骤，不保存或展示不可控内部推理全文 |
+
+
 ## 二、单元测试用例
 
 ### 2.1 认证模块（auth）

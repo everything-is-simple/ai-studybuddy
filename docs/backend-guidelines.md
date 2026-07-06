@@ -394,6 +394,27 @@ apps/server/src/ai/prompts/
 
 ---
 
+### 6.7 开源底座接入规则
+
+> 详细 SoT：`docs/open-source-foundation.md`
+
+后端允许参考 KaoBuddy、MiaowTest、考试粥助手、RAGFlow、Dify 的实现思路，但不得直接引入与本项目架构冲突的服务层或数据层。
+
+| 参考来源 | 后端可借鉴内容 | 必须保持的本项目边界 |
+|---|---|---|
+| KaoBuddy | 资料到知识点、计划、模拟考、错题的任务编排 | 仍使用 Fastify Service + BullMQ Worker |
+| MiaowTest | 题库、练习、错题、统计模型 | 仍使用 PostgreSQL + Drizzle，不引入 MongoDB 模型 |
+| 考试粥助手 | BYOK、本地资料处理、轻量闭环 | 仍使用 AI Provider Registry 管理模型配置 |
+| RAGFlow / Dify | 文档解析、RAG、Prompt/Workflow 管理 | 只能作为外部 AI Adapter，不接管认证和业务库 |
+| SenseVoice / FunASR / PaddleOCR | ASR/OCR 能力 | 独立服务，Worker 串行/限流调用 |
+
+实现要求：
+- 新增外部能力时，先定义 `Provider`/`Adapter` 接口，再写具体实现。
+- 不允许路由层直接调用第三方 SDK；必须经过 Service 或 Worker。
+- 复制开源代码片段时必须记录来源 URL、License、修改说明。
+- AI 批改结果入库时保存“教学解析步骤”，不要保存不可控的内部推理全文。
+
+
 ## 七、安全设计
 
 ### 7.1 安全原则

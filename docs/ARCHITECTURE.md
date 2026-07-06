@@ -89,6 +89,26 @@ graph TB
 
 ---
 
+### 2.3 开源底座映射（最终决定）
+
+> 详细 SoT：`docs/open-source-foundation.md`
+
+系统主架构不继承任何外部仓库。开源项目只映射到具体子系统：
+
+| 子系统 | 主要参考 | 本项目落地方式 |
+|---|---|---|
+| 学习闭环 | KaoBuddy | 课程资料、知识点、计划、模拟考、错题闭环的产品流程参考 |
+| 题库/练习/错题统计 | MiaowTest | `question_sets`、`questions`、`submissions`、`grading_results`、`error_questions` 等模型和页面参考 |
+| 轻量 MVP | 考试粥助手 | 第一阶段体验边界：资料上传 → AI 笔记 → 练习 → 错题 |
+| 文档解析/RAG/Workflow | RAGFlow / Dify | 作为 AI 服务层参考，必要时通过 Adapter 接入，不进入业务核心表 |
+| ASR/OCR | SenseVoice / FunASR / PaddleOCR | 独立 Python/容器服务，Fastify 只通过 Worker 调用 |
+| 间隔复习 | Anki | 只参考复习调度思想，具体状态机由本项目实现 |
+
+**架构边界**：外部项目不能改变本项目的认证、家庭空间权限、家长可见边界、数据库主模型和任务时间线模型。所有外部能力必须通过 `apps/server/src/ai/*`、`apps/server/src/workers/*` 或明确的 Adapter 层接入。
+
+**AI 解析边界**：数据库保存的是面向学生展示的教学解析步骤和评分要点，不保存或展示不可控的模型内部推理全文。
+
+
 ## 三、模块拆分
 
 ### 3.1 模块总览
