@@ -101,7 +101,12 @@ ai-studybuddy/
 │   ├── PRD.md
 │   ├── ARCHITECTURE.md
 │   ├── dev-rules.md     # 本文档
-│   └── frontend-guidelines.md
+│   ├── frontend-guidelines.md
+│   ├── backend-guidelines.md
+│   ├── test-plan.md
+│   ├── todo-list.md
+│   ├── lessons.md
+│   └── buglist.md
 ├── docker-compose.yml
 └── turbo.json
 ```

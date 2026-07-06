@@ -1150,7 +1150,12 @@ ai-studybuddy/
     ├── PRD.md
     ├── ARCHITECTURE.md             # 本文档
     ├── dev-rules.md
-    └── frontend-guidelines.md
+    ├── frontend-guidelines.md
+    ├── backend-guidelines.md
+    ├── test-plan.md
+    ├── todo-list.md
+    ├── lessons.md
+    └── buglist.md
 ```
 
 ---
