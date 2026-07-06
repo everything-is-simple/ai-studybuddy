@@ -245,7 +245,7 @@ interface ApiError {
   data: null;
 }
 
-// 分页
+// 分页（服务端响应，字段用 snake_case，与数据库字段一致）
 interface PaginatedResponse<T> {
   code: 0;
   message: 'ok';
@@ -253,10 +253,12 @@ interface PaginatedResponse<T> {
     items: T[];
     total: number;
     page: number;
-    pageSize: number;
+    page_size: number;
   };
 }
 ```
+
+**规则：API 响应体（wire format）统一用 `snake_case`**，与数据库字段命名一致，避免序列化时做无谓的字段名转换。前端 TypeScript 类型内部用 `camelCase`（见 1.2 命名规范），在 `lib/api-client.ts` 中做一次性的 snake_case ↔ camelCase 转换（如用 `camelcase-keys` 库），业务代码不直接接触 API 原始响应。
 
 ### 5.3 错误码规范
 

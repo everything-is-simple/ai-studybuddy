@@ -186,7 +186,7 @@ App（家长端）
 - Segment切换平滑过渡，不闪烁
 - 结构化笔记支持Markdown渲染（标题、列表、加粗、代码块）
 - 数学公式用 KaTeX 渲染
-- 思维导图支持双指缩放、点击节点展开/折叠
+- 思维导图用 `react-native-webview` 加载 Markmap.js，渲染后端生成的 Mermaid 文本；缩放/平移/节点展开折叠由 Markmap 自身交互处理，不需要原生手势实现
 - AI处理中显示进度条：`转写中... → 笔记生成中... → 思维导图生成中...`
 
 ### 3.3 做题页面
@@ -539,7 +539,7 @@ stores/
 | 列表渲染 | @shopify/flash-list | — |
 | 表单 | react-hook-form + zod | — |
 | 数学公式 | react-native-math-view | KaTeX via WebView |
-| 思维导图 | 自研（基于 react-native-svg） | — |
+| 思维导图 | react-native-webview + Markmap.js（渲染后端生成的 Mermaid/Markdown） | 自研 react-native-svg（若后续需要更强原生交互再评估切换） |
 | Markdown渲染 | react-native-markdown-display | — |
 | 录音 | expo-av | — |
 | 相机/拍照 | expo-camera + expo-image-picker | — |

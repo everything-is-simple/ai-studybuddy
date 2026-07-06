@@ -295,6 +295,17 @@ HTTP 请求（触发 AI 任务）
 | 低 | 变题生成 | 非实时需求 |
 | 低 | AI 出题 | 可提前生成缓存 |
 
+**Worker 并发数控制**（防止自部署 ASR/OCR 被压垮，也防止 AI API 触发限流）：
+
+| Worker | 并发数 | 理由 |
+|--------|--------|------|
+| ASR Worker（SenseVoice/FunASR） | 1 | CPU 自部署，单实例串行处理，避免多任务抢占 CPU 导致单个任务耗时暴涨 |
+| OCR Worker（PaddleOCR） | 1 | 同上 |
+| LLM Worker（笔记/出题/批改/CoT等） | 3 | API 调用型任务，可并发但要控制在 Provider 的 RPM 限制内 |
+| 变题/复习排程 Worker | 2 | 非实时，适度并发即可 |
+
+用 BullMQ 的 `concurrency` 选项配置：`worker.run({ concurrency: 1 })`。用户一次上传多条录音时，任务会排队而不是同时抢占 CPU。
+
 ### 6.3 AI 错误处理
 
 | 错误类型 | 处理策略 |
@@ -305,7 +316,64 @@ HTTP 请求（触发 AI 任务）
 | Token 超限 | 自动截断输入，记录日志 |
 | 响应格式异常 | JSON 解析失败时重试一次，仍失败则标记 failed |
 
-### 6.4 Prompt 管理策略
+**CoT 解析（DeepSeek R1）专项 fallback**：R1 是价格最高（¥4/¥16 每百万token）且承担最核心解题价值的功能，单独配置备选模型（如 Kimi K2.6），R1 不可用时自动降级调用备选模型，而不是直接失败，保证学生做题体验不中断。
+
+### 6.4 AI 调用预算控制（成本控制核心）
+
+**背景**：PRD 8.6 确认了 AI Key 混合策略——新用户使用系统试用额度，用完后引导切换为自备 Key。试用额度必须有硬性上限，否则开发者账户可能被无限透支；即便用户自备 Key，考前冲刺期高频触发 CoT 解析（R1 模型最贵）也可能产生费用惊喜，需要预算提醒。
+
+```
+ai_provider_configs 表增加字段（或新增 ai_budgets 表）：
+- budget_type: 'trial' | 'user_key'        -- 试用额度 还是 用户自备Key
+- monthly_call_limit: INT                   -- 试用额度：每月调用次数上限（如 50）
+- monthly_cost_limit_cny: DECIMAL           -- 用户自备Key：每月费用软上限（用户自设，如 ¥20）
+- current_month_calls: INT                  -- 本月已用次数
+- current_month_cost_cny: DECIMAL           -- 本月已产生费用（从 ai_call_logs 按 token 单价估算汇总）
+```
+
+**执行逻辑：**
+
+| 场景 | 触发条件 | 行为 |
+|------|---------|------|
+| 试用额度超限 | current_month_calls ≥ monthly_call_limit（trial） | 拒绝调用，返回业务错误码，前端提示"试用额度已用完，配置你自己的 API Key 继续使用" |
+| 自备 Key 费用告警 | current_month_cost_cny ≥ monthly_cost_limit_cny × 0.8 | 推送通知"本月 AI 费用已达 ¥16（预算 ¥20 的 80%）" |
+| 自备 Key 费用超限 | current_month_cost_cny ≥ monthly_cost_limit_cny | 推送通知 + 非紧急任务（思维导图、变题生成等低优先级队列）自动降级为更便宜的模型（如 R1 降级为 V3.2），批改和转写等核心功能不降级 |
+| 每月 1 日 | Cron 定时任务 | 重置 current_month_calls / current_month_cost_cny 为 0 |
+
+**规则：预算检查在任务入队前做（route 层），不是 Worker 消费时做**——避免任务已排队等待很久才发现超限被拒绝，浪费用户等待时间。
+
+### 6.5 推送通知设计
+
+**背景**：PRD 定义了多种推送场景（AI 处理完成、任务截止提醒、错题复习提醒、家长点赞），这些通知需要在 App **不在前台**时也能送达，WebSocket 只能覆盖 App 在线场景，必须叠加系统级推送。
+
+```
+设备 Token 注册：
+1. App 启动时通过 expo-notifications 获取设备 push token（Expo Push Token）
+2. POST /api/v1/users/me/push-token 上传 token，写入 device_tokens 表
+3. 一个用户可有多台设备（如换新手机后旧设备 token 失效不清理，靠发送失败自然淘汰）
+
+发送流程：
+BullMQ 定时/触发任务 → 查 device_tokens → 调用 Expo Push API（服务端统一走 Expo 推送网关，
+不需要分别对接 FCM/APNs，Expo 已封装好双端差异）→ 记录发送结果到 notification_logs
+```
+
+**关键表**：`device_tokens`（user_id, push_token, platform, created_at）、`notification_logs`（user_id, type, payload, status, sent_at）
+
+**通知类型与触发时机：**
+
+| 通知类型 | 触发时机 | 优先级 |
+|---------|---------|--------|
+| AI 处理完成 | Worker 完成笔记/思维导图生成 | 中 |
+| 任务截止提醒 | 作业/练习截止前 2 小时（Cron 扫描） | 中 |
+| 错题复习提醒 | 每天早上 8 点（Cron 定时） | 高 |
+| 超时警告 | 任务超时未完成（Cron 扫描 tasks 表） | 中 |
+| 备考提醒 | 考试前 2 个月触发（exam_schedules 扫描） | 中 |
+| 家长点赞 | 家长点击点赞按钮后实时触发 | 低 |
+| AI 预算告警 | 见 6.4 预算超限逻辑 | 高 |
+
+**失败处理**：Expo Push API 返回失效 token（如用户卸载 App）时，标记 `device_tokens.is_valid = false`，不再发送，不重试。
+
+### 6.6 Prompt 管理策略
 
 ```
 prompt 不放数据库，放代码中的常量文件：

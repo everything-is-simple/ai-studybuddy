@@ -130,7 +130,9 @@ graph LR
 | 链接保存 | URL → 抓取标题+摘要 → 存入资料库 |
 | 课次管理 | 按课程/日期组织素材，一个课次对应多个素材 |
 
-**关键表**：`courses`, `sessions`（课次）, `recordings`, `notes`, `links`, `attachments`
+**关键表**：`courses`, `sessions`（课次）, `recordings`, `notes`, `links`
+
+> 说明：图片类附件（手写笔记原图等）不建独立 `attachments` 表，作为 JSONB 字段挂在归属表上（如 `notes.raw_images`），减少表数量、避免过度建表。
 
 ### 3.4 整理模块（organize）
 
@@ -147,7 +149,9 @@ graph LR
 | 课程整合 | 将录音/笔记/链接聚合到同一课次视图 |
 | 跨课次串联 | 同课程多课次笔记可生成“章节总复习”思维导图（进阶） |
 
-**关键表**：`transcripts`, `structured_notes`, `mind_maps`, `highlights`
+**关键表**：`transcripts`, `structured_notes`, `mind_maps`
+
+> 说明：`highlights`（重点高亮）不建独立表，是 `structured_notes.highlights` 字段（JSONB），与结构化笔记同源同生命周期。
 
 **异步流程**：素材上传 → 写入Redis队列 → Worker消费 → 调用AI → 结果写回DB → 通知前端完成
 
@@ -461,7 +465,8 @@ CREATE TABLE exam_schedules (
     exam_date DATE NOT NULL,
     exam_type VARCHAR(30),         -- midterm | final | quiz | other
     title VARCHAR(200),
-    alert_at DATE,                 -- 提前2个月的预警日期 = exam_date - 60天
+    alert_at DATE,                 -- 预警期起点 = exam_date - 60天，触发真题上传+CoT解析
+    sprint_at DATE,                -- 冲刺期起点 = exam_date - 30天，触发集中刷变题模拟卷
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -469,9 +474,11 @@ CREATE TABLE study_plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     exam_schedule_id UUID REFERENCES exam_schedules(id),
     user_id UUID REFERENCES users(id),
-    start_date DATE NOT NULL,      -- 备考开始日期
+    start_date DATE NOT NULL,      -- 备考开始日期（= alert_at，预警期起点）
+    sprint_date DATE NOT NULL,     -- 冲刺期起点（= sprint_at），从这天起任务重心转向变题模拟卷
     end_date DATE NOT NULL,        -- 考试日期
-    daily_tasks JSONB,             -- 每天分配的任务量 {past_exams_per_day, mocks_per_day}
+    phase VARCHAR(20) DEFAULT 'alert', -- alert（预警期，真题解析为主）| sprint（冲刺期，变题模拟卷为主），按当前日期与 sprint_date 比较得出，可由定时任务每日刷新
+    daily_tasks JSONB,             -- 每天分配的任务量 {past_exams_per_day, mocks_per_day}，两阶段比例不同（预警期真题为主，冲刺期变题为主）
     status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -842,6 +849,12 @@ CREATE TABLE ai_provider_configs (
     model VARCHAR(100) NOT NULL,            -- 模型名称
     max_tokens INT,
     temperature DECIMAL(3,2),
+    -- 预算控制字段（见 backend-guidelines.md 6.4）
+    budget_type VARCHAR(20) DEFAULT 'trial',  -- trial（系统试用额度）| user_key（用户自备Key）
+    monthly_call_limit INT DEFAULT 50,        -- 试用额度：每月调用次数上限
+    monthly_cost_limit_cny DECIMAL(8,2) DEFAULT 20.00, -- 自备Key：每月费用软上限（用户自设）
+    current_month_calls INT DEFAULT 0,        -- 本月已用次数
+    current_month_cost_cny DECIMAL(8,2) DEFAULT 0.00,  -- 本月已产生费用
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -863,8 +876,33 @@ CREATE TABLE ai_call_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ==============================
+-- 推送通知
+-- ==============================
+
+CREATE TABLE device_tokens (              -- 用户设备推送Token
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    push_token TEXT NOT NULL,             -- Expo Push Token
+    platform VARCHAR(10) NOT NULL,        -- ios | android
+    is_valid BOOLEAN DEFAULT TRUE,        -- token是否有效（卸载后标记false）
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, push_token)
+);
+
+CREATE TABLE notification_logs (          -- 推送记录
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    type VARCHAR(30) NOT NULL,            -- ai_done | task_reminder | review_reminder | overdue | exam_alert | encouragement | budget_alert
+    payload JSONB NOT NULL,               -- 推送内容
+    status VARCHAR(20) DEFAULT 'sent',    -- sent | failed
+    sent_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE INDEX idx_ai_configs_space ON ai_provider_configs(space_id);
 CREATE INDEX idx_ai_logs_space_date ON ai_call_logs(space_id, created_at DESC);
+CREATE INDEX idx_device_tokens_user ON device_tokens(user_id);
+CREATE INDEX idx_notification_logs_user_date ON notification_logs(user_id, sent_at DESC);
 ```
 
 ### 6.4 API 接口
@@ -876,9 +914,15 @@ PUT    /api/v1/spaces/:id/ai-config/:function        更新某功能的模型配
 POST   /api/v1/spaces/:id/ai-config/test             测试配置是否可用
 DELETE /api/v1/spaces/:id/ai-config/:function        重置为默认配置
 GET    /api/v1/spaces/:id/ai-config/usage            查看AI调用统计（token用量/费用估算）
+GET    /api/v1/spaces/:id/ai-config/budget           查看当前预算状态（剩余额度/已用费用）
+PUT    /api/v1/spaces/:id/ai-config/budget           更新预算上限（自备Key用户自设月费上限）
 
 -- AI服务发现（前端配置页用）
 GET    /api/v1/ai-providers                          获取支持的Provider列表和预设模型
+
+-- 设备推送Token管理
+POST   /api/v1/users/me/push-token                   注册/更新设备推送Token
+DELETE /api/v1/users/me/push-token/:tokenId           删除设备Token（退出登录时调用）
 ```
 
 ### 6.5 AI配置页面功能
@@ -886,8 +930,9 @@ GET    /api/v1/ai-providers                          获取支持的Provider列�
 | 功能 | 说明 |
 |------|------|
 | 配置表单 | 每个功能一行：选择Provider + 填API地址 + API Key + 模型名 |
-| 连接测试 | 填完可点“测试”按钮，发一个简单请求验证配置是否可用 |
+| 连接测试 | 填完可点"测试"按钮，发一个简单请求验证配置是否可用 |
 | 用量统计 | 显示每个功能的调用次数、token用量、费用估算 |
+| 预算与额度 | 试用额度剩余次数/自备 Key 月费用进度条，超限告警提示（详细规则见 backend-guidelines.md 6.4） |
 | 重置默认 | 一键重置为系统推荐的默认配置 |
 | 预设方案 | 提供几套预设：省钱方案（全部V4-Flash）、均衡方案、质量方案 |
 
@@ -1045,10 +1090,15 @@ Cron: 每小时执行
   ├─ 1. 扫描超时任务：deadline < now && status in (pending, in_progress)
   │     └─ 标记 status = overdue，推送提醒
   │
-  ├─ 2. 扫描考试预警：exam_date - 60天 == today
-  │     └─ 触发备考计划生成，推送提醒
+  ├─ 2. 扫描考试预警（两阶段）：
+  │     ├─ exam_date - 60天 == today（alert_at）→ 触发备考计划生成（study_plans.phase='alert'），
+  │     │     推送"距XX考试还有2个月，开始上传真题、生成CoT解析"
+  │     └─ exam_date - 30天 == today（sprint_at）→ 更新 study_plans.phase='sprint'，
+  │           推送"距XX考试还有1个月，进入冲刺期，开始集中刷变题模拟卷"
   │
-  ├─ 3. 生成每日任务：基于study_plans，创建当天的tasks记录
+  ├─ 3. 生成每日任务：基于 study_plans.phase 判断当前阶段，按对应比例分配当天任务
+  │     ├─ phase='alert'：daily_tasks 以 past_exams_per_day 为主（真题解析）
+  │     └─ phase='sprint'：daily_tasks 以 mocks_per_day 为主（变题模拟卷）
   │
   └─ 4. 错题复习排程：扫描 next_review_date <= today 的未掌握错题
         ├─ 生成 error_review_schedules 记录
@@ -1074,6 +1124,49 @@ Cron: 每小时执行
   └─ 4. 写入 questions 表（source='error_variation'）
 输出：变题（含答案和解析），关联到 error_reviews 表
 ```
+
+### 7.9 原始素材清理 Pipeline（成本控制核心）
+
+**设计原则**：原始音视频是"输入"，不是"资产"。结构化笔记生成后，原始素材的使命已完成，长期保留没有价值，只有存储成本。
+
+```
+Cron: 每日凌晨 3 点执行
+  │
+  ├─ 1. 扫描 recordings 表：
+  │     WHERE created_at < NOW() - INTERVAL '15 days'
+  │       AND deleted_at IS NULL
+  │
+  ├─ 2. 前提条件校验（安全兜底，任一不满足则跳过）：
+  │     ├─ 该 recording 关联的 session 存在 structured_notes 且 status = 'done'
+  │     └─ transcripts 记录已存在（文字稿是永久留存的核心资产）
+  │
+  ├─ 3. 执行清理：
+  │     ├─ 删除 S3/MinIO 上的音视频对象
+  │     ├─ recordings.deleted_at = NOW()（软删除，保留记录用于审计）
+  │     └─ transcripts、structured_notes、mind_maps 不受影响，永久保留
+  │
+  └─ 4. 未生成笔记的录音不清理（无论多久），并记录告警日志（可能是 AI 处理卡住）
+```
+
+**保留策略一览：**
+
+| 数据类型 | 保留期限 | 理由 |
+|---------|---------|------|
+| 原始录音/视频（S3/MinIO） | 15 天（笔记生成后） | 给用户"发现笔记有问题可重新整理"的缓冲窗口，过期即删 |
+| 转写文字稿（transcripts） | 永久 | 文本体积小，是笔记生成的可追溯依据 |
+| AI 整理结果（笔记/思维导图/高亮） | 永久 | 核心资产，用户长期查阅 |
+| 手写笔记原图（notes.raw_images） | 与 note 同生命周期 | 图片本身体积小（非视频级），保留价值高于成本 |
+| 真题/作业拍照原图 | 永久 | 体积小且需要人工复核 OCR 结果 |
+
+**存储量级估算（验证清理策略的必要性）：**
+
+| 场景 | 计算 | 结果 |
+|------|------|------|
+| 5 门课 × 每周 3 节 × 15 天缓冲 | ~22 条录音 × 5-10MB/条 | 110-220MB（音频） |
+| 若同时启用视频录制（可选功能，见 PRD 暂不实现/可选说明） | 音频用量 × 约 50 倍 | 5.5-11GB |
+| 转写文字稿永久保留 | 22 条/学期 × 全部学期 | 每条 <50KB，年累计 <5MB，可忽略 |
+
+结论：**只保留音频时，缓冲存储稳定控制在 200MB 级别，任何服务器都无压力**。视频功能一旦启用会让存储成本上升近两个数量级，因此视频录制在 v1.0 中默认关闭，用户可在设置中按需开启（见 PRD 第七节）。
 
 ---
 
@@ -1171,9 +1264,9 @@ ai-studybuddy/
 | 项目初始化 | Expo + Fastify + PostgreSQL + Docker Compose |
 | 认证 | 注册/登录/JWT，最简实现 |
 | 课程管理 | 创建课程、创建课次 |
-| 上传录音 | 分片上传到MinIO，触发ASR转写（SenseVoice/FunASR） |
-| 手动输入文本 | 不录音也能用，直接粘贴笔记文本 |
-| AI整理 | ASR转写 → LLM结构化笔记 → LLM思维导图 |
+| **课堂录音（主路径）** | 分片上传到MinIO，触发ASR转写（SenseVoice/FunASR）——产品入口，先有素材才有后续整理 |
+| AI整理 | ASR转写 → LLM结构化笔记 → LLM思维导图，消费录音产生的素材 |
+| 手动输入文本（兜底路径） | 漏录/录音失败时的备选入口，跳过ASR直接粘贴文本走整理流程，非首页主推 |
 | 展示结果 | 课次详情页展示笔记+思维导图+重点高亮 |
 
 **验收标准**：上传一段5分钟中文课堂录音，能在2分钟内看到带章节结构的笔记和可展开的思维导图。

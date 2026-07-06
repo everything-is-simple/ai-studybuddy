@@ -82,6 +82,7 @@
   - 暗色模式正常工作
   - React DevTools 可连接
   - 基础 UI 组件（Button、Card、Input）可复用
+- **说明**：错题本 Tab 功能在 Phase 2 才实现（见 Phase 2 任务），Phase 1 该 Tab 显示空状态占位（如"做题功能上线后这里会有你的错题"），不阻塞 Tab 导航验收
 
 ---
 
@@ -206,16 +207,27 @@
 
 ### 5. AI 整理模块（核心价值）
 
+#### 5.0 ASR 性能基准测试（⚠️ 必须先做，决定技术路线）
+
+- [ ] **任务描述**：在目标部署硬件（如 4 核/8GB VPS）上跑 SenseVoice-Small CPU 模式的转写耗时测试，用不同时长的中文录音样本（1分钟/5分钟/15分钟）
+- **输入文件**：无（独立验证任务）
+- **输出文件**：benchmark 结果记录（写入 lessons.md）
+- **验收标准**：
+  - 明确得出：5 分钟录音在目标硬件上的实际转写耗时
+  - 如果达标（<60秒），5.1 按原计划推进
+  - 如果不达标，启动 Plan B：评估 FunASR 流式模式 或 接入云端 ASR API（如阿里云语音识别）的成本和延迟，更新本任务清单
+- ⚠️ **风险点**：这是 Phase 1 最大的技术不确定性，必须在投入笔记结构化/思维导图开发前确认，避免后续推倒重来
+
 #### 5.1 ASR 服务部署与对接
 
-- [ ] **任务描述**：部署 SenseVoice-Small（Docker 容器），封装 ASR 调用接口，集成到后端 Worker
-- **输入文件**：ARCHITECTURE.md（7.2 录音转写 Pipeline）、backend-guidelines.md（第六节 AI 集成）
+- [ ] **任务描述**：部署 SenseVoice-Small（Docker 容器），封装 ASR 调用接口，集成到后端 Worker，配置 Worker 并发数=1（见 backend-guidelines.md 6.2）
+- **输入文件**：ARCHITECTURE.md（7.2 录音转写 Pipeline）、backend-guidelines.md（第六节 AI 集成、6.2 Worker 并发控制）
 - **输出文件**：ai/asr.ts、workers/transcribe.ts、docker-compose.yml（新增 asr-service）
 - **验收标准**：
-  - 5 分钟中文录音转写 < 60 秒
+  - 转写耗时符合 5.0 基准测试确认的目标
   - 输出带时间戳的 segments
   - 转写结果写入 transcripts 表
-- ⚠️ **风险点**：SenseVoice Docker 镜像的 GPU/CPU 模式配置，CPU 模式需要确认性能是否达标
+- ⚠️ **风险点**：依赖 5.0 的结论，若走 Plan B 需重新评估对接方式
 
 #### 5.2 BullMQ 任务队列搭建
 
@@ -275,16 +287,16 @@
 
 #### 5.7 前端整理结果展示
 
-- [ ] **任务描述**：实现课次详情页的整理结果展示——Markdown 笔记渲染、思维导图渲染、重点高亮列表、AI 处理进度条
-- **输入文件**：frontend-guidelines.md（3.2 课次详情页）
-- **输出文件**：components/organize/StructuredNote.tsx、MindMapView.tsx、HighlightList.tsx、AIProgressBar.tsx
+- [ ] **任务描述**：实现课次详情页的整理结果展示——Markdown 笔记渲染、思维导图渲染（react-native-webview + Markmap.js 加载 Mermaid 文本）、重点高亮列表、AI 处理进度条
+- **输入文件**：frontend-guidelines.md（3.2 课次详情页、第八节依赖清单）
+- **输出文件**：components/organize/StructuredNote.tsx、MindMapView.tsx（WebView 封装）、HighlightList.tsx、AIProgressBar.tsx
 - **验收标准**：
   - Markdown 渲染正确（标题、列表、加粗、代码块）
   - 数学公式用 KaTeX 渲染
-  - 思维导图可缩放、可展开/折叠节点
+  - 思维导图 WebView 加载 Markmap.js 正确渲染 Mermaid 文本，支持缩放/平移/节点展开折叠（均由 Markmap 自带交互提供）
   - AI 处理中显示分步进度条
   - 处理完成后自动刷新展示结果
-- ⚠️ **风险点**：思维导图自研组件（基于 react-native-svg）的缩放和交互实现难度
+- ⚠️ **风险点**：WebView 与 RN 之间传递 Mermaid 文本的桥接（建议用 `injectedJavaScript` 或 `postMessage`），首次加载 Markmap.js 资源的离线打包（避免每次联网加载 CDN）
 
 ---
 
@@ -300,10 +312,10 @@
   - 上传 5 分钟中文录音，2 分钟内看到结构化笔记 + 思维导图
   - 无控制台报错，无 UI 闪烁
 
-#### 6.2 手动文本输入（备选入口）
+#### 6.2 手动文本输入（兜底入口，非主路径）
 
-- [ ] **任务描述**：实现不录音也能使用的入口——直接粘贴文本触发 AI 整理
-- **输入文件**：PRD.md（7.2 第一个核心模块：初期可手动上传录音/文本）
+- [ ] **任务描述**：实现漏录/录音失败场景下的兜底入口——直接粘贴文本触发 AI 整理，跳过 ASR 环节。MVP 主线用户旅程仍是"录音→整理"，此入口不作为首页主推功能
+- **输入文件**：PRD.md（8.2 第一个核心模块：手动文本输入是兜底路径，不是主路径）
 - **输出文件**：components/notes/ManualTextInput.tsx
 - **验收标准**：
   - 粘贴文本 → 跳过 ASR → 直接走笔记+思维导图 Pipeline
@@ -326,7 +338,9 @@
 
 以下任务在 Phase 1 验收通过后开始，具体拆解在 Phase 1 结束时补充：
 
+- [ ] **推送通知基础设施**（需提前到 Phase 2 开始前，不能拖到 Phase 5）：设备 token 注册（expo-notifications）、`device_tokens`/`notification_logs` 表、Expo Push API 集成——见 backend-guidelines.md 6.5。原因：Phase 2 的"错题复习提醒"（每天8点推送）依赖此基础设施，若拖到 Phase 5 会导致错题本核心机制（艾宾浩斯复习）体验不完整
+- [ ] **AI 调用预算控制**（需在 Phase 2 开始前完成）：`ai_budgets` 表、试用额度扣减逻辑、超限降级逻辑——见 backend-guidelines.md 6.4 和 PRD.md 8.6。原因：Phase 2 引入 AI 出题/批改/CoT 后调用量显著上升，预算机制必须先于高频功能上线
 - [ ] Phase 2：写题模块（AI 出题 + 做题 + 批改 + CoT + 错题本）
 - [ ] Phase 3：真题与变题（真题 OCR + CoT 重生成 + 变题组卷 + 限时考试）
 - [ ] Phase 4：家长可见 + 备考调度（家长面板 + 考前预警 + 备考计划）
-- [ ] Phase 5：打磨与上线（UI 打磨 + 性能优化 + 离线支持 + 推送通知 + 部署）
+- [ ] Phase 5：打磨与上线（UI 打磨 + 性能优化 + 离线支持 + 部署）
