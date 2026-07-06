@@ -97,10 +97,13 @@ ai-studybuddy/
 │   └── server/          # Node.js (Fastify) 后端
 ├── packages/
 │   └── shared/          # 前后端共享的类型和常量
-├── docs/                # 项目文档（PRD、架构、规范等）
-├── PRD.md
-├── ARCHITECTURE.md
-└── dev-rules.md         # 本文档
+├── docs/                # 项目文档（全部放这里）
+│   ├── PRD.md
+│   ├── ARCHITECTURE.md
+│   ├── dev-rules.md     # 本文档
+│   └── frontend-guidelines.md
+├── docker-compose.yml
+└── turbo.json
 ```
 
 ### 2.2 文件归属规则
@@ -125,7 +128,7 @@ ai-studybuddy/
 新增任何模块前，确认以下事项：
 
 - [ ] 这个模块属于 mobile 还是 server 还是 shared？
-- [ ] 是否需要在 ARCHITECTURE.md 中更新模块说明？
+- [ ] 是否需要在 docs/ARCHITECTURE.md 中更新模块说明？
 - [ ] 是否涉及新表？需要在 schema.ts 中定义并生成迁移
 - [ ] 是否涉及新API？需要遵循 API 设计规范（见第五节）
 - [ ] 是否有对应的测试用例？

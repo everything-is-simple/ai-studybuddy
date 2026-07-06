@@ -136,13 +136,16 @@ graph LR
 
 **职责**：调用AI服务，将原始素材转化为结构化学习材料
 
+**分类层级**：所有整理结果按 **课程（学科）→ 课次（日期）→ 整理产物** 三级归档。课程是顶层分类，一个课程对应一个学科。AI整理时注入课程上下文（课程名、课次主题），让输出更精准。
+
 | 功能 | 说明 |
 |------|------|
 | 录音转写 | SenseVoice/FunASR → 带时间戳的文字稿 |
-| 结构化笔记 | LLM基于转写+手写笔记，生成章节化Markdown文档 |
+| 结构化笔记 | LLM基于转写+手写笔记+课程上下文，生成章节化Markdown文档 |
 | 思维导图 | LLM提取知识点层级，输出Mermaid/JSON格式思维导图 |
 | 重点高亮 | LLM标注核心定义、公式、高频考点 |
 | 课程整合 | 将录音/笔记/链接聚合到同一课次视图 |
+| 跨课次串联 | 同课程多课次笔记可生成“章节总复习”思维导图（进阶） |
 
 **关键表**：`transcripts`, `structured_notes`, `mind_maps`, `highlights`
 
@@ -150,7 +153,7 @@ graph LR
 
 ### 3.5 写题模块（quiz）
 
-**职责**：题目生成、练习管理、作业跟踪、AI批改、CoT解析
+**职责**：题目生成、练习管理、作业跟踪、AI批改、CoT解析、错题本间隔复习（艾宾浩斯曲线）
 
 | 子模块 | 说明 |
 |--------|------|
@@ -159,9 +162,9 @@ graph LR
 | 真题解析（past-exam） | 上传真题，CoT八步解析重生成 |
 | 变题组卷（mock-exam） | 基于真题分布变题，限时考试，自动批改 |
 | 批改引擎（grader） | 统一入口：所有提交都走AI批改+CoT解析 |
-| 错题本（error-book） | 所有错题自动沉淀，支持重做、AI错因分析、考前优先推送 |
+| 错题本（error-book） | 所有错题自动沉淀，艾宾浩斯间隔复习、原题重做+AI变题练习、考前优先推送 |
 
-**关键表**：`questions`, `question_sets`, `submissions`, `grading_results`, `homework`, `past_exams`, `mock_exams`, `mock_exam_sessions`, `error_questions`, `error_reviews`
+**关键表**：`questions`, `question_sets`, `submissions`, `grading_results`, `homework`, `past_exams`, `mock_exams`, `mock_exam_sessions`, `error_questions`, `error_reviews`, `error_review_schedules`
 
 ### 3.6 任务调度模块（task）
 
@@ -496,6 +499,7 @@ CREATE TABLE error_questions (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     question_id UUID REFERENCES questions(id),
     submission_id UUID REFERENCES submissions(id),
+    course_id UUID REFERENCES courses(id),           -- 所属学科（课程），方便按科目筛选
     source_type VARCHAR(30) NOT NULL,     -- daily_practice | homework | past_exam | mock_exam
     source_ref UUID,                      -- 来源ID（question_set_id/homework_id等）
     student_answer TEXT,                  -- 学生的答案
@@ -504,7 +508,11 @@ CREATE TABLE error_questions (
     error_type VARCHAR(30),               -- knowledge_gap | misread | calculation | misunderstanding | unable
     knowledge_points JSONB,               -- 涉及的知识点
     status VARCHAR(20) DEFAULT 'unresolved', -- unresolved | reviewing | mastered
-    retry_count INT DEFAULT 0,            -- 重做次数
+    -- 艾宾浩斯间隔复习字段
+    review_stage INT DEFAULT 0,           -- 当前复习轮次（0=未复习，1-6对应六轮）
+    consecutive_correct INT DEFAULT 0,    -- 连续做对次数（≥3则掌握）
+    next_review_date DATE,                -- 下次复习日期（系统自动计算）
+    current_interval_days INT DEFAULT 1,  -- 当前复习间隔（天）
     mastered_at TIMESTAMPTZ,              -- 掌握时间
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -514,8 +522,22 @@ CREATE TABLE error_reviews (            -- 错题复习记录
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     error_question_id UUID REFERENCES error_questions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id),
+    review_stage INT NOT NULL,           -- 第几轮复习
+    review_type VARCHAR(20) NOT NULL,     -- original（原题重做）| variation（变题练习）
+    variation_question_id UUID REFERENCES questions(id), -- 变题关联的题目（仅review_type=variation时）
     retry_answer TEXT,                    -- 重做时的答案
     is_correct BOOLEAN NOT NULL,          -- 这次做对了吗
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE error_review_schedules (   -- 每日复习排程（系统自动生成）
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    error_question_id UUID REFERENCES error_questions(id) ON DELETE CASCADE,
+    scheduled_date DATE NOT NULL,         -- 计划复习日期
+    review_type VARCHAR(20) NOT NULL,     -- original | variation
+    status VARCHAR(20) DEFAULT 'pending', -- pending | completed | skipped
+    completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
@@ -537,6 +559,9 @@ CREATE INDEX idx_encouragements_task ON encouragements(task_id);
 CREATE INDEX idx_encouragements_to_user ON encouragements(to_user, created_at DESC);
 CREATE INDEX idx_error_questions_user_status ON error_questions(user_id, status, created_at DESC);
 CREATE INDEX idx_error_questions_knowledge ON error_questions(user_id) WHERE status != 'mastered';
+CREATE INDEX idx_error_questions_course ON error_questions(user_id, course_id, status);
+CREATE INDEX idx_error_questions_review_date ON error_questions(user_id, next_review_date) WHERE status != 'mastered';
+CREATE INDEX idx_error_review_schedules_user_date ON error_review_schedules(user_id, scheduled_date, status);
 ```
 
 ---
@@ -647,8 +672,11 @@ GET    /api/v1/study-plans/:id                获取备考计划详情
 ```
 GET    /api/v1/error-questions                       获取错题列表（支持科目/错因/状态筛选）
 GET    /api/v1/error-questions/:id                   获取错题详情
-POST   /api/v1/error-questions/:id/retry             重做错题
+POST   /api/v1/error-questions/:id/retry             重做错题（原题）
+POST   /api/v1/error-questions/:id/variation         生成并作答变题
 GET    /api/v1/error-questions/stats                  错题统计（按科目/知识点/错因分布）
+GET    /api/v1/error-questions/review-today           获取今日待复习错题（艾宾浩斯队列）
+GET    /api/v1/error-questions/review-schedule        获取复习日历（未来7天排程）
 POST   /api/v1/error-questions/review-plan            生成错题复习计划
 ```
 
@@ -895,11 +923,14 @@ graph TB
     QUEUE --> W3[Worker 3: 思维导图]
     QUEUE --> W4[Worker 4: 出题]
     QUEUE --> W5[Worker 5: 批改]
+    QUEUE --> W6[Worker 6: 错题变题生成]
+    CRON[定时任务] --> W6
     W1 --> DB[(数据库)]
     W2 --> DB
     W3 --> DB
     W4 --> DB
     W5 --> DB
+    W6 --> DB
     DB --> NOTIFY[WebSocket 通知前端]
 ```
 
@@ -1017,7 +1048,31 @@ Cron: 每小时执行
   ├─ 2. 扫描考试预警：exam_date - 60天 == today
   │     └─ 触发备考计划生成，推送提醒
   │
-  └─ 3. 生成每日任务：基于study_plans，创建当天的tasks记录
+  ├─ 3. 生成每日任务：基于study_plans，创建当天的tasks记录
+  │
+  └─ 4. 错题复习排程：扫描 next_review_date <= today 的未掌握错题
+        ├─ 生成 error_review_schedules 记录
+        ├─ 第1-2轮复习：安排原题重做
+        ├─ 第3-5轮复习：触发AI变题生成，安排变题练习
+        └─ 推送"今日待复习"通知
+```
+
+### 7.8 错题变题生成 Pipeline
+
+```
+输入：错题记录 + 涉及的知识点
+  │
+  ├─ 1. 提取错题的知识点、错因、原题结构
+  │
+  ├─ 2. 构造变题prompt：
+  │     ├─ system: "你是题目变体专家，请基于以下题目生成考察相同知识点的新题"
+  │     ├─ 注入原题内容 + 知识点 + 难度要求
+  │     └─ 变题策略：第3轮改数字 → 第4轮改情境 → 第5轮增加干扰条件
+  │
+  ├─ 3. LLM生成变题 + 标准答案 + CoT解析
+  │
+  └─ 4. 写入 questions 表（source='error_variation'）
+输出：变题（含答案和解析），关联到 error_reviews 表
 ```
 
 ---
@@ -1057,6 +1112,7 @@ ai-studybuddy/
 │       │   │   ├── homework.ts
 │       │   │   ├── submissions.ts
 │       │   │   ├── tasks.ts
+│       │   │   ├── error-questions.ts  # 错题本API
 │       │   │   └── visibility.ts   # 家长可见接口
 │       │   ├── services/           # 业务逻辑层
 │       │   ├── ai/                 # AI服务封装
@@ -1065,12 +1121,14 @@ ai-studybuddy/
 │       │   │   ├── mindmap.ts      # 思维导图
 │       │   │   ├── quiz-gen.ts     # 出题
 │       │   │   ├── grading.ts      # 批改
-│       │   │   └── cot.ts          # CoT解析
+│       │   │   ├── cot.ts          # CoT解析
+│       │   │   └── error-variation.ts  # 错题变题生成
 │       │   ├── workers/            # BullMQ异步Worker
 │       │   │   ├── transcribe.ts
 │       │   │   ├── organize.ts
 │       │   │   ├── quiz.ts
-│       │   │   └── grading.ts
+│       │   │   ├── grading.ts
+│       │   │   └── error-review.ts  # 错题复习排程+变题生成
 │       │   ├── db/                 # 数据库
 │       │   │   ├── schema.ts       # Drizzle ORM schema
 │       │   │   ├── migrations/     # 数据库迁移
@@ -1088,8 +1146,11 @@ ai-studybuddy/
 ├── .env.example                    # 环境变量模板
 ├── turbo.json                      # Turborepo配置（monorepo）
 ├── package.json                    # 根package.json
-├── PRD.md
-└── ARCHITECTURE.md
+└── docs/                           # 项目文档
+    ├── PRD.md
+    ├── ARCHITECTURE.md             # 本文档
+    ├── dev-rules.md
+    └── frontend-guidelines.md
 ```
 
 ---
@@ -1114,7 +1175,7 @@ ai-studybuddy/
 
 ### Phase 2：写题模块（3-4周）
 
-**目标**：基于笔记AI出题 + 学生做题 + AI批改 + CoT解析
+**目标**：基于笔记AI出题 + 学生做题 + AI批改 + CoT解析 + 错题本间隔复习
 
 | 任务 | 说明 |
 |------|------|
@@ -1124,6 +1185,9 @@ ai-studybuddy/
 | CoT解析 | 每道题八步思维链展示 |
 | 作业录入 | 手动输入 + 拍照OCR |
 | 平时练习时效 | 48小时倒计时，超时标记overdue |
+| 错题本自动收集 | 批改完成后自动入库，记录错因和知识点 |
+| 艾宾浩斯复习排程 | 定时任务扫描并安排复习，推送"今日待复习" |
+| 错题变题生成 | 第3轮起AI生成变题，检验迁移能力 |
 
 ### Phase 3：真题与变题（2-3周）
 
