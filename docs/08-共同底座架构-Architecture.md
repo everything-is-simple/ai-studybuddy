@@ -112,9 +112,144 @@ Phase 0.8 默认只接 DeepSeek 文本模型：
 
 Qwen、Kimi、GPT 暂只保留配置位，不在 Phase 0.8 强依赖。GPT 只作为后续最难推理兜底，不属于开源组件。
 
+最小接口约定：
+
+```ts
+type AiTaskType = 'note_generation' | 'practice_grading' | 'error_analysis' | 'question_generation'
+
+type AiRequest = {
+  taskType: AiTaskType
+  inputText: string
+  language?: 'zh' | 'en'
+  options?: Record<string, unknown>
+}
+
+type AiResponse = {
+  content: string
+  provider: string
+  model: string
+  tokenUsed: number
+  latencyMs: number
+  fallbackUsed: boolean
+}
+```
+
+日志允许记录 `provider`、`model`、`tokenUsed`、`latencyMs`、失败原因；不记录 API Key 和学生隐私全文。
+
 ---
 
-## 7. 非目标
+## 7. 数据库和迁移约定
+
+| 约定项 | 规则 |
+|---|---|
+| 主键 | 全部使用 UUID |
+| 时间字段 | 使用 `timestamptz`，避免本地时区混乱 |
+| 公共字段 | 默认包含 `created_at`、`updated_at` |
+| 迁移策略 | 渐进式 Schema；子系统未开工，不提前建表 |
+| 迁移目录 | 建议 `packages/backend/drizzle/migrations/` 或同等后端迁移目录 |
+| 迁移命名 | `0001_init_users_courses.sql` 这种序号 + 描述格式 |
+| 跨子系统字段 | 放共同底座；业务字段留给对应子系统 |
+
+Phase 0.8 第一批只落 S1/S2 必需表：`users`、`courses`、`study_tasks`、`study_events`、`materials`、`normalized_texts`、`structured_notes`、`mind_maps`。
+
+---
+
+## 8. 统一 API 响应格式
+
+成功响应：
+
+```json
+{
+  "success": true,
+  "data": {},
+  "meta": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 100
+  }
+}
+```
+
+失败响应：
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "截止时间不能早于今天"
+  }
+}
+```
+
+HTTP 状态码约定：
+
+| 状态码 | 含义 |
+|---|---|
+| 200 | 查询 / 更新成功 |
+| 201 | 创建成功 |
+| 400 | 参数错误 |
+| 401 | 未登录 |
+| 403 | 无权访问 |
+| 404 | 资源不存在 |
+| 500 | 服务端错误 |
+
+---
+
+## 9. 格式转换层接口约定
+
+格式转换全部输出统一纯文本，不把 LLM 当作主转换路径。
+
+```ts
+type ConvertInput = {
+  sourceType: 'pdf' | 'image' | 'text' | 'markdown' | 'url'
+  storageKey?: string
+  rawText?: string
+}
+
+type ConvertOutput = {
+  text: string
+  converter: string
+  metadata: {
+    pageCount?: number
+    charCount: number
+    hasFormula: boolean
+    hasTable: boolean
+  }
+}
+```
+
+PDF、图片等耗时转换优先放到 BullMQ Job；Phase 0.8 可先同步跑通，再异步化。
+
+---
+
+## 10. 环境变量最小清单
+
+`.env.local` 不提交真实值，只提交 `.env.example` 的变量名。
+
+```env
+DATABASE_URL=
+REDIS_URL=
+MINIO_ENDPOINT=
+MINIO_ACCESS_KEY=
+MINIO_SECRET_KEY=
+STORAGE_BUCKET=ai-studybuddy
+
+AI_PROVIDER_DEFAULT=deepseek
+DEEPSEEK_API_KEY=
+QWEN_API_KEY=
+OPENAI_API_KEY=
+
+DATA_ROOT=G:\ai-studybuddy-data
+LOG_ROOT=G:\ai-studybuddy-logs
+TMP_ROOT=G:\ai-studybuddy-tmp
+```
+
+未来业务代码不得硬编码 `G:\...` 路径，必须通过环境变量读取。
+
+---
+
+## 11. 非目标
 
 本文档不设计：
 

@@ -130,9 +130,47 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 1. `COMPOSER_ROOT` 独立调通；
 2. 形成组件能力卡；
-3. 有最小 smoke test；
+3. 有最小 smoke test（见下方标准表）；
 4. Adapter 输出结构稳定；
 5. 日志写入 `LOG_ROOT`；
 6. 临时文件写入 `TMP_ROOT`；
 7. 运行数据不污染主 repo；
 8. 许可证和部署方式可接受。
+
+## 七、Smoke Test 标准表
+
+以下是每个 MVP 必接组件的 smoke test 具体要求。"通过"不是模糊感觉，而是可验证的检查项。
+
+| 组件 | Smoke Test 操作 | 通过标准 | 失败处理 |
+|---|---|---|---|
+| **pdf-parse / PDF.js** | 解析 1 个含中文的真实 PDF（至少 3 页） | 文本完整提取、无乱码、中文字符正确、页码能区分 | 换备选组件或检查编码 |
+| **PaddleOCR + PP-OCRv6** | 识别 1 张含中文文字的试卷图片 | 汉字/数字识别率 > 90%；表格结构基本保留；不丢整行 | 调整模型版本或预处理 |
+| **Markmap** | 渲染 1 份 3 级层级的 Markdown 文本 | 浏览器可正常展示导图；节点可展开/收起；不报错 | 检查 Markdown 格式或 Markmap 版本 |
+| **react-markdown + KaTeX** | 渲染含行内公式 `$E=mc^2$` 和块级公式的 Markdown | 公式美观渲染、不显示原始 LaTeX 源码、无 JS 报错 | 检查 KaTeX 插件配置 |
+| **BullMQ + Redis** | 创建队列 → 入队 1 个 Job → 消费 → 模拟失败 → 重试 | Job 经历 waiting→active→completed 全生命周期；失败 Job 重试成功 | 检查 Redis 连接和队列配置 |
+| **MinIO** | 上传 1 个文件 → 下载 → 生成临时 URL → URL 可访问 | 上传/下载内容一致；临时 URL 在有效期内可访问、过期后不可访问 | 检查 Bucket 策略和端口 |
+| **PostgreSQL + pgvector** | 建表 → 插入 → 查询 → 创建向量列 → 向量相似度搜索 | CRUD 正常；pgvector 扩展加载成功；向量搜索返回结果 | 检查扩展安装和 SQL 语法 |
+| **DeepSeek API** | 发送 1 段 500 字中文纯文本，要求返回结构化笔记 | API 调通；返回 Markdown 格式可解析；latency < 30s；token 消耗合理 | 检查 API Key 和网络；记录错误码 |
+| **Qwen API**（P1 备选） | 同 DeepSeek smoke test | 同上 | 同上 |
+
+### Smoke Test 执行规范
+
+1. **测试文件位置**：每个组件的 smoke test 脚本放在 `composer\<组件目录>\smoke-test\` 下；
+2. **测试数据**：使用真实的中文样本（教材截取或公开试卷），不用英文 lorem ipsum；
+3. **结果记录**：通过后在能力卡中标注日期和版本；
+4. **失败不阻塞其他组件**：某组件失败时，其他组件可继续，但该组件不得进入主系统；
+5. **二次验证**：组件升级版本后，必须重新跑 smoke test。
+
+### Smoke Test 状态追踪
+
+| 组件 | 状态 | 通过日期 | 版本 | 备注 |
+|---|---|---|---|---|
+| pdf-parse | ⏳ 待测 | — | — | — |
+| PaddleOCR | ⏳ 待测 | — | — | — |
+| Markmap | ⏳ 待测 | — | — | — |
+| react-markdown + KaTeX | ⏳ 待测 | — | — | — |
+| BullMQ + Redis | ⏳ 待测 | — | — | — |
+| MinIO | ⏳ 待测 | — | — | — |
+| PostgreSQL + pgvector | ⏳ 待测 | — | — | — |
+| DeepSeek API | ⏳ 待测 | — | — | — |
+| Qwen API | ⏳ 待测 | — | — | — |
