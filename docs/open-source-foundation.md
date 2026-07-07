@@ -31,6 +31,9 @@
 | 4 | [RAGFlow](https://github.com/infiniflow/ragflow) / [Dify](https://github.com/langgenius/dify) | 文档解析、RAG、AI Workflow、Prompt 调试、模型管理 | 只做 AI 工作流/知识库参考，不做业务主后端 |
 | 5 | [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) / [FunASR](https://github.com/modelscope/FunASR) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) | 课堂录音转写、作业/真题/手写 OCR | 作为独立能力服务接入，通过 Worker 调用 |
 | 6 | [Anki](https://github.com/ankitects/anki) | 间隔复习思想参考 | 只参考记忆调度思想，不搬 UI 或复杂同步体系 |
+| 7 | [pdf-parse](https://www.npmjs.com/package/pdf-parse) / [PyMuPDF](https://github.com/pymupdf/PyMuPDF) | PDF 课件/教材文本提取 | 进程内调用，无需独立服务 |
+| 8 | [ffmpeg](https://ffmpeg.org/) | 视频音轨提取，提取后走 ASR | Docker 容器内调用 |
+| 9 | [Readability](https://github.com/mozilla/readability) | 网页链接正文提取 | 进程内调用，无需独立服务 |
 
 ---
 
@@ -109,7 +112,21 @@
 
 ---
 
-## 六、对现有设计文档的约束
+## 六、两层架构边界（格式转换 vs LLM 理解）
+
+> 详细架构见 ARCHITECTURE.md 2.4。本节只记录开源工具在两层中的定位。
+
+| 层 | 职责 | 本项目使用的开源工具 | 是否需 LLM |
+|----|------|-------------------|----------|
+| 格式转换层 | 各种格式→纯文本 | SenseVoice、FunASR、PaddleOCR、pdf-parse、PyMuPDF、ffmpeg、Readability | **不需要** |
+| LLM 理解层 | 纯文本→结构化输出 | DeepSeek 系列（纯文本模型） | **需要**，只有 7 个调用点 |
+| 规则引擎层 | 批改/排程/检测 | 自写规则引擎（字符串匹配、日期计算） | **不需要** |
+
+**MVP 优先级**：PDF + 纯文本 + 图片 OCR 先行（无需部署 ASR 服务即可跑通核心链路），音频 ASR 紧随其后，视频最后。
+
+---
+
+## 七、对现有设计文档的约束
 
 - `PRD.md`：记录开源底座最终决策、产品范围和错题闭环。
 - `ARCHITECTURE.md`：保留当前技术栈，增加开源项目到模块的映射关系。

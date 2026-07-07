@@ -245,7 +245,32 @@ users (1) ──< (N) family_spaces ──< (N) space_members
 
 ## 六、AI 服务集成设计
 
-### 6.1 Provider 抽象层
+> **两层架构原则**（详细见 ARCHITECTURE.md 2.4）：格式转换和 LLM 理解解耦。
+>
+> - **格式转换层**（ASR/OCR/PDF/视频/链接）用专用开源工具，通过 `FormatConverter` Adapter 接入，不走 Provider Registry
+> - **LLM 理解层**（笔记结构化、CoT解析、出题、变题、批改）走 Provider Registry，统一接口
+>
+> 两层之间用纯文本作为接口：第一层输出纯文本，第二层吃纯文本。
+
+### 6.1 格式转换 Adapter（第一层，不走 LLM）
+
+```typescript
+// 格式转换工具统一接口——不经过 Provider Registry，不走 LLM
+interface FormatConverter {
+  convert(input: UploadedFile): Promise<ConvertedText>;
+}
+
+// 每种格式一个实现
+class AudioConverter implements FormatConverter { ... }  // SenseVoice/FunASR
+class ImageConverter implements FormatConverter { ... }  // PaddleOCR
+class PdfConverter implements FormatConverter { ... }    // pdf-parse/PyMuPDF
+class VideoConverter implements FormatConverter { ... }  // ffmpeg + ASR
+class LinkConverter implements FormatConverter { ... }   // Readability
+
+// MVP 优先级：PdfConverter + ImageConverter + LinkConverter 先行
+```
+
+### 6.2 Provider 抽象层（第二层，LLM 调用）
 
 ```typescript
 // 所有 AI 调用统一通过 Provider Registry
@@ -266,7 +291,7 @@ class ProviderRegistry {
 }
 ```
 
-### 6.2 AI 任务队列设计
+### 6.3 AI 任务队列设计
 
 ```
 HTTP 请求（触发 AI 任务）
@@ -306,7 +331,7 @@ HTTP 请求（触发 AI 任务）
 
 用 BullMQ 的 `concurrency` 选项配置：`worker.run({ concurrency: 1 })`。用户一次上传多条录音时，任务会排队而不是同时抢占 CPU。
 
-### 6.3 AI 错误处理
+### 6.4 AI 错误处理
 
 | 错误类型 | 处理策略 |
 |---------|---------|
@@ -318,7 +343,7 @@ HTTP 请求（触发 AI 任务）
 
 **CoT 解析（DeepSeek R1）专项 fallback**：R1 是价格最高（¥4/¥16 每百万token）且承担最核心解题价值的功能，单独配置备选模型（如 Kimi K2.6），R1 不可用时自动降级调用备选模型，而不是直接失败，保证学生做题体验不中断。
 
-### 6.4 AI 调用预算控制（成本控制核心）
+### 6.5 AI 调用预算控制（成本控制核心）
 
 **背景**：PRD 8.6 确认了 AI Key 混合策略——新用户使用系统试用额度，用完后引导切换为自备 Key。试用额度必须有硬性上限，否则开发者账户可能被无限透支；即便用户自备 Key，考前冲刺期高频触发 CoT 解析（R1 模型最贵）也可能产生费用惊喜，需要预算提醒。
 
@@ -342,7 +367,7 @@ ai_provider_configs 表增加字段（或新增 ai_budgets 表）：
 
 **规则：预算检查在任务入队前做（route 层），不是 Worker 消费时做**——避免任务已排队等待很久才发现超限被拒绝，浪费用户等待时间。
 
-### 6.5 推送通知设计
+### 6.6 推送通知设计
 
 **背景**：PRD 定义了多种推送场景（AI 处理完成、任务截止提醒、错题复习提醒、家长点赞），这些通知需要在 App **不在前台**时也能送达，WebSocket 只能覆盖 App 在线场景，必须叠加系统级推送。
 
@@ -373,7 +398,7 @@ BullMQ 定时/触发任务 → 查 device_tokens → 调用 Expo Push API（服�
 
 **失败处理**：Expo Push API 返回失效 token（如用户卸载 App）时，标记 `device_tokens.is_valid = false`，不再发送，不重试。
 
-### 6.6 Prompt 管理策略
+### 6.7 Prompt 管理策略
 
 ```
 prompt 不放数据库，放代码中的常量文件：
@@ -394,7 +419,7 @@ apps/server/src/ai/prompts/
 
 ---
 
-### 6.7 开源底座接入规则
+### 6.8 开源底座接入规则
 
 > 详细 SoT：`docs/open-source-foundation.md`
 

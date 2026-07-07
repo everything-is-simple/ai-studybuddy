@@ -238,8 +238,8 @@
 
 #### 5.1 ASR 服务部署与对接
 
-- [ ] **任务描述**：部署 SenseVoice-Small（Docker 容器），封装 ASR 调用接口，集成到后端 Worker，配置 Worker 并发数=1（见 backend-guidelines.md 6.2）
-- **输入文件**：ARCHITECTURE.md（7.2 录音转写 Pipeline）、backend-guidelines.md（第六节 AI 集成、6.2 Worker 并发控制）
+- [ ] **任务描述**：部署 SenseVoice-Small（Docker 容器），封装 ASR 调用接口，集成到后端 Worker，配置 Worker 并发数=1（见 backend-guidelines.md 6.3）
+- **输入文件**：ARCHITECTURE.md（7.2 格式转换 Pipeline）、backend-guidelines.md（第六节 AI 集成、6.1 格式转换 Adapter、6.3 Worker 并发控制）
 - **输出文件**：ai/asr.ts、workers/transcribe.ts、docker-compose.yml（新增 asr-service）
 - **验收标准**：
   - 转写耗时符合 5.0 基准测试确认的目标
@@ -250,7 +250,7 @@
 #### 5.2 BullMQ 任务队列搭建
 
 - [ ] **任务描述**：搭建 BullMQ 队列基础设施，Worker 进程，任务状态跟踪，WebSocket 通知
-- **输入文件**：backend-guidelines.md（6.2 AI 任务队列设计）
+- **输入文件**：backend-guidelines.md（6.3 AI 任务队列设计）
 - **输出文件**：lib/queue.ts、workers/index.ts、lib/websocket.ts
 - **验收标准**：
   - 任务加入队列 → Worker 消费 → 状态更新正常
@@ -261,7 +261,7 @@
 #### 5.3 AI Provider 基础框架
 
 - [ ] **任务描述**：实现 Provider Registry、DeepSeek Provider（OpenAI 兼容 SDK）、配置读取（用户自定义 → 系统默认）
-- **输入文件**：ARCHITECTURE.md（第六节 AI Provider 配置架构）、backend-guidelines.md（6.1 Provider 抽象层）
+- **输入文件**：ARCHITECTURE.md（第六节 AI Provider 配置架构）、backend-guidelines.md（6.2 Provider 抽象层）
 - **输出文件**：ai/provider-registry.ts、ai/providers/deepseek.ts、db/schema.ts（ai_provider_configs 表）
 - **验收标准**：
   - `getProvider(spaceId, fn)` 返回正确配置
@@ -356,8 +356,8 @@
 
 以下任务在 Phase 1 验收通过后开始，具体拆解在 Phase 1 结束时补充：
 
-- [ ] **推送通知基础设施**（需提前到 Phase 2 开始前，不能拖到 Phase 5）：设备 token 注册（expo-notifications）、`device_tokens`/`notification_logs` 表、Expo Push API 集成——见 backend-guidelines.md 6.5。原因：Phase 2 的"错题复习提醒"（每天8点推送）依赖此基础设施，若拖到 Phase 5 会导致错题本核心机制（艾宾浩斯复习）体验不完整
-- [ ] **AI 调用预算控制**（需在 Phase 2 开始前完成）：`ai_budgets` 表、试用额度扣减逻辑、超限降级逻辑——见 backend-guidelines.md 6.4 和 PRD.md 8.6。原因：Phase 2 引入 AI 出题/批改/CoT 后调用量显著上升，预算机制必须先于高频功能上线
+- [ ] **推送通知基础设施**（需提前到 Phase 2 开始前，不能拖到 Phase 5）：设备 token 注册（expo-notifications）、`device_tokens`/`notification_logs` 表、Expo Push API 集成——见 backend-guidelines.md 6.6。原因：Phase 2 的"错题复习提醒"（每天8点推送）依赖此基础设施，若拖到 Phase 5 会导致错题本核心机制（艾宾浩斯复习）体验不完整
+- [ ] **AI 调用预算控制**（需在 Phase 2 开始前完成）：`ai_budgets` 表、试用额度扣减逻辑、超限降级逻辑——见 backend-guidelines.md 6.5 和 PRD.md 8.6。原因：Phase 2 引入 AI 出题/批改/CoT 后调用量显著上升，预算机制必须先于高频功能上线
 - [ ] Phase 2：写题模块（AI 出题 + 做题 + 批改 + CoT + 错题本）
 - [ ] Phase 3：真题与变题（真题 OCR + CoT 重生成 + 变题组卷 + 限时考试）
 - [ ] Phase 4：家长可见 + 备考调度（家长面板 + 考前预警 + 备考计划）

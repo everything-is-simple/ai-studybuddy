@@ -15,7 +15,7 @@
 | 2 | `g:\ai-studybuddy\docs\ARCHITECTURE.md` | ARCHITECTURE.md | **技术架构文档** — 系统总览、6 大模块设计、20+ 数据库表 SQL、10 组 API、7 条 AI Pipeline、数据保留清理 Pipeline(7.9)、AI Provider 配置(含预算字段)、推送通知表 |
 | 3 | `g:\ai-studybuddy\docs\dev-rules.md` | dev-rules.md | **开发规范** — TypeScript 规范、命名约定、AI 行为约束、Git 规范、API/DB/前后端代码规范、环境变量、分页字段统一为 page_size(snake_case) |
 | 4 | `g:\ai-studybuddy\docs\frontend-guidelines.md` | frontend-guidelines.md | **前端开发指南** — 设计原则、导航结构、7 个核心页面线框图、离线策略、性能预算、状态管理、依赖清单(思维导图: WebView+Markmap) |
-| 5 | `g:\ai-studybuddy\docs\backend-guidelines.md` | backend-guidelines.md | **后端开发指南** — Fastify/Drizzle/Redis 决策、Auth 设计、API 设计、DB 策略、AI 集成、Worker 并发控制(6.3)、AI 预算控制(6.4)、推送通知设计(6.5)、安全设计 |
+| 5 | `g:\ai-studybuddy\docs\backend-guidelines.md` | backend-guidelines.md | **后端开发指南** — Fastify/Drizzle/Redis 决策、Auth 设计、API 设计、DB 策略、AI 集成（两层架构：6.1格式转换+6.2 Provider）、Worker 并发控制(6.3)、AI 预算控制(6.5)、推送通知设计(6.6)、安全设计 |
 | 6 | `g:\ai-studybuddy\docs\test-plan.md` | test-plan.md | **测试计划** — 测试金字塔、单元/集成/E2E 测试用例、各 Phase 验收标准、CI 质量门禁 |
 | 7 | `g:\ai-studybuddy\docs\todo-list.md` | todo-list.md | **任务清单** — Phase 0 开源底座决策 + Phase 1 MVP 18 个任务(6 组)，含描述/输入/输出/验收标准/风险点，思维导图任务已调整为 WebView+Markmap |
 | 8 | `g:\ai-studybuddy\docs\tutorial-one-sentence-ai-app.md` | tutorial-one-sentence-ai-app.md | **开发过程指导** — 5 阶段开发法(需求对话→PRD→10 文档→任务拆解→AI 执行与验证) |
