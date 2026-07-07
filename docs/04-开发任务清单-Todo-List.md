@@ -104,6 +104,23 @@
 - [ ] 内容只包含：基础数据结构草案、数据库约定、API 响应格式、AI Router 接口
 - [ ] 更新 `docs/00-文档索引-Index.md`
 
+### Phase 0.5B：支撑 S3 + S4 的第二批组件
+
+> Phase 0.8 跑通后，准备进入 S3/S4 开发前调通。
+
+- [ ] 客观题规则批改：选择题 / 填空题最小规则引擎测试
+- [ ] 错题复习排程：艾宾浩斯间隔复习日期计算测试
+- [ ] Qwen Provider：文本备选最小样例（同 DeepSeek smoke test 格式）
+- [ ] GPT Provider：难题兜底最小样例
+
+### Phase 0.5C：工程治理脚本
+
+- [ ] 备份 zip 脚本：标注阶段、commit hash、风险说明、恢复方式
+- [ ] tmp 清理脚本：清空 `G:\ai-studybuddy-tmp` 后系统可继续运行
+- [ ] logs 规范验证：确认日志中不记录 API Key、学生隐私全文、完整答案
+
+暂不进入 Phase 0.5 主线：SenseVoice、FunASR、FFmpeg、Readability。它们等 S7 或对应子系统开工前再调。
+
 ---
 
 ## Phase 0.8：第一个可运行里程碑
@@ -233,3 +250,21 @@
 2. `docs/00-文档索引-Index.md` 已更新；
 3. 开源组件 smoke test 已通过；
 4. `scripts/check-docs-governance.ps1` 检查无报错。
+
+### 规范文档触发条件
+
+> 开发动作触发文档，而不是提前创建空文档。
+
+| 即将开始的动作 | 必须先存在/创建的文档 | 说明 |
+|---|---|---|
+| 设计共同数据模型、队列、对象存储、AI Provider、Adapter | `08-共同底座架构-Architecture.md` | 没有共同底座设计，不开始跨子系统实现 |
+| 调通第一个开源组件 smoke test | `09-测试验收计划-Test-Plan.md` | 先定义怎么验收，再调组件 |
+| 写第一个后端服务 / Adapter / API / Worker | `10-后端开发规范-Backend-Guidelines.md` | 先统一路径、日志、Adapter 输出约定 |
+| 写第一个正式前端页面 | `11-前端开发规范-Frontend-Guidelines.md` | 先统一页面、组件、状态和渲染规范 |
+| 多 AI / 多分支 / 多人协作 | `12-开发规范-Dev-Rules.md` | 先统一协作、提交、归档、备份规则 |
+
+门禁流程：
+
+```text
+收到任务 → 读 00 索引 → 查目标文档是否存在 → 查触发条件 → 不满足则不创建 → 满足则创建 → 更新 00 索引 → 运行治理检查 → 提交
+```

@@ -19,7 +19,7 @@
 | 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `G:\ai-studybuddy-*` 目录职责 |
 | 07 | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md) | ✅ 有效 | 文档分层、子系统文档触发条件 |
 | 08 | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md) | ✅ 有效 | 共同底座最小架构（S1 开工前必读） |
-| 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | 📅 未来 | 待 Phase 0.8 代码启动后触发 |
+| 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5A 组件 smoke test 与 Phase 0.8 验收标准 |
 
 ---
 
@@ -41,10 +41,9 @@
 
 | 文档 | 触发条件 | 当前状态 |
 |---|---|---|
-| 09-测试验收计划-Test-Plan.md | Phase 0.8 第一个可运行里程碑代码启动后 | 未触发 |
-| 10-前端技术规范-Frontend-Spec.md | S1/S2 页面开始开发时 | 未触发 |
-| 11-后端API规范-Backend-API-Spec.md | S1/S2 API 开始开发时 | 未触发 |
-| 12-数据库迁移策略-DB-Migration.md | 第一次数据库 Schema 创建时 | 未触发 |
+| 10-后端开发规范-Backend-Guidelines.md | 写第一个后端服务 / Adapter / API / Worker 前 | 未触发 |
+| 11-前端开发规范-Frontend-Guidelines.md | 写第一个正式前端页面前 | 未触发 |
+| 12-开发规范-Dev-Rules.md | 多 AI / 多分支 / 多人协作时 | 未触发 |
 | 13-部署运维指南-Deployment.md | Phase 1 完成后准备部署时 | 未触发 |
 | 14-安全与隐私-Security-Privacy.md | Phase 1 后期或真实家庭试用前 | 未触发 |
 
