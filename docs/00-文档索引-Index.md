@@ -1,4 +1,4 @@
-# AI StudyBuddy 文档索引
+# AI StudyBuddy 文档索引 Index
 
 > **项目根目录**：`G:\ai-studybuddy`
 > **文档目录**：`G:\ai-studybuddy\docs`
@@ -8,25 +8,36 @@
 
 ---
 
-## 1. 当前有效文档（唯一应优先读取）
+## 1. 当前有效文档（按重要性排序）
 
-当前 `docs` 目录只保留正在使用的系统设计 SoT，避免旧文档误导人和 AI。
+`00` 是目录入口，不参与正文重要性排名。真正的系统设计文档从 `01` 开始。
 
-| 顺序 | 文件 | 用途 | 状态 |
+| 排名 | 文件 | 中文用途 | 状态 |
 |---|---|---|---|
-| 1 | `G:\ai-studybuddy\docs\PRD.md` | 总 PRD：产品目标、七个场景子系统、MVP 边界、AI 边界 | **当前有效** |
-| 2 | `G:\ai-studybuddy\docs\scenario-systems.md` | 七个子系统地图：命名、边界、依赖、开发顺序 | **当前有效** |
-| 3 | `G:\ai-studybuddy\docs\design-docs-strategy.md` | 文档策略：是否每个子系统写文档、最少需要几份文档 | **当前有效** |
-| 4 | `G:\ai-studybuddy\docs\subsystems\S1-study-rhythm-PRD.md` | 第一个子系统 PRD：学习节奏 StudyRhythm | **当前有效** |
-| 5 | `G:\ai-studybuddy\docs\dev-environment.md` | 本地目录治理：composer/data/day-study/logs/tmp/backup | **当前有效** |
-| 6 | `G:\ai-studybuddy\docs\open-source-foundation.md` | 开源组件先行装配、组件能力卡、成熟组件清单 | **当前有效，后续按七子系统补充** |
-| 7 | `G:\ai-studybuddy\docs\todo-list.md` | 新任务清单：共同底座 + 七子系统逐个完成 | **当前有效** |
+| 00 | `G:\ai-studybuddy\docs\00-文档索引-Index.md` | 文档入口：告诉人和 AI 应该读哪些文件、不该读哪些旧稿 | **当前有效** |
+| 01 | `G:\ai-studybuddy\docs\01-总PRD-产品需求-Product-Requirements.md` | 总 PRD：产品目标、七个场景子系统、MVP 边界、AI 边界 | **当前有效** |
+| 02 | `G:\ai-studybuddy\docs\02-七子系统地图-Scenario-Systems.md` | 七个子系统地图：命名、边界、依赖、开发顺序 | **当前有效** |
+| 03 | `G:\ai-studybuddy\docs\subsystems\03-S1学习节奏子系统PRD-StudyRhythm.md` | 第一个子系统 PRD：学习节奏 StudyRhythm | **当前有效** |
+| 04 | `G:\ai-studybuddy\docs\04-开发任务清单-Todo-List.md` | 开发任务清单：共同底座 + 七子系统逐个完成 | **当前有效** |
+| 05 | `G:\ai-studybuddy\docs\05-开源组件装配-Open-Source-Foundation.md` | 开源组件先行装配、组件能力卡、成熟组件清单 | **当前有效，后续按七子系统补充** |
+| 06 | `G:\ai-studybuddy\docs\06-本地目录治理-Dev-Environment.md` | 本地目录治理：composer/data/day-study/logs/tmp/backup | **当前有效** |
+| 07 | `G:\ai-studybuddy\docs\07-文档策略-Design-Docs-Strategy.md` | 文档策略：是否每个子系统写文档、最少需要几份文档 | **当前有效** |
 
 ---
 
-## 2. 已归档旧草稿文档
+## 2. 现在这些是不是全部系统文档？
 
-以下旧文档已经从主 `docs` 目录移除，避免继续误导开发：
+**是。对当前阶段来说，这些就是全部有效系统文档。**
+
+更准确地说：
+
+```text
+当前有效系统文档 = 上表 00-07
+旧草稿系统文档 = 只在 backup zip 中，不在主 docs 中
+未来文档 = 等真正要开发对应模块时，再按七子系统路线新建
+```
+
+当前不要再恢复旧版：
 
 ```text
 ARCHITECTURE.md
@@ -39,49 +50,62 @@ test-plan.md
 tutorial-one-sentence-ai-app.md
 ```
 
-它们不再是当前系统设计依据。需要查看旧稿时，只能去归档包：
+这些旧文件已经归档，不再作为当前设计依据。
+
+---
+
+## 3. 已归档旧草稿文档
+
+旧稿归档包：
 
 ```text
 G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 ```
 
+旧稿使用规则：
+
+- 默认不读；
+- 默认不恢复；
+- 只在用户明确说“参考旧稿某一段”时打开；
+- 参考后也必须改写进新文档，不能直接把旧稿放回主 `docs`。
+
 ---
 
-## 3. 推荐阅读顺序
+## 4. 推荐阅读顺序
 
 ```text
-1. PRD.md
-2. scenario-systems.md
-3. design-docs-strategy.md
-4. subsystems/S1-study-rhythm-PRD.md
-5. dev-environment.md
-6. open-source-foundation.md
-7. todo-list.md
+00-文档索引-Index.md
+01-总PRD-产品需求-Product-Requirements.md
+02-七子系统地图-Scenario-Systems.md
+subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md
+04-开发任务清单-Todo-List.md
+05-开源组件装配-Open-Source-Foundation.md
+06-本地目录治理-Dev-Environment.md
+07-文档策略-Design-Docs-Strategy.md
 ```
 
 ---
 
-## 4. 当前开发原则
+## 5. 当前开发原则
 
 - 不是一个巨型系统一次做完，而是七个场景子系统逐个完成。
 - 共同底座只放跨子系统能力。
 - 每个子系统开工前写 2-5 页轻量 PRD。
-- 个人开发最少 5 份核心文档：总 PRD、子系统地图、架构、任务清单、测试验收。
-- 当前架构、测试、前后端规范文档还没有按七子系统路线重写；未重写前不要引用旧稿。
+- 当前阶段已经足够，不要再把旧草稿文档放回主目录。
 - 成熟开源组件先在 `G:\ai-studybuddy-composer` 跑通，再封装 Adapter 接入主系统。
 
 ---
 
-## 5. 下一批应该重建的文档
+## 6. 未来如果需要新增文档
 
-按顺序重建，不要一次性写回一大堆旧文档：
+以后新增文档也按“数字 + 中文 + 英文”命名，例如：
 
-| 顺序 | 新文档 | 目标 |
-|---|---|---|
-| 1 | `ARCHITECTURE.md` | 重写为“共同底座 + 七子系统架构” |
-| 2 | `test-plan.md` | 重写为“每个子系统独立验收 + 组合验收” |
-| 3 | `backend-guidelines.md` | 重写为“共同底座 API + 子系统 Adapter 规范” |
-| 4 | `frontend-guidelines.md` | 重写为“七子系统页面导航与最小页面集” |
-| 5 | `dev-rules.md` | 重写为“个人开发 + AI 协作 + 防旧稿污染规则” |
+```text
+08-共同底座架构-Architecture.md
+09-测试验收计划-Test-Plan.md
+10-后端开发规范-Backend-Guidelines.md
+11-前端开发规范-Frontend-Guidelines.md
+12-开发规范-Dev-Rules.md
+```
 
-没有重写完成的文档，不应该出现在主 `docs` 目录。
+但这些要等真正需要时重写，不要从旧稿直接恢复。

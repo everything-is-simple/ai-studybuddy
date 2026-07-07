@@ -101,16 +101,16 @@ flowchart TD
 
 | 最小文档 | 用途 | 本项目对应 |
 |---|---|---|
-| 1. 总 PRD | 产品目标、用户、场景、范围 | `docs/PRD.md` |
-| 2. 子系统地图 | 七个子系统边界、顺序、依赖 | `docs/scenario-systems.md` |
-| 3. 架构文档 | 共同底座、数据流、组件、AI 路由 | `docs/ARCHITECTURE.md`（后续重写） |
-| 4. 任务清单 | 按阶段拆任务，避免乱做 | `docs/todo-list.md` |
-| 5. 测试验收 | 每个场景怎么证明能用 | `docs/test-plan.md`（后续重写） |
+| 1. 总 PRD | 产品目标、用户、场景、范围 | `docs/01-总PRD-产品需求-Product-Requirements.md` |
+| 2. 子系统地图 | 七个子系统边界、顺序、依赖 | `docs/02-七子系统地图-Scenario-Systems.md` |
+| 3. 架构文档 | 共同底座、数据流、组件、AI 路由 | `docs/08-共同底座架构-Architecture.md`（未来重写） |
+| 4. 任务清单 | 按阶段拆任务，避免乱做 | `docs/04-开发任务清单-Todo-List.md` |
+| 5. 测试验收 | 每个场景怎么证明能用 | `docs/09-测试验收计划-Test-Plan.md`（未来重写） |
 
 本项目因为强调开源组件先行和本地目录治理，额外保留：
 
-- `docs/open-source-foundation.md`：成熟开源组件装配清单；
-- `docs/dev-environment.md`：`G:\ai-studybuddy-*` 目录治理；
+- `docs/05-开源组件装配-Open-Source-Foundation.md`：成熟开源组件装配清单；
+- `docs/06-本地目录治理-Dev-Environment.md`：`G:\ai-studybuddy-*` 目录治理；
 - `docs/subsystems/*.md`：按需补每个子系统轻量 PRD。
 
 ---

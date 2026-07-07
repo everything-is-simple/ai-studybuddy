@@ -10,10 +10,10 @@
 
 - [x] 将旧草稿设计文档 zip 归档到 `G:\ai-studybuddy-backup`
 - [x] 标记归档为 `系统设计文档-draft`
-- [x] 重建总 PRD：`docs/PRD.md`
-- [x] 命名七个子系统：`docs/scenario-systems.md`
-- [x] 回答文档策略问题：`docs/design-docs-strategy.md`
-- [x] 编写第一个子系统 PRD：`docs/subsystems/S1-study-rhythm-PRD.md`
+- [x] 重建总 PRD：`docs/01-总PRD-产品需求-Product-Requirements.md`
+- [x] 命名七个子系统：`docs/02-七子系统地图-Scenario-Systems.md`
+- [x] 回答文档策略问题：`docs/07-文档策略-Design-Docs-Strategy.md`
+- [x] 编写第一个子系统 PRD：`docs/subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md`
 
 ---
 

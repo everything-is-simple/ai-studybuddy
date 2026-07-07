@@ -33,8 +33,8 @@
 
 本项目额外保留两份工程治理文档：
 
-- `open-source-foundation.md`：开源组件先行装配；
-- `dev-environment.md`：`G:\ai-studybuddy-*` 目录治理。
+- `05-开源组件装配-Open-Source-Foundation.md`：开源组件先行装配；
+- `06-本地目录治理-Dev-Environment.md`：`G:\ai-studybuddy-*` 目录治理。
 
 ---
 
@@ -42,12 +42,12 @@
 
 ```mermaid
 flowchart TD
-  A["总 PRD：docs/PRD.md"] --> B["七子系统地图：docs/scenario-systems.md"]
-  B --> C["共同底座架构：docs/ARCHITECTURE.md"]
-  C --> D["任务清单：docs/todo-list.md"]
-  C --> E["测试验收：docs/test-plan.md"]
-  C --> F["开源组件装配：docs/open-source-foundation.md"]
-  C --> G["本地目录治理：docs/dev-environment.md"]
+  A["总 PRD：docs/01-总PRD-产品需求-Product-Requirements.md"] --> B["七子系统地图：docs/02-七子系统地图-Scenario-Systems.md"]
+  B --> C["共同底座架构：docs/08-共同底座架构-Architecture.md"]
+  C --> D["任务清单：docs/04-开发任务清单-Todo-List.md"]
+  C --> E["测试验收：docs/09-测试验收计划-Test-Plan.md"]
+  C --> F["开源组件装配：docs/05-开源组件装配-Open-Source-Foundation.md"]
+  C --> G["本地目录治理：docs/06-本地目录治理-Dev-Environment.md"]
   B --> H["子系统轻量 PRD：docs/subsystems/*.md"]
 ```
 
@@ -97,6 +97,6 @@ G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 后续原则：
 
 - 旧草稿只作为参考，不再作为当前开发 SoT；
-- 当前 SoT 从 `docs/PRD.md`、`docs/scenario-systems.md` 开始重建；
+- 当前 SoT 从 `docs/01-总PRD-产品需求-Product-Requirements.md`、`docs/02-七子系统地图-Scenario-Systems.md` 开始重建；
 - 旧架构、旧测试、旧任务文档如果与七子系统路线冲突，以新 PRD 为准；
 - 每完成一个重建阶段，再打一个新的 zip 备份。
