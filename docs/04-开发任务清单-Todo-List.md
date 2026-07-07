@@ -41,8 +41,12 @@
 ## Phase 0.5：共同底座与开源组件试炼场
 
 > 所有成熟开源组件先在 `G:\ai-studybuddy-composer` 单独调通，smoke test 通过后再进主系统。
+> 开始调第一个组件前，按文档门禁应先创建 `09-测试验收计划-Test-Plan.md`；开始写 Adapter/API/Worker 前，应先创建 `10-后端开发规范-Backend-Guidelines.md`。
 
-- [ ] 创建 composer 子目录：pdf / ocr / markdown / mindmap / storage / queue / ai-provider
+### 0.5A 第一批：支撑 S1 + S2 + Phase 0.8
+
+- [ ] 创建 composer 子目录：pdf / ocr / markdown / mindmap / storage / queue / ai-provider / db
+- [ ] PostgreSQL + pgvector：本地连接、迁移目录、最小表 smoke test
 - [ ] PDF.js / pdf-parse：PDF → 文本 smoke test
 - [ ] PaddleOCR + PP-OCRv6：图片/试卷 → 文本 smoke test
 - [ ] react-markdown + KaTeX：笔记/公式展示 smoke test
@@ -50,11 +54,40 @@
 - [ ] MinIO：上传/下载 PDF、图片 smoke test
 - [ ] BullMQ + Redis：异步 job、失败重试 smoke test
 - [ ] DeepSeek Provider：纯文本 → 结构化 JSON smoke test
+
+### 0.5B 第二批：支撑 S3 + S4
+
+- [ ] 客观题规则批改：选择题/填空题最小规则测试
+- [ ] 错题复习排程：间隔复习日期计算测试
 - [ ] Qwen Provider：文本备选最小样例
 - [ ] GPT Provider：难题兜底最小样例
+
+### 0.5C 工程治理
+
 - [ ] 备份 zip 脚本：写入阶段、commit、风险、恢复方式
 - [ ] tmp 清理脚本：清空后系统可继续运行
 - [ ] logs 规范：不记录 API Key、学生隐私全文、完整答案
+
+暂不进入 Phase 0.5 主线：SenseVoice、FunASR、FFmpeg、Readability。它们等 S7 或对应子系统开工前再调。
+
+---
+
+## Phase 0.8：第一个能看到东西的最小里程碑
+
+目标：不要等完整 MVP 才有反馈，先跑通“创建课程 → 上传 PDF/图片/文本 → 看到结构化笔记和思维导图”。
+
+范围只包含 S1 基础 + S2 核心：
+
+- [ ] 创建最小用户/学生上下文
+- [ ] 创建课程 Course
+- [ ] 创建课次/学习任务 StudyTask
+- [ ] 上传 PDF / 图片 / 文本到 MinIO
+- [ ] FormatConverter 输出统一纯文本
+- [ ] DeepSeek 生成结构化笔记 + 重点 + 思维导图数据
+- [ ] 前端展示 Markdown / 公式 / 思维导图
+- [ ] 写入 StudyEvent：资料已整理
+
+明确不做：练习、错题、家长面板、音频 ASR、期末真题。
 
 ---
 
@@ -63,6 +96,8 @@
 目标：先完成 S1 + S2 + S3 + S4 + S6 简版。
 
 ### S1 学习节奏 StudyRhythm
+
+渐进式 Schema：S1 只先建 `users`、`courses`、`study_tasks`、`study_events` 四类最小数据结构；后续子系统开工时再追加自己的表，不一次性设计 20+ 张表。
 
 - [ ] 课程 Course 数据结构
 - [ ] 学习任务 StudyTask 数据结构

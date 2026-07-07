@@ -68,6 +68,8 @@ G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 - 默认不恢复；
 - 只在用户明确说“参考旧稿某一段”时打开；
 - 参考后也必须改写进新文档，不能直接把旧稿放回主 `docs`。
+- 可参考的旧稿精华包括：AI Provider Registry、格式转换 Pipeline、错题艾宾浩斯机制、原始素材清理策略、AI Key 混合策略；
+- 这些内容只能在对应子系统或共同底座触发后“摘取重写”，不能整段恢复旧文档。
 
 ---
 
@@ -108,7 +110,7 @@ NN-中文标题-English-Title.md
 
 | 编号 | 预留文件名 | 当前状态 | 触发条件 |
 |---|---|---|---|
-| 08 | `08-共同底座架构-Architecture.md` | 预留 | 开始设计/实现多个子系统共用的数据模型、队列、文件存储、AI Provider、Adapter 时创建 |
+| 08 | `08-共同底座架构-Architecture.md` | 预留 | 开始设计/实现多个子系统共用的数据模型、队列、文件存储、AI Provider、Adapter 时创建；如果 S1 开工需要定义 Course/StudyTask/StudyEvent、数据库迁移、统一 API 响应，也视为触发 |
 | 09 | `09-测试验收计划-Test-Plan.md` | 预留 | Phase 0.5 开始调通第一个开源组件 smoke test 前创建 |
 | 10 | `10-后端开发规范-Backend-Guidelines.md` | 预留 | 开始写第一个后端服务、Adapter、API、Worker 前创建 |
 | 11 | `11-前端开发规范-Frontend-Guidelines.md` | 预留 | 开始写第一个正式前端页面前创建 |
