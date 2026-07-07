@@ -60,3 +60,13 @@ Follow the existing commit style: short imperative messages with a scope, e.g. `
 ## Agent-Specific Instructions
 
 Always read `docs/00-文档索引-Index.md` first. Treat `docs/01-*` and `docs/02-*` as the current product truth. Do not use archived drafts as active guidance.
+
+Before creating any new design document, follow the documented gate:
+
+1. Read `docs/00-文档索引-Index.md`.
+2. Check whether the target document already exists.
+3. Check whether its trigger condition is met.
+4. If not met, do not create it; explain that it is not time yet.
+5. If met, create it using `NN-中文标题-English-Title.md`.
+6. Update `docs/00-文档索引-Index.md` in the same change.
+7. Run `scripts/check-docs-governance.ps1` before committing.
