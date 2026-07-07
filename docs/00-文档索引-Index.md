@@ -22,6 +22,8 @@
 | 05 | `G:\ai-studybuddy\docs\05-开源组件装配-Open-Source-Foundation.md` | 开源组件先行装配、组件能力卡、成熟组件清单 | **当前有效，后续按七子系统补充** |
 | 06 | `G:\ai-studybuddy\docs\06-本地目录治理-Dev-Environment.md` | 本地目录治理：composer/data/day-study/logs/tmp/backup | **当前有效** |
 | 07 | `G:\ai-studybuddy\docs\07-文档策略-Design-Docs-Strategy.md` | 文档策略：是否每个子系统写文档、最少需要几份文档 | **当前有效** |
+| 08 | `G:\ai-studybuddy\docs\08-共同底座架构-Architecture.md` | 最小共同底座架构：Phase 0.8 路径、最小数据模型、组件关系、Adapter 边界 | **当前有效，最小版** |
+| 09 | `G:\ai-studybuddy\docs\09-测试验收计划-Test-Plan.md` | 测试验收计划：Phase 0.5A 组件 smoke test 与 Phase 0.8 验收 | **当前有效，最小版** |
 
 ---
 
@@ -32,9 +34,9 @@
 更准确地说：
 
 ```text
-当前有效系统文档 = 上表 00-07
+当前有效系统文档 = 上表 00-09
 旧草稿系统文档 = 只在 backup zip 中，不在主 docs 中
-未来文档 = 等真正要开发对应模块时，再按七子系统路线新建
+未来文档 = 10-12 等真正触发时，再按七子系统路线新建
 ```
 
 当前不要再恢复旧版：
@@ -84,6 +86,8 @@ subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md
 05-开源组件装配-Open-Source-Foundation.md
 06-本地目录治理-Dev-Environment.md
 07-文档策略-Design-Docs-Strategy.md
+08-共同底座架构-Architecture.md
+09-测试验收计划-Test-Plan.md
 ```
 
 ---
@@ -110,8 +114,8 @@ NN-中文标题-English-Title.md
 
 | 编号 | 预留文件名 | 当前状态 | 触发条件 |
 |---|---|---|---|
-| 08 | `08-共同底座架构-Architecture.md` | 预留 | 开始设计/实现多个子系统共用的数据模型、队列、文件存储、AI Provider、Adapter 时创建；如果 S1 开工需要定义 Course/StudyTask/StudyEvent、数据库迁移、统一 API 响应，也视为触发 |
-| 09 | `09-测试验收计划-Test-Plan.md` | 预留 | Phase 0.5 开始调通第一个开源组件 smoke test 前创建 |
+| 08 | `08-共同底座架构-Architecture.md` | 已创建 | 已按 Phase 0.8 创建最小共同底座；后续只按实际开发增量扩展 |
+| 09 | `09-测试验收计划-Test-Plan.md` | 已创建 | 已按 Phase 0.5A 创建组件 smoke test 与 Phase 0.8 验收；后续按子系统增量扩展 |
 | 10 | `10-后端开发规范-Backend-Guidelines.md` | 预留 | 开始写第一个后端服务、Adapter、API、Worker 前创建 |
 | 11 | `11-前端开发规范-Frontend-Guidelines.md` | 预留 | 开始写第一个正式前端页面前创建 |
 | 12 | `12-开发规范-Dev-Rules.md` | 预留 | 项目进入多人/多 AI/多分支协作开发前创建 |

@@ -1,0 +1,121 @@
+# AI StudyBuddy 测试验收计划 Test Plan
+
+**版本**：v0.1-minimal  
+**日期**：2026-07-07  
+**状态**：只覆盖 Phase 0.5A 组件 smoke test 与 Phase 0.8 最小验收  
+**原则**：先证明组件能独立跑通，再接入主系统。
+
+---
+
+## 1. 测试分层
+
+```text
+组件 smoke test
+  → Adapter 输入输出测试
+  → Phase 0.8 E2E 验收
+  → 文档/目录治理检查
+```
+
+当前不覆盖 S3 练习、S4 错题、S5 真题、S6 家长、S7 ASR。
+
+---
+
+## 2. Phase 0.5A 组件 smoke test
+
+所有组件先在 `G:\ai-studybuddy-composer` 独立跑通。通过后才能封装 Adapter。
+
+| 组件 | 最小输入 | 期望输出 | 通过标准 | 结果记录 |
+|---|---|---|---|---|
+| PostgreSQL + pgvector | 启动数据库并执行建表 SQL | 可连接、可写入、可查询 | 能创建最小表并插入/读取一条记录 | composer/db/pgvector-test |
+| PDF.js / pdf-parse | 1 个文字型 PDF | 可读纯文本 | 能提取主要正文，非空，无明显乱码 | composer/pdf |
+| PaddleOCR + PP-OCRv6 | 1 张试卷/课件图片 | OCR 文本 | 能识别主要题干/标题，允许少量错字 | composer/ocr/PaddleOCR |
+| react-markdown + KaTeX | 含标题、列表、公式的 Markdown | 页面正确渲染 | 公式和 Markdown 均可显示 | composer/markdown |
+| Markmap | 层级 Markdown | 思维导图 | 节点层级正确，可展开 | composer/mindmap |
+| MinIO | 上传 PDF/图片 | object key + 可下载文件 | 上传、下载、删除均成功 | composer/storage/minio-test |
+| BullMQ + Redis | 1 个测试 job | job 执行结果 | 成功执行，失败可重试 | composer/queue/bullmq-test |
+| DeepSeek Provider | 一段课程文本 | 结构化 JSON/Markdown | 返回笔记、重点、导图数据字段 | composer/ai-provider/deepseek-test |
+
+---
+
+## 3. Adapter 最小验收
+
+Adapter 不验证组件内部实现，只验证本项目统一输入输出。
+
+| Adapter | 输入 | 输出 | 通过标准 |
+|---|---|---|---|
+| `PdfConverter` | PDF 文件路径/object key | `ConverterResult` | `ok=true` 且 `text` 非空 |
+| `OcrConverter` | 图片文件路径/object key | `ConverterResult` | `ok=true` 且 `text` 非空 |
+| `TextConverter` | Markdown/纯文本 | `ConverterResult` | 原文可入库，无需 LLM |
+| `NoteAiProvider` | 统一纯文本 | 结构化笔记对象 | 含 `markdown`、`highlights`、`mindMap` |
+
+统一失败要求：
+
+- 不能吞异常；
+- 必须返回 `ok=false` 和 `error`；
+- 警告放入 `warnings`；
+- 不在日志中记录 API Key、学生隐私全文、完整答案。
+
+---
+
+## 4. Phase 0.8 E2E 验收
+
+目标路径：
+
+```text
+创建课程
+  → 创建课次/学习任务
+  → 上传 PDF/图片/文本
+  → 转为统一纯文本
+  → DeepSeek 生成结构化笔记 + 重点 + 思维导图
+  → 前端展示 Markdown / KaTeX / Markmap
+  → 写入 StudyEvent
+```
+
+通过标准：
+
+- 能创建 1 门课程；
+- 能创建 1 个学习任务；
+- 至少一种资料格式能完整跑通，优先 PDF；
+- 能看到结构化笔记；
+- 能看到重点列表；
+- 能看到思维导图；
+- `study_events` 中出现“资料已整理”事件；
+- 清空 `G:\ai-studybuddy-tmp` 后，系统仍可重新执行该流程。
+
+---
+
+## 5. 文档与目录治理检查
+
+每次文档或组件接入前后都运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1
+git diff --check
+```
+
+目录验收：
+
+| 目录 | 验收标准 |
+|---|---|
+| `G:\ai-studybuddy-composer` | 只放组件下载、调试、smoke test |
+| `G:\ai-studybuddy` | 只放主系统源码、文档、验证后的 Adapter |
+| `G:\ai-studybuddy-tmp` | 可清空，不影响长期数据 |
+| `G:\ai-studybuddy-logs` | 不保存密钥和隐私全文 |
+| `G:\ai-studybuddy-data` | 存数据库/Redis 持久化数据 |
+| `G:\ai-studybuddy-day-study` | 存 MinIO/学习资料对象存储 |
+
+---
+
+## 6. 暂不测试
+
+当前阶段不测试：
+
+- SenseVoice / FunASR 音频转写；
+- FFmpeg 视频处理；
+- Readability 网页解析；
+- 练习生成和批改；
+- 错题本；
+- 家长面板；
+- 期末真题解析和变题。
+
+这些能力等对应子系统触发后，再扩展本测试计划。

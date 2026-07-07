@@ -35,13 +35,15 @@
 - [x] 命名七个子系统：`docs/02-七子系统地图-Scenario-Systems.md`
 - [x] 回答文档策略问题：`docs/07-文档策略-Design-Docs-Strategy.md`
 - [x] 编写第一个子系统 PRD：`docs/subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md`
+- [x] 按门禁创建 08 最小共同底座：`docs/08-共同底座架构-Architecture.md`
+- [x] 按门禁创建 09 测试验收计划：`docs/09-测试验收计划-Test-Plan.md`
 
 ---
 
 ## Phase 0.5：共同底座与开源组件试炼场
 
 > 所有成熟开源组件先在 `G:\ai-studybuddy-composer` 单独调通，smoke test 通过后再进主系统。
-> 开始调第一个组件前，按文档门禁应先创建 `09-测试验收计划-Test-Plan.md`；开始写 Adapter/API/Worker 前，应先创建 `10-后端开发规范-Backend-Guidelines.md`。
+> `09-测试验收计划-Test-Plan.md` 已创建。开始写 Adapter/API/Worker 前，再按门禁创建 `10-后端开发规范-Backend-Guidelines.md`。
 
 ### 0.5A 第一批：支撑 S1 + S2 + Phase 0.8
 
