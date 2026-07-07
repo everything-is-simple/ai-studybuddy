@@ -31,7 +31,7 @@ graph TB
 
     subgraph AI服务层
         ASR[SenseVoice/FunASR<br/>录音转文字]
-        LLM[DeepSeek/可配置<br/>笔记/出题/批改/CoT]
+        LLM[DeepSeek/可配置<br/>笔记/出题/批改/教学解析]
         EMB[Embedding<br/>知识点向量化]
         OCR[PaddleOCR<br/>拍照识别题目]
     end
@@ -82,8 +82,8 @@ graph TB
 | 缓存/队列 | Redis + BullMQ | AI任务异步队列，录音转写/笔记整理后台处理 |
 | 对象存储 | MinIO（自部署）/ AWS S3 | 音视频、图片、PDF等大文件存储 |
 | 录音转写 | SenseVoice-Small / FunASR（阿里开源，自部署） | 中文CER 3%（Whisper是5%），CPU可跑，免费 |
-| LLM | DeepSeek V4系列（可配置替换） | 性价比极高，支持OpenAI兼容API，用户可自接入 |
-| OCR | PaddleOCR v6（百度开源，自部署） | 中文识别97.3%，开源免费 |
+| LLM | DeepSeek 文本模型（可配置替换） | 性价比极高，支持OpenAI兼容API，用户可自接入 |
+| OCR | PaddleOCR + PP-OCRv6（百度开源，自部署） | 中文识别97.3%，开源免费 |
 | 部署 | Docker + Docker Compose | 一键部署全栈服务，开发和生产一致 |
 | CI/CD | GitHub Actions | 自动测试、构建、部署 |
 
@@ -119,7 +119,7 @@ graph TB
 | 输入格式 | 开源工具 | 输出 | 部署方式 |
 |---------|---------|------|----------|
 | 音频（mp3/wav/m4a） | SenseVoice-Small / FunASR | 带时间戳的文本 | Docker 自部署，免费 |
-| 图片（试卷/手写/教材拍照） | PaddleOCR v6 | 识别文本 | Docker 自部署，免费 |
+| 图片（试卷/手写/教材拍照） | PaddleOCR + PP-OCRv6 | 识别文本 | Docker 自部署，免费 |
 | PDF（课件/教材） | pdf-parse (JS) / PyMuPDF (Python) | 提取文本 | 进程内调用，免费 |
 | 视频（mp4/avi） | ffmpeg 提取音轨 → ASR | 文本 | Docker 自部署，免费 |
 | 网页链接 | 爬虫 + Readability (mozilla) | 正文文本 | 进程内调用，免费 |
@@ -131,8 +131,8 @@ graph TB
 
 | 序号 | 能力 | 输入（纯文本） | 输出 | 模型要求 |
 |------|------|--------------|------|----------|
-| 1 | **结构化笔记** | 转写稿/OCR结果/PDF文本 + 课程上下文 | 章节化 Markdown + 思维导图 + 重点高亮（一次调用，同时输出） | 文本理解+格式化输出，DeepSeek V4-Pro 够用 |
-| 2 | **试题解析（CoT思维链）** | 题目文本（已 OCR） | 读题→审题→划重点→找条件→思维链→知识点→剪枝→最终解法 | 强推理，DeepSeek R1 |
+| 1 | **结构化笔记** | 转写稿/OCR结果/PDF文本 + 课程上下文 | 章节化 Markdown + 思维导图 + 重点高亮（一次调用，同时输出） | 文本理解+格式化输出，DeepSeek 文本模型 够用 |
+| 2 | **试题解析（教学解析步骤 / 解题路径）** | 题目文本（已 OCR） | 读题→审题→划重点→找条件→解题路径→知识点→剪枝→最终解法 | 强推理，DeepSeek R1 |
 | 3 | **模板化出题/变题** | 笔记内容/真题文本 + 解题模板 | 新题目 + 标准答案 + 解析 | 理解+变化生成，DeepSeek V3.2 |
 
 **不需要 LLM 的环节（规则引擎/字符串匹配）**：
@@ -212,15 +212,15 @@ graph LR
 
 ### 3.5 写题模块（quiz）
 
-**职责**：题目生成、练习管理、作业跟踪、AI批改、CoT解析、错题本间隔复习（艾宾浩斯曲线）
+**职责**：题目生成、练习管理、作业跟踪、AI批改、教学解析步骤、错题本间隔复习（艾宾浩斯曲线）
 
 | 子模块 | 说明 |
 |--------|------|
 | 平时练习（daily） | 基于笔记内容AI出题，48小时时效 |
 | 老师作业（homework） | 学生录入+拍照OCR，记录截止时间，AI批改 |
-| 真题解析（past-exam） | 上传真题，CoT八步解析重生成 |
+| 真题解析（past-exam） | 上传真题，教学解析步骤重生成 |
 | 变题组卷（mock-exam） | 基于真题分布变题，限时考试，自动批改 |
-| 批改引擎（grader） | 统一入口：所有提交都走AI批改+CoT解析 |
+| 批改引擎（grader） | 统一入口：所有提交都走AI批改+教学解析步骤 |
 | 错题本（error-book） | 所有错题自动沉淀，艾宾浩斯间隔复习、原题重做+AI变题练习、考前优先推送 |
 
 **关键表**：`questions`, `question_sets`, `submissions`, `grading_results`, `homework`, `past_exams`, `mock_exams`, `mock_exam_sessions`, `error_questions`, `error_reviews`, `error_review_schedules`
@@ -394,7 +394,7 @@ CREATE TABLE questions (
     content TEXT NOT NULL,       -- 题目内容（Markdown/LaTeX）
     options JSONB,               -- 选择题选项 [{key:"A",text:"..."},...]
     answer TEXT,                 -- 标准答案
-    explanation TEXT,            -- AI生成的CoT解析
+    explanation TEXT,            -- AI生成的教学解析步骤
     difficulty VARCHAR(10),      -- easy | medium | hard
     knowledge_points JSONB,      -- 关联知识点列表
     source VARCHAR(50),          -- ai_generated | homework | past_exam | mock
@@ -469,7 +469,7 @@ CREATE TABLE past_exams (
     year INT,
     semester VARCHAR(20),
     raw_images JSONB,                -- 真题原图
-    question_set_id UUID REFERENCES question_sets(id), -- CoT解析后的题组
+    question_set_id UUID REFERENCES question_sets(id), -- 教学解析步骤后的题组
     status VARCHAR(20) DEFAULT 'uploaded', -- uploaded | parsing | parsed | failed
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -520,7 +520,7 @@ CREATE TABLE exam_schedules (
     exam_date DATE NOT NULL,
     exam_type VARCHAR(30),         -- midterm | final | quiz | other
     title VARCHAR(200),
-    alert_at DATE,                 -- 预警期起点 = exam_date - 60天，触发真题上传+CoT解析
+    alert_at DATE,                 -- 预警期起点 = exam_date - 60天，触发真题上传+教学解析步骤
     sprint_at DATE,                -- 冲刺期起点 = exam_date - 30天，触发集中刷变题模拟卷
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -566,7 +566,7 @@ CREATE TABLE error_questions (
     source_ref UUID,                      -- 来源ID（question_set_id/homework_id等）
     student_answer TEXT,                  -- 学生的答案
     correct_answer TEXT,                  -- 正确答案
-    cot_explanation TEXT,                 -- CoT解析
+    cot_explanation TEXT,                 -- 教学解析步骤
     error_type VARCHAR(30),               -- knowledge_gap | misread | calculation | misunderstanding | unable
     knowledge_points JSONB,               -- 涉及的知识点
     status VARCHAR(20) DEFAULT 'unresolved', -- unresolved | reviewing | mastered
@@ -702,12 +702,12 @@ GET    /api/v1/homework/:id                   获取作业详情
 -- 提交与批改
 POST   /api/v1/question-sets/:id/submit       提交答案
 GET    /api/v1/submissions/:id                获取提交详情
-GET    /api/v1/submissions/:id/grading        获取批改结果（含CoT解析）
+GET    /api/v1/submissions/:id/grading        获取批改结果（含教学解析步骤）
 
 -- 真题
 POST   /api/v1/past-exams                     上传真题
 GET    /api/v1/past-exams                     获取真题列表
-POST   /api/v1/past-exams/:id/parse           触发CoT解析
+POST   /api/v1/past-exams/:id/parse           触发教学解析步骤
 GET    /api/v1/past-exams/:id/parse/status    查询解析进度
 
 -- 变题模拟卷
@@ -801,7 +801,7 @@ graph TB
         F1[笔记结构化]
         F2[思维导图]
         F3[AI出题]
-        F4[CoT解析]
+        F4[教学解析步骤]
         F5[AI批改]
         F6[变题组卷]
         F7[录音转写]
@@ -848,7 +848,7 @@ type AIFunction =
   | 'mindmap_generation' // 思维导图
   | 'highlight'          // 重点高亮
   | 'quiz_generation'    // AI出题
-  | 'cot_analysis'       // CoT解析
+  | 'cot_analysis'       // 教学解析步骤
   | 'grading'            // AI批改
   | 'question_variation' // 变题组卷
   | 'url_summary';       // URL摘要
@@ -1001,7 +1001,7 @@ DELETE /api/v1/users/me/push-token/:tokenId           删除设备Token（退出
 |------|------|------|------|
 | 音频转文本 | SenseVoice-Small（自部署） | 免费 | CER 3%，234M，CPU可跑 |
 | 音频转文本备选 | FunASR+Paraformer（自部署） | 免费 | VAD+ASR+标点+说话人分离全套 |
-| 图片 OCR | PaddleOCR v6（自部署） | 免费 | 97.3%准确率，Apache 2.0 |
+| 图片 OCR | PaddleOCR + PP-OCRv6（自部署） | 免费 | 97.3%准确率，Apache 2.0 |
 | PDF 提取文本 | pdf-parse (JS) / PyMuPDF | 免费 | 进程内调用，无服务开销 |
 | 视频提取音轨 | ffmpeg | 免费 | 提取后走 ASR |
 | 网页正文提取 | Readability (mozilla) + 爬虫 | 免费 | 进程内调用 |
@@ -1010,13 +1010,13 @@ DELETE /api/v1/users/me/push-token/:tokenId           删除设备Token（退出
 
 | 序号 | 能力 | 推荐模型 | 价格（输入/输出 ¥/百万token） | 说明 |
 |------|------|---------|---------------------------|------|
-| 1 | **结构化笔记 + 思维导图 + 重点高亮**（合并为一次调用） | DeepSeek V4-Pro | ¥0.44 / ¥0.87 | Prompt 同时要求输出章节化笔记 + Mermaid 思维导图 + 高亮标注，省掉两次 API 调用 |
-| 2 | **CoT 试题解析** | DeepSeek R1 | ¥4 / ¥16 | 八步思维链，全系统最吃推理能力 |
+| 1 | **结构化笔记 + 思维导图 + 重点高亮**（合并为一次调用） | DeepSeek 文本模型 | ¥0.44 / ¥0.87 | Prompt 同时要求输出章节化笔记 + Mermaid 思维导图 + 高亮标注，省掉两次 API 调用 |
+| 2 | **教学解析步骤** | DeepSeek R1 | ¥4 / ¥16 | 八步解题路径，全系统最吃推理能力 |
 | 3 | **AI 出题** | DeepSeek V3.2 | ¥2 / ¥8 | 基于笔记内容生成题目 + 答案 + 解析 |
 | 4 | **变题组卷** | DeepSeek V3.2 | ¥2 / ¥8 | 基于真题改数字/改情境/改问法 |
-| 5 | **简答题批改** | DeepSeek V4-Flash | ¥0.5 / ¥1 | 语义评分，选择填空用精确匹配不用 LLM |
-| 6 | **URL 摘要** | DeepSeek V4-Flash | ¥0.5 / ¥1 | 轻量摘要任务 |
-| 7 | **解题模板提取**（进阶） | DeepSeek V4-Pro | ¥0.44 / ¥0.87 | 从真题中抽象解题思想模板 |
+| 5 | **简答题批改** | DeepSeek 文本模型 | ¥0.5 / ¥1 | 语义评分，选择填空用精确匹配不用 LLM |
+| 6 | **URL 摘要** | DeepSeek 文本模型 | ¥0.5 / ¥1 | 轻量摘要任务 |
+| 7 | **解题模板提取**（进阶） | DeepSeek 文本模型 | ¥0.44 / ¥0.87 | 从真题中抽象解题思想模板 |
 
 #### 规则引擎层（不需要 LLM）
 
@@ -1035,37 +1035,57 @@ DELETE /api/v1/users/me/push-token/:tokenId           删除设备Token（退出
 
 ## 七、AI Pipeline 设计
 
-### 7.1 总流程（两层管道）
+### 7.1 用户动作到系统组件流程图
 
 ```mermaid
-graph TB
-    UPLOAD[学生上传素材] --> LAYER1[第一层：格式转换]
-    LAYER1 --> L1A[音频 → ASR转文本]
-    LAYER1 --> L1B[图片 → OCR转文本]
-    LAYER1 --> L1C[PDF → 提取文本]
-    LAYER1 --> L1D[视频 → ffmpeg提取音轨 → ASR]
-    LAYER1 --> L1E[链接 → 爬虫+Readability]
-    LAYER1 --> L1F[文本 → 直接使用]
-    L1A --> PURE_TEXT[统一纯文本]
-    L1B --> PURE_TEXT
-    L1C --> PURE_TEXT
-    L1D --> PURE_TEXT
-    L1E --> PURE_TEXT
-    L1F --> PURE_TEXT
-    PURE_TEXT --> LAYER2[第二层：LLM 理解]
-    LAYER2 --> W1[笔记+导图+高亮 一次调用]
-    LAYER2 --> W2[AI出题]
-    LAYER2 --> W3[CoT解析]
-    LAYER2 --> W4[变题组卷]
-    LAYER2 --> W5[简答题批改]
-    CRON[定时任务] --> W4
-    W1 --> DB[(数据库)]
-    W2 --> DB
-    W3 --> DB
-    W4 --> DB
-    W5 --> DB
-    DB --> NOTIFY[WebSocket 通知前端]
+flowchart LR
+  U["用户上传素材"] --> Upload["UploadService：MinIO/S3 存储"]
+
+  Upload --> Router["FormatConverter Router（按文件类型分发）"]
+
+  Router --> PDF["PdfConverter：PDF.js / pdf-parse"]
+  Router --> IMG["OcrConverter：PaddleOCR + PP-OCRv6"]
+  Router --> AUD["AudioConverter：SenseVoice / FunASR"]
+  Router --> VID["VideoConverter：FFmpeg → AudioConverter"]
+  Router --> URL["UrlConverter：Readability + jsdom"]
+  Router --> TXT["TextConverter：Markdown/文本直入"]
+
+  PDF --> Text["NormalizedText：统一纯文本"]
+  IMG --> Text
+  AUD --> Text
+  VID --> Text
+  URL --> Text
+  TXT --> Text
+
+  Text --> LLMRouter["LLM Provider Router"]
+
+  LLMRouter --> DS["DeepSeek：默认文本理解/笔记/普通解析"]
+  LLMRouter --> QW["Qwen：文本任务备选；Qwen-VL 仅作多模态兜底"]
+  LLMRouter --> KM["Kimi：复杂图片版面/OCR失败兜底"]
+  LLMRouter --> GPT["GPT：最难数学/证明/跨学科推理兜底"]
+
+  DS --> Jobs["AI Jobs：笔记整理 / 教学解析 / 出题变题 / 主观题评分"]
+  QW --> Jobs
+  KM --> Jobs
+  GPT --> Jobs
+
+  Jobs --> DB["PostgreSQL + pgvector"]
+  DB --> UI["前端展示：react-markdown / KaTeX / Markmap"]
+  DB --> Parent["家长面板：进度时间线"]
 ```
+
+### 7.1.1 两层管道原则
+
+```text
+用户上传任意资料
+  → 格式转换层（成熟开源组件，无 LLM）
+  → NormalizedText（统一纯文本）
+  → LLM 理解层（只吃纯文本）
+  → 规则引擎层（批改、排程、提醒、统计）
+  → 前端展示 / 家长时间线
+```
+
+说明：内部可以保留历史 job 名如 `cot_analysis`，但面向学生和家长的产品文案统一为“教学解析步骤 / 解题路径”，不宣称暴露模型内部推理链。
 
 ### 7.2 格式转换 Pipeline（第一层，不需要 LLM）
 
@@ -1080,7 +1100,7 @@ graph TB
   │     └─ 后处理：合并短segment、修正标点
   │
   ├─ 图片：
-  │     ├─ PaddleOCR v6 识别
+  │     ├─ PaddleOCR + PP-OCRv6 识别
   │     └─ 输出识别文本 + 置信度
   │
   ├─ PDF：
@@ -1130,9 +1150,9 @@ graph TB
 输入：笔记内容 / 真题题目 / 知识点分布
   │
   ├─ 平时练习：基于单课次笔记，生成5-10题（选择+填空+简答）
-  ├─ 真题CoT解析：
+  ├─ 真题教学解析步骤：
   │     ├─ 读题 → 审题 → 划重点 → 找条件
-  │     ├─ 初步构造思维链（多路径）
+  │     ├─ 初步构造解题路径（多路径）
   │     ├─ 查找相关知识点
   │     ├─ 剪枝错误路径
   │     └─ 输出最终解析 + 评分要点
@@ -1141,29 +1161,29 @@ graph TB
   │     ├─ 分析真题知识点分布、题型比例、难度分布
   │     ├─ 对每道真题进行变体：改数字/改情境/改问法
   │     ├─ 按配置比例组装新卷
-  │     └─ 生成标准答案 + CoT解析
+  │     └─ 生成标准答案 + 教学解析步骤
   │
   └─ 写入 questions + question_sets 表
-输出：题组（含题目、选项、答案、CoT解析）
+输出：题组（含题目、选项、答案、教学解析步骤）
 ```
 
 ### 7.6 AI批改 Pipeline
 
 ```
-输入：学生提交的答案 + 题组（含标准答案和CoT）
+输入：学生提交的答案 + 题组（含标准答案和教学解析）
   │
   ├─ 1. 逐题批改：
   │     ├─ 选择题/填空题：精确匹配
   │     └─ 简答题：LLM评分（0-满分），给出评分理由
   │
-  ├─ 2. 生成CoT解析（如题目尚无）：
-  │     └─ 同真题解析流程，八步思维链
+  ├─ 2. 生成教学解析步骤（如题目尚无）：
+  │     └─ 同真题解析流程，八步解题路径
   │
   ├─ 3. 识别薄弱知识点：
   │     └─ 汇总错题涉及的知识点，按频率排序
   │
   └─ 4. 写入 grading_results 表
-输出：总分 + 逐题得分 + CoT解析 + 薄弱知识点
+输出：总分 + 逐题得分 + 教学解析步骤 + 薄弱知识点
 ```
 
 ### 7.7 任务调度 Pipeline（BullMQ定时任务）
@@ -1176,7 +1196,7 @@ Cron: 每小时执行
   │
   ├─ 2. 扫描考试预警（两阶段）：
   │     ├─ exam_date - 60天 == today（alert_at）→ 触发备考计划生成（study_plans.phase='alert'），
-  │     │     推送"距XX考试还有2个月，开始上传真题、生成CoT解析"
+  │     │     推送"距XX考试还有2个月，开始上传真题、生成教学解析步骤"
   │     └─ exam_date - 30天 == today（sprint_at）→ 更新 study_plans.phase='sprint'，
   │           推送"距XX考试还有1个月，进入冲刺期，开始集中刷变题模拟卷"
   │
@@ -1203,7 +1223,7 @@ Cron: 每小时执行
   │     ├─ 注入原题内容 + 知识点 + 难度要求
   │     └─ 变题策略：第3轮改数字 → 第4轮改情境 → 第5轮增加干扰条件
   │
-  ├─ 3. LLM生成变题 + 标准答案 + CoT解析
+  ├─ 3. LLM生成变题 + 标准答案 + 教学解析步骤
   │
   └─ 4. 写入 questions 表（source='error_variation'）
 输出：变题（含答案和解析），关联到 error_reviews 表
@@ -1256,6 +1276,43 @@ Cron: 每日凌晨 3 点执行
 
 ## 八、项目目录结构
 
+### 8.1 本地运行目录职责
+
+本地目录治理的单一事实来源见 [`dev-environment.md`](./dev-environment.md)。架构层只保留运行职责摘要。
+
+| 环境变量 | 默认目录 | 职责 |
+|---|---|---|
+| `APP_ROOT` | `G:\ai-studybuddy` | 主系统源码、文档、正式 Adapter |
+| `COMPOSER_ROOT` | `G:\ai-studybuddy-composer` | 成熟开源组件下载、调试、验证；不参与线上运行 |
+| `DATA_ROOT` | `G:\ai-studybuddy-data` | PostgreSQL / Redis / pgvector 持久化数据 |
+| `STUDY_FILE_ROOT` | `G:\ai-studybuddy-day-study` | MinIO 对象存储后端目录、学习资料文件 |
+| `LOG_ROOT` | `G:\ai-studybuddy-logs` | 后端、worker、组件、AI Provider 日志 |
+| `TMP_ROOT` | `G:\ai-studybuddy-tmp` | OCR、ASR、PDF、视频等临时文件，可清空 |
+| `BACKUP_ROOT` | `G:\ai-studybuddy-backup` | 里程碑 zip 备份 |
+
+```mermaid
+flowchart TD
+  A["G:\ai-studybuddy-composer<br/>成熟开源组件下载/调试"] --> B["组件 smoke test 通过"]
+  B --> C["封装 Adapter"]
+  C --> D["G:\ai-studybuddy<br/>主系统接入"]
+  D --> E["运行数据写入 G:\ai-studybuddy-data"]
+  D --> F["学习文件写入 G:\ai-studybuddy-day-study"]
+  D --> G["日志写入 G:\ai-studybuddy-logs"]
+  D --> H["临时文件写入 G:\ai-studybuddy-tmp"]
+  D --> I["里程碑完成"]
+  I --> J["G:\ai-studybuddy-backup<br/>打包 zip 备份"]
+```
+
+规则：
+
+- 代码不得硬编码 `G:\...` 路径，必须从环境变量读取。
+- `COMPOSER_ROOT` 中的组件未通过 smoke test，不得接入主系统。
+- `TMP_ROOT` 可以随时清空，系统不得长期依赖其中任何文件。
+- `LOG_ROOT` 不得保存完整 API Key、学生隐私全文、完整题目答案。
+- `DATA_ROOT` 与 `STUDY_FILE_ROOT` 不进入 git。
+
+### 8.2 主系统代码目录
+
 ```
 ai-studybuddy/
 ├── apps/
@@ -1298,7 +1355,7 @@ ai-studybuddy/
 │       │   │   ├── mindmap.ts      # 思维导图
 │       │   │   ├── quiz-gen.ts     # 出题
 │       │   │   ├── grading.ts      # 批改
-│       │   │   ├── cot.ts          # CoT解析
+│       │   │   ├── cot.ts          # 教学解析步骤
 │       │   │   └── error-variation.ts  # 错题变题生成
 │       │   ├── workers/            # BullMQ异步Worker
 │       │   │   ├── transcribe.ts
@@ -1339,32 +1396,54 @@ ai-studybuddy/
 
 ## 九、开发阶段规划
 
-### Phase 1：MVP — AI整理模块（2-3周）
+### Phase 0.5：开源组件调试与装配（组件先行）
 
-**目标**：学生上传录音/文本 → AI输出结构化笔记 + 思维导图
+目标：先把 MVP 关键组件在 `G:\ai-studybuddy-composer` 独立调通，再封装 Adapter。
 
-| 任务 | 说明 |
-|------|------|
-| 项目初始化 | Expo + Fastify + PostgreSQL + Docker Compose |
-| 认证 | 注册/登录/JWT，最简实现 |
-| 课程管理 | 创建课程、创建课次 |
-| **课堂录音（主路径）** | 分片上传到MinIO，触发ASR转写（SenseVoice/FunASR）——产品入口，先有素材才有后续整理 |
-| AI整理 | ASR转写 → LLM结构化笔记 → LLM思维导图，消费录音产生的素材 |
-| 手动输入文本（兜底路径） | 漏录/录音失败时的备选入口，跳过ASR直接粘贴文本走整理流程，非首页主推 |
-| 展示结果 | 课次详情页展示笔记+思维导图+重点高亮 |
+| 能力 | 组件 | 验收 |
+|---|---|---|
+| PDF → 文本 | PDF.js / pdf-parse | 输入 1 个 PDF，输出可读文本 |
+| 图片 / 试卷 → 文本 | PaddleOCR + PP-OCRv6 | 输入 1 张试卷图片，输出题目文本 |
+| Markdown / 公式展示 | react-markdown + KaTeX | 结构化笔记和公式可渲染 |
+| 思维导图 | Markmap | 层级 Markdown 可生成导图 |
+| 对象存储 | MinIO | 上传 / 下载 PDF、图片 |
+| 异步任务 | BullMQ + Redis | job 执行、失败重试 |
+| 默认文本 AI | DeepSeek Provider | 纯文本 → 结构化 JSON |
+| AI Provider 预留 | Qwen / Kimi / GPT | 配置位和最小样例预留 |
 
-**验收标准**：上传一段5分钟中文课堂录音，能在2分钟内看到带章节结构的笔记和可展开的思维导图。
+### Phase 1：MVP — 多格式资料导入到学习闭环（3-5周）
+
+主路径：
+
+```text
+PDF / 文本 / 图片
+  → FormatConverter Adapter
+  → 统一纯文本入库
+  → 一次 LLM 调用生成结构化笔记 + 重点 + 思维导图数据
+  → 前端展示笔记、公式、思维导图
+  → 生成限时练习
+  → 客观题规则批改
+  → 主观题 LLM 辅助评分
+  → 错题入库
+  → 家长查看学习时间线
+```
+
+验收标准：上传 PDF / 文本 / 图片后，学生能看到结构化笔记、重点、思维导图和限时练习；错题能沉淀；家长能看到完成记录和学习时间线。
+
+### Phase 1.5：音频 ASR 增强入口
+
+接入 SenseVoice / FunASR。音频不再是 Phase 1 第一验收路径，而是资料导入入口之一。
 
 ### Phase 2：写题模块（3-4周）
 
-**目标**：基于笔记AI出题 + 学生做题 + AI批改 + CoT解析 + 错题本间隔复习
+**目标**：基于笔记AI出题 + 学生做题 + AI批改 + 教学解析步骤 + 错题本间隔复习
 
 | 任务 | 说明 |
 |------|------|
 | AI出题 | 基于笔记内容生成选择题/填空/简答 |
 | 做题界面 | 答题UI + 倒计时 + 提交 |
 | AI批改 | 选择题精确判 + 简答题LLM评分 |
-| CoT解析 | 每道题八步思维链展示 |
+| 教学解析步骤 | 每道题面向学生的教学解析步骤展示 |
 | 作业录入 | 手动输入 + 拍照OCR |
 | 平时练习时效 | 48小时倒计时，超时标记overdue |
 | 错题本自动收集 | 批改完成后自动入库，记录错因和知识点 |
@@ -1373,12 +1452,12 @@ ai-studybuddy/
 
 ### Phase 3：真题与变题（2-3周）
 
-**目标**：上传真题 → CoT解析 → 变题组卷 → 限时考试
+**目标**：上传真题 → 教学解析步骤 → 变题组卷 → 限时考试
 
 | 任务 | 说明 |
 |------|------|
 | 真题上传 | 拍照上传 → OCR识别 → 结构化题目 |
-| CoT重生成 | 八步解题思维链，覆盖所有题型 |
+| 教学解析重生成 | 八步解题路径，覆盖所有题型 |
 | 变题引擎 | 改数字/改情境/改问法，生成新题 |
 | 组卷 | 按知识点分布 + 难度比例自动组卷 |
 | 限时考试 | 倒计时 + 到时自动提交 |

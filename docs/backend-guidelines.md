@@ -248,7 +248,7 @@ users (1) ──< (N) family_spaces ──< (N) space_members
 > **两层架构原则**（详细见 ARCHITECTURE.md 2.4）：格式转换和 LLM 理解解耦。
 >
 > - **格式转换层**（ASR/OCR/PDF/视频/链接）用专用开源工具，通过 `FormatConverter` Adapter 接入，不走 Provider Registry
-> - **LLM 理解层**（笔记结构化、CoT解析、出题、变题、批改）走 Provider Registry，统一接口
+> - **LLM 理解层**（笔记结构化、教学解析步骤、出题、变题、批改）走 Provider Registry，统一接口
 >
 > 两层之间用纯文本作为接口：第一层输出纯文本，第二层吃纯文本。
 
@@ -326,7 +326,7 @@ HTTP 请求（触发 AI 任务）
 |--------|--------|------|
 | ASR Worker（SenseVoice/FunASR） | 1 | CPU 自部署，单实例串行处理，避免多任务抢占 CPU 导致单个任务耗时暴涨 |
 | OCR Worker（PaddleOCR） | 1 | 同上 |
-| LLM Worker（笔记/出题/批改/CoT等） | 3 | API 调用型任务，可并发但要控制在 Provider 的 RPM 限制内 |
+| LLM Worker（笔记/出题/批改/教学解析等） | 3 | API 调用型任务，可并发但要控制在 Provider 的 RPM 限制内 |
 | 变题/复习排程 Worker | 2 | 非实时，适度并发即可 |
 
 用 BullMQ 的 `concurrency` 选项配置：`worker.run({ concurrency: 1 })`。用户一次上传多条录音时，任务会排队而不是同时抢占 CPU。
@@ -341,11 +341,11 @@ HTTP 请求（触发 AI 任务）
 | Token 超限 | 自动截断输入，记录日志 |
 | 响应格式异常 | JSON 解析失败时重试一次，仍失败则标记 failed |
 
-**CoT 解析（DeepSeek R1）专项 fallback**：R1 是价格最高（¥4/¥16 每百万token）且承担最核心解题价值的功能，单独配置备选模型（如 Kimi K2.6），R1 不可用时自动降级调用备选模型，而不是直接失败，保证学生做题体验不中断。
+**教学解析步骤（DeepSeek R1）专项 fallback**：R1 是价格最高（¥4/¥16 每百万token）且承担最核心解题价值的功能，单独配置备选模型（如 Kimi K2.6），R1 不可用时自动降级调用备选模型，而不是直接失败，保证学生做题体验不中断。
 
 ### 6.5 AI 调用预算控制（成本控制核心）
 
-**背景**：PRD 8.6 确认了 AI Key 混合策略——新用户使用系统试用额度，用完后引导切换为自备 Key。试用额度必须有硬性上限，否则开发者账户可能被无限透支；即便用户自备 Key，考前冲刺期高频触发 CoT 解析（R1 模型最贵）也可能产生费用惊喜，需要预算提醒。
+**背景**：PRD 8.6 确认了 AI Key 混合策略——新用户使用系统试用额度，用完后引导切换为自备 Key。试用额度必须有硬性上限，否则开发者账户可能被无限透支；即便用户自备 Key，考前冲刺期高频触发 教学解析步骤（R1 模型最贵）也可能产生费用惊喜，需要预算提醒。
 
 ```
 ai_provider_configs 表增加字段（或新增 ai_budgets 表）：
@@ -407,7 +407,7 @@ apps/server/src/ai/prompts/
 ├── note-structuring.ts    # 笔记结构化 prompt
 ├── mindmap.ts             # 思维导图 prompt
 ├── quiz-generation.ts     # 出题 prompt
-├── cot-analysis.ts        # CoT 解析 prompt
+├── cot-analysis.ts        # 教学解析步骤 prompt
 ├── grading.ts             # 批改 prompt
 └── error-variation.ts     # 错题变题 prompt
 
@@ -537,3 +537,58 @@ GET /health/queue    → 检查 BullMQ 队列积压情况
 | frontend-guidelines.md | 前端需要后端提供的接口契约、实时通知需求 |
 
 **本文档不重复代码层面的规范**（如怎么写 Service、怎么定义 Schema），只定义"设计决策"（为什么选这个方案、安全怎么保障、AI 怎么集成）。
+
+---
+
+## 七、本地目录、Adapter 与运行数据规则
+
+本节与 [`dev-environment.md`](./dev-environment.md) 保持一致。业务代码只负责 Adapter、编排、权限和数据边界，不在主系统中直接堆放组件实验代码。
+
+### 7.1 路径环境变量
+
+所有路径必须从环境变量读取，禁止业务代码硬编码 `G:\`。
+
+```env
+APP_ROOT=G:\ai-studybuddy
+COMPOSER_ROOT=G:\ai-studybuddy-composer
+DATA_ROOT=G:\ai-studybuddy-data
+STUDY_FILE_ROOT=G:\ai-studybuddy-day-study
+LOG_ROOT=G:\ai-studybuddy-logs
+TMP_ROOT=G:\ai-studybuddy-tmp
+BACKUP_ROOT=G:\ai-studybuddy-backup
+```
+
+职责：
+
+- `APP_ROOT`：主系统源码、文档、正式 Adapter；
+- `COMPOSER_ROOT`：组件调试代码和 smoke test，不参与线上运行；
+- `DATA_ROOT`：PostgreSQL / Redis / pgvector 持久化；
+- `STUDY_FILE_ROOT`：MinIO 本地对象存储；
+- `LOG_ROOT`：后端、worker、组件、AI Provider 日志；
+- `TMP_ROOT`：OCR、ASR、PDF、视频临时文件；
+- `BACKUP_ROOT`：里程碑 zip 备份。
+
+### 7.2 Adapter 接入规则
+
+- 组件必须先在 `COMPOSER_ROOT` smoke test 通过，再封装 Adapter。
+- Adapter 只暴露统一输入输出，不暴露组件内部命令细节。
+- 临时文件必须写入 `TMP_ROOT`。
+- 日志必须写入 `LOG_ROOT`。
+- MinIO 本地存储指向 `STUDY_FILE_ROOT`。
+- PostgreSQL / Redis 持久化指向 `DATA_ROOT`。
+- AI Provider 日志不得记录完整 API Key、学生隐私全文、完整题目答案。
+
+### 7.3 ConverterResult 文档约定
+
+```ts
+type ConverterResult = {
+  ok: boolean
+  sourceType: 'pdf' | 'image' | 'audio' | 'video' | 'url' | 'text'
+  text?: string
+  metadata?: Record<string, unknown>
+  warnings?: string[]
+  error?: string
+}
+```
+
+该类型是文档中的接口约定。后续实现时可以落到实际代码，但字段语义不得随意漂移。

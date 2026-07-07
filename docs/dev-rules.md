@@ -234,7 +234,7 @@ ai-studybuddy/
 |------|------|------|
 | `feat` | 新功能 | `feat(quiz): 实现选择题AI出题` |
 | `fix` | 修复Bug | `fix(auth): 修复Token刷新逻辑` |
-| `refactor` | 重构（不改功能） | `refactor(ai): 抽取CoT解析公共方法` |
+| `refactor` | 重构（不改功能） | `refactor(ai): 抽取教学解析公共方法` |
 | `docs` | 文档更新 | `docs: 更新API设计文档` |
 | `style` | 代码格式调整 | `style: 统一import排序` |
 | `test` | 添加/修改测试 | `test(quiz): 补充出题边界测试` |

@@ -28,9 +28,43 @@
 
 
 
-## Phase 1：MVP — AI 整理模块（2-3周）
 
-**目标**：学生上传录音/文本 → AI 输出结构化笔记 + 思维导图 + 重点高亮
+---
+
+## Phase 0.5：开源组件调试与装配（组件先行）
+
+> 原则：每个成熟开源组件先在 `G:\ai-studybuddy-composer` 独立调通，形成组件能力卡和 smoke test，再封装 Adapter 接入主系统。
+
+### 0.5.1 composer 目录与组件能力卡
+
+- [ ] 创建并记录 `G:\ai-studybuddy-composer` 子目录结构
+- [ ] 为每个 MVP 组件建立 `COMPONENT-CARD.md`
+- [ ] 记录 License、安装方式、输入输出、smoke test、Adapter 名称
+
+### 0.5.2 MVP 必接组件调通
+
+- [ ] 调通 PDF.js / pdf-parse：PDF → 文本
+- [ ] 调通 PaddleOCR + PP-OCRv6：图片 / 试卷 → 文本
+- [ ] 调通 Markmap：Markdown / 层级结构 → 思维导图
+- [ ] 调通 KaTeX + react-markdown：结构化笔记展示
+- [ ] 调通 MinIO：上传 / 下载 PDF、图片
+- [ ] 调通 BullMQ + Redis：异步 job、失败重试
+- [ ] 调通 DeepSeek Provider：纯文本 → 结构化 JSON
+- [ ] 预留 Qwen / Kimi / GPT Provider 配置位和最小样例
+
+### 0.5.3 工程治理脚本要求
+
+- [ ] 建立 backup zip 脚本文档要求：写入阶段、commit、风险、恢复方式
+- [ ] 建立 tmp 清理脚本文档要求：清空后系统可重跑转换任务
+- [ ] 建立 logs 落盘规范：不保存 API Key、学生隐私全文、完整答案
+- [ ] 明确 Phase 1.5 再调通 SenseVoice / FunASR
+- [ ] 明确视频 FFmpeg 放到后续增强
+
+---
+
+## Phase 1：MVP — 多格式资料导入到学习闭环
+
+**目标**：学生上传 PDF / 文本 / 图片 → 格式转换为纯文本 → AI 输出结构化笔记 + 重点高亮 + 思维导图 → 练习 → 错题 → 家长时间线。音频 ASR 进入 Phase 1.5。
 
 ---
 
@@ -65,7 +99,7 @@
 - **输出文件**：packages/shared/types/index.ts、packages/shared/constants/index.ts
 - **验收标准**：
   - 前后端可通过 `@ai-studybuddy/shared` 导入
-  - 包含：UserRole、TaskStatus、RecordingStatus 等枚举
+  - 包含：UserRole、TaskStatus、MaterialStatus、ConverterStatus 等枚举
   - 包含：User、Course、Session 等基础类型
 
 #### 1.4 后端基础框架
@@ -81,7 +115,7 @@
 
 #### 1.5 数据库 Schema 与迁移
 
-- [ ] **任务描述**：用 Drizzle ORM 定义 Phase 1 所需表结构（users、family_spaces、space_members、courses、sessions、recordings、transcripts、notes、structured_notes、mind_maps），生成初始迁移
+- [ ] **任务描述**：用 Drizzle ORM 定义 Phase 1 所需表结构（users、family_spaces、space_members、courses、sessions、materials、normalized_texts、notes、structured_notes、mind_maps、exercises、wrong_questions），生成初始迁移
 - **输入文件**：ARCHITECTURE.md（第四节数据库设计）
 - **输出文件**：apps/server/src/db/schema.ts、migrations/
 - **验收标准**：
@@ -167,12 +201,12 @@
 
 #### 3.3 前端课次详情页
 
-- [ ] **任务描述**：实现课次详情页，展示课次信息、素材列表、整理结果（Segment 切换：录音/笔记/整理/练习）
+- [ ] **任务描述**：实现课次详情页，展示课次信息、素材列表、整理结果（Segment 切换：资料/笔记/整理/练习）
 - **输入文件**：frontend-guidelines.md（3.2 课次详情页）
 - **输出文件**：app/session/[id].tsx、components/session/
 - **验收标准**：
   - Segment 切换平滑
-  - 显示录音列表、笔记列表
+  - 显示 PDF/图片/文本素材列表、笔记列表
   - 整理结果区域预留（后续填充）
 
 ---
@@ -183,34 +217,34 @@
 
 - [ ] **任务描述**：实现文件上传接口（直传 + 分片上传），MinIO 存储集成，签名 URL 生成
 - **输入文件**：backend-guidelines.md（4.4 文件上传策略）
-- **输出文件**：routes/recordings.ts、services/storage.ts、lib/minio.ts
+- **输出文件**：routes/materials.ts、services/storage.ts、lib/minio.ts
 - **验收标准**：
   - 直传文件 ≤ 10MB 成功写入 MinIO
   - 分片上传（每片 5MB）成功合并
   - 签名 URL 可访问文件（1小时有效）
 - ⚠️ **风险点**：分片上传的合并顺序和完整性校验
 
-#### 4.2 后端录音/笔记/链接 API
+#### 4.2 后端资料/笔记/链接 API
 
-- [ ] **任务描述**：实现录音上传记录、笔记保存、链接保存接口，关联到课次
+- [ ] **任务描述**：实现 PDF、图片、文本素材记录接口，笔记保存、链接保存接口，关联到课次
 - **输入文件**：ARCHITECTURE.md（5.4 记录 API）
-- **输出文件**：routes/recordings.ts、routes/notes.ts、services/recordings.ts
+- **输出文件**：routes/materials.ts、routes/notes.ts、services/materials.ts
 - **验收标准**：
-  - 录音记录写入 recordings 表，status=uploaded
+  - PDF / 图片 / 文本素材写入 materials 表，status=uploaded
   - 笔记写入 notes 表
-  - 链接写入 links 表，自动抓取标题和摘要
+  - 链接写入 links 表，后续由 Readability 任务提取正文
 
-#### 4.3 前端录音功能
+#### 4.3 前端多格式资料上传
 
-- [ ] **任务描述**：实现课堂录音功能（expo-av），录音中显示波形和计时器，录音完成后上传
-- **输入文件**：frontend-guidelines.md（3.1 课堂记录页）
-- **输出文件**：app/session/[id]/record.tsx、hooks/useRecording.ts、components/recording/
+- [ ] **任务描述**：实现 PDF / 图片 / 文本上传入口，支持课次内添加素材和备注
+- **输入文件**：frontend-guidelines.md（课次详情页、资料导入入口）
+- **输出文件**：app/session/[id]/materials.tsx、hooks/useMaterialUpload.ts、components/materials/
 - **验收标准**：
-  - 点击大按钮开始录音，按钮变为"录音中..."
-  - 显示录音时长计时器
-  - 停止录音后自动上传
-  - 录音过程中可添加笔记和链接
-- ⚠️ **风险点**：iOS 和 Android 录音权限处理差异
+  - 学生能上传 PDF 文件
+  - 学生能上传图片 / 试卷照片
+  - 学生能粘贴 Markdown / 纯文本
+  - 上传完成后自动进入 FormatConverter 队列
+- ⚠️ **风险点**：移动端文件选择器、图片权限和大文件上传体验
 
 #### 4.4 前端笔记与链接输入
 
@@ -225,27 +259,27 @@
 
 ### 5. AI 整理模块（核心价值）
 
-#### 5.0 ASR 性能基准测试（⚠️ 必须先做，决定技术路线）
+#### 5.0 FormatConverter Adapter 框架
 
-- [ ] **任务描述**：在目标部署硬件（如 4 核/8GB VPS）上跑 SenseVoice-Small CPU 模式的转写耗时测试，用不同时长的中文录音样本（1分钟/5分钟/15分钟）
-- **输入文件**：无（独立验证任务）
-- **输出文件**：benchmark 结果记录（写入 lessons.md）
+- [ ] **任务描述**：实现 FormatConverter Router，按文件类型分发到 PdfConverter、OcrConverter、TextConverter；音频/视频 Converter 只预留接口，Phase 1.5 接入
+- **输入文件**：ARCHITECTURE.md（7.1 用户动作到系统组件流程图）、backend-guidelines.md（ConverterResult 约定）
+- **输出文件**：converters/index.ts、converters/pdf.ts、converters/ocr.ts、converters/text.ts、workers/format-convert.ts
 - **验收标准**：
-  - 明确得出：5 分钟录音在目标硬件上的实际转写耗时
-  - 如果达标（<60秒），5.1 按原计划推进
-  - 如果不达标，启动 Plan B：评估 FunASR 流式模式 或 接入云端 ASR API（如阿里云语音识别）的成本和延迟，更新本任务清单
-- ⚠️ **风险点**：这是 Phase 1 最大的技术不确定性，必须在投入笔记结构化/思维导图开发前确认，避免后续推倒重来
+  - PDF → PDF.js / pdf-parse → normalized_texts
+  - 图片 / 试卷 → PaddleOCR + PP-OCRv6 → normalized_texts
+  - Markdown / 纯文本 → 直接入库
+  - 所有 Converter 返回统一 ConverterResult
 
-#### 5.1 ASR 服务部署与对接
+#### 5.1 PDF / OCR 转换能力接入
 
-- [ ] **任务描述**：部署 SenseVoice-Small（Docker 容器），封装 ASR 调用接口，集成到后端 Worker，配置 Worker 并发数=1（见 backend-guidelines.md 6.3）
-- **输入文件**：ARCHITECTURE.md（7.2 格式转换 Pipeline）、backend-guidelines.md（第六节 AI 集成、6.1 格式转换 Adapter、6.3 Worker 并发控制）
-- **输出文件**：ai/asr.ts、workers/transcribe.ts、docker-compose.yml（新增 asr-service）
+- [ ] **任务描述**：把 Phase 0.5 已调通的 PDF.js / pdf-parse、PaddleOCR + PP-OCRv6 通过 Adapter 接入 Worker
+- **输入文件**：open-source-foundation.md（组件能力卡）、backend-guidelines.md（7.2 Adapter 接入规则）
+- **输出文件**：converters/pdf.ts、converters/ocr.ts、workers/format-convert.ts
 - **验收标准**：
-  - 转写耗时符合 5.0 基准测试确认的目标
-  - 输出带时间戳的 segments
-  - 转写结果写入 transcripts 表
-- ⚠️ **风险点**：依赖 5.0 的结论，若走 Plan B 需重新评估对接方式
+  - 输入 1 个 PDF，输出可读纯文本
+  - 输入 1 张试卷图片，输出 OCR 文本
+  - 临时文件写入 TMP_ROOT，日志写入 LOG_ROOT
+  - 失败时保留 warning/error，不阻断其他资料处理
 
 #### 5.2 BullMQ 任务队列搭建
 
@@ -275,7 +309,7 @@
 - **输入文件**：ARCHITECTURE.md（7.3 结构化笔记 Pipeline）
 - **输出文件**：ai/notes.ts、ai/prompts/note-structuring.ts、workers/organize.ts
 - **验收标准**：
-  - 输入转写文本 + 手写笔记 → 输出 Markdown 结构化笔记
+  - 输入 normalized_texts + 手写笔记 → 输出 Markdown 结构化笔记
   - 包含章节、[定义]/[公式]/[重点] 标签
   - 末尾附"本课次要点总结"
   - highlights JSON 正确提取
@@ -283,38 +317,38 @@
 
 #### 5.5 思维导图 Pipeline
 
-- [ ] **任务描述**：实现思维导图生成 Worker，从结构化笔记提取知识层级，输出 JSON 树形结构 + Mermaid 格式
+- [ ] **任务描述**：在笔记结构化同一次 LLM job 中输出思维导图数据；前端用 Markmap 渲染，单独思维导图 Worker 后续优化
 - **输入文件**：ARCHITECTURE.md（7.4 思维导图 Pipeline）
-- **输出文件**：ai/mindmap.ts、ai/prompts/mindmap.ts
+- **输出文件**：ai/prompts/note-structuring.ts、components/organize/MindMapView.tsx
 - **验收标准**：
-  - 输入结构化笔记 → 输出 JSON 树形结构
+  - 输入统一纯文本 → 同时输出结构化笔记与 JSON 树形结构
   - 包含 `is_key: true` 标注重点节点
-  - 同时生成 Mermaid mindmap 语法
+  - 前端用 Markmap 渲染层级结构
   - 写入 mind_maps 表
 
 #### 5.6 整理触发 API 与编排
 
-- [ ] **任务描述**：实现 `POST /sessions/:id/organize` 接口，编排完整 Pipeline（转写→笔记→思维导图），幂等处理，状态查询接口
+- [ ] **任务描述**：实现 `POST /sessions/:id/organize` 接口，编排完整 Pipeline（格式转换→统一纯文本→结构化笔记+重点+思维导图），幂等处理，状态查询接口
 - **输入文件**：ARCHITECTURE.md（5.5 整理 API）
 - **输出文件**：routes/organize.ts、services/organize.ts
 - **验收标准**：
-  - 触发后按顺序执行：ASR → 笔记 → 思维导图
+  - 触发后按顺序执行：格式转换 → 统一纯文本 → 笔记/重点/思维导图
   - 重复触发返回已有任务（幂等）
   - `GET /sessions/:id/organize/status` 返回实时进度
   - 完成后 WebSocket 通知前端
 
 #### 5.7 前端整理结果展示
 
-- [ ] **任务描述**：实现课次详情页的整理结果展示——Markdown 笔记渲染、思维导图渲染（react-native-webview + Markmap.js 加载 Mermaid 文本）、重点高亮列表、AI 处理进度条
+- [ ] **任务描述**：实现课次详情页的整理结果展示——Markdown 笔记渲染、思维导图渲染（react-native-webview + Markmap 渲染层级 Markdown / JSON）、重点高亮列表、AI 处理进度条
 - **输入文件**：frontend-guidelines.md（3.2 课次详情页、第八节依赖清单）
 - **输出文件**：components/organize/StructuredNote.tsx、MindMapView.tsx（WebView 封装）、HighlightList.tsx、AIProgressBar.tsx
 - **验收标准**：
   - Markdown 渲染正确（标题、列表、加粗、代码块）
   - 数学公式用 KaTeX 渲染
-  - 思维导图 WebView 加载 Markmap.js 正确渲染 Mermaid 文本，支持缩放/平移/节点展开折叠（均由 Markmap 自带交互提供）
+  - 思维导图 WebView 正确渲染 Markmap，支持缩放/平移/节点展开折叠（均由 Markmap 自带交互提供）
   - AI 处理中显示分步进度条
   - 处理完成后自动刷新展示结果
-- ⚠️ **风险点**：WebView 与 RN 之间传递 Mermaid 文本的桥接（建议用 `injectedJavaScript` 或 `postMessage`），首次加载 Markmap.js 资源的离线打包（避免每次联网加载 CDN）
+- ⚠️ **风险点**：WebView 与 RN 之间传递 Markmap 数据的桥接（建议用 `injectedJavaScript` 或 `postMessage`），首次加载 Markmap.js 资源的离线打包（避免每次联网加载 CDN）
 
 ---
 
@@ -322,22 +356,20 @@
 
 #### 6.1 端到端联调
 
-- [ ] **任务描述**：完整流程联调——注册→创建课程→创建课次→录音→触发整理→查看结果
+- [ ] **任务描述**：完整流程联调——注册→创建课程→创建课次→上传 PDF/文本/图片→格式转换→AI 整理→查看结果→练习→错题入库→家长时间线
 - **输入文件**：test-plan.md（Phase 1 验收标准）
 - **输出文件**：无（修复 Bug 为主）
 - **验收标准**：
   - 全流程顺畅走通
-  - 上传 5 分钟中文录音，2 分钟内看到结构化笔记 + 思维导图
+  - 上传 PDF/文本/图片，60-120 秒内看到结构化笔记 + 重点 + 思维导图
   - 无控制台报错，无 UI 闪烁
 
-#### 6.2 手动文本输入（兜底入口，非主路径）
+#### 6.2 多格式资料入口验证
 
-- [ ] **任务描述**：实现漏录/录音失败场景下的兜底入口——直接粘贴文本触发 AI 整理，跳过 ASR 环节。MVP 主线用户旅程仍是"录音→整理"，此入口不作为首页主推功能
-- **输入文件**：PRD.md（8.2 第一个核心模块：手动文本输入是兜底路径，不是主路径）
-- **输出文件**：components/notes/ManualTextInput.tsx
-- **验收标准**：
-  - 粘贴文本 → 跳过 ASR → 直接走笔记+思维导图 Pipeline
-  - 结果展示与录音入口一致
+- [ ] PDF 上传 → PDF.js / pdf-parse 提取文本 → 入库
+- [ ] 图片 / 试卷上传 → PaddleOCR + PP-OCRv6 OCR → 入库
+- [ ] Markdown / 纯文本上传 → 直接入库
+- [ ] 统一触发结构化笔记 + 重点 + 思维导图生成
 
 #### 6.3 Phase 1 回归测试
 
@@ -357,8 +389,8 @@
 以下任务在 Phase 1 验收通过后开始，具体拆解在 Phase 1 结束时补充：
 
 - [ ] **推送通知基础设施**（需提前到 Phase 2 开始前，不能拖到 Phase 5）：设备 token 注册（expo-notifications）、`device_tokens`/`notification_logs` 表、Expo Push API 集成——见 backend-guidelines.md 6.6。原因：Phase 2 的"错题复习提醒"（每天8点推送）依赖此基础设施，若拖到 Phase 5 会导致错题本核心机制（艾宾浩斯复习）体验不完整
-- [ ] **AI 调用预算控制**（需在 Phase 2 开始前完成）：`ai_budgets` 表、试用额度扣减逻辑、超限降级逻辑——见 backend-guidelines.md 6.5 和 PRD.md 8.6。原因：Phase 2 引入 AI 出题/批改/CoT 后调用量显著上升，预算机制必须先于高频功能上线
-- [ ] Phase 2：写题模块（AI 出题 + 做题 + 批改 + CoT + 错题本）
-- [ ] Phase 3：真题与变题（真题 OCR + CoT 重生成 + 变题组卷 + 限时考试）
+- [ ] **AI 调用预算控制**（需在 Phase 2 开始前完成）：`ai_budgets` 表、试用额度扣减逻辑、超限降级逻辑——见 backend-guidelines.md 6.5 和 PRD.md 8.6。原因：Phase 2 引入 AI 出题/批改/教学解析 后调用量显著上升，预算机制必须先于高频功能上线
+- [ ] Phase 2：写题模块（AI 出题 + 做题 + 批改 + 教学解析 + 错题本）
+- [ ] Phase 3：真题与变题（真题 OCR + 教学解析重生成 + 变题组卷 + 限时考试）
 - [ ] Phase 4：家长可见 + 备考调度（家长面板 + 考前预警 + 备考计划）
 - [ ] Phase 5：打磨与上线（UI 打磨 + 性能优化 + 离线支持 + 部署）
