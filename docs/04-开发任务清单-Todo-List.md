@@ -30,72 +30,90 @@
 
 ### 0.5-T01：环境准备
 
-- [ ] 确认 Node.js / Python / Docker 版本满足各组件要求
-- [ ] 创建 `G:\ai-studybuddy-composer` 目录结构（见 `06-本地目录治理`）
+- [ ] 确认 Node.js 18+（`node --version`）、Python 3.8+（`python --version`）、Docker Desktop 已启动（`docker ps`）
+- [ ] 在 `C:\Users\Administrator\.wslconfig` 写入内存上限（防 Docker Desktop WSL2 内存泄漏）：`memory=8GB processors=4 swap=2GB`
+- [ ] 创建 `F:\ai-studybuddy-composer` 目录结构（已完成）
 - [ ] 配置 `.env.example`，列出后续会用到的环境变量名（不填真实值）
+
+> ⚠️ 常见坑：Node 命令不存在 → 去 nodejs.org 装 LTS；Python 是 2.x → 装 3.10+；Docker 图标未变绿就跑命令会报错，等它完全启动再操作。
 
 ### 0.5-T02：PDF 文本提取（MVP 必接）
 
-- [ ] 在 `composer\pdf\` 安装 pdf-parse 或 PDF.js
-- [ ] 准备 1 个含中文的真实 PDF（可用教材截取的试卷或讲义）
-- [ ] 运行 smoke test：输入 PDF，输出纯文本
+- [ ] 在 `composer\pdf\pdf-parse-demo\` 安装：`npm install`
+- [ ] 准备 1 个含中文的真实 PDF，放入 `samples\test.pdf`（用教材/讲义，不用扫描版）
+- [ ] 运行 smoke test：`node smoke-test\smoke-test.js`
 - [ ] 验证完成标准：中文字符完整、数学公式文本可用、无乱码
 - [ ] 填写能力卡（见 `05-开源组件装配` 模板）
 
+> ⚠️ 常见坑：输出乱码 → PDF 是扫描版图片，换文字版；中文显示 `?????` → PDF 字体未嵌入，换另一个 PDF；数学公式变乱符号 → 正常，公式是图片走 OCR 路径。
+
 ### 0.5-T03：图片 / 试卷 OCR（MVP 必接）
 
-- [ ] 在 `composer\ocr\PaddleOCR\` 安装 PaddleOCR + PP-OCRv6
-- [ ] 准备 1 张含中文文字的试卷图片
-- [ ] 运行 smoke test：输入图片，输出 OCR 文本
-- [ ] 验证完成标准：汉字/数字识别率 > 90%，表格结构基本保留
-- [ ] 填写能力卡
+- [ ] 安装 RapidOCR（首选）：`pip install rapidocr-onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple`
+- [ ] 安装 PaddleOCR（对比用）：`pip install paddlepaddle paddleocr -i https://pypi.tuna.tsinghua.edu.cn/simple`
+- [ ] 准备 1 张真实中文试卷图片（清晰拍照，非截图），放入各自 `samples\test.jpg`
+- [ ] 分别运行：`python smoke-test\smoke-test.py`，记录识别率和单页耗时
+- [ ] 对比两者，选识别率高且速度快的作为主力，填写能力卡
+
+> ⚠️ 常见坑：pip 超时 → 加 `-i` 清华源；首次运行自动下载模型约 50MB 需等待；识别率 <80% → 图片模糊/旋转，换清晰图片；耗时 >15s → 正常，接入主系统必须走 BullMQ 异步 Job；DLL 报错 → 安装 Visual C++ Redistributable。
 
 ### 0.5-T04：思维导图渲染（MVP 必接）
 
-- [ ] 在 `composer\mindmap\markmap-test\` 安装 Markmap
-- [ ] 编写一份 Markdown 层级文本（可用 AI 生成样例）
-- [ ] 运行 smoke test：浏览器能渲染出思维导图
-- [ ] 验证完成标准：层级关系正确、节点可展开收起
-- [ ] 填写能力卡
+- [ ] 在 `composer\mindmap\markmap-test\` 安装：`npm install markmap-lib`
+- [ ] 运行 smoke test：`node smoke-test\smoke-test.js`，生成 `output\result.html`
+- [ ] 用浏览器打开 `output\result.html`，验证节点层级正确、可展开收起、中文无乱码
+- [ ] 填写能力卡（已有 2026-07-08 通过记录，复核即可）
+
+> ⚠️ 常见坑：HTML 打开空白 → CDN 加载失败，开代理或换 Chrome；中文显示方框 → 用 Chrome 打开，Edge 偶有问题；节点层级乱 → 检查 `samples\sample.md` 缩进是空格不是 Tab。
 
 ### 0.5-T05：Markdown + KaTeX 渲染（MVP 必接）
 
-- [ ] 在 `composer\markdown\react-markdown-test\` 安装 react-markdown + KaTeX
-- [ ] 准备含公式（`$E=mc^2$`）和代码块的 Markdown 样本
-- [ ] 运行 smoke test：页面正常渲染，公式美观
-- [ ] 验证完成标准：行内公式和块级公式均可渲染
+- [ ] 直接用浏览器打开 `composer\markdown\react-markdown-test\smoke-test\index.html`
+- [ ] 验证：行内公式 `$E=mc^2$` 渲染正确、块级公式渲染正确、中文显示正常、无 JS 报错
 - [ ] 填写能力卡
+
+> ⚠️ 常见坑：公式显示原始 `$...$` 字符 → KaTeX CDN 加载失败，开代理；页面卡住 → 同上；用 Chrome 打开最稳定。
 
 ### 0.5-T06：异步任务队列 BullMQ（MVP 必接）
 
-- [ ] 在 `composer\queue\bullmq-test\` 安装 BullMQ + Redis
-- [ ] 启动本地 Redis（Docker 或直装）
-- [ ] 编写 smoke test：创建队列、入队一个 Job、消费、模拟失败并重试
-- [ ] 验证完成标准：Job 状态（waiting / active / completed / failed）可查询
+- [ ] 启动 Redis：`docker run -d --name redis -p 6379:6379 redis:7-alpine`
+- [ ] 在 `composer\queue\bullmq-test\` 安装：`npm install`
+- [ ] 运行 smoke test：`node smoke-test\smoke-test.js`
+- [ ] 验证完成标准：Job 经历 waiting→active→completed 全生命周期，失败后重试成功
 - [ ] 填写能力卡
+
+> ⚠️ 常见坑：`ECONNREFUSED 6379` → Redis 容器没起来，`docker ps` 确认；`port already allocated` → `netstat -ano | findstr 6379` 找占用进程关掉；测完记得清理 `docker stop redis && docker rm redis`。
 
 ### 0.5-T07：对象存储 MinIO（MVP 必接）
 
-- [ ] 在 `composer\storage\minio-test\` 启动 MinIO（Docker 推荐）
-- [ ] 编写 smoke test：上传一个文件、下载、生成临时 URL
-- [ ] 验证完成标准：上传 / 下载 / URL 生成均成功
+- [ ] 启动 MinIO：`docker run -d --name minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin minio/minio server /data --console-address ":9001"`
+- [ ] 在 `composer\storage\minio-test\` 安装：`npm install`，复制 `.env.example` 为 `.env.local`
+- [ ] 运行 smoke test：`node smoke-test\smoke-test.js`
+- [ ] 额外验证：浏览器打开 `http://localhost:9001`，用 minioadmin/minioadmin 登录能看到控制台
+- [ ] 验证完成标准：上传/下载内容一致，临时 URL 可访问
 - [ ] 填写能力卡
+
+> ⚠️ 常见坑：9000 端口占用 → 改 `-p 9002:9000` 并同步改 `.env.local`；`AccessDenied` → 检查账号密码是否与 docker run 一致；临时 URL 浏览器打不开 → 正常，URL 是给 Node 脚本访问的，不是给浏览器直接开的。
 
 ### 0.5-T08：数据库 PostgreSQL（MVP 必接）
 
-- [ ] 在 `composer\db\pgvector-test\` 启动 PostgreSQL（Docker 推荐）
-- [ ] 安装 pgvector 扩展
-- [ ] 编写 smoke test：建表、插入、查询、向量搜索基础验证
-- [ ] 验证完成标准：CRUD 正常，pgvector 扩展加载成功
+- [ ] 启动 PostgreSQL+pgvector：`docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=devpassword pgvector/pgvector:pg16`
+- [ ] 在 `composer\db\pgvector-test\` 安装：`npm install`，复制 `.env.example` 为 `.env.local`
+- [ ] 运行 smoke test：`node smoke-test\smoke-test.js`
+- [ ] 验证完成标准：CRUD 正常，pgvector 扩展加载成功，向量搜索返回结果
 - [ ] 填写能力卡
 
-### 0.5-T09：AI Provider——Kimi（MVP 必接）
+> ⚠️ 常见坑：`ECONNREFUSED 5432` → 容器刚起来需等 5 秒，`docker logs postgres` 看是否就绪；`extension "vector" does not exist` → 镜像用错了，必须用 `pgvector/pgvector:pg16` 不是普通 `postgres`；5432 端口占用（本机装了 PG）→ 改 `-p 5433:5432` 并同步改 `.env.local`；密码不对 → `.env.local` 里 `POSTGRES_PASSWORD` 必须和 docker run 的 `-e` 一致。
 
-- [ ] 在 `composer\ai-provider\kimi-test\` 写最小接入样例
-- [ ] 发送一段纯文本，要求返回结构化笔记（Markdown 格式）
-- [ ] 验证完成标准：API 可调通，响应格式可解析，latency 可接受
-- [ ] 记录：模型名、token 消耗、响应时间
-- [ ] 填写能力卡
+### 0.5-T09：AI Provider——中转 GPT（MVP 必接）
+
+- [ ] 在 `composer\ai-provider\deepseek-test\` 安装：`npm install`
+- [ ] 创建 `.env.local`，填入：`RELAY_API_KEY=你的Key`、`RELAY_BASE_URL=https://你的中转/v1`、`RELAY_MODEL=gpt-4o`（或实际模型名）
+- [ ] 运行 smoke test：`node smoke-test\smoke-test.js`
+- [ ] 验证完成标准：API 调通，返回可解析 Markdown，latency < 30s
+- [ ] 记录：模型名、token 消耗、响应时间，填写能力卡
+
+> ⚠️ 常见坑：`401 Unauthorized` → Key 错或 baseURL 末尾少了 `/v1`；返回内容不是中文 → 模型名写错，查中转平台支持的模型列表；latency > 30s → 中转服务慢，换个时间段或换另一家中转；`.env.local` 绝不提交 git，Key 泄露后立即去中转平台作废重生成。
 
 ### 0.5-T10：共同底座架构文档（触发条件满足，主动创建）
 
