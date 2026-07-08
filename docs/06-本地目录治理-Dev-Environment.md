@@ -90,7 +90,7 @@ G:\ai-studybuddy-composer
   ├── db
   │   └── pgvector-test
   ├── ai-provider
-  │   ├── deepseek-test
+  │   ├── kimi-test
   │   ├── qwen-test
   │   ├── vision-fallback-test
   │   └── gpt-test
@@ -171,9 +171,8 @@ G:\ai-studybuddy-logs
   │   ├── pdf.log
   │   └── markmap.log
   └── ai-provider
-      ├── deepseek.log
-      ├── qwen.log
       ├── kimi.log
+      ├── qwen.log
       └── gpt.log
 ```
 

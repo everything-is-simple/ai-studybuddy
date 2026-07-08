@@ -132,7 +132,7 @@ flowchart TD
   A["学生创建课程和本周学习任务"] --> B["上传资料：PDF / 文本 / 图片"]
   B --> C["格式转换：PDF.js / pdf-parse / PaddleOCR（无LLM）"]
   C --> D["统一纯文本入库"]
-  D --> E["AI整理：DeepSeek 默认，Qwen 备选，GPT 难内容兜底"]
+  D --> E["AI整理：Kimi 默认，Qwen 备选，GPT/Claude 中转兜底"]
   E --> F["结构化笔记 + 重点 + 思维导图"]
   F --> G["生成限时练习"]
   G --> H1["客观题规则批改"]
@@ -172,7 +172,7 @@ flowchart TD
 
 - 输入：PDF、文本、Markdown、图片；
 - 格式转换：PDF.js / pdf-parse / PaddleOCR；
-- AI：DeepSeek 默认整理，Qwen 备选，GPT 兜底；
+- AI：Kimi 默认整理（多模态+工具调用+工程分解），Qwen 备选，GPT/Claude 中转兜底；
 - 输出：Markdown 笔记、重点、高频概念、思维导图数据；
 - 展示：react-markdown + KaTeX + Markmap。
 
@@ -250,18 +250,18 @@ flowchart TD
 
 | 场景 | 默认 | 备选 | 兜底 |
 |---|---|---|---|
-| 笔记整理/重点/导图 | DeepSeek 文本模型 | Qwen 文本模型 | GPT |
-| 主观题评分 | DeepSeek | Qwen | GPT |
-| 教学解析步骤/解题路径 | DeepSeek | Qwen | GPT 处理最难题 |
-| 变题/组卷 | DeepSeek | Qwen | GPT |
-| OCR/版面失败 | 不默认走 LLM | Qwen-VL | Kimi / GPT 视觉能力（高级兜底） |
+| 笔记整理/重点/导图 | Kimi 文本模型 | Qwen 文本模型 | GPT/Claude 中转 |
+| 主观题评分 | Kimi | Qwen | GPT/Claude 中转 |
+| 教学解析步骤/解题路径 | Kimi（思考+分解） | Qwen | GPT/Claude 处理最难题 |
+| 变题/组卷 | Kimi | Qwen | GPT/Claude 中转 |
+| OCR/版面失败 | Kimi 视觉（多模态） | Qwen-VL | GPT 视觉能力（高级兜底） |
 
 ### 6.3 AI 输出原则
 
 - 用户看到的是“教学解析步骤 / 解题路径”，不是模型内部思维链；
 - 所有 LLM 输入优先是纯文本；
 - AI Provider 可替换，不写死模型版本；
-- GPT 只担纲最难推理、复杂证明、国产模型失败后的高级兜底；
+- GPT/Claude 只担纲最难推理、复杂证明、国产模型失败后的高级兜底；
 - 记录模型、token、耗时和失败原因，不记录 API Key 和学生隐私全文。
 
 ---
@@ -311,7 +311,7 @@ flowchart LR
 | 风险 | 应对 |
 |---|---|
 | 七个子系统仍然太大 | 每次只开发一个子系统；未开发子系统只保留接口位 |
-| AI 成本失控 | 默认 DeepSeek/Qwen；GPT 只做兜底；缓存 AI 结果 |
+| AI 成本失控 | 默认 Kimi/Qwen；GPT/Claude 只做兜底；缓存 AI 结果 |
 | OCR/ASR 运维复杂 | 先在 composer 调通；未通过 smoke test 不进主系统 |
 | 家长端变监控工具 | 强制只显示节奏、数量、趋势，不显示隐私原文 |
 | 文档再次膨胀 | 采用“总 PRD + 轻量子 PRD + 最小 5 文档”制度 |

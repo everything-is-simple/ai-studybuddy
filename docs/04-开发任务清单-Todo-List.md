@@ -89,9 +89,9 @@
 - [ ] 验证完成标准：CRUD 正常，pgvector 扩展加载成功
 - [ ] 填写能力卡
 
-### 0.5-T09：AI Provider——DeepSeek（MVP 必接）
+### 0.5-T09：AI Provider——Kimi（MVP 必接）
 
-- [ ] 在 `composer\ai-provider\deepseek-test\` 写最小接入样例
+- [ ] 在 `composer\ai-provider\kimi-test\` 写最小接入样例
 - [ ] 发送一段纯文本，要求返回结构化笔记（Markdown 格式）
 - [ ] 验证完成标准：API 可调通，响应格式可解析，latency 可接受
 - [ ] 记录：模型名、token 消耗、响应时间
@@ -110,7 +110,7 @@
 
 - [ ] 客观题规则批改：选择题 / 填空题最小规则引擎测试
 - [ ] 错题复习排程：艾宾浩斯间隔复习日期计算测试
-- [ ] Qwen Provider：文本备选最小样例（同 DeepSeek smoke test 格式）
+- [ ] Qwen Provider：文本备选最小样例（同 Kimi smoke test 格式）
 - [ ] GPT Provider：难题兜底最小样例
 
 ### Phase 0.5C：工程治理脚本
@@ -131,7 +131,7 @@
 学生创建课程
   → 上传 PDF/图片/文本
   → 格式转换为纯文本
-  → DeepSeek 生成结构化笔记 + 重点 + 思维导图
+  → Kimi 生成结构化笔记 + 重点 + 思维导图
   → 前端能看到笔记和导图
 ```
 
@@ -167,7 +167,7 @@
 ### 0.8-T05：共同底座——AI Provider Router
 
 - [ ] 封装 `AiProviderRouter`，支持按任务类型选择 Provider
-- [ ] 默认 DeepSeek，失败时自动降级到 Qwen（暂时可手动配置）
+- [ ] 默认 Kimi，失败时自动降级到 Qwen（暂时可手动配置）
 - [ ] 记录：模型名、token 消耗、耗时、失败原因（不记录学生隐私原文）
 
 ### 0.8-T06：S1 学习节奏——核心 API

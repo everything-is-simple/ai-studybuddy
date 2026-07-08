@@ -124,7 +124,7 @@ G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 学生创建课程
   → 上传 PDF/图片/文本
   → 格式转换为纯文本
-  → DeepSeek 生成结构化笔记 + 重点 + 思维导图
+  → Kimi 生成结构化笔记 + 重点 + 思维导图
   → 前端能看到笔记和导图
 ```
 

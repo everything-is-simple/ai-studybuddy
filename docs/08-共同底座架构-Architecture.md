@@ -15,7 +15,7 @@
 学生创建课程
   → 上传 PDF/图片/文本
   → 格式转换为纯文本
-  → DeepSeek 生成结构化笔记 + 重点 + 思维导图
+  → Kimi 生成结构化笔记 + 重点 + 思维导图
   → 前端看到笔记和导图
 ```
 
@@ -32,7 +32,7 @@ flowchart TD
   C --> D["上传资料：PDF/图片/文本"]
   D --> E["MinIO 保存原始文件"]
   E --> F["FormatConverter 转为统一纯文本"]
-  F --> G["DeepSeek Provider 生成结构化笔记"]
+  F --> G["Kimi Provider 生成结构化笔记"]
   G --> H["structured_notes / mind_maps 入库"]
   H --> I["前端展示 Markdown + KaTeX + Markmap"]
   I --> J["写入 StudyEvent：资料已整理"]
@@ -69,7 +69,7 @@ flowchart TD
 | PDF 转文本 | PDF.js / pdf-parse | 输入 PDF，输出纯文本 |
 | 图片 OCR | PaddleOCR + PP-OCRv6 | 输入图片，输出纯文本 |
 | 文本直入 | TextConverter | Markdown/纯文本直接入库 |
-| AI 整理 | DeepSeek Provider | 输入纯文本，输出结构化 JSON/Markdown |
+| AI 整理 | Kimi Provider | 输入纯文本，输出结构化 JSON/Markdown |
 | 展示 | react-markdown + KaTeX + Markmap | 渲染笔记、公式、思维导图 |
 
 ---
@@ -102,15 +102,16 @@ Phase 0.8 只需要：
 
 ## 6. AI Provider 路由原则
 
-Phase 0.8 默认只接 DeepSeek 文本模型：
+Phase 0.8 默认接 Kimi（多模态+工具调用+工程分解能力）：
 
 | 场景 | 默认 | 备注 |
 |---|---|---|
-| 结构化笔记 | DeepSeek | 输入必须是纯文本 |
-| 重点高亮 | DeepSeek | 与笔记生成合并一次调用 |
-| 思维导图数据 | DeepSeek | 与笔记生成合并一次调用 |
+| 结构化笔记 | Kimi | 输入必须是纯文本 |
+| 重点高亮 | Kimi | 与笔记生成合并一次调用 |
+| 思维导图数据 | Kimi | 与笔记生成合并一次调用 |
+| OCR/版面失败兑底 | Kimi 视觉 | 多模态能力直接处理 |
 
-Qwen、Kimi、GPT 暂只保留配置位，不在 Phase 0.8 强依赖。GPT 只作为后续最难推理兜底，不属于开源组件。
+Qwen 保留配置位作为备选，持续跟踪马爸爸领导的 Qwen 进展。GPT/Claude 通过中转服务作为最难推理兑底，不属于开源组件。
 
 最小接口约定：
 
@@ -235,8 +236,8 @@ MINIO_ACCESS_KEY=
 MINIO_SECRET_KEY=
 STORAGE_BUCKET=ai-studybuddy
 
-AI_PROVIDER_DEFAULT=deepseek
-DEEPSEEK_API_KEY=
+AI_PROVIDER_DEFAULT=kimi
+KIMI_API_KEY=
 QWEN_API_KEY=
 OPENAI_API_KEY=
 

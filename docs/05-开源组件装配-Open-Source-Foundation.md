@@ -68,12 +68,12 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 异步任务队列 | [BullMQ](https://github.com/taskforcesh/bullmq) + Redis | `composer\queue\bullmq-test` | 格式转换 / AI Job 异步执行 | MVP 必接 |
 | 对象存储 | [MinIO](https://github.com/minio/minio) | `composer\storage\minio-test` | 原始素材、PDF、图片、音频存储 | MVP 必接 |
 | 数据库 / 向量 | [PostgreSQL](https://www.postgresql.org/) + [pgvector](https://github.com/pgvector/pgvector) | `composer\db\pgvector-test` | 业务数据 + 后续知识检索 | MVP 必接 |
-| 默认文本 AI | DeepSeek | `composer\ai-provider\deepseek-test` | 文本理解、笔记整理、普通解析 | MVP 必接 |
+| 默认文本 AI | Kimi | `composer\ai-provider\kimi-test` | 文本理解、笔记整理、普通解析、多模态 | MVP 必接 |
 | 文本 AI 备选 | Qwen | `composer\ai-provider\qwen-test` | 文本任务备选；Qwen-VL 只作多模态兜底 | P1 |
-| 复杂图片兜底 | Kimi / Qwen-VL | `composer\ai-provider\vision-fallback-test` | OCR/版面失败时兜底 | P2 |
-| 最难推理兜底 | GPT | `composer\ai-provider\gpt-test` | 最难数学、证明、跨学科推理 | P2/高级兜底 |
+| 复杂图片兜底 | Kimi 视觉 / Qwen-VL | `composer\ai-provider\vision-fallback-test` | OCR/版面失败时兜底 | P2 |
+| 最难推理兜底 | GPT/Claude 中转 | `composer\ai-provider\gpt-test` | 最难数学、证明、跨学科推理 | P2/高级兜底 |
 
-说明：DeepSeek / Qwen / Kimi / GPT 是可替换 AI Provider，不属于“成熟开源组件下载清单”的开源组件范畴；它们出现在本表中，只表示也要先做最小接入验证。
+说明：Kimi / Qwen / GPT/Claude 是可替换 AI Provider，不属于“成熟开源组件下载清单”的开源组件范畴；它们出现在本表中，只表示也要先做最小接入验证。
 
 ## 四、产品流程参考边界
 
@@ -108,13 +108,13 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 ### 5.2 LLM 理解层：只吃纯文本
 
-| 任务 | 默认 Provider | 兜底策略 |
+| 任务 | 默认 Provider | 兑底策略 |
 |---|---|---|
-| 结构化笔记 + 重点 + 思维导图数据 | DeepSeek | Qwen 备选；GPT 处理难内容 |
-| 教学解析步骤 / 解题路径 | DeepSeek / Qwen | GPT 处理最难数学、证明、跨学科推理 |
-| 出题 / 变题 | DeepSeek / Qwen | GPT 处理难题 |
-| 主观题评分 / 错因分类 | DeepSeek / Qwen | GPT 处理争议样例 |
-| OCR/版面失败兜底 | Kimi / Qwen-VL | 仅在开源 OCR 失败后使用 |
+| 结构化笔记 + 重点 + 思维导图数据 | Kimi | Qwen 备选；GPT/Claude 处理难内容 |
+| 教学解析步骤 / 解题路径 | Kimi（思考+分解） | Qwen 备选；GPT/Claude 处理最难数学、证明、跨学科推理 |
+| 出题 / 变题 | Kimi / Qwen | GPT/Claude 处理难题 |
+| 主观题评分 / 错因分类 | Kimi / Qwen | GPT/Claude 处理争议样例 |
+| OCR/版面失败兑底 | Kimi 视觉 / Qwen-VL | 仅在开源 OCR 失败后使用 |
 
 ### 5.3 规则引擎层：不走 LLM
 
@@ -151,8 +151,8 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | **BullMQ + Redis** | 创建队列 → 入队 1 个 Job → 消费 → 模拟失败 → 重试 | Job 经历 waiting→active→completed 全生命周期；失败 Job 重试成功 | 检查 Redis 连接和队列配置 |
 | **MinIO** | 上传 1 个文件 → 下载 → 生成临时 URL → URL 可访问 | 上传/下载内容一致；临时 URL 在有效期内可访问、过期后不可访问 | 检查 Bucket 策略和端口 |
 | **PostgreSQL + pgvector** | 建表 → 插入 → 查询 → 创建向量列 → 向量相似度搜索 | CRUD 正常；pgvector 扩展加载成功；向量搜索返回结果 | 检查扩展安装和 SQL 语法 |
-| **DeepSeek API** | 发送 1 段 500 字中文纯文本，要求返回结构化笔记 | API 调通；返回 Markdown 格式可解析；latency < 30s；token 消耗合理 | 检查 API Key 和网络；记录错误码 |
-| **Qwen API**（P1 备选） | 同 DeepSeek smoke test | 同上 | 同上 |
+| **Kimi API** | 发送 1 段 500 字中文纯文本，要求返回结构化笔记 | API 调通；返回 Markdown 格式可解析；latency < 30s；token 消耗合理 | 检查 API Key 和网络；记录错误码 |
+| **Qwen API**（P1 备选） | 同 Kimi smoke test | 同上 | 同上 |
 
 ### Smoke Test 执行规范
 
@@ -173,14 +173,14 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | BullMQ + Redis | ⏳ 待测 | — | — | — |
 | MinIO | ⏳ 待测 | — | — | — |
 | PostgreSQL + pgvector | ⏳ 待测 | — | — | — |
-| DeepSeek API | ⏳ 待测 | — | — | — |
+| Kimi API | ⏳ 待测 | — | — | — |
 | Qwen API | ⏳ 待测 | — | — | — |
 
 ---
 
 ## 八、七子系统底座选型（2026-07-08 调研补充）
 
-**来源**：两轮深度调研（对抗式验证）。**目标**：每个子系统尽量套成熟开源底座，避免从零自建。**结论前提**：AI 走 DeepSeek 等云 API，不在本地跑大模型。
+**来源**：两轮深度调研（对抗式验证）。**目标**：每个子系统尽量套成熟开源底座，避免从零自建。**结论前提**：AI 走 Kimi/Qwen 等云 API，不在本地跑大模型。
 
 ### 8.1 整体判断：分子系统各取所长，不套单一 LMS
 
@@ -198,10 +198,10 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 子系统 | 推荐底座 | License / 栈契合 | 覆盖范围 · 需自建 |
 |---|---|---|---|
 | **S1 学习节奏** | [frappe-gantt](https://github.com/frappe/gantt) + [react-big-calendar](https://github.com/jquense/react-big-calendar)；复杂甘特可选 [DHTMLX Gantt](https://github.com/DHTMLX/gantt) | 全 **MIT**，React/JS 库可嵌入 ✅ | 覆盖时间线/日历/甘特渲染。自建：课程/任务数据模型、工作量聚合（甘特无原生工作量视图）、逾期提醒（BullMQ 定时 Job）。**DHTMLX 仅 v10+ Community 版为 MIT，须锁版本，v9 及更早为 GPLv2** |
-| **S2 资料笔记** | [markmap](https://github.com/markmap/markmap)（导图）+ 既有 PDF.js/OCR/react-markdown/KaTeX；检索可参考 [Quivr](https://github.com/quivrhq/quivr)(Apache-2.0,原生 pgvector) | markmap **MIT**，JS/TS 原生 ✅ | 覆盖导图渲染与格式转换。自建：上传→转文本→喂 DeepSeek→存 markdown/导图数据 的编排线 |
-| **S3 限时练习** | [@lumieducation/h5p-server](https://github.com/Lumieducation/H5P-Nodejs-library) | 纯 **TypeScript**，npm 可嵌入 ✅ 最契合 | Question Set 内置多选/填空/拖词等客观题型→规则批改。自建：主观题 AI 评分（DeepSeek）、题目生成（DeepSeek）、限时逻辑。Moodle 题引擎(PHP 耦合)/E-Quiz(需 K8s)/obsidian 插件(绑 Obsidian) 均不宜嵌入 |
+| **S2 资料笔记** | [markmap](https://github.com/markmap/markmap)（导图）+ 既有 PDF.js/OCR/react-markdown/KaTeX；检索可参考 [Quivr](https://github.com/quivrhq/quivr)(Apache-2.0,原生 pgvector) | markmap **MIT**，JS/TS 原生 ✅ | 覆盖导图渲染与格式转换。自建：上传→转文本→喂 Kimi→存 markdown/导图数据 的编排线 |
+| **S3 限时练习** | [@lumieducation/h5p-server](https://github.com/Lumieducation/H5P-Nodejs-library) | 纯 **TypeScript**，npm 可嵌入 ✅ 最契合 | Question Set 内置多选/填空/拖词等客观题型→规则批改。自建：主观题 AI 评分（Kimi）、题目生成（Kimi）、限时逻辑。Moodle 题引擎(PHP 耦合)/E-Quiz(需 K8s)/obsidian 插件(绑 Obsidian) 均不宜嵌入 |
 | **S4 错题改错** | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs)（~704★，FSRS-v6） | **MIT**，同栈原生 TS 库 ✅ 最契合 | 覆盖艾宾浩斯间隔复习调度引擎（喂评分→返回下次复习时间）。自建：错题本模型、错因分类、变题重做、录入 UI、卡片状态持久化到 PostgreSQL |
-| **S5 期末冲刺** | ⚠️ **组卷算法无可复用 TS/Node 底座，需自研** | — | 自建：按知识点/难度加权抽样组卷（TS 实现，不复杂）。真题解析/变题走 DeepSeek。限时模拟考复用 S3 的 H5P。（RecruitSystem 用遗传算法组卷但为 Java SSM 整站，不可复用） |
+| **S5 期末冲刺** | ⚠️ **组卷算法无可复用 TS/Node 底座，需自研** | — | 自建：按知识点/难度加权抽样组卷（TS 实现，不复杂）。真题解析/变题走 Kimi。限时模拟考复用 S3 的 H5P。（RecruitSystem 用遗传算法组卷但为 Java SSM 整站，不可复用） |
 | **S6 家长观察** | **自建 [ECharts](https://github.com/apache/echarts)/Recharts 只读面板**（决策见 8.3） | ECharts Apache-2.0 | 家长只读图表（完成状态/趋势/逾期预警），数据从后端 API 出。不引入独立 BI 服务 |
 | **S7 课堂采集** | [FunASR](https://github.com/modelscope/FunASR) 或 [SenseVoice.cpp](https://github.com/lovemefan/SenseVoice.cpp)（CPU）；省心可用 [Scriberr](https://github.com/rishikanthc/Scriberr)(MIT) 独立服务或云 ASR | 中文优先；见 9.2 硬件注意 | 覆盖课堂转写。自建：说话人登记/命名（ASR 只给匿名 spk0/spk1）。**SenseVoice.cpp 无 Windows 预编译二进制，须自编译** |
 
@@ -217,7 +217,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 |---|---|---|
 | **第一档 直接套库** | S4→ts-fsrs；S1→frappe-gantt+react-big-calendar；S3→@lumieducation/h5p-server | 极少 |
 | **第二档 套组件配薄胶水** | S2→markmap+OCR+PDF.js+react-markdown/KaTeX；S6→自建 ECharts 面板 | 编排线 |
-| **第三档 主要自研（但薄）** | S5→组卷算法自研+DeepSeek 解析；S7→本地 ASR 自编译或用云/独立服务 | 较多 |
+| **第三档 主要自研（但薄）** | S5→组卷算法自研+Kimi 解析；S7→本地 ASR 自编译或用云/独立服务 | 较多 |
 
 ---
 
@@ -243,7 +243,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 - **中文 OCR 改推 [RapidOCR](https://github.com/RapidAI/RapidOCR)**（ONNXRuntime，CPU 无需 CUDA，官方支持 Windows，比 PaddleOCR 轻）。但 Node 原生绑定 `node-RapidOcrOnnx` 不可靠（1★、2023 后停更、无预编译包、只带 PP-OCRv3、须本地编译）——**建议走 RapidOCR 官方 Python/CLI，用 Node 子进程调用**。PaddleOCR 仍作为备选保留在第三节清单。
 - **S7 ASR：`SenseVoice.cpp`（ggml/MIT/活跃）无 Windows 预编译二进制，全部 release 仅源码**，Windows 上须自行编译后再经 Node 子进程集成，是实际门槛。不想折腾编译则退回**云 ASR API** 或 **Scriberr 独立服务**（但 Scriberr 的 WhisperX/Parakeet GPU 加速在无 N 卡下用不上，只能走 CPU）。
-- DeepSeek 等 AI 走云 API，不吃本地 GPU/内存，不受此约束。
+- Kimi/Qwen 等 AI 走云 API，不吃本地 GPU/内存，不受此约束。
 
 ### 9.3 待实测项（Phase 0.5 smoke test 覆盖）
 

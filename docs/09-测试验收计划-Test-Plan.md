@@ -33,7 +33,7 @@
 | Markmap | 层级 Markdown | 思维导图 | 节点层级正确，可展开 | composer/mindmap（✅ 2026-07-08 smoke test 通过，39 节点 / 深度 5） |
 | MinIO | 上传 PDF/图片 | object key + 可下载文件 | 上传、下载、删除均成功 | composer/storage/minio-test |
 | BullMQ + Redis | 1 个测试 job | job 执行结果 | 成功执行，失败可重试 | composer/queue/bullmq-test |
-| DeepSeek Provider | 一段课程文本 | 结构化 JSON/Markdown | 返回笔记、重点、导图数据字段 | composer/ai-provider/deepseek-test |
+| Kimi Provider | 一段课程文本 | 结构化 JSON/Markdown | 返回笔记、重点、导图数据字段 | composer/ai-provider/kimi-test |
 
 ---
 
@@ -66,7 +66,7 @@ Adapter 不验证组件内部实现，只验证本项目统一输入输出。
   → 创建课次/学习任务
   → 上传 PDF/图片/文本
   → 转为统一纯文本
-  → DeepSeek 生成结构化笔记 + 重点 + 思维导图
+  → Kimi 生成结构化笔记 + 重点 + 思维导图
   → 前端展示 Markdown / KaTeX / Markmap
   → 写入 StudyEvent
 ```
