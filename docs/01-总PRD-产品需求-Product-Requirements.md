@@ -1,6 +1,6 @@
 # AI StudyBuddy 总 PRD：共同底座 + 七个场景子系统
 
-**版本**：v1.0-rebuild
+**版本**：v0.01
 **日期**：2026-07-07
 **状态**：新系统设计第一版 PRD
 **归档来源**：旧草稿已归档到 `G:\ai-studybuddy-backup\system-design-docs-draft_*.zip`

@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+**Version**: v0.01
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 本仓库是什么

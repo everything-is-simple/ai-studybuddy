@@ -1,6 +1,6 @@
 # AI StudyBuddy 测试验收计划 Test Plan
 
-**版本**：v0.1-minimal  
+**版本**：v0.01
 **日期**：2026-07-07  
 **状态**：只覆盖 Phase 0.5A 组件 smoke test 与 Phase 0.8 最小验收  
 **原则**：先证明组件能独立跑通，再接入主系统。
@@ -30,7 +30,7 @@
 | PDF.js / pdf-parse | 1 个文字型 PDF | 可读纯文本 | 能提取主要正文，非空，无明显乱码 | composer/pdf |
 | PaddleOCR + PP-OCRv6 | 1 张试卷/课件图片 | OCR 文本 | 能识别主要题干/标题，允许少量错字 | composer/ocr/PaddleOCR |
 | react-markdown + KaTeX | 含标题、列表、公式的 Markdown | 页面正确渲染 | 公式和 Markdown 均可显示 | composer/markdown |
-| Markmap | 层级 Markdown | 思维导图 | 节点层级正确，可展开 | composer/mindmap |
+| Markmap | 层级 Markdown | 思维导图 | 节点层级正确，可展开 | composer/mindmap（✅ 2026-07-08 smoke test 通过，39 节点 / 深度 5） |
 | MinIO | 上传 PDF/图片 | object key + 可下载文件 | 上传、下载、删除均成功 | composer/storage/minio-test |
 | BullMQ + Redis | 1 个测试 job | job 执行结果 | 成功执行，失败可重试 | composer/queue/bullmq-test |
 | DeepSeek Provider | 一段课程文本 | 结构化 JSON/Markdown | 返回笔记、重点、导图数据字段 | composer/ai-provider/deepseek-test |
