@@ -15,7 +15,7 @@
 学生创建课程
   → 上传 PDF/图片/文本
   → 格式转换为纯文本
-  → Kimi 生成结构化笔记 + 重点 + 思维导图
+  → LLM（中转 GPT/Claude 默认）生成结构化笔记 + 重点 + 思维导图
   → 前端看到笔记和导图
 ```
 
@@ -32,7 +32,7 @@ flowchart TD
   C --> D["上传资料：PDF/图片/文本"]
   D --> E["MinIO 保存原始文件"]
   E --> F["FormatConverter 转为统一纯文本"]
-  F --> G["Kimi Provider 生成结构化笔记"]
+  F --> G["NoteAiProvider 生成结构化笔记（中转默认）"]
   G --> H["structured_notes / mind_maps 入库"]
   H --> I["前端展示 Markdown + KaTeX + Markmap"]
   I --> J["写入 StudyEvent：资料已整理"]
@@ -69,7 +69,7 @@ flowchart TD
 | PDF 转文本 | PDF.js / pdf-parse | 输入 PDF，输出纯文本 |
 | 图片 OCR | PaddleOCR + PP-OCRv6 | 输入图片，输出纯文本 |
 | 文本直入 | TextConverter | Markdown/纯文本直接入库 |
-| AI 整理 | Kimi Provider | 输入纯文本，输出结构化 JSON/Markdown |
+| AI 整理 | NoteAiProvider（中转 GPT/Claude 默认，Kimi 备选，官方兜底） | 输入纯文本，输出结构化 JSON/Markdown |
 | 展示 | react-markdown + KaTeX + Markmap | 渲染笔记、公式、思维导图 |
 
 ---
@@ -102,16 +102,18 @@ Phase 0.8 只需要：
 
 ## 6. AI Provider 路由原则
 
-Phase 0.8 默认接 Kimi（多模态+工具调用+工程分解能力）：
+默认走**中转渠道的 GPT/Claude**（实测倍率极低，成本优于国产直连），中转不可用时切 Kimi，最终兜底回国产官方直连。Provider 可替换，不写死模型版本。
 
-| 场景 | 默认 | 备注 |
-|---|---|---|
-| 结构化笔记 | Kimi | 输入必须是纯文本 |
-| 重点高亮 | Kimi | 与笔记生成合并一次调用 |
-| 思维导图数据 | Kimi | 与笔记生成合并一次调用 |
-| OCR/版面失败兑底 | Kimi 视觉 | 多模态能力直接处理 |
+| 场景 | 默认（中转） | 备选 | 兜底（官方直连） |
+|---|---|---|---|
+| 结构化笔记 | GPT/Claude 中转 | Kimi | Kimi/Qwen 官方 API |
+| 重点高亮 | GPT/Claude 中转 | Kimi | Kimi/Qwen 官方 API |
+| 思维导图数据 | GPT/Claude 中转 | Kimi | Kimi/Qwen 官方 API |
+| OCR/版面失败兜底 | GPT 视觉（中转） | Kimi 视觉 | Qwen-VL 官方 API |
 
-Qwen 保留配置位作为备选，持续跟踪马爸爸领导的 Qwen 进展。GPT/Claude 通过中转服务作为最难推理兑底，不属于开源组件。
+- 中转渠道成本最优但可能不稳或有变动，故官方直连始终作为随时可切换的兜底，保证系统可用；
+- 笔记、重点、导图三项尽量合并一次调用，降低 token 消耗；
+- Qwen 保留配置位持续跟踪。
 
 最小接口约定：
 
@@ -224,7 +226,44 @@ PDF、图片等耗时转换优先放到 BullMQ Job；Phase 0.8 可先同步跑�
 
 ---
 
-## 10. 环境变量最小清单
+## 10. 部署形态与远程接入（前瞻参考）
+
+> 本节记录已定的部署方向，供开工时不至于抓瞎。**详细安装步骤等 `13-部署运维指南` 触发时再写**；此处只定形态与工具选型。
+
+### 10.1 整体形态
+
+重算力留在家用主机，外网通过免费隧道接入。不上云服务器、不做小程序、不做 Serverless。
+
+| 维度 | 方案 |
+|---|---|
+| 主机 | 家中闲置 i7 笔记本（16G/2T）当常用主机；笔记本自带电池 = 免费 UPS；重活兜底用 Maxtang FP650（8 核/32G） |
+| 运行 | **按需开机**：孩子要用时才开，不 7×24 空转 |
+| 自助唤醒 | 智能插座（首选）或 WoL（有公网 IP 时加分项）——孩子自己点亮，不用等家长 |
+| 外网接入 | 免费隧道（主机主动外连，中国移动家宽无公网 IP 也可用） |
+| 鉴权 | **开机即对外可达，因此必须登录鉴权，绝不裸奔**；学生 owner，家长只读 |
+| 算力 | OCR/ASR/PDF 全部本地免费跑；重活走 BullMQ 异步，worker 并发 1–2 |
+
+### 10.2 隧道怎么建（工具选型）
+
+家宽多在运营商 NAT 后面（无公网 IP），无法直接端口转发。解决办法是用**由主机主动向外建立连接**的隧道工具，外网请求经隧道服务商回到家里。三个候选，从易到难：
+
+| 工具 | 原理 | 适合 | 成本 | 备注 |
+|---|---|---|---|---|
+| **Cloudflare Tunnel** | 主机跑 `cloudflared` 主动外连 Cloudflare，分配一个子域名 | 首选试点 | 免费 | 免公网 IP、自带 HTTPS；大陆访问偶有绕境外、可能不稳，需实测 |
+| **frp** | 自己有一台有公网 IP 的小服务器当中转，主机跑 `frpc` 连它 | 想要国内稳定 | 需一台廉价 VPS（与"不上云"权衡） | 最可控但要维护中转端 |
+| **花生壳等内网穿透** | 商业内网穿透服务 | 图省事 | 免费档限速/限流量 | 免费档够轻量用，超了要付费 |
+
+**推荐路径**：先试 Cloudflare Tunnel（零成本、零硬件），实测大陆访问稳不稳；不稳再退 frp 或花生壳。选定后在 `13-部署运维` 写具体配置。
+
+### 10.3 待实测项（影响最终选型）
+
+- Cloudflare Tunnel 在孩子所在校园网访问是否稳定、够快；
+- SenseVoice 在主机上转 40 分钟音频的真实耗时（决定云 ASR 要不要花钱）；
+- 智能插座 + 笔记本"通电自启 / 合盖不休眠"能否稳定实现自助唤醒。
+
+---
+
+## 11. 环境变量最小清单
 
 `.env.local` 不提交真实值，只提交 `.env.example` 的变量名。
 
@@ -236,21 +275,28 @@ MINIO_ACCESS_KEY=
 MINIO_SECRET_KEY=
 STORAGE_BUCKET=ai-studybuddy
 
-AI_PROVIDER_DEFAULT=kimi
+# AI 路由：默认中转，Kimi 备选，官方直连兜底
+AI_PROVIDER_DEFAULT=relay
+RELAY_BASE_URL=
+RELAY_API_KEY=
 KIMI_API_KEY=
 QWEN_API_KEY=
 OPENAI_API_KEY=
+
+# 远程接入（隧道，具体值待选型后填）
+TUNNEL_PROVIDER=
+TUNNEL_TOKEN=
 
 DATA_ROOT=G:\ai-studybuddy-data
 LOG_ROOT=G:\ai-studybuddy-logs
 TMP_ROOT=G:\ai-studybuddy-tmp
 ```
 
-未来业务代码不得硬编码 `G:\...` 路径，必须通过环境变量读取。
+未来业务代码不得硬编码 `G:\...` 路径，必须通过环境变量读取。API Key 和隧道 token 绝不写进日志。
 
 ---
 
-## 11. 非目标
+## 12. 非目标
 
 本文档不设计：
 
