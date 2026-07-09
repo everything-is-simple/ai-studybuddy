@@ -1,7 +1,7 @@
 # AI StudyBuddy 七个场景子系统地图
 
 **版本**：v0.01
-**日期**：2026-07-08（修订：AI 路由改为中转默认；补充异地远程与学生主视角）
+**日期**：2026-07-08（2026-07-09 补充：Phase 0.5A MVP 底座 smoke test 结论）
 **用途**：这是七个子系统拆分的单一事实来源。开发时先看本文件，确认当前做的是哪一个场景，不要把所有功能混成一锅。
 
 ---
@@ -30,12 +30,12 @@ AI StudyBuddy 的开发方式：
 | 编号 | 子系统 | 场景 | 学生动作 | 系统输出 | 主要开源组件 | AI 使用点 |
 |---|---|---|---|---|---|---|
 | S1 | 学习节奏 StudyRhythm | 每日/每周学习安排 | 建课程、课次、任务、截止时间 | 时间线、工作量、逾期提醒 | BullMQ、PostgreSQL、Redis | 一般不用；后续可生成复习建议 |
-| S2 | 资料笔记 NoteBuilder | 课后整理资料 | 上传 PDF/文本/图片 | 笔记、重点、导图 | PDF.js、pdf-parse、PaddleOCR、react-markdown、KaTeX、Markmap | 默认中转 GPT/Claude，Kimi 备选，官方直连兜底 |
+| S2 | 资料笔记 NoteBuilder | 课后整理资料 | 上传 PDF/文本/图片 | 笔记、重点、导图 | pdf-parse、RapidOCR（PaddleOCR 备选）、react-markdown、KaTeX、Markmap | 默认中转 GPT/Claude（Pixel API/Responses 已测），Kimi/Qwen 后续备选 |
 | S3 | 限时练习 PracticeRunner | 学完后练习 | 做限时题、提交答案 | 批改结果、解析、完成记录 | 规则引擎、PostgreSQL | 主观题评分、题目生成 |
 | S4 | 错题改错 ErrorFixer | 复盘错题 | 查看错因、重做 | 错题本、复习排程、变题 | 规则引擎、BullMQ | 错因分类、改错建议、变题 |
 | S5 | 期末冲刺 ExamCrammer | 考前冲刺 | 上传真题、限时模拟 | 真题解析、模拟卷、冲刺计划 | PDF/OCR、计时器、题库 | 教学解析、变题组卷、难题走中转/官方兜底 |
 | S6 | 家长观察 ParentWindow | 家长查看节奏 | 打开只读旁观窗 | 完成状态、趋势、预警 | Web/PWA、图表库、Server酱/Bark 推送 | 可选生成周报摘要 |
-| S7 | 课堂采集 ClassCapture | 上课现场 | 录音/视频/拍笔记 | 转写文本、课堂素材 | SenseVoice、FunASR、FFmpeg、PaddleOCR | 默认不用；失败兜底可用视觉模型 |
+| S7 | 课堂采集 ClassCapture | 上课现场 | 录音/视频/拍笔记 | 转写文本、课堂素材 | SenseVoice、FunASR、FFmpeg、RapidOCR/PaddleOCR | 默认不用；失败兜底可用视觉模型 |
 
 ---
 

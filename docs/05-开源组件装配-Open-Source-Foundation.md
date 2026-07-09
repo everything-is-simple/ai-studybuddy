@@ -37,7 +37,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 | 字段 | 要求 |
 |---|---|
-| 组件名 | 例如 PaddleOCR、SenseVoice、Markmap |
+| 组件名 | 例如 RapidOCR、SenseVoice、Markmap |
 | GitHub / 官网地址 | 必须可追溯 |
 | License | 必须确认许可证 |
 | 成熟度判断 | Stars、维护状态、社区使用度、文档质量 |
@@ -57,7 +57,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 刷题/错题参考 | [MiaowTest](https://github.com/qijun1900/MiaowTest) | `composer\reference\miaowtest` | 参考题库、练习记录、错题统计；不搬数据库/框架 | 必参考 |
 | 轻量 MVP 参考 | [考试粥助手](https://github.com/zjuhechao/exam-porridge-assistant) | `composer\reference\exam-porridge` | 参考资料上传、AI笔记、练习、错题追踪 | 必参考 |
 | PDF 文本提取 | [PDF.js](https://github.com/mozilla/pdf.js) / [pdf-parse](https://www.npmjs.com/package/pdf-parse) | `composer\pdf` | PDF → 文本，封装 `PdfConverter` | MVP 必接 |
-| 图片 / 试卷 OCR | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) + PP-OCRv6 | `composer\ocr\PaddleOCR` | 图片 → 文本，封装 `OcrConverter` | MVP 必接 |
+| 图片 / 试卷 OCR | [RapidOCR](https://github.com/RapidAI/RapidOCR)（首选）/ [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)（备选对比） | `composer\ocr\RapidOCR` / `composer\ocr\PaddleOCR` | 图片 → 文本，封装 `OcrConverter` | MVP 必接 |
 | 音频转文字 | [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) | `composer\asr\SenseVoice` | 音频 → 文本，封装 `AudioConverter` | Phase 1.5 |
 | ASR 备选 | [FunASR](https://github.com/modelscope/FunASR) | `composer\asr\FunASR` | 更完整 ASR pipeline | Phase 1.5 |
 | 视频处理 | [FFmpeg](https://ffmpeg.org/) | `composer\video\ffmpeg-test` | 视频 → 音轨 → ASR | 后接 |
@@ -68,7 +68,8 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 异步任务队列 | [BullMQ](https://github.com/taskforcesh/bullmq) + Redis | `composer\queue\bullmq-test` | 格式转换 / AI Job 异步执行 | MVP 必接 |
 | 对象存储 | [MinIO](https://github.com/minio/minio) | `composer\storage\minio-test` | 原始素材、PDF、图片、音频存储 | MVP 必接 |
 | 数据库 / 向量 | [PostgreSQL](https://www.postgresql.org/) + [pgvector](https://github.com/pgvector/pgvector) | `composer\db\pgvector-test` | 业务数据 + 后续知识检索 | MVP 必接 |
-| 默认文本 AI | Kimi | `composer\ai-provider\kimi-test` | 文本理解、笔记整理、普通解析、多模态 | MVP 必接 |
+| 默认文本 AI | GPT/Claude 中转（Pixel API） | `composer\ai-provider\gpt-test` | 文本理解、笔记整理、普通解析 | MVP 必接 |
+| 文本 AI 备选 | Kimi | `composer\ai-provider\kimi-test` | 文本理解、笔记整理、多模态；当前无 Key | 备选 |
 | 文本 AI 备选 | Qwen | `composer\ai-provider\qwen-test` | 文本任务备选；Qwen-VL 只作多模态兜底 | P1 |
 | 复杂图片兜底 | Kimi 视觉 / Qwen-VL | `composer\ai-provider\vision-fallback-test` | OCR/版面失败时兜底 | P2 |
 | 最难推理兜底 | GPT/Claude 中转 | `composer\ai-provider\gpt-test` | 最难数学、证明、跨学科推理 | P2/高级兜底 |
@@ -100,7 +101,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 输入 | 组件 | 输出 |
 |---|---|---|
 | PDF | PDF.js / pdf-parse | 纯文本 |
-| 图片 / 试卷 | PaddleOCR + PP-OCRv6 | OCR 文本 |
+| 图片 / 试卷 | RapidOCR（首选）/ PaddleOCR（备选对比） | OCR 文本 |
 | 音频 | SenseVoice / FunASR | 转写文本 |
 | 视频 | FFmpeg → ASR | 转写文本 |
 | 网页链接 | Mozilla Readability + jsdom | 正文文本 |
@@ -110,10 +111,10 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 | 任务 | 默认 Provider | 兑底策略 |
 |---|---|---|
-| 结构化笔记 + 重点 + 思维导图数据 | Kimi | Qwen 备选；GPT/Claude 处理难内容 |
-| 教学解析步骤 / 解题路径 | Kimi（思考+分解） | Qwen 备选；GPT/Claude 处理最难数学、证明、跨学科推理 |
-| 出题 / 变题 | Kimi / Qwen | GPT/Claude 处理难题 |
-| 主观题评分 / 错因分类 | Kimi / Qwen | GPT/Claude 处理争议样例 |
+| 结构化笔记 + 重点 + 思维导图数据 | GPT/Claude 中转 | Kimi/Qwen 备选 |
+| 教学解析步骤 / 解题路径 | GPT/Claude 中转 | Kimi/Qwen 备选 |
+| 出题 / 变题 | GPT/Claude 中转 | Kimi/Qwen 备选 |
+| 主观题评分 / 错因分类 | GPT/Claude 中转 | Kimi/Qwen 备选 |
 | OCR/版面失败兑底 | Kimi 视觉 / Qwen-VL | 仅在开源 OCR 失败后使用 |
 
 ### 5.3 规则引擎层：不走 LLM
@@ -145,13 +146,14 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 组件 | Smoke Test 操作 | 通过标准 | 失败处理 |
 |---|---|---|---|
 | **pdf-parse / PDF.js** | 解析 1 个含中文的真实 PDF（至少 3 页） | 文本完整提取、无乱码、中文字符正确、页码能区分 | 换备选组件或检查编码 |
-| **PaddleOCR + PP-OCRv6** | 识别 1 张含中文文字的试卷图片 | 汉字/数字识别率 > 90%；表格结构基本保留；不丢整行 | 调整模型版本或预处理 |
+| **RapidOCR / PaddleOCR** | 识别 1 张含中文文字的试卷图片 | 能识别主要题干/标题；记录单页耗时、中文字符数和人工抽检误字；PaddleOCR 只作备选对比 | 调整模型版本、预处理或转入 LLM 视觉兜底 |
 | **Markmap** | 渲染 1 份 3 级层级的 Markdown 文本 | 浏览器可正常展示导图；节点可展开/收起；不报错 | 检查 Markdown 格式或 Markmap 版本 |
 | **react-markdown + KaTeX** | 渲染含行内公式 `$E=mc^2$` 和块级公式的 Markdown | 公式美观渲染、不显示原始 LaTeX 源码、无 JS 报错 | 检查 KaTeX 插件配置 |
 | **BullMQ + Redis** | 创建队列 → 入队 1 个 Job → 消费 → 模拟失败 → 重试 | Job 经历 waiting→active→completed 全生命周期；失败 Job 重试成功 | 检查 Redis 连接和队列配置 |
 | **MinIO** | 上传 1 个文件 → 下载 → 生成临时 URL → URL 可访问 | 上传/下载内容一致；临时 URL 在有效期内可访问、过期后不可访问 | 检查 Bucket 策略和端口 |
 | **PostgreSQL + pgvector** | 建表 → 插入 → 查询 → 创建向量列 → 向量相似度搜索 | CRUD 正常；pgvector 扩展加载成功；向量搜索返回结果 | 检查扩展安装和 SQL 语法 |
-| **Kimi API** | 发送 1 段 500 字中文纯文本，要求返回结构化笔记 | API 调通；返回 Markdown 格式可解析；latency < 30s；token 消耗合理 | 检查 API Key 和网络；记录错误码 |
+| **GPT/Claude 中转 API** | 发送 1 段 500 字中文纯文本，要求返回结构化笔记 | API 调通；返回 Markdown 格式可解析；latency < 30s；token 消耗合理 | 检查 API Key、Base URL、余额和模型权限；记录错误码 |
+| **Kimi API** | 同中转 API smoke test | 同上 | 检查 API Key 和网络；记录错误码 |
 | **Qwen API**（P1 备选） | 同 Kimi smoke test | 同上 | 同上 |
 
 ### Smoke Test 执行规范
@@ -166,21 +168,23 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 | 组件 | 状态 | 通过日期 | 版本 | 备注 |
 |---|---|---|---|---|
-| pdf-parse | ⏳ 待测 | — | — | — |
+| pdf-parse | ✅ 已测 | 2026-07-09 | 2.4.5 | 文字型中文 PDF 通过：7 页、5155 字符、2422 个中文字符；扫描版 `电工考点.pdf` 需走 OCR |
+| RapidOCR | ✅ 已测 | 2026-07-09 | rapidocr-onnxruntime 1.4.4 | 22 张繁体书页批量通过；平均 1.94s/页；中文字符 3009；存在误字，需人工/LLM 清洗 |
 | PaddleOCR | ⏳ 待测 | — | — | — |
-| Markmap | ⏳ 待测 | — | — | — |
-| react-markdown + KaTeX | ⏳ 待测 | — | — | — |
-| BullMQ + Redis | ⏳ 待测 | — | — | — |
-| MinIO | ⏳ 待测 | — | — | — |
-| PostgreSQL + pgvector | ⏳ 待测 | — | — | — |
-| Kimi API | ⏳ 待测 | — | — | — |
+| Markmap | ✅ 已测 | 2026-07-09 | 0.18.12 | Node 脚本通过；Chrome 浏览器二次验证通过 |
+| react-markdown + KaTeX | ✅ 已测 | 2026-07-09 | KaTeX CDN 0.16.9 | Chrome 浏览器验证通过：5 个公式、中文、代码块均正常 |
+| BullMQ + Redis | ✅ 已测 | 2026-07-09 | BullMQ 5.79.3 / Redis 7.4.9 | 失败重试 + completed 生命周期通过；Docker Hub token EOF 时使用 daocloud 镜像代理 |
+| MinIO | ✅ 已测 | 2026-07-09 | MinIO RELEASE.2025-09-07 / SDK 8.0.7 | 上传/下载一致、presigned URL、对象删除、控制台登录通过；Docker Hub TLS 超时后使用 daocloud 镜像代理 |
+| PostgreSQL + pgvector | ✅ 已测 | 2026-07-09 | PostgreSQL 16.14 / pgvector 0.8.5 | CRUD、向量搜索、IVFFlat 索引通过；测试后已清理容器 |
+| GPT/Claude 中转 API | ✅ 已测 | 2026-07-09 | Pixel API / gpt-5.5 / Responses API | `gpt-test` 通过：11.9s，总 tokens 988，Markdown、中文、思维导图 JSON 均通过；最初 401 为 `.env.local` 手填 Key 与 cc-switch provider key 不一致 |
+| Kimi API | ⏳ 待测 | — | — | 当前无 Key |
 | Qwen API | ⏳ 待测 | — | — | — |
 
 ---
 
 ## 八、七子系统底座选型（2026-07-08 调研补充）
 
-**来源**：两轮深度调研（对抗式验证）。**目标**：每个子系统尽量套成熟开源底座，避免从零自建。**结论前提**：AI 走 Kimi/Qwen 等云 API，不在本地跑大模型。
+**来源**：两轮深度调研（对抗式验证）+ Phase 0.5A 本机 smoke test。**目标**：每个子系统尽量套成熟开源底座，避免从零自建。**结论前提**：AI 走云 API，不在本地跑大模型；当前默认是 Pixel API 中转 GPT/Claude，Kimi/Qwen 只保留后续备选配置位。
 
 ### 8.1 整体判断：分子系统各取所长，不套单一 LMS
 
@@ -198,7 +202,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 子系统 | 推荐底座 | License / 栈契合 | 覆盖范围 · 需自建 |
 |---|---|---|---|
 | **S1 学习节奏** | [frappe-gantt](https://github.com/frappe/gantt) + [react-big-calendar](https://github.com/jquense/react-big-calendar)；复杂甘特可选 [DHTMLX Gantt](https://github.com/DHTMLX/gantt) | 全 **MIT**，React/JS 库可嵌入 ✅ | 覆盖时间线/日历/甘特渲染。自建：课程/任务数据模型、工作量聚合（甘特无原生工作量视图）、逾期提醒（BullMQ 定时 Job）。**DHTMLX 仅 v10+ Community 版为 MIT，须锁版本，v9 及更早为 GPLv2** |
-| **S2 资料笔记** | [markmap](https://github.com/markmap/markmap)（导图）+ 既有 PDF.js/OCR/react-markdown/KaTeX；检索可参考 [Quivr](https://github.com/quivrhq/quivr)(Apache-2.0,原生 pgvector) | markmap **MIT**，JS/TS 原生 ✅ | 覆盖导图渲染与格式转换。自建：上传→转文本→喂 Kimi→存 markdown/导图数据 的编排线 |
+| **S2 资料笔记** | [markmap](https://github.com/markmap/markmap)（导图）+ 既有 pdf-parse/RapidOCR/react-markdown/KaTeX；检索可参考 [Quivr](https://github.com/quivrhq/quivr)(Apache-2.0,原生 pgvector) | markmap **MIT**，JS/TS 原生 ✅ | 覆盖导图渲染与格式转换。自建：上传→转文本→喂中转 GPT/Claude→存 markdown/导图数据 的编排线 |
 | **S3 限时练习** | [@lumieducation/h5p-server](https://github.com/Lumieducation/H5P-Nodejs-library) | 纯 **TypeScript**，npm 可嵌入 ✅ 最契合 | Question Set 内置多选/填空/拖词等客观题型→规则批改。自建：主观题 AI 评分（Kimi）、题目生成（Kimi）、限时逻辑。Moodle 题引擎(PHP 耦合)/E-Quiz(需 K8s)/obsidian 插件(绑 Obsidian) 均不宜嵌入 |
 | **S4 错题改错** | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs)（~704★，FSRS-v6） | **MIT**，同栈原生 TS 库 ✅ 最契合 | 覆盖艾宾浩斯间隔复习调度引擎（喂评分→返回下次复习时间）。自建：错题本模型、错因分类、变题重做、录入 UI、卡片状态持久化到 PostgreSQL |
 | **S5 期末冲刺** | ⚠️ **组卷算法无可复用 TS/Node 底座，需自研** | — | 自建：按知识点/难度加权抽样组卷（TS 实现，不复杂）。真题解析/变题走 Kimi。限时模拟考复用 S3 的 H5P。（RecruitSystem 用遗传算法组卷但为 Java SSM 整站，不可复用） |

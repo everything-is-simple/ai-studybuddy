@@ -129,7 +129,7 @@ git diff --check
 
 1. 重读 [08-共同底座架构](08-共同底座架构-Architecture.md)；
 2. 创建 `subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`；
-3. 在 composer 先调通 PDF.js/PaddleOCR/Markmap；
+3. 在 composer 先调通 pdf-parse/RapidOCR/Markmap；
 4. 开工。
 
 ---
@@ -161,4 +161,5 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 |---|---|---|
+| v1.1 | 2026-07-09 | Phase 0.5A MVP 底座完成后，更新共同底座、组件状态、AI Provider 与 OCR 主路径 |
 | v1.0 | 2026-07-07 | 初始版本，文档重建后的第一版索引 |

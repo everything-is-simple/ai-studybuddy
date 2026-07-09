@@ -15,10 +15,10 @@
 | 重活兜底 | Maxtang FP650（8 核/32G）作开发机 + OCR/ASR 重负载兜底 |
 | 开机方式 | **按需开机**：孩子要用时才开，不空转，电费几乎为零 |
 | 自助唤醒 | 智能插座（首选，物理通电最稳）或网络唤醒 WoL（有公网 IP 时加分项）——学生自己点亮，不依赖家长在场 |
-| 外网接入 | 免费隧道（主机主动外连，家宽无公网 IP 也可用）；详见 `08-共同底座架构` 第 10 节 |
+| 外网接入 | 免费隧道（主机主动外连，家宽无公网 IP 也可用）；详见 `08-共同底座架构` 第 12 节 |
 | 安全底线 | 主机一开机即对外可达，**必须登录鉴权**；学生为 owner，家长为受限只读 |
 
-> 具体隧道工具选型和安装步骤见 `08-共同底座架构` 第 10 节与将来的 `13-部署运维指南`。本文只声明主机形态，不重复。
+> 具体隧道工具选型和安装步骤见 `08-共同底座架构` 第 12 节与将来的 `13-部署运维指南`。本文只声明主机形态，不重复。
 
 ## 一、总原则：分解 → 调试 → 组合 → 固化 → 备份
 
@@ -51,7 +51,7 @@ AI StudyBuddy 不是先写一个大而全系统，再临时寻找外部能力；
 | 目录 | 角色 | 放什么 | 不放什么 |
 |---|---|---|---|
 | `G:\ai-studybuddy` | 主系统工程 | 源码、设计文档、正式 Adapter、数据库 schema、Docker Compose | 组件原仓库、大型测试素材、真实运行数据、长期日志 |
-| `G:\ai-studybuddy-composer` | 组件试炼场 | PaddleOCR、SenseVoice、PDF.js、Markmap、MinIO、BullMQ、AI Provider 最小样例 | 主系统业务代码、真实学习数据 |
+| `G:\ai-studybuddy-composer` | 组件试炼场 | RapidOCR/PaddleOCR、SenseVoice、PDF.js、Markmap、MinIO、BullMQ、AI Provider 最小样例 | 主系统业务代码、真实学习数据 |
 | `G:\ai-studybuddy-backup` | 里程碑备份 | 每个阶段完成后的 zip 包、`COMMIT.txt` | 未压缩源码散落文件、运行日志 |
 | `G:\ai-studybuddy-data` | 数据库持久化 | PostgreSQL、Redis、pgvector 数据目录 | 源码、日志、学习文件原件 |
 | `G:\ai-studybuddy-day-study` | 学习文件存储 | MinIO 对象存储后端目录、PDF、图片、音频、导出文件 | 数据库文件、临时切片 |
@@ -85,6 +85,7 @@ G:\ai-studybuddy-composer
   │   ├── SenseVoice
   │   └── FunASR
   ├── ocr
+  │   ├── RapidOCR
   │   └── PaddleOCR
   ├── pdf
   │   ├── pdfjs
@@ -181,6 +182,7 @@ G:\ai-studybuddy-logs
   │   ├── ai-jobs.log
   │   └── queue.log
   ├── components
+  │   ├── rapidocr.log
   │   ├── paddleocr.log
   │   ├── sensevoice.log
   │   ├── pdf.log

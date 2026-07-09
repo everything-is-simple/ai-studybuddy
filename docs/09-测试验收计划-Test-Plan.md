@@ -2,7 +2,7 @@
 
 **版本**：v0.01
 **日期**：2026-07-07  
-**状态**：只覆盖 Phase 0.5A 组件 smoke test 与 Phase 0.8 最小验收  
+**状态**：Phase 0.5A MVP 主路径已完成；继续覆盖 Phase 0.8 最小验收
 **原则**：先证明组件能独立跑通，再接入主系统。
 
 ---
@@ -26,14 +26,14 @@
 
 | 组件 | 最小输入 | 期望输出 | 通过标准 | 结果记录 |
 |---|---|---|---|---|
-| PostgreSQL + pgvector | 启动数据库并执行建表 SQL | 可连接、可写入、可查询 | 能创建最小表并插入/读取一条记录 | composer/db/pgvector-test |
-| PDF.js / pdf-parse | 1 个文字型 PDF | 可读纯文本 | 能提取主要正文，非空，无明显乱码 | composer/pdf |
-| PaddleOCR + PP-OCRv6 | 1 张试卷/课件图片 | OCR 文本 | 能识别主要题干/标题，允许少量错字 | composer/ocr/PaddleOCR |
-| react-markdown + KaTeX | 含标题、列表、公式的 Markdown | 页面正确渲染 | 公式和 Markdown 均可显示 | composer/markdown |
-| Markmap | 层级 Markdown | 思维导图 | 节点层级正确，可展开 | composer/mindmap（✅ 2026-07-08 smoke test 通过，39 节点 / 深度 5） |
-| MinIO | 上传 PDF/图片 | object key + 可下载文件 | 上传、下载、删除均成功 | composer/storage/minio-test |
-| BullMQ + Redis | 1 个测试 job | job 执行结果 | 成功执行，失败可重试 | composer/queue/bullmq-test |
-| Kimi Provider | 一段课程文本 | 结构化 JSON/Markdown | 返回笔记、重点、导图数据字段 | composer/ai-provider/kimi-test |
+| PostgreSQL + pgvector | 启动数据库并执行建表 SQL | 可连接、可写入、可查询、可向量检索 | ✅ 2026-07-09 验证通过：PostgreSQL 16.14 + pgvector 0.8.5；CRUD、向量搜索、IVFFlat 索引通过 | composer/db/pgvector-test |
+| PDF.js / pdf-parse | 1 个文字型 PDF | 可读纯文本 | 能提取主要正文，非空，无明显乱码 | composer/pdf（✅ 2026-07-09 pdf-parse 2.4.5 验证通过：7 页、5155 字符、2422 个中文字符） |
+| RapidOCR / PaddleOCR | 1 张试卷/课件图片 | OCR 文本 | 能识别主要题干/标题，允许少量错字；RapidOCR 为当前主路径，PaddleOCR 仅作备选对比 | composer/ocr（✅ RapidOCR 2026-07-09 批量验证通过：22 张、平均 1.94s/页、中文字符 3009；PaddleOCR 待对比但不阻塞 Phase 0.8） |
+| react-markdown + KaTeX | 含标题、列表、公式的 Markdown | 页面正确渲染 | 公式和 Markdown 均可显示 | composer/markdown（✅ 2026-07-09 Chrome 浏览器验证通过：KaTeX 加载、5 个公式、中文、代码块均正常） |
+| Markmap | 层级 Markdown | 思维导图 | 节点层级正确，可展开 | composer/mindmap（✅ 2026-07-08 Node smoke test 通过，39 节点 / 深度 5；2026-07-09 Chrome 浏览器验证通过） |
+| MinIO | 上传 PDF/图片 | object key + 可下载文件 + presigned URL | ✅ 2026-07-09 验证通过：上传、下载一致、临时 URL、删除、控制台登录均成功 | composer/storage/minio-test |
+| BullMQ + Redis | 1 个测试 job | job 执行结果 | 成功执行，失败可重试 | composer/queue/bullmq-test（✅ 2026-07-09 验证通过：第一次失败、第二次重试成功、最终 completed） |
+| Relay GPT/Claude Provider | 一段课程文本 | 结构化 JSON/Markdown | ✅ 2026-07-09 验证通过：Pixel API / gpt-5.5 / Responses API；11.9s，总 tokens 988，Markdown、中文、思维导图 JSON 均通过 | composer/ai-provider/gpt-test |
 
 ---
 
@@ -66,7 +66,7 @@ Adapter 不验证组件内部实现，只验证本项目统一输入输出。
   → 创建课次/学习任务
   → 上传 PDF/图片/文本
   → 转为统一纯文本
-  → Kimi 生成结构化笔记 + 重点 + 思维导图
+  → 中转 GPT/Claude 生成结构化笔记 + 重点 + 思维导图
   → 前端展示 Markdown / KaTeX / Markmap
   → 写入 StudyEvent
 ```

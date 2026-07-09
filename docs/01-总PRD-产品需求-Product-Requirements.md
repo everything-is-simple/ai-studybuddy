@@ -1,7 +1,7 @@
 # AI StudyBuddy 总 PRD：共同底座 + 七个场景子系统
 
 **版本**：v0.01
-**日期**：2026-07-08（修订：补充异地远程访问场景、"家用机按需开机 + 隧道"部署形态、AI 中转默认路由）
+**日期**：2026-07-08（2026-07-09 补充：Phase 0.5A MVP 底座 smoke test 结论）
 **状态**：新系统设计第一版 PRD
 **归档来源**：旧草稿已归档到 `G:\ai-studybuddy-backup\system-design-docs-draft_*.zip`
 
@@ -108,9 +108,9 @@ flowchart TD
 |---|---|---|
 | 1. 总 PRD | 产品目标、用户、场景、范围 | `docs/01-总PRD-产品需求-Product-Requirements.md` |
 | 2. 子系统地图 | 七个子系统边界、顺序、依赖 | `docs/02-七子系统地图-Scenario-Systems.md` |
-| 3. 架构文档 | 共同底座、数据流、组件、AI 路由 | `docs/08-共同底座架构-Architecture.md`（未来重写） |
+| 3. 架构文档 | 共同底座、数据流、组件、AI 路由 | `docs/08-共同底座架构-Architecture.md` |
 | 4. 任务清单 | 按阶段拆任务，避免乱做 | `docs/04-开发任务清单-Todo-List.md` |
-| 5. 测试验收 | 每个场景怎么证明能用 | `docs/09-测试验收计划-Test-Plan.md`（未来重写） |
+| 5. 测试验收 | 每个场景怎么证明能用 | `docs/09-测试验收计划-Test-Plan.md` |
 
 本项目因为强调开源组件先行和本地目录治理，额外保留：
 
@@ -137,7 +137,7 @@ flowchart TD
 ```mermaid
 flowchart TD
   A["学生创建课程和本周学习任务"] --> B["上传资料：PDF / 文本 / 图片"]
-  B --> C["格式转换：PDF.js / pdf-parse / PaddleOCR（无LLM）"]
+  B --> C["格式转换：pdf-parse / RapidOCR（无LLM）"]
   C --> D["统一纯文本入库"]
   D --> E["AI整理：中转 GPT/Claude 默认，Kimi 备选，国产官方直连兜底"]
   E --> F["结构化笔记 + 重点 + 思维导图"]
@@ -179,8 +179,8 @@ flowchart TD
 **目标**：把学习资料变成可复习的结构化笔记。
 
 - 输入：PDF、文本、Markdown、图片；
-- 格式转换：PDF.js / pdf-parse / PaddleOCR；
-- AI：默认中转 GPT/Claude（成本最优），Kimi 备选，国产官方直连兜底；
+- 格式转换：PDF.js / pdf-parse / RapidOCR（PaddleOCR 作为 OCR 备选对比）；
+- AI：默认中转 GPT/Claude（Pixel API 已通过 Responses API smoke test），Kimi/Qwen 保留配置位；
 - 输出：Markdown 笔记、重点、高频概念、思维导图数据；
 - 展示：react-markdown + KaTeX + Markmap。
 
@@ -236,7 +236,7 @@ flowchart TD
 - 课堂录音；
 - 音频 ASR：SenseVoice / FunASR（本地 CPU 运行，免费；转写慢时走异步队列，不阻塞）；
 - 视频抽音轨：FFmpeg → ASR；
-- 手写笔记拍照：PaddleOCR；
+- 手写笔记拍照：RapidOCR（PaddleOCR 备选对比）；
 - 课堂资料自动进入 S2；
 - **原始音视频处理完成后即删除，仅保留结构化笔记**（存储极小，隐私也更干净）。
 
@@ -249,7 +249,7 @@ flowchart TD
 | 能力 | 工具 | 说明 |
 |---|---|---|
 | PDF 提取文本 | PDF.js / pdf-parse | 格式转换，不是 AI 理解 |
-| 图片/试卷 OCR | PaddleOCR + PP-OCRv6 | OCR，不让 LLM 直接看图作为主路径 |
+| 图片/试卷 OCR | RapidOCR（首选）/ PaddleOCR（备选对比） | OCR，不让 LLM 直接看图作为主路径 |
 | 音频转文本 | SenseVoice / FunASR | ASR，Phase 1.5 |
 | 视频处理 | FFmpeg | 抽音轨后走 ASR |
 | 网页正文 | Mozilla Readability + jsdom | 抽正文，不做理解 |
@@ -258,7 +258,7 @@ flowchart TD
 
 ### 6.2 哪些地方使用 LLM
 
-默认走**中转渠道的 GPT/Claude**（实测倍率极低，成本优于国产直连），中转不可用时切 Kimi，最终兜底回国产官方直连。
+默认走**中转渠道的 GPT/Claude**（实测倍率极低，成本优于国产直连），Provider 可替换，不写死模型版本。2026-07-09 已通过 Pixel API `gpt-5.5` + Responses API smoke test；Kimi 当前无 Key，GLM-5.2 已到期，DeepSeek 按用户偏好废弃不用。
 
 | 场景 | 默认（中转） | 备选 | 兜底（官方直连） |
 |---|---|---|---|
@@ -273,7 +273,7 @@ flowchart TD
 - 用户看到的是“教学解析步骤 / 解题路径”，不是模型内部思维链；
 - 所有 LLM 输入优先是纯文本；
 - AI Provider 可替换，不写死模型版本；**默认走中转渠道（成本最优），官方直连随时可切换作为兜底**，因为中转渠道可能不稳或有变动；
-- 国产官方直连（Kimi/Qwen）担纲中转全部失效后的最终兜底，保证系统始终可用；
+- Kimi/Qwen 保留为后续备选配置位；当前 Phase 0.8 主路径不依赖它们；
 - 记录模型、token、耗时和失败原因，不记录 API Key 和学生隐私全文。
 
 ---
@@ -354,7 +354,7 @@ flowchart TD
 | 阶段 | 目标 | 子系统 |
 |---|---|---|
 | Phase 0 | 文档重建、草稿归档、七子系统命名 | 全局 |
-| Phase 0.5 | 成熟开源组件在 composer 独立调通 | 共同底座 |
+| Phase 0.5 | 成熟开源组件在 composer 独立调通（MVP 主路径已基本完成；PaddleOCR 备选对比不阻塞） | 共同底座 |
 | Phase 1 | 跑通最小学习闭环 | S1 + S2 + S3 + S4 + S6 简版 |
 | Phase 1.5 | 加课堂录音 ASR | S7 |
 | Phase 2 | 加期末真题冲刺 | S5 |

@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
 **版本**：v0.01
-**日期**：2026-07-07  
-**状态**：最小共同底座，仅服务 Phase 0.5A 和 Phase 0.8  
+**日期**：2026-07-07（2026-07-09 补充：Phase 0.5A smoke test 结论与 Phase 0.8 开工前整理）
+**状态**：Phase 0.8 开工前共同底座基线
 **原则**：只写当前要用的底座，不恢复旧版大架构。
 
 ---
@@ -67,14 +67,33 @@ flowchart TD
 | 文件存储 | MinIO | 原始 PDF/图片/文本通过 S3 API 存取 |
 | 异步任务 | BullMQ + Redis | 格式转换和 AI Job 可异步；Phase 0.8 可先同步跑通再异步化 |
 | PDF 转文本 | PDF.js / pdf-parse | 输入 PDF，输出纯文本 |
-| 图片 OCR | PaddleOCR + PP-OCRv6 | 输入图片，输出纯文本 |
+| 图片 OCR | RapidOCR（首选）/ PaddleOCR（备选对比） | 输入图片，输出纯文本；RapidOCR 已通过本机批量 smoke test |
 | 文本直入 | TextConverter | Markdown/纯文本直接入库 |
-| AI 整理 | NoteAiProvider（中转 GPT/Claude 默认，Kimi 备选，官方兜底） | 输入纯文本，输出结构化 JSON/Markdown |
+| AI 整理 | NoteAiProvider（中转 GPT/Claude 默认；Kimi/Qwen 后续备选） | 输入纯文本，输出结构化 JSON/Markdown；Pixel API / Responses API 已通过 smoke test |
 | 展示 | react-markdown + KaTeX + Markmap | 渲染笔记、公式、思维导图 |
 
 ---
 
-## 5. Adapter 边界
+## 5. Phase 0.5A Smoke Test 结论
+
+截至 2026-07-09，Phase 0.8 需要的 MVP 主路径底座已基本齐备：
+
+| 能力 | 结论 | 主系统接入判断 |
+|---|---|---|
+| PDF 文本提取 | pdf-parse 已通过文字型中文 PDF；扫描版 PDF 进入 OCR 路径 | 可封装 `PdfConverter` |
+| 图片 OCR | RapidOCR 批量 22 张书页通过，平均 1.94s/页；PaddleOCR 未对比 | `OcrConverter` 先接 RapidOCR，PaddleOCR 不阻塞 |
+| Markdown/公式展示 | react-markdown + KaTeX 浏览器验证通过 | 可进入前端笔记页 |
+| 思维导图 | Markmap Node + 浏览器验证通过 | 可进入前端导图页 |
+| 队列 | BullMQ + Redis 失败重试与 completed 生命周期通过 | OCR/AI 重任务可异步 |
+| 对象存储 | MinIO 上传、下载、presigned URL、控制台登录通过 | 可封装 `StorageAdapter` |
+| 数据库 | PostgreSQL 16.14 + pgvector 0.8.5 CRUD、向量搜索、IVFFlat 通过 | 可进入迁移设计 |
+| AI Provider | Pixel API / `gpt-5.5` / Responses API 通过；总 tokens 988，11.9s | 可封装 `NoteAiProvider` |
+
+PaddleOCR、Kimi、Qwen、ASR、FFmpeg、Readability 均不是 Phase 0.8 主路径阻塞项。
+
+---
+
+## 6. Adapter 边界
 
 主系统不直接依赖组件内部命令。组件统一通过 Adapter 暴露输入输出。
 
@@ -92,7 +111,7 @@ type ConverterResult = {
 Phase 0.8 只需要：
 
 - `PdfConverter`
-- `OcrConverter`
+- `OcrConverter`（先接 RapidOCR，PaddleOCR 作为可替换实现）
 - `TextConverter`
 - `NoteAiProvider`
 
@@ -100,20 +119,21 @@ Phase 0.8 只需要：
 
 ---
 
-## 6. AI Provider 路由原则
+## 7. AI Provider 路由原则
 
-默认走**中转渠道的 GPT/Claude**（实测倍率极低，成本优于国产直连），中转不可用时切 Kimi，最终兜底回国产官方直连。Provider 可替换，不写死模型版本。
+默认走**中转渠道的 GPT/Claude**（实测倍率极低，成本优于国产直连）。2026-07-09 本机 smoke test 已确认 Pixel API `gpt-5.5` 通过 OpenAI Responses API 可用；Provider 可替换，不写死模型版本。
 
 | 场景 | 默认（中转） | 备选 | 兜底（官方直连） |
 |---|---|---|---|
-| 结构化笔记 | GPT/Claude 中转 | Kimi | Kimi/Qwen 官方 API |
-| 重点高亮 | GPT/Claude 中转 | Kimi | Kimi/Qwen 官方 API |
-| 思维导图数据 | GPT/Claude 中转 | Kimi | Kimi/Qwen 官方 API |
-| OCR/版面失败兜底 | GPT 视觉（中转） | Kimi 视觉 | Qwen-VL 官方 API |
+| 结构化笔记 | Pixel API 中转 GPT/Claude | Kimi（当前无 Key） | Qwen 官方 API（后续备选） |
+| 重点高亮 | Pixel API 中转 GPT/Claude | Kimi（当前无 Key） | Qwen 官方 API（后续备选） |
+| 思维导图数据 | Pixel API 中转 GPT/Claude | Kimi（当前无 Key） | Qwen 官方 API（后续备选） |
+| OCR/版面失败兜底 | GPT 视觉（中转，待测） | Kimi 视觉（当前无 Key） | Qwen-VL 官方 API（后续备选） |
 
-- 中转渠道成本最优但可能不稳或有变动，故官方直连始终作为随时可切换的兜底，保证系统可用；
+- Phase 0.8 主路径只依赖已测通的 Pixel API 中转；Kimi/Qwen 保留配置位，不作为当前阻塞项；
+- DeepSeek 按用户偏好废弃不用；GLM-5.2 已到期，不进入当前 Provider 列表；
 - 笔记、重点、导图三项尽量合并一次调用，降低 token 消耗；
-- Qwen 保留配置位持续跟踪。
+- cc-switch 导出的 provider 可作为本地测试来源；主系统实现时仍应通过环境变量或 Provider Registry 读取，不把 Key 写入仓库。
 
 最小接口约定：
 
@@ -141,7 +161,7 @@ type AiResponse = {
 
 ---
 
-## 7. 数据库和迁移约定
+## 8. 数据库和迁移约定
 
 | 约定项 | 规则 |
 |---|---|
@@ -157,7 +177,7 @@ Phase 0.8 第一批只落 S1/S2 必需表：`users`、`courses`、`study_tasks`�
 
 ---
 
-## 8. 统一 API 响应格式
+## 9. 统一 API 响应格式
 
 成功响应：
 
@@ -199,7 +219,7 @@ HTTP 状态码约定：
 
 ---
 
-## 9. 格式转换层接口约定
+## 10. 格式转换层接口约定
 
 格式转换全部输出统一纯文本，不把 LLM 当作主转换路径。
 
@@ -222,15 +242,34 @@ type ConvertOutput = {
 }
 ```
 
-PDF、图片等耗时转换优先放到 BullMQ Job；Phase 0.8 可先同步跑通，再异步化。
+PDF、图片等耗时转换优先放到 BullMQ Job。Phase 0.8 可先让文字型 PDF / 纯文本同步跑通；图片 OCR、扫描版 PDF 和 AI 整理默认按异步任务设计，避免在线请求长时间占用。
 
 ---
 
-## 10. 部署形态与远程接入（前瞻参考）
+## 11. Phase 0.8 开工前置清单
+
+进入主系统实现前，按以下顺序收口：
+
+1. 初始化主系统工程结构：`packages/shared`、`packages/backend`、`packages/frontend` 或同等分层；
+2. 创建 `.env.example`，只放变量名，不放真实 Key；
+3. 先实现 PostgreSQL 迁移和最小数据表：`users`、`courses`、`study_tasks`、`study_events`、`materials`、`normalized_texts`、`structured_notes`、`mind_maps`；
+4. 封装 `StorageAdapter` 对接 MinIO；
+5. 封装 `PdfConverter`、`OcrConverter`、`TextConverter`，统一返回纯文本；
+6. 封装 `NoteAiProvider`，默认走 Pixel API Responses；记录 provider、model、token、latency，不记录隐私全文；
+7. 接入 BullMQ：扫描版 PDF、图片 OCR、AI 整理走 Job；文字型 PDF 可先同步跑通；
+8. 做最小前端：课程列表、资料上传、笔记展示、Markmap 导图；
+9. 端到端验证：创建课程 → 上传 PDF/图片/文本 → 转纯文本 → AI 笔记 → 前端展示 → 写入 StudyEvent；
+10. 通过后再触发 S2 轻量 PRD；不要提前创建 S3/S4/S5/S6/S7 的业务表。
+
+`docs/10-后端开发规范-Backend-Guidelines.md` 还不到创建时机；等开始写第一个后端服务 / Adapter / API / Worker 前再创建。
+
+---
+
+## 12. 部署形态与远程接入（前瞻参考）
 
 > 本节记录已定的部署方向，供开工时不至于抓瞎。**详细安装步骤等 `13-部署运维指南` 触发时再写**；此处只定形态与工具选型。
 
-### 10.1 整体形态
+### 12.1 整体形态
 
 重算力留在家用主机，外网通过免费隧道接入。不上云服务器、不做小程序、不做 Serverless。
 
@@ -243,7 +282,7 @@ PDF、图片等耗时转换优先放到 BullMQ Job；Phase 0.8 可先同步跑�
 | 鉴权 | **开机即对外可达，因此必须登录鉴权，绝不裸奔**；学生 owner，家长只读 |
 | 算力 | OCR/ASR/PDF 全部本地免费跑；重活走 BullMQ 异步，worker 并发 1–2 |
 
-### 10.2 隧道怎么建（工具选型）
+### 12.2 隧道怎么建（工具选型）
 
 家宽多在运营商 NAT 后面（无公网 IP），无法直接端口转发。解决办法是用**由主机主动向外建立连接**的隧道工具，外网请求经隧道服务商回到家里。三个候选，从易到难：
 
@@ -255,7 +294,7 @@ PDF、图片等耗时转换优先放到 BullMQ Job；Phase 0.8 可先同步跑�
 
 **推荐路径**：先试 Cloudflare Tunnel（零成本、零硬件），实测大陆访问稳不稳；不稳再退 frp 或花生壳。选定后在 `13-部署运维` 写具体配置。
 
-### 10.3 待实测项（影响最终选型）
+### 12.3 待实测项（影响最终选型）
 
 - Cloudflare Tunnel 在孩子所在校园网访问是否稳定、够快；
 - SenseVoice 在主机上转 40 分钟音频的真实耗时（决定云 ASR 要不要花钱）；
@@ -263,7 +302,7 @@ PDF、图片等耗时转换优先放到 BullMQ Job；Phase 0.8 可先同步跑�
 
 ---
 
-## 11. 环境变量最小清单
+## 13. 环境变量最小清单
 
 `.env.local` 不提交真实值，只提交 `.env.example` 的变量名。
 
@@ -279,6 +318,8 @@ STORAGE_BUCKET=ai-studybuddy
 AI_PROVIDER_DEFAULT=relay
 RELAY_BASE_URL=
 RELAY_API_KEY=
+RELAY_MODEL=
+RELAY_WIRE_API=responses
 KIMI_API_KEY=
 QWEN_API_KEY=
 OPENAI_API_KEY=
@@ -296,7 +337,7 @@ TMP_ROOT=G:\ai-studybuddy-tmp
 
 ---
 
-## 12. 非目标
+## 14. 非目标
 
 本文档不设计：
 
