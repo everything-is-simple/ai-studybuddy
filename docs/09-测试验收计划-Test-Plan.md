@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划 Test Plan
 
-**版本**：v0.01
-**日期**：2026-07-07  
-**状态**：Phase 0.5A MVP 主路径已完成；继续覆盖 Phase 0.8 最小验收
+**版本**：v1.2
+**日期**：2026-07-09
+**状态**：Phase 0.5 已完成；继续覆盖 Phase 0.8 最小验收
 **原则**：先证明组件能独立跑通，再接入主系统。
 
 ---
@@ -20,9 +20,9 @@
 
 ---
 
-## 2. Phase 0.5A 组件 smoke test
+## 2. Phase 0.5 组件 smoke test
 
-所有组件先在 `G:\ai-studybuddy-composer` 独立跑通。通过后才能封装 Adapter。
+所有 MVP 主路径组件已在 `G:\ai-studybuddy-composer` 独立跑通。通过后才能封装 Adapter。
 
 | 组件 | 最小输入 | 期望输出 | 通过标准 | 结果记录 |
 |---|---|---|---|---|

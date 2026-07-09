@@ -1,7 +1,7 @@
 # AI StudyBuddy 总 PRD：共同底座 + 七个场景子系统
 
-**版本**：v0.01
-**日期**：2026-07-08（2026-07-09 补充：Phase 0.5A MVP 底座 smoke test 结论）
+**版本**：v1.2
+**日期**：2026-07-09（Phase 0.5 完成交割后同步）
 **状态**：新系统设计第一版 PRD
 **归档来源**：旧草稿已归档到 `G:\ai-studybuddy-backup\system-design-docs-draft_*.zip`
 
@@ -354,7 +354,8 @@ flowchart TD
 | 阶段 | 目标 | 子系统 |
 |---|---|---|
 | Phase 0 | 文档重建、草稿归档、七子系统命名 | 全局 |
-| Phase 0.5 | 成熟开源组件在 composer 独立调通（MVP 主路径已基本完成；PaddleOCR 备选对比不阻塞） | 共同底座 |
+| Phase 0.5 | 成熟开源组件在 composer 独立调通（MVP 主路径已完成；后续备选项不阻塞） | 共同底座 |
+| Phase 0.8 | 第一个可运行里程碑：S1 基础 + S2 核心端到端 | S1 + S2 |
 | Phase 1 | 跑通最小学习闭环 | S1 + S2 + S3 + S4 + S6 简版 |
 | Phase 1.5 | 加课堂录音 ASR | S7 |
 | Phase 2 | 加期末真题冲刺 | S5 |

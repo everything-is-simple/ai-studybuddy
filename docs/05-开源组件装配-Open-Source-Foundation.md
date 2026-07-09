@@ -1,8 +1,8 @@
 # AI StudyBuddy 开源组件装配 SoT
 
-**版本**：v0.01
-**状态**：已确认
-**日期**：2026-07-07（2026-07-08 补充第八、九节：子系统底座选型与硬件可行性）
+**版本**：v1.2
+**状态**：Phase 0.5 已完成，Phase 0.8 可按主路径接入
+**日期**：2026-07-09
 **用途**：定义本项目如何优先使用成熟开源组件，如何在 `G:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
 
 ## 一、核心原则：先分解，再组合
@@ -184,7 +184,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 ## 八、七子系统底座选型（2026-07-08 调研补充）
 
-**来源**：两轮深度调研（对抗式验证）+ Phase 0.5A 本机 smoke test。**目标**：每个子系统尽量套成熟开源底座，避免从零自建。**结论前提**：AI 走云 API，不在本地跑大模型；当前默认是 Pixel API 中转 GPT/Claude，Kimi/Qwen 只保留后续备选配置位。
+**来源**：两轮深度调研（对抗式验证）+ Phase 0.5 本机 smoke test。**目标**：每个子系统尽量套成熟开源底座，避免从零自建。**结论前提**：AI 走云 API，不在本地跑大模型；当前默认是 Pixel API 中转 GPT/Claude，Kimi/Qwen 只保留后续备选配置位。
 
 ### 8.1 整体判断：分子系统各取所长，不套单一 LMS
 
@@ -249,9 +249,9 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 - **S7 ASR：`SenseVoice.cpp`（ggml/MIT/活跃）无 Windows 预编译二进制，全部 release 仅源码**，Windows 上须自行编译后再经 Node 子进程集成，是实际门槛。不想折腾编译则退回**云 ASR API** 或 **Scriberr 独立服务**（但 Scriberr 的 WhisperX/Parakeet GPU 加速在无 N 卡下用不上，只能走 CPU）。
 - Kimi/Qwen 等 AI 走云 API，不吃本地 GPU/内存，不受此约束。
 
-### 9.3 待实测项（Phase 0.5 smoke test 覆盖）
+### 9.3 后续触发项（Phase 0.8 后按需覆盖）
 
-以下量化指标两轮调研均未坐实，须在本机跑 smoke test 验证，不是再调研能解决的：
+以下量化指标两轮调研均未坐实，须在对应子系统触发时做本机 smoke test 验证，不是再调研能解决的：
 
 - RapidOCR / PaddleOCR 在 5800H CPU 上单页中文试卷的延迟与峰值内存；
 - SenseVoice-Small / FunASR 纯 CPU 转写一节课音频的实时率（RTF）与内存；

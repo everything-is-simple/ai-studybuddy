@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v0.01
-**日期**：2026-07-07
+**版本**：v1.2
+**日期**：2026-07-09
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5A MVP 主路径已基本完成；下一步进入 T10 共同底座架构汇总 / Phase 0.8 开工前整理。PaddleOCR 仅作 OCR 备选对比，不阻塞主线。
+> 当前进度：Phase 0.5 已完成。MVP 主路径组件已通过 smoke test，T10 共同底座汇总已回填；下一步进入 Phase 0.8 工程初始化。PaddleOCR、Kimi/Qwen、ASR、FFmpeg、Readability 均作为后续触发项，不阻塞 Phase 0.8。
 
 ---
 
@@ -13,7 +13,7 @@
 | 阶段 | 目标 | 状态 |
 |---|---|---|
 | Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
-| Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ MVP 主路径已完成（PaddleOCR 备选待测） |
+| Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ⏳ 待开始 |
 | Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
 | Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
@@ -26,14 +26,14 @@
 
 **目标**：在 `G:\ai-studybuddy-composer` 先把每个组件跑起来，形成能力卡，再进主系统。
 
-**Phase 0.5A 完成标准**：MVP 主路径组件通过 smoke test，输入/输出格式已确认。PaddleOCR、Kimi/Qwen、ASR、FFmpeg、Readability 等备选/后续组件不阻塞 Phase 0.8。
+**Phase 0.5 完成标准**：MVP 主路径组件通过 smoke test，输入/输出格式已确认，能力卡和共同底座文档已回填。PaddleOCR、Kimi/Qwen、ASR、FFmpeg、Readability 等备选/后续组件不计入 Phase 0.5 完成门槛。
 
 ### 0.5-T01：环境准备
 
-- [ ] 确认 Node.js 18+（`node --version`）、Python 3.8+（`python --version`）、Docker Desktop 已启动（`docker ps`）
-- [ ] 在 `C:\Users\Administrator\.wslconfig` 写入内存上限（防 Docker Desktop WSL2 内存泄漏）：`memory=8GB processors=4 swap=2GB`
-- [ ] 创建 `F:\ai-studybuddy-composer` 目录结构（已完成）
-- [ ] 配置 `.env.example`，列出后续会用到的环境变量名（不填真实值）
+- [x] 确认 Node.js 18+、Python 3.8+、Docker Desktop 可支撑组件 smoke test
+- [ ] 可选治理：在 `C:\Users\Administrator\.wslconfig` 写入内存上限（防 Docker Desktop WSL2 内存泄漏）：`memory=8GB processors=4 swap=2GB`
+- [x] 创建 `G:\ai-studybuddy-composer` 目录结构（已完成）
+- [x] 配置 `.env.example`，列出后续会用到的环境变量名（不填真实值）
 
 > ⚠️ 常见坑：Node 命令不存在 → 去 nodejs.org 装 LTS；Python 是 2.x → 装 3.10+；Docker 图标未变绿就跑命令会报错，等它完全启动再操作。
 
@@ -51,11 +51,11 @@
 ### 0.5-T03：图片 / 试卷 OCR（MVP 必接）
 
 - [x] 安装 RapidOCR（首选）：`pip install rapidocr-onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple`
-- [ ] 安装 PaddleOCR（对比用）：`pip install paddlepaddle paddleocr -i https://pypi.tuna.tsinghua.edu.cn/simple`
+- [ ] 后续可选：安装 PaddleOCR（对比用）：`pip install paddlepaddle paddleocr -i https://pypi.tuna.tsinghua.edu.cn/simple`
 - [x] 准备 1 张真实中文试卷图片（清晰拍照，非截图），放入各自 `samples\test.jpg`
 - [x] 运行 RapidOCR：`python smoke-test\smoke-test.py`，记录单页耗时
 - [x] 运行 RapidOCR 批量测试：`python smoke-test\smoke-test-batch.py`，记录 22 张书页汇总
-- [ ] 运行 PaddleOCR：`python smoke-test\smoke-test.py`，记录识别率和单页耗时（备选对比，不阻塞）
+- [ ] 后续可选：运行 PaddleOCR：`python smoke-test\smoke-test.py`，记录识别率和单页耗时（备选对比，不阻塞）
 - [x] Phase 0.8 主路径先选 RapidOCR，填写能力卡；PaddleOCR 作为可替换实现保留
 
 > ⚠️ 常见坑：pip 超时 → 加 `-i` 清华源；首次运行自动下载模型约 50MB 需等待；识别率 <80% → 图片模糊/旋转，换清晰图片；耗时 >15s → 正常，接入主系统必须走 BullMQ 异步 Job；DLL 报错 → 安装 Visual C++ Redistributable。
@@ -127,12 +127,12 @@
 
 - [x] 读 `docs/00-文档索引-Index.md`，确认当前共同底座文档已存在：`docs/08-共同底座架构-Architecture.md`
 - [x] 不新建 `docs/10-*`：`10-后端开发规范` 的触发条件是写第一个后端服务 / Adapter / API / Worker 前，当前尚未触发
-- [x] 更新 `docs/08-共同底座架构-Architecture.md`：补齐 Phase 0.5A smoke test 结论、AI Provider 实测配置、RapidOCR 主路径、Phase 0.8 开工前置清单
+- [x] 更新 `docs/08-共同底座架构-Architecture.md`：补齐 Phase 0.5 smoke test 结论、AI Provider 实测配置、RapidOCR 主路径、Phase 0.8 开工前置清单
 - [x] 同步更新系统设计相关文档：`01-总PRD`、`02-七子系统地图`、`04-开发任务清单`、`05-开源组件装配`、`09-测试验收计划`
 - [x] 运行治理检查：`powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1`
 - [x] 运行空白检查：`git diff --check`
 
-### Phase 0.5B：支撑 S3 + S4 的第二批组件
+### 后续候选：支撑 S3 + S4 的第二批组件
 
 > Phase 0.8 跑通后，准备进入 S3/S4 开发前调通。
 
@@ -141,7 +141,7 @@
 - [ ] Qwen Provider：文本备选最小样例（同 Kimi smoke test 格式）
 - [ ] GPT Provider：难题兜底最小样例
 
-### Phase 0.5C：工程治理脚本
+### 后续候选：工程治理脚本
 
 - [ ] 备份 zip 脚本：标注阶段、commit hash、风险说明、恢复方式
 - [ ] tmp 清理脚本：清空 `G:\ai-studybuddy-tmp` 后系统可继续运行
@@ -149,9 +149,9 @@
 
 暂不进入 Phase 0.5 主线：SenseVoice、FunASR、FFmpeg、Readability。它们等 S7 或对应子系统开工前再调。
 
-### Phase 0.5A 完成声明
+### Phase 0.5 完成声明
 
-截至 2026-07-09，Phase 0.5A MVP 主路径底座完成并复测通过：PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ、MinIO、PostgreSQL/pgvector、Pixel API 中转 AI Provider 均已通过 smoke test。Phase 0.8 可开工。
+截至 2026-07-09，Phase 0.5 已完成并复测通过：PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ、MinIO、PostgreSQL/pgvector、Pixel API 中转 AI Provider 均已通过 smoke test，T10 共同底座汇总已回填。Phase 0.8 可开工。
 
 ---
 
@@ -211,6 +211,7 @@
 
 ### 0.8-T07：S2 资料笔记——核心 API
 
+- [ ] 开工前按索引触发并创建 `docs/subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`
 - [ ] 实现 `POST /materials/upload`（上传 PDF / 图片 / 文本）
 - [ ] 接入格式转换层，异步处理（BullMQ Job）
 - [ ] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据
