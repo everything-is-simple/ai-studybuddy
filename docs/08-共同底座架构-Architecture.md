@@ -2,14 +2,14 @@
 
 **版本**：v1.2
 **日期**：2026-07-09
-**状态**：Phase 0.8 开工前共同底座基线
+**状态**：Phase 0.6/0.8 开工前共同底座基线
 **原则**：只写当前要用的底座，不恢复旧版大架构。
 
 ---
 
 ## 1. 本文档解决什么问题
 
-本文档只定义 Phase 0.8 需要的最小共同底座：
+本文档只定义 Phase 0.6/0.8 需要的最小共同底座：
 
 ```text
 学生创建课程
@@ -90,6 +90,8 @@ flowchart TD
 | AI Provider | Pixel API / `gpt-5.5` / Responses API 通过；总 tokens 988，11.9s | 可封装 `NoteAiProvider` |
 
 PaddleOCR、Kimi、Qwen、ASR、FFmpeg、Readability 均为后续触发项，不是 Phase 0.8 主路径阻塞项。
+
+Phase 0.5 未覆盖免费隧道 / 内网穿透。外网访问是 PRD 已确认的产品形态要求，独立进入 Phase 0.6 做选型与 smoke test；Phase 0.6 不改变 0.5 组件完成结论，但会成为 Phase 0.8 前的接入风险收口项。
 
 ---
 
@@ -246,20 +248,34 @@ PDF、图片等耗时转换优先放到 BullMQ Job。Phase 0.8 可先让文字�
 
 ---
 
-## 11. Phase 0.8 开工前置清单
+## 11. Phase 0.6 / Phase 0.8 开工前置清单
+
+### 11.1 Phase 0.6 隧道验证前置清单
+
+进入 Phase 0.6 前，按以下顺序收口：
+
+1. 不创建 `13-部署运维指南-Deployment.md`，只在现有文档中记录最小选型、测试步骤和结论；
+2. 准备一个不含学生隐私和密钥的本地最小 Web 服务；
+3. 对比 Cloudflare Tunnel、Tailscale Funnel/Serve、frp、ngrok 等候选方案，选出 Phase 0.8 试用默认方案和备选；
+4. 只把公网入口转发到 Web 服务端口，不暴露 MinIO、PostgreSQL、Redis、Docker Desktop、调试端口和管理控制台；
+5. 从非同一局域网网络完成访问验证，并记录连接稳定性、重启恢复步骤和安全边界；
+6. 将 smoke test 结果回填到 `docs/09-测试验收计划-Test-Plan.md`。
+
+### 11.2 Phase 0.8 主系统开工前置清单
 
 进入主系统实现前，按以下顺序收口：
 
-1. 初始化主系统工程结构：`packages/shared`、`packages/backend`、`packages/frontend` 或同等分层；
-2. 创建 `.env.example`，只放变量名，不放真实 Key；
-3. 先实现 PostgreSQL 迁移和最小数据表：`users`、`courses`、`study_tasks`、`study_events`、`materials`、`normalized_texts`、`structured_notes`、`mind_maps`；
-4. 封装 `StorageAdapter` 对接 MinIO；
-5. 封装 `PdfConverter`、`OcrConverter`、`TextConverter`，统一返回纯文本；
-6. 封装 `NoteAiProvider`，默认走 Pixel API Responses；记录 provider、model、token、latency，不记录隐私全文；
-7. 接入 BullMQ：扫描版 PDF、图片 OCR、AI 整理走 Job；文字型 PDF 可先同步跑通；
-8. 做最小前端：课程列表、资料上传、笔记展示、Markmap 导图；
-9. 端到端验证：创建课程 → 上传 PDF/图片/文本 → 转纯文本 → AI 笔记 → 前端展示 → 写入 StudyEvent；
-10. 进入 S2 核心 API 开发前，按索引触发并创建 S2 轻量 PRD；不要提前创建 S3/S4/S5/S6/S7 的业务表。
+1. 完成 Phase 0.6 隧道验证，明确 Phase 0.8 试用默认接入方案；
+2. 初始化主系统工程结构：`packages/shared`、`packages/backend`、`packages/frontend` 或同等分层；
+3. 创建 `.env.example`，只放变量名，不放真实 Key；
+4. 先实现 PostgreSQL 迁移和最小数据表：`users`、`courses`、`study_tasks`、`study_events`、`materials`、`normalized_texts`、`structured_notes`、`mind_maps`；
+5. 封装 `StorageAdapter` 对接 MinIO；
+6. 封装 `PdfConverter`、`OcrConverter`、`TextConverter`，统一返回纯文本；
+7. 封装 `NoteAiProvider`，默认走 Pixel API Responses；记录 provider、model、token、latency，不记录隐私全文；
+8. 接入 BullMQ：扫描版 PDF、图片 OCR、AI 整理走 Job；文字型 PDF 可先同步跑通；
+9. 做最小前端：课程列表、资料上传、笔记展示、Markmap 导图；
+10. 端到端验证：创建课程 → 上传 PDF/图片/文本 → 转纯文本 → AI 笔记 → 前端展示 → 写入 StudyEvent；
+11. 进入 S2 核心 API 开发前，按索引触发并创建 S2 轻量 PRD；不要提前创建 S3/S4/S5/S6/S7 的业务表。
 
 `docs/10-后端开发规范-Backend-Guidelines.md` 还不到创建时机；等开始写第一个后端服务 / Adapter / API / Worker 前再创建。
 
@@ -300,7 +316,7 @@ AI StudyBuddy 的部署形态按成熟度演化，不把当前试用方式误当
   → 观察学习事件和系统健康
 ```
 
-基础版可以使用局域网访问，也可以临时使用隧道。隧道只是试用阶段的接入手段，不应成为成熟家庭使用的唯一依赖。
+基础版可以使用局域网访问，也可以临时使用隧道。隧道只是试用阶段的接入手段，不应成为成熟家庭使用的唯一依赖。Phase 0.6 只验证免费隧道 / 内网穿透的最小可行性和安全边界；不把隧道配置写死到业务代码。
 
 ### 12.3 简化版：孩子本机使用 + 父母异步报告
 
@@ -337,7 +353,8 @@ Pro 版不影响 Phase 0.8 的实现，但要求当前代码不要把本地路�
 - 后端无状态：业务状态进入 PostgreSQL / MinIO / Redis，不依赖单次进程内存；
 - 文件存储抽象：主系统只依赖 `StorageAdapter`，以后可从 MinIO 换到 S3 兼容服务；
 - 报告接口预留：`StudyEvent` 作为日报/周报的数据来源，Phase 1 后再实现飞书 / Email；
-- 家长视角异步优先：先做报告摘要，再考虑实时看板。
+- 家长视角异步优先：先做报告摘要，再考虑实时看板；
+- 外网接入配置化：`TUNNEL_PROVIDER` / `PUBLIC_APP_URL` / `APP_BASE_URL` 只作为接入配置，业务代码不得依赖某个隧道厂商。
 
 ### 12.6 暂不做
 
@@ -371,9 +388,11 @@ KIMI_API_KEY=
 QWEN_API_KEY=
 OPENAI_API_KEY=
 
-# 远程接入（隧道，具体值待选型后填）
+# 远程接入（Phase 0.6 选型后填，真实 token 不提交）
 TUNNEL_PROVIDER=
 TUNNEL_TOKEN=
+PUBLIC_APP_URL=
+APP_BASE_URL=
 
 DATA_ROOT=G:\ai-studybuddy-data
 LOG_ROOT=G:\ai-studybuddy-logs

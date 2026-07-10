@@ -14,12 +14,12 @@
 | 01 | [总PRD-产品需求-Product-Requirements.md](01-总PRD-产品需求-Product-Requirements.md) | ✅ 有效 | 产品目标、七子系统总表、MVP 边界、AI 使用边界 |
 | 02 | [七子系统地图-Scenario-Systems.md](02-七子系统地图-Scenario-Systems.md) | ✅ 有效 | 七个场景子系统边界、依赖关系、开发顺序 |
 | 03 | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md) | ✅ 有效 | S1 轻量 PRD，第一个子系统设计 |
-| 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | Phase 0.5 完成状态、Phase 0.8/1 具体任务拆解 |
+| 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | Phase 0.5 完成状态、Phase 0.6 隧道穿透验证、Phase 0.8/1 具体任务拆解 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
 | 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `G:\ai-studybuddy-*` 目录职责 |
 | 07 | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md) | ✅ 有效 | 文档分层、子系统文档触发条件 |
 | 08 | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md) | ✅ 有效 | 共同底座最小架构（S1 开工前必读） |
-| 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5 组件 smoke test 与 Phase 0.8 验收标准 |
+| 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5 组件 smoke test、Phase 0.6 隧道验收与 Phase 0.8 验收标准 |
 
 ---
 

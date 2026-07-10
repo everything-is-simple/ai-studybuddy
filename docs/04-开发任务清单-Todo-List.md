@@ -14,6 +14,7 @@
 |---|---|---|
 | Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
 | Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
+| Phase 0.6 | 免费隧道 / 内网穿透选型与 smoke test | ⏳ 待开始 |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ⏳ 待开始 |
 | Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
 | Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
@@ -151,7 +152,50 @@
 
 ### Phase 0.5 完成声明
 
-截至 2026-07-09，Phase 0.5 已完成并复测通过：PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ、MinIO、PostgreSQL/pgvector、Pixel API 中转 AI Provider 均已通过 smoke test，T10 共同底座汇总已回填。Phase 0.8 可开工。
+截至 2026-07-09，Phase 0.5 已完成并复测通过：PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ、MinIO、PostgreSQL/pgvector、Pixel API 中转 AI Provider 均已通过 smoke test，T10 共同底座汇总已回填。
+
+Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该缺口独立收口为 Phase 0.6；Phase 0.6 完成后再进入 Phase 0.8 主系统实现。
+
+---
+
+## Phase 0.6：免费隧道 / 内网穿透验证
+
+**目标**：在不提前创建 `13-部署运维指南-Deployment.md` 的前提下，先完成试用阶段外网接入的最小选型和 smoke test，证明“学生异地通过浏览器访问家用主机”可行且不裸奔。
+
+**完成标准**：选定 1 个 Phase 0.8 试用默认隧道方案，记录备选取舍；本机启动最小 Web 服务后，能从非同一局域网访问；访问入口必须经过系统登录或临时鉴权页；不得暴露 MinIO、PostgreSQL、Redis、管理控制台和真实 token。
+
+### 0.6-T01：隧道候选方案对比
+
+- [ ] 对比 Cloudflare Tunnel、Tailscale Funnel/Serve、frp、ngrok 等候选项
+- [ ] 记录每个方案的免费额度、是否需域名、国内可达性、Windows 支持、开机自启动、HTTPS、访问控制和封禁/限速风险
+- [ ] 选出 Phase 0.8 试用默认方案和 1 个备选方案
+
+### 0.6-T02：本机最小 Web 服务准备
+
+- [ ] 启动一个只用于 smoke test 的本地 Web 服务（可用临时静态页或未来前端 dev server）
+- [ ] 页面只显示健康检查信息，不展示真实学生资料、API Key、token 或内部路径
+- [ ] 确认本机局域网访问和 `localhost` 访问均正常
+
+### 0.6-T03：隧道连通性 smoke test
+
+- [ ] 按候选方案建立隧道，将公网入口只转发到最小 Web 服务端口
+- [ ] 用手机蜂窝网络或另一条非同局域网网络访问公网 URL
+- [ ] 记录：访问 URL 形态、首次连接耗时、页面加载是否稳定、断线重连表现
+
+### 0.6-T04：安全边界检查
+
+- [ ] 确认公网入口只暴露 Web 入口，不暴露 MinIO Console、PostgreSQL、Redis、Docker Desktop、调试端口
+- [ ] 确认访问入口必须登录或至少有临时鉴权，不允许裸奔访问学习数据
+- [ ] 确认日志不记录隧道 token、学生隐私全文、完整答案和真实 API Key
+- [ ] 确认 `.env.local` / token 文件不提交 git
+
+### 0.6-T05：重启恢复与记录回填
+
+- [ ] 重启本地 Web 服务后，验证隧道访问恢复
+- [ ] 重启隧道进程或 Windows 后，验证恢复步骤可执行
+- [ ] 将最终选型、命令摘要、风险和 smoke test 结果回填到 `docs/08-共同底座架构-Architecture.md` 与 `docs/09-测试验收计划-Test-Plan.md`
+
+> Phase 0.6 只解决“试用阶段外网入口是否可行”。详细安装、备份、监控、域名、证书、开机自启动和长期运维流程仍等 `13-部署运维指南-Deployment.md` 触发后再写。
 
 ---
 
