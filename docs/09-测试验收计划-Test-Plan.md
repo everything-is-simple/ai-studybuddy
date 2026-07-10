@@ -25,16 +25,16 @@ PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ/Redis、MinIO、PostgreSQL/pg
 
 | 编号 | 验收对象 | 通过标准 | 当前证据与状态 |
 |---|---|---|---|
-| 0.7-T01 | 环境基线 | Node 22 LTS、Windows、Python、内存、Docker/WSL2 状态均留档 | ⚠️ 开发机已留档：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB；Node 22 LTS 与 HP 待测 |
+| 0.7-T01 | 环境基线 | Node 22 LTS、Windows、Python、内存、Docker/WSL2 状态均留档 | ⚠️ 开发机已留档：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB；Node 22 LTS 与 HP 暂缓复测（设备不在身边） |
 | 0.7-T02 | SQLite | `better-sqlite3`、WAL、CRUD、唯一约束、事务、关闭后备份恢复 | ✅ 开发机离线通过 |
 | 0.7-T03 | 本地文件 | 逻辑 `storage_key`、写读删、路径逃逸拒绝、tmp 清理保护 materials | ✅ 开发机离线通过 |
 | 0.7-T04 | SQLite Job Worker | 单进程串行、有限重试、上限失败、stale running 恢复、重启不丢 Job | ✅ 开发机离线通过 |
-| 0.7-T05 | RapidOCR 子进程 | JSON stdout、成功/缺文件/非零退出/超时、Python 退出 | ✅ 开发机离线通过；HP 峰值与退出复测待做 |
+| 0.7-T05 | RapidOCR 子进程 | JSON stdout、成功/缺文件/非零退出/超时、Python 退出 | ✅ 开发机离线通过；HP 峰值与退出复测暂缓 |
 | 0.7-T06 | 报告核心 | 规则统计、AI 失败降级、脱敏、合并与渠道去重 | ✅ 开发机离线通过；固定 `2026-05-31 22:30 Asia/Shanghai` 覆盖日报、周报、月报和考前 7 天 |
 | 0.7-T07 | QQ SMTP | UTF-8 中文 HTML、可选附件、日志不泄露授权码、父母邮箱实收 | ✅ 真实通过：QQ SMTP accepted，163 父母测试邮箱已收到 |
 | 0.7-T08 | 飞书 Webhook | 完整合并报告卡片、失败不阻断邮件、Webhook 不泄露、父母飞书群实收 | ✅ 真实通过：飞书 Webhook accepted，父母飞书群已收到 |
-| 0.7-T09 | Windows Task Scheduler | 临时 `AIStudyBuddy-Phase07-Smoke`：XML `StartWhenAvailable`、创建、手动触发、日志、退出码、清理、补发 | ⏸️ `BLOCKED_EXTERNAL`：当前会话拒绝创建任务；XML 单测通过，但不是调度通过 |
-| 0.7-T10 | 整合与 HP 实机 | 课程/任务→本地文件→OCR→AI→SQLite→报告→双渠道去重；16GB 门槛 | ⏳ 开发机离线整合、合并和去重通过；调度与 HP 实机未验收 |
+| 0.7-T09 | Windows Task Scheduler | 临时 `AIStudyBuddy-Phase07-Smoke`：XML `StartWhenAvailable`、创建、手动触发、日志、退出码、清理、补发 | ✅ 管理员 PowerShell 真实通过：XML 单测通过；临时任务创建/触发/清理；`report-runner.js` 写入 `report:2026-05-31` SQLite 发送记录 |
+| 0.7-T10 | 整合与 HP 实机 | 课程/任务→本地文件→OCR→AI→SQLite→报告→双渠道去重；16GB 门槛 | ⏳ 开发机离线整合、合并、去重、QQ SMTP、飞书和 Windows 调度均通过；HP 实机因设备不在身边暂缓 |
 
 ## 四、报告隐私、合并与重试
 
@@ -46,7 +46,7 @@ PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ/Redis、MinIO、PostgreSQL/pg
 
 ## 五、Windows 任务计划与 HP 16GB 最终门槛
 
-在孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）上，以 Node 22 LTS 执行：
+孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）当前不在身边，实机验收暂缓。设备可用后，以 Node 22 LTS 执行：
 
 ```powershell
 cd I:\ai-studybuddy-composer\windows-native
@@ -82,4 +82,4 @@ powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1
 git diff --check
 ```
 
-Phase 0.7 完成后，再把最终选型结论和实测数据同步回 `docs/04-*`、`docs/08-*` 与本目录的能力卡。当前未完成的调度和 HP 验收不得用文档措辞掩盖。
+Phase 0.7 完成后，再把最终选型结论和实测数据同步回 `docs/04-*`、`docs/08-*` 与本目录的能力卡。当前未完成的 HP 验收不得用文档措辞掩盖。

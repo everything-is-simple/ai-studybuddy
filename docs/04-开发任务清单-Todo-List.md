@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.3
+**版本**：v1.4
 **日期**：2026-07-10
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5 历史组件验证已完成；Phase 0.7 正在收口 Windows 原生底座。SQLite、本地文件、SQLite Job Worker、RapidOCR、规则报告、QQ SMTP 与飞书已在开发机取得证据；Windows 任务计划、Node 22 LTS 与孩子 HP 16GB 实机仍是阻塞门槛。Phase 0.8 不得提前开始。
+> 当前进度：Phase 0.5 历史组件验证已完成；Phase 0.7 正在收口 Windows 原生底座。SQLite、本地文件、SQLite Job Worker、RapidOCR、规则报告、QQ SMTP、飞书和 Windows 任务计划均已在开发机取得证据。孩子 HP 16GB 实机因设备不在身边暂缓复测，不在当前开发机收口范围内。Phase 0.8 不得提前开始。
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
 | Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
-| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | 🔄 进行中（调度与 HP 实机未完成） |
+| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | 🔄 进行中（开发机调度已通过；HP 实机因设备不在身边暂缓） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ⏳ 待开始 |
 | Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
 | Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
@@ -169,10 +169,10 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 记录开发机 Windows、Node、Python、内存与 Docker/WSL2 未运行状态
 - [x] 创建 `.env.example`，不写真实 SMTP 授权码、Webhook 或 API Key
 
-- [ ] 在孩子 HP 上用 Node.js 22 LTS 复测独立安装和环境基线（未完成）
+- [ ] 在孩子 HP 上用 Node.js 22 LTS 复测独立安装和环境基线（暂缓：设备不在身边）
 
 ### 0.7-T02：SQLite 基础与备份
-- [x] 安装并验证 `better-sqlite3` 的 Windows x64 预编译模块（开发机 Node 25.4.0 兼容通过；Node 22 LTS/HP 待复测）
+- [x] 安装并验证 `better-sqlite3` 的 Windows x64 预编译模块（开发机 Node 25.4.0 兼容通过；Node 22 LTS/HP 暂缓复测）
 - [x] 验证 WAL、CRUD、唯一约束、事务提交/回滚、关闭后备份与恢复（开发机离线通过）
 - [x] 建立 `courses`、`study_tasks`、`study_events`、`jobs`、`report_deliveries` 最小 schema（开发机离线通过）
 
@@ -188,7 +188,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 0.7-T05：RapidOCR 子进程
 - [x] Node 用 `child_process` 调 Python RapidOCR，stdout 只返回 JSON（开发机离线通过）
-- [x] 验证成功、文件不存在、非零退出、超时终止（开发机离线通过；HP 峰值待测）
+- [x] 验证成功、文件不存在、非零退出、超时终止（开发机离线通过；HP 峰值暂缓复测）
 - [ ] 记录 OCR 运行峰值内存，确认 Python 进程完成后退出
 
 ### 0.7-T06：规则报告与 AI 失败兜底
@@ -207,16 +207,16 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 用父母飞书群真实收到卡片完成手工验证
 
 ### 0.7-T09：Windows 任务计划
-- [ ] 使用临时 `AIStudyBuddy-Phase07-Smoke` 任务验证 `report.js`、日志、退出码和删除清理
-- [ ] 验证 `StartWhenAvailable=true` 和下次 Windows 登录补发
-- [ ] 记录正式 22:30 日报、周日/月末合并报告、考前 7/3/1 天提醒的规则
+- [x] 使用临时 `AIStudyBuddy-Phase07-Smoke` 任务验证 `report.js`、日志、退出码和删除清理（管理员 PowerShell 真实通过）
+- [x] 验证 `StartWhenAvailable=true` 和固定周期发送记录去重：`report:2026-05-31`
+- [x] 记录正式 22:30 日报、周日/月末合并报告、考前 7/3/1 天提醒的规则
 
 ### 0.7-T10：整合链路与 HP 实机验收
-- [x] 开发机跑通离线整合：课程/任务 → 本地资料 → OCR → SQLite/文件 → 规则报告 → 渠道去重；QQ SMTP 与飞书另行真实送达（调度触发与 HP 实机仍未完成）
+- [x] 开发机跑通离线整合：课程/任务 → 本地资料 → OCR → SQLite/文件 → 规则报告 → 渠道去重；QQ SMTP、飞书与 Windows 任务计划另行真实通过（HP 实机暂缓）
 - [x] 用固定 `2026-05-31 22:30 Asia/Shanghai` 验证日报、周报、月报、考前提醒合并（开发机离线通过）
-- [ ] 在孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）复测
+- [ ] 在孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）复测（暂缓：设备不在身边）
 - [ ] 验收：学习服务可用内存 ≥6GB；OCR/AI/报告峰值可用内存 ≥3GB；无持续分页增长
-- [ ] 在 Windows 任务计划与 HP 实机完成后，回填全部 `COMPONENT-CARD.md`、`docs/08-*` 和 `docs/09-*`，并运行文档治理检查
+- [ ] 在 Windows 任务计划与 HP 实机完成后，回填全部 `COMPONENT-CARD.md`、`docs/08-*` 和 `docs/09-*`，并运行文档治理检查；HP 不在身边期间不追该项
 
 ---
 
@@ -225,11 +225,12 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 **目标**：
 
 ```
-学生创建课程
+学生创建课程与考试目标
   → 上传 PDF/图片/文本
   → 格式转换为纯文本
-  → 中转 GPT/Claude 生成结构化笔记 + 重点 + 思维导图
-  → 前端能看到笔记和导图
+  → 中转 GPT/Claude 生成结构化笔记 + 重点 + 思维导图 + 带来源证据的知识模块
+  → 规则生成可完成的学习任务
+  → 前端能看到笔记、导图、知识模块和任务
 ```
 
 **前置条件**：Phase 0.7 的 Node 22 LTS、Windows 任务计划和 HP 16GB 门槛全部通过并回填证据。`packages/` 在此之前不得把试炼场代码直接当成产品实现。
@@ -246,8 +247,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 ### 0.8-T02：共同底座——数据库与迁移
 
 - [ ] 基于 Phase 0.7 结果选定 SQLite schema/migration 工具
-- [ ] 创建第一批表：`users`、`courses`、`study_tasks`、`study_events`、`jobs`、`report_deliveries`
-- [ ] 创建第二批表：`materials`、`normalized_texts`、`structured_notes`、`mind_maps`
+- [ ] 创建第一批表：`users`、`courses`、`exams`、`study_tasks`、`study_events`、`jobs`、`report_deliveries`
+- [ ] 创建第二批表：`materials`、`normalized_texts`、`structured_notes`、`mind_maps`、`knowledge_modules`
+- [ ] `exams` 最小字段：课程关联、名称、`exam_at`、目标/每日可学习时间、范围摘要；考前 7/3/1 天提醒只读取该对象
+- [ ] `knowledge_modules` 最小字段：课程关联、标题、重要度、难度、考察内容、来源资料/证据、学习状态；不保存或复制完整资料正文
+- [ ] 明确不创建 `questions`、`practice_sessions`、`practice_answers`、`mistakes`、`weak_points`：它们等待 S3/S4 PRD 触发后再迁移
 - [ ] 启用 WAL，运行迁移并验证备份恢复
 
 ### 0.8-T03：共同底座——文件存储接口
@@ -272,7 +276,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 ### 0.8-T06：S1 学习节奏——核心 API
 
 - [ ] 实现 `POST /courses`、`GET /courses`
+- [ ] 实现 `POST /exams`、`GET /exams`；课程可有多个考试目标，考试日期不再塞进 `courses`
 - [ ] 实现 `POST /study-tasks`、`PATCH /study-tasks/:id/status`
+- [ ] 任务可关联考试和知识模块；初版计划由确定性规则按考试日期、截止时间、优先级和逾期状态生成
 - [ ] 实现 `POST /study-events`（供其他子系统写入时间线）
 - [ ] 实现 `GET /timeline`（学生时间线）
 
@@ -281,20 +287,21 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 开工前按索引触发并创建 `docs/subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`
 - [ ] 实现 `POST /materials/upload`（上传 PDF / 图片 / 文本）
 - [ ] 接入格式转换层，由 SQLite Job Worker 异步处理
-- [ ] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据
+- [ ] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据；从资料/笔记形成带来源证据的知识模块
+- [ ] 实现 `GET /knowledge-modules`（按课程/考试范围读取）与模块状态更新；不开始练习/错题表实现
 - [ ] 实现 `GET /notes/:id`（获取笔记详情）
 
 ### 0.8-T08：前端——最小可用页面
 
-- [ ] 页面 1：课程列表 + 创建课程
+- [ ] 页面 1：课程列表 + 创建课程/考试目标
 - [ ] 页面 2：资料上传（拖拽或选择文件）
-- [ ] 页面 3：笔记展示（react-markdown + KaTeX + Markmap 渲染）
+- [ ] 页面 3：笔记展示（react-markdown + KaTeX + Markmap 渲染）+ 知识模块与对应学习任务
 - [ ] 不要求样式完美，要求功能可用
 
 ### 0.8-T09：端到端验证
 
-- [ ] 完整走一遍流程：创建课程 → 上传 PDF → 等待转换 → 查看笔记
-- [ ] 验证：笔记 Markdown 渲染正确、思维导图可展示
+- [ ] 完整走一遍流程：创建课程/考试目标 → 上传 PDF → 等待转换 → 查看笔记 → 生成知识模块/学习任务
+- [ ] 验证：笔记 Markdown 渲染正确、思维导图可展示、每个模块能回链到来源资料、考试目标能影响任务优先级
 - [ ] 记录 AI 调用 token 消耗和响应时间
 - [ ] 临时文件清理不影响笔记数据
 
@@ -310,8 +317,10 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 阶段目标拆解
 
-- [ ] S3 PracticeRunner：根据笔记生成练习，客观题规则批改，错题进 S4
-- [ ] S4 ErrorFixer：错题入库，错因分类，艾宾浩斯排程，原题 / 变题重做
+- [ ] S3 PracticeRunner：根据笔记/知识模块生成练习，客观题规则批改，错题进 S4
+- [ ] S3 数据对象：按 S3 PRD 创建 `questions`、`practice_sessions`、`practice_answers`；每题关联知识模块和来源，保存逐题作答、正确性、用时与得分
+- [ ] S4 ErrorFixer：按 S4 PRD 创建 `mistakes`、`weak_points`；错题记录次数/最近错误/掌握状态，薄弱点由多次证据归纳；安排艾宾浩斯、原题/变题重做
+- [ ] 回流规则：错误和薄弱点提升关联知识模块/任务优先级；已掌握后降低复习优先级，不自动删除学习历史
 - [ ] S6 ParentReport 简版：发送邮件/飞书日报、周报、月报和考前提醒（不含隐私原文）
 - [ ] S1 扩展：完整接收 S2/S3/S4 的 StudyEvent 写入，时间线完整
 

@@ -11,7 +11,7 @@
 
 ```text
 孩子在 Windows 本机浏览器使用 Express localhost
-  → 创建课程 / 任务 / 考试日期
+  → 创建课程 / 考试目标 / 知识模块 / 任务
   → 本地文件目录保存资料（只存 storage_key）
   → SQLite jobs 串行调 RapidOCR / AI
   → SQLite 保存业务数据、任务和 report_deliveries
@@ -46,16 +46,31 @@ Phase 0.5 的 PostgreSQL/pgvector、MinIO、Redis/BullMQ 和 Docker/WSL2 结论�
 
 | 对象 | 用途 | 关键规则 |
 |---|---|---|
-| `courses` | 课程与考试节点 | `name`、`exam_at`；考试日驱动提醒 |
-| `study_tasks` | 学习任务 | 标题、状态、截止时间、预计/实际时长 |
+| `courses` | 课程 | 名称等稳定课程信息；不再把一个考试日期塞入课程 |
+| `exams` | 考试目标 | `course_id`、名称、`exam_at`、目标、每日可学习时间、范围摘要；驱动计划和 7/3/1 天提醒 |
+| `knowledge_modules` | 可考知识模块 | `course_id`、标题、重要度、难度、考察内容、来源资料/证据、学习状态；连接资料、任务、练习和错题 |
+| `study_tasks` | 学习任务 | 可关联 `exam_id`、`knowledge_module_id`；标题、状态、截止时间、预计/实际时长 |
 | `study_events` | 时间线与统计 | 只记录事件摘要；供 S6 聚合 |
 | `materials` | 文件索引 | 只保存 `storage_key`，不保存绝对路径 |
 | `jobs` | 持久化后台任务 | `pending/running/completed/failed`、重试与错误摘要 |
 | `report_deliveries` | 报告渠道去重 | 唯一键 `report_key + channel` |
 
-Phase 0.8 只按当前 S1/S2 闭环创建必要表；不提前创建 S3–S7 的业务表。
+Phase 0.8 只按当前 S1/S2 闭环创建 `exams`、`knowledge_modules` 等必要对象；不提前创建 S3–S7 的 `questions`、`practice_sessions`、`practice_answers`、`mistakes`、`weak_points`、`mock_attempts` 等业务表。
 
-### 3.2 Job 状态
+### 3.2 共同对象流与职责
+
+```text
+Course → Exam / Material → KnowledgeModule → StudyTask → StudyEvent
+KnowledgeModule → Question → PracticeSession / PracticeAnswer → Mistake → WeakPoint → 下一轮 StudyTask
+Exam + StudyTask + StudyEvent → ParentReport（脱敏聚合）
+```
+
+- `Exam` 是孩子本机的学习组织对象，不是家长 Web 面板、远程登录入口或外部日历同步功能。
+- `KnowledgeModule` 必须能回链到资料和证据；AI 笔记正文不能直接充当知识模块。
+- `Question` 到 `WeakPoint` 的对象只在 S3/S4 开工并完成轻量 PRD 后创建；Phase 0.8 仅保留 `KnowledgeModule` 的关联接口，防止未来复制不一致字段。
+- 报告服务只能消费考试临近状态、任务/事件、练习/错题的聚合数值；不读取资料、笔记、答案或错题正文。
+
+### 3.3 Job 状态
 
 ```text
 pending → running → completed
@@ -65,7 +80,7 @@ pending → running → failed   （达到 max_attempts）
 
 Worker 启动时将超时的 `running` Job 恢复为 `pending`。单进程串行执行 OCR、AI 与报告 Job，避免孩子 16GB 机器的内存竞争。
 
-### 3.3 报告、合并与去重
+### 3.4 报告、合并与去重
 
 - 每天 22:30 生成 `report:<yyyy-mm-dd>`；
 - 周日增加周报区块，月末增加月报区块；考试前 7、3、1 天增加提醒区块；同日只发送一个合并批次；
@@ -81,11 +96,11 @@ Phase 0.8 正式实现以下 Adapter：`SqliteDatabase`、`StorageAdapter`、`Jo
 
 ## 五、Phase 0.7 验证状态与门槛
 
-开发机记录：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB 可见内存。这只是兼容性证据，不能替代 Node 22 LTS 和孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）的最终验收。
+开发机记录：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB 可见内存。这只是兼容性证据，不能替代 Node 22 LTS 和孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）的最终验收；HP 设备当前不在身边，实机复测暂缓。
 
-已取得开发机证据：SQLite WAL/事务/备份、本地文件越界保护、SQLite Job 重试恢复、RapidOCR 按需子进程、规则报告与 AI 降级、固定周期合并去重、QQ SMTP 真实送达、飞书 Webhook 真实送达。
+已取得开发机证据：SQLite WAL/事务/备份、本地文件越界保护、SQLite Job 重试恢复、RapidOCR 按需子进程、规则报告与 AI 降级、固定周期合并去重、QQ SMTP 真实送达、飞书 Webhook 真实送达、Windows Task Scheduler 临时任务真实创建/触发/清理并写入 SQLite 发送记录。
 
-尚未通过：Windows Task Scheduler 的真实临时任务创建/触发/清理与错过计划补发；孩子 HP 上的 Node 22 LTS、16GB 内存门槛、进程退出与重复周期去重复测。未完成前 Phase 0.7 不得标记完成，Phase 0.8 不得开始产品接入。
+尚未通过：孩子 HP 上的 Node 22 LTS、16GB 内存门槛、进程退出与重复周期去重复测。HP 实机复测等设备在身边后再执行。未完成前 Phase 0.7 不得标记完成，Phase 0.8 不得开始产品接入。
 
 ## 六、安全与运行门槛
 
