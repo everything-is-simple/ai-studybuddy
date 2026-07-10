@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.2
-**日期**：2026-07-09
+**版本**：v1.3
+**日期**：2026-07-10
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5 已完成。MVP 主路径组件已通过 smoke test，T10 共同底座汇总已回填；下一步进入 Phase 0.8 工程初始化。PaddleOCR、Kimi/Qwen、ASR、FFmpeg、Readability 均作为后续触发项，不阻塞 Phase 0.8。
+> 当前进度：Phase 0.5 历史组件验证已完成；Phase 0.7 正在收口 Windows 原生底座。SQLite、本地文件、SQLite Job Worker、RapidOCR、规则报告、QQ SMTP 与飞书已在开发机取得证据；Windows 任务计划、Node 22 LTS 与孩子 HP 16GB 实机仍是阻塞门槛。Phase 0.8 不得提前开始。
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
 | Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
-| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | ⏳ 待开始 |
+| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | 🔄 进行中（调度与 HP 实机未完成） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ⏳ 待开始 |
 | Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
 | Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
@@ -25,7 +25,7 @@
 
 ## Phase 0.5：开源组件独立调通
 
-**目标**：在 `G:\ai-studybuddy-composer` 先把每个组件跑起来，形成能力卡，再进主系统。
+**目标**：在 `I:\ai-studybuddy-composer` 先把每个组件跑起来，形成能力卡，再进主系统。
 
 **Phase 0.5 完成标准**：MVP 主路径组件通过 smoke test，输入/输出格式已确认，能力卡和共同底座文档已回填。PaddleOCR、Kimi/Qwen、ASR、FFmpeg、Readability 等备选/后续组件不计入 Phase 0.5 完成门槛。
 
@@ -33,14 +33,14 @@
 
 - [x] 确认 Node.js 18+、Python 3.8+、Docker Desktop 可支撑组件 smoke test
 - [ ] 可选治理：在 `C:\Users\Administrator\.wslconfig` 写入内存上限（防 Docker Desktop WSL2 内存泄漏）：`memory=8GB processors=4 swap=2GB`
-- [x] 创建 `G:\ai-studybuddy-composer` 目录结构（已完成）
+- [x] 创建 `I:\ai-studybuddy-composer` 目录结构（已完成）
 - [x] 配置 `.env.example`，列出后续会用到的环境变量名（不填真实值）
 
 > ⚠️ 常见坑：Node 命令不存在 → 去 nodejs.org 装 LTS；Python 是 2.x → 装 3.10+；Docker 图标未变绿就跑命令会报错，等它完全启动再操作。
 
 ### 0.5-T02：PDF 文本提取（MVP 必接）
 
-- [x] 在 `composer\pdf\pdf-parse-demo\` 安装：`npm install`
+- [x] 在 `I:\ai-studybuddy-composer\pdf\pdf-parse-demo\` 安装：`npm install`
 - [x] 准备 1 个含中文的真实 PDF，放入 `samples\test.pdf`（用教材/讲义，不用扫描版）
 - [x] 运行 smoke test：`node smoke-test\smoke-test.js`
 - [x] 验证完成标准：中文字符完整、数学公式文本可用、无乱码
@@ -64,7 +64,7 @@
 
 ### 0.5-T04：思维导图渲染（MVP 必接）
 
-- [x] 在 `composer\mindmap\markmap-test\` 安装：`npm install markmap-lib`
+- [x] 在 `I:\ai-studybuddy-composer\mindmap\markmap-test\` 安装：`npm install markmap-lib`
 - [x] 运行 smoke test：`node smoke-test\smoke-test.js`，生成 `output\result.html`
 - [x] 用浏览器打开 `output\result.html`，验证节点层级正确、可展开收起、中文无乱码
 - [x] 填写能力卡（2026-07-09 已完成浏览器复核）
@@ -122,7 +122,7 @@
 - [x] 记录：模型名、token 消耗、响应时间，填写能力卡（2026-07-09 已完成）
 
 > ⚠️ 常见坑：`401 Unauthorized` → Key 错或 baseURL 末尾少了 `/v1`；返回内容不是中文 → 模型名写错，查中转平台支持的模型列表；latency > 30s → 中转服务慢，换个时间段或换另一家中转；`.env.local` 绝不提交 git，Key 泄露后立即去中转平台作废重生成。
-> 2026-07-09 实测：已创建 `composer\ai-provider\gpt-test`，按 cc-switch 导出的当前 Pixel provider `pixelapi-1783123721199` 读取 auth，使用 Pixel API 中转站 `https://ai-pixel.online/v1`、`wire_api=responses`、模型 `gpt-5.5` 通过。响应时间 11.9s，输入 tokens 460，输出 tokens 528，总 tokens 988；返回 Markdown、中文内容、思维导图 JSON 均通过。最初 401 根因是 `.env.local` 中手填 Key 与 cc-switch 正在使用的 provider key 不一致。DeepSeek 已按用户偏好废弃；Kimi 当前无 Key；GLM-5.2 已到期。
+> 2026-07-09 实测：已创建 `I:\ai-studybuddy-composer\ai-provider\gpt-test`，按 cc-switch 导出的当前 Pixel provider `pixelapi-1783123721199` 读取 auth，使用 Pixel API 中转站 `https://ai-pixel.online/v1`、`wire_api=responses`、模型 `gpt-5.5` 通过。响应时间 11.9s，输入 tokens 460，输出 tokens 528，总 tokens 988；返回 Markdown、中文内容、思维导图 JSON 均通过。最初 401 根因是 `.env.local` 中手填 Key 与 cc-switch 正在使用的 provider key 不一致。DeepSeek 已按用户偏好废弃；Kimi 当前无 Key；GLM-5.2 已到期。
 
 ### 0.5-T10：共同底座架构汇总 / Phase 0.8 开工前整理
 
@@ -145,7 +145,7 @@
 ### 后续候选：工程治理脚本
 
 - [ ] 备份 zip 脚本：标注阶段、commit hash、风险说明、恢复方式
-- [ ] tmp 清理脚本：清空 `G:\ai-studybuddy-tmp` 后系统可继续运行
+- [ ] tmp 清理脚本：清空 `I:\ai-studybuddy-tmp` 后系统可继续运行
 - [ ] logs 规范验证：确认日志中不记录 API Key、学生隐私全文、完整答案
 
 暂不进入 Phase 0.5 主线：SenseVoice、FunASR、FFmpeg、Readability。它们等 S7 或对应子系统开工前再调。
@@ -165,9 +165,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 **完成标准**：SQLite、本地文件、SQLite Job Worker、RapidOCR 子进程、规则报告、QQ SMTP、飞书 Webhook、Windows 任务计划和整合链路均有能力卡。真实 QQ/飞书凭据与孩子 HP 16GB 实机未验证前，不得宣称 Phase 0.7 完成。
 
 ### 0.7-T01：Windows 原生环境基线
-- [ ] 在外部试炼场 `I:\ai-studybuddy-composer\windows-native\` 建立独立 Node.js 22 LTS 样例，不加入主系统 pnpm workspace
-- [ ] 记录 Windows、Node、Python、内存、Docker/WSL2 未运行状态
-- [ ] 创建 `.env.example`，不写真实 SMTP 授权码、Webhook 或 API Key
+- [x] 在外部试炼场建立独立样例，不加入主系统 pnpm workspace（开发机 Node 25.4.0 兼容通过）
+- [x] 记录开发机 Windows、Node、Python、内存与 Docker/WSL2 未运行状态
+- [x] 创建 `.env.example`，不写真实 SMTP 授权码、Webhook 或 API Key
+
+- [ ] 在孩子 HP 上用 Node.js 22 LTS 复测独立安装和环境基线（未完成）
 
 ### 0.7-T02：SQLite 基础与备份
 - [x] 安装并验证 `better-sqlite3` 的 Windows x64 预编译模块（开发机 Node 25.4.0 兼容通过；Node 22 LTS/HP 待复测）
@@ -210,11 +212,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 记录正式 22:30 日报、周日/月末合并报告、考前 7/3/1 天提醒的规则
 
 ### 0.7-T10：整合链路与 HP 实机验收
-- [ ] 跑通：课程/任务 → 本地资料 → OCR → AI → SQLite/文件 → 报告 → 邮件/飞书 → 去重
+- [x] 开发机跑通离线整合：课程/任务 → 本地资料 → OCR → SQLite/文件 → 规则报告 → 渠道去重；QQ SMTP 与飞书另行真实送达（调度触发与 HP 实机仍未完成）
 - [x] 用固定 `2026-05-31 22:30 Asia/Shanghai` 验证日报、周报、月报、考前提醒合并（开发机离线通过）
 - [ ] 在孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）复测
 - [ ] 验收：学习服务可用内存 ≥6GB；OCR/AI/报告峰值可用内存 ≥3GB；无持续分页增长
-- [ ] 回填全部 `COMPONENT-CARD.md`、`docs/08-*` 和 `docs/09-*`，并运行文档治理检查
+- [ ] 在 Windows 任务计划与 HP 实机完成后，回填全部 `COMPONENT-CARD.md`、`docs/08-*` 和 `docs/09-*`，并运行文档治理检查
 
 ---
 
@@ -230,11 +232,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
   → 前端能看到笔记和导图
 ```
 
-**完成标准**：Phase 0.7 全部通过后，端到端流程可以演示；不需要完整功能，只需核心路径跑通。
+**前置条件**：Phase 0.7 的 Node 22 LTS、Windows 任务计划和 HP 16GB 门槛全部通过并回填证据。`packages/` 在此之前不得把试炼场代码直接当成产品实现。
+
+**完成标准**：前置条件满足后，端到端流程可以演示；不需要完整功能，只需核心路径跑通。
 
 ### 0.8-T01：项目结构初始化
 
-- [ ] 在 `G:\ai-studybuddy` 初始化 monorepo（推荐 pnpm workspace）
+- [ ] 在 `I:\ai-studybuddy` 初始化 monorepo（推荐 pnpm workspace）
 - [ ] 创建基础包结构：`packages/shared`、`packages/backend`、`packages/frontend`（或类似结构）
 - [ ] 配置 TypeScript、ESLint、Prettier（对齐项目语言）
 - [ ] 配置环境变量读取（`.env.local`，不 commit 真实 Key）

@@ -1,9 +1,9 @@
 # AI StudyBuddy 开源组件装配 SoT
 
-**版本**：v1.2
+**版本**：v1.3
 **状态**：Phase 0.5 历史组件已验证；Phase 0.7 验证 Windows 原生替代组件；Phase 0.8 按结果正式接入
-**日期**：2026-07-09
-**用途**：定义本项目如何优先使用成熟开源组件，如何在 `G:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
+**日期**：2026-07-10
+**用途**：定义本项目如何优先使用成熟开源组件，如何在 `I:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
 
 > 注：PostgreSQL、MinIO、Redis/BullMQ 已保留为 Phase 0.5 历史能力卡，不进入当前单机成品默认栈；Phase 0.7 以 SQLite、本地文件与 SQLite Job Worker 验证替代路径。
 
@@ -31,7 +31,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 - AI Provider 不是开源组件，但也必须先在 composer 中用最小样例调通。
 - 不得因为某功能重要就自己造轮子。
 - 产品流程可以参考优秀开源项目；技术栈不强行搬运。
-- `G:\ai-studybuddy-composer` 是组件试炼场；`G:\ai-studybuddy` 只接收验证后的 Adapter 和业务编排。
+- `I:\ai-studybuddy-composer` 是独立本机试炼场；`I:\ai-studybuddy` 只接收经过文档门禁后重新实现的正式 Adapter 和业务编排。试炼场不得被主系统 import，也不得把样例代码直接复制进产品。
 
 ## 二、组件能力卡模板
 
@@ -46,7 +46,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 安装方式 | npm / pip / Docker / 二进制 |
 | 输入 | 文件、文本、URL、音频、图片等 |
 | 输出 | 纯文本、JSON、HTML、Markdown、音频轨等 |
-| Composer 目录 | 该组件在 `G:\ai-studybuddy-composer` 下的位置 |
+| Composer 目录 | 该组件在 `I:\ai-studybuddy-composer` 下的位置 |
 | Adapter 名称 | 主系统封装层名称 |
 | smoke test | 最小可运行测试 |
 | MVP 状态 | 必接 / 后接 / 只参考 |
@@ -190,7 +190,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 ### 8.1 整体判断：分子系统各取所长，不套单一 LMS
 
-不存在与本项目栈（TypeScript/Node + PostgreSQL/pgvector）契合的单一整体教育平台底座：
+不存在与本项目栈（TypeScript/Node + Windows 本机 SQLite/本地文件）契合的单一整体教育平台底座：
 
 - Frappe LMS：Python 全栈 + Vue，默认 MariaDB，Postgres 为二等支持、无原生 pgvector，且 **AGPL-3.0**（网络托管触发源码披露义务）。
 - Open edX：Python + Django + React，机构级重量平台。
@@ -203,12 +203,12 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 | 子系统 | 推荐底座 | License / 栈契合 | 覆盖范围 · 需自建 |
 |---|---|---|---|
-| **S1 学习节奏** | [frappe-gantt](https://github.com/frappe/gantt) + [react-big-calendar](https://github.com/jquense/react-big-calendar)；复杂甘特可选 [DHTMLX Gantt](https://github.com/DHTMLX/gantt) | 全 **MIT**，React/JS 库可嵌入 ✅ | 覆盖时间线/日历/甘特渲染。自建：课程/任务数据模型、工作量聚合（甘特无原生工作量视图）、逾期提醒（BullMQ 定时 Job）。**DHTMLX 仅 v10+ Community 版为 MIT，须锁版本，v9 及更早为 GPLv2** |
+| **S1 学习节奏** | [frappe-gantt](https://github.com/frappe/gantt) + [react-big-calendar](https://github.com/jquense/react-big-calendar)；复杂甘特可选 [DHTMLX Gantt](https://github.com/DHTMLX/gantt) | 全 **MIT**，React/JS 库可嵌入 ✅ | 覆盖时间线/日历/甘特渲染。自建：课程/任务数据模型、工作量聚合（甘特无原生工作量视图）、逾期提醒（SQLite Job Worker + Windows 调度）。**DHTMLX 仅 v10+ Community 版为 MIT，须锁版本，v9 及更早为 GPLv2** |
 | **S2 资料笔记** | [markmap](https://github.com/markmap/markmap)（导图）+ 既有 pdf-parse/RapidOCR/react-markdown/KaTeX；检索可参考 [Quivr](https://github.com/quivrhq/quivr)(Apache-2.0,原生 pgvector) | markmap **MIT**，JS/TS 原生 ✅ | 覆盖导图渲染与格式转换。自建：上传→转文本→喂中转 GPT/Claude→存 markdown/导图数据 的编排线 |
 | **S3 限时练习** | [@lumieducation/h5p-server](https://github.com/Lumieducation/H5P-Nodejs-library) | 纯 **TypeScript**，npm 可嵌入 ✅ 最契合 | Question Set 内置多选/填空/拖词等客观题型→规则批改。自建：主观题 AI 评分（Kimi）、题目生成（Kimi）、限时逻辑。Moodle 题引擎(PHP 耦合)/E-Quiz(需 K8s)/obsidian 插件(绑 Obsidian) 均不宜嵌入 |
-| **S4 错题改错** | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs)（~704★，FSRS-v6） | **MIT**，同栈原生 TS 库 ✅ 最契合 | 覆盖艾宾浩斯间隔复习调度引擎（喂评分→返回下次复习时间）。自建：错题本模型、错因分类、变题重做、录入 UI、卡片状态持久化到 PostgreSQL |
+| **S4 错题改错** | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs)（~704★，FSRS-v6） | **MIT**，同栈原生 TS 库 ✅ 最契合 | 覆盖艾宾浩斯间隔复习调度引擎（喂评分→返回下次复习时间）。自建：错题本模型、错因分类、变题重做、录入 UI、卡片状态持久化到 SQLite |
 | **S5 期末冲刺** | ⚠️ **组卷算法无可复用 TS/Node 底座，需自研** | — | 自建：按知识点/难度加权抽样组卷（TS 实现，不复杂）。真题解析/变题走 Kimi。限时模拟考复用 S3 的 H5P。（RecruitSystem 用遗传算法组卷但为 Java SSM 整站，不可复用） |
-| **S6 家长观察** | **自建 [ECharts](https://github.com/apache/echarts)/Recharts 只读面板**（决策见 8.3） | ECharts Apache-2.0 | 家长只读图表（完成状态/趋势/逾期预警），数据从后端 API 出。不引入独立 BI 服务 |
+| **S6 家长观察** | `nodemailer` + QQ SMTP、飞书自定义机器人 Webhook | Node 出站发送，无需公网入口 | 规则统计生成 HTML 报告与卡片；AI 仅可选润色；不做家长 Web 面板或远程登录 |
 | **S7 课堂采集** | [FunASR](https://github.com/modelscope/FunASR) 或 [SenseVoice.cpp](https://github.com/lovemefan/SenseVoice.cpp)（CPU）；省心可用 [Scriberr](https://github.com/rishikanthc/Scriberr)(MIT) 独立服务或云 ASR | 中文优先；见 9.2 硬件注意 | 覆盖课堂转写。自建：说话人登记/命名（ASR 只给匿名 spk0/spk1）。**SenseVoice.cpp 无 Windows 预编译二进制，须自编译** |
 
 ### 8.3 S6 家长报告选型决策
@@ -222,42 +222,37 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 档位 | 子系统 → 底座 | 自研量 |
 |---|---|---|
 | **第一档 直接套库** | S4→ts-fsrs；S1→frappe-gantt+react-big-calendar；S3→@lumieducation/h5p-server | 极少 |
-| **第二档 套组件配薄胶水** | S2→markmap+OCR+PDF.js+react-markdown/KaTeX；S6→自建 ECharts 面板 | 编排线 |
+| **第二档 套组件配薄胶水** | S2→markmap+OCR+PDF.js+react-markdown/KaTeX；S6→邮件 HTML + 飞书卡片 | 编排线 |
 | **第三档 主要自研（但薄）** | S5→组卷算法自研+Kimi 解析；S7→本地 ASR 自编译或用云/独立服务 | 较多 |
 
 ---
 
-## 九、硬件可行性与部署预算（2026-07-08 调研补充）
+## 九、当前默认栈与历史验证的边界
 
-**开发/部署机**：Maxtang FP650 迷你主机 — AMD Ryzen 7 5800H（8 核 16 线程）、32GB DDR4-3200、**无独立 NVIDIA GPU**（仅 AMD 核显，无 CUDA）、512GB+500GB SSD、Windows 10 LTSC 64 位。全套自托管服务共享这一台机器。
+### 9.1 当前单机成品默认栈
 
-### 9.1 内存预算（Docker Desktop + WSL2，粗算）
+| 能力 | 当前默认 | 原因 |
+|---|---|---|
+| 运行 | Windows 11 + Express localhost | 孩子本机按需启动，无 Docker/WSL2 常驻 |
+| 数据 | SQLite WAL + `better-sqlite3` | 单用户、单文件、低内存、可备份 |
+| 文件 | 本地目录 + 逻辑 `storage_key` | 不需 MinIO、对象存储或预签名 URL |
+| 任务 | SQLite `jobs` + 单进程串行 Worker | 持久化、有限重试、重启恢复，不需 Redis |
+| OCR | RapidOCR Python 子进程 | 用完退出，不常驻 |
+| 报告 | QQ SMTP + 飞书 Webhook | 孩子电脑主动出站，无公网入口 |
+| 调度 | Windows Task Scheduler | 22:30 独立执行 `report.js` |
 
-| 项 | 内存 |
-|---|---|
-| Windows 10 LTSC + Docker Desktop/WSL2 | 4–6 GB |
-| PostgreSQL + pgvector | 2–4 GB |
-| Redis | 0.5–1 GB |
-| MinIO | ~0.5 GB |
-| Node 后端 + Worker | 1–2 GB |
-| **常驻小计** | **约 8–13 GB** |
-| OCR/ASR 任务峰值（异步、不常驻） | +1–2 GB |
+### 9.2 Phase 0.5 历史组件能力
 
-**结论：32GB 够用且有余量**，前提是 OCR/ASR 走 BullMQ 异步 Job、worker 并发限 1–2，不与在线请求抢 CPU。这使架构文档中「PDF/OCR/ASR 走 BullMQ」从可选项变为**硬要求**。注意 CPU 满载时温度偏高（导出快照 91°C），长任务前留意散热。
+PostgreSQL/pgvector、MinIO、Redis/BullMQ、Docker Desktop/WSL2 的 smoke test 结论仍有效，适用于未来多用户、云端或更重的部署形态；它们不构成孩子 16GB Windows 本机版的默认依赖，也不得在 Phase 0.8 中无重新决策地带回主路径。
 
-### 9.2 CPU-only 组件注意（无 GPU）
+### 9.3 试炼场到产品的唯一通道
 
-- **中文 OCR 改推 [RapidOCR](https://github.com/RapidAI/RapidOCR)**（ONNXRuntime，CPU 无需 CUDA，官方支持 Windows，比 PaddleOCR 轻）。但 Node 原生绑定 `node-RapidOcrOnnx` 不可靠（1★、2023 后停更、无预编译包、只带 PP-OCRv3、须本地编译）——**建议走 RapidOCR 官方 Python/CLI，用 Node 子进程调用**。PaddleOCR 仍作为备选保留在第三节清单。
-- **S7 ASR：`SenseVoice.cpp`（ggml/MIT/活跃）无 Windows 预编译二进制，全部 release 仅源码**，Windows 上须自行编译后再经 Node 子进程集成，是实际门槛。不想折腾编译则退回**云 ASR API** 或 **Scriberr 独立服务**（但 Scriberr 的 WhisperX/Parakeet GPU 加速在无 N 卡下用不上，只能走 CPU）。
-- Kimi/Qwen 等 AI 走云 API，不吃本地 GPU/内存，不受此约束。
+```text
+I:\ai-studybuddy-composer 的最小样例
+  → 可重复 smoke test + COMPONENT-CARD
+  → 04 记录任务状态 + 09 记录验收结果
+  → 08 定义 Adapter 与安全边界
+  → Phase 0.8 在 I:\ai-studybuddy\packages 重新实现
+```
 
-### 9.3 后续触发项（Phase 0.8 后按需覆盖）
-
-以下量化指标两轮调研均未坐实，须在对应子系统触发时做本机 smoke test 验证，不是再调研能解决的：
-
-- RapidOCR / PaddleOCR 在 5800H CPU 上单页中文试卷的延迟与峰值内存；
-- SenseVoice-Small / FunASR 纯 CPU 转写一节课音频的实时率（RTF）与内存；
-- SenseVoice.cpp 在本机 Windows 自编译的实际工作量与稳定性；
-- 全服务同时运行 + 偶发 OCR/ASR 的精确内存占用，及 Docker Desktop(WSL2) vs Windows 原生服务的净差异。
-
-> 这些验证在 S7 及 OCR 组件正式触发时，按第六、七节的 smoke test 规范补入 `docs/09-测试验收计划`。
+`.env.local`、`.venv`、`node_modules`、output、真实凭据和真实学习材料只留在本机试炼场或 `APP_DATA_ROOT`；不进入主仓库 Git。任何一环缺失，组件不得视为可接入产品。

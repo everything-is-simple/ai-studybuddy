@@ -1,8 +1,8 @@
 # S1 学习节奏子系统 StudyRhythm PRD
 
-**版本**：v0.01
-**日期**：2026-07-07
-**状态**：第一个子系统轻量 PRD 草案
+**版本**：v0.02
+**日期**：2026-07-10
+**状态**：Phase 0.8 开工前轻量设计基线
 
 ---
 
@@ -24,7 +24,7 @@ StudyRhythm 提供课程、课次、学习任务、截止时间、工作量累�
 | 时间约束 | 每个任务必须有截止时间或计划完成日期 |
 | 工作量累计 | 系统能按课程统计资料整理、练习、错题复习、备考任务次数 |
 | 逾期识别 | 逾期任务能自动标记并进入时间线 |
-| 家长摘要 | ParentWindow 能读取 StudyRhythm 的非隐私进度摘要 |
+| 家长摘要 | ParentReport 能读取 StudyRhythm 的脱敏统计并生成异步报告 |
 
 ---
 
@@ -42,7 +42,7 @@ StudyRhythm 提供课程、课次、学习任务、截止时间、工作量累�
 | As a student, I want to create courses so that my learning records are grouped by subject. | 能创建/编辑/停用课程；课程有学期字段 |
 | As a student, I want to create time-limited tasks so that I know what must be done before a deadline. | 任务有类型、预计时长、截止时间、状态 |
 | As a student, I want all subsystem actions to become timeline events so that I can see my learning rhythm. | NoteBuilder/PracticeRunner/ErrorFixer 事件能写入时间线 |
-| As a parent, I want to view only progress summary so that I can care without monitoring details. | 家长只看完成状态、数量、趋势，不看资料原文/答案 |
+| As a parent, I want to view only progress summary so that I can care without monitoring details. | 家长只接收完成状态、数量、趋势和考前提醒，不看资料原文/答案，也不登录系统 |
 
 ### Non-Goals
 
@@ -66,7 +66,7 @@ flowchart TD
   E2 --> F
   F --> G["逾期/连续未学习检测"]
   G --> H["学生端提醒"]
-  G --> I["家长端只显示趋势和状态"]
+  G --> I["ParentReport 生成脱敏异步摘要"]
 ```
 
 ---
@@ -88,7 +88,7 @@ flowchart TD
 - 本周学习时间线；
 - 课程工作量统计；
 - 逾期任务列表；
-- 家长端摘要数据。
+- ParentReport 使用的脱敏统计数据。
 
 ---
 
@@ -185,7 +185,13 @@ ParentProgressSummary
 | `PATCH /study-tasks/:id/status` | 更新状态 |
 | `POST /study-events` | 子系统写入时间线事件 |
 | `GET /timeline` | 学生时间线 |
-| `GET /parent/progress-summary` | 家长摘要 |
+| 内部 `ReportDataQuery` | 仅供报告生成器读取脱敏统计；不暴露家长远程 API |
+
+---
+
+### ParentReport 数据边界
+
+S1 只提供课程名、任务标题、状态、学习时长、趋势和考试节点等脱敏统计；邮件/飞书发送由后续 `ReportService` 完成。父母不是 S1 的远程登录用户，系统不提供 `/parent/*` 公开 HTTP 接口。
 
 ---
 
@@ -197,7 +203,7 @@ ParentProgressSummary
 - [ ] 逾期任务能被定时扫描标记；
 - [ ] 其他子系统可通过统一接口写入 StudyEvent；
 - [ ] 家长端摘要不包含原始学习资料、题目答案、隐私全文；
-- [ ] 清空 `G:\ai-studybuddy-tmp` 不影响 StudyRhythm 数据；
+- [ ] 清空 `APP_DATA_ROOT\tmp` 不影响 StudyRhythm 数据；
 - [ ] 日志不记录学生隐私全文和 API Key。
 
 ---

@@ -1,76 +1,75 @@
-# AI StudyBuddy 本地目录与组件装配开发规范
+# AI StudyBuddy 本地目录与验证资产治理
 
-**版本**：v1.3
+**版本**：v1.4
 **状态**：已确认
 **日期**：2026-07-10
-**用途**：定义仓库内组件试炼场、Windows 单机运行数据、日志、临时文件和备份规则。本文件是本地开发环境与目录治理的单一事实来源（SoT）。
+**用途**：定义主系统、外部组件试炼场、运行数据、日志、临时文件和备份的唯一边界。本文件是 Windows 单机目录治理的单一事实来源（SoT）。
 
 ---
 
-## 一、运行形态
+## 一、总原则
 
-当前默认产品运行在孩子 Windows 电脑：学习服务按需启动，报告脚本由 Windows 任务计划触发，父母只接收邮件和飞书报告。Docker/WSL2、家用主机、隧道和公网入口不属于单机成品默认形态。
+产品默认运行在孩子的 Windows 11 电脑：Express 仅监听 `127.0.0.1`，SQLite 和学习资料保存在本机，OCR/AI/报告按需运行；父母只通过 QQ 邮件和飞书接收脱敏摘要。Docker/WSL2、家用主机、隧道、公网入口与家长远程登录均不属于当前单机成品。
 
-- 当前正式支持目标：Windows 11、Ryzen 5 5625U、16GB 内存、512GB SSD；
-- 新设备推荐：32GB 内存；
-- OCR、AI、报告 Worker 按需启动后退出；
-- 真实数据、SMTP 授权码、Webhook 和 API Key 不进 git。
+目录必须按职责隔离：**源码不存真实数据，试炼场不变成主系统，运行数据不进入 Git，备份不反向污染当前 SoT。**
 
-## 二、目录职责
+## 二、七个本机目录
 
-| 路径/变量 | 职责 | 可放内容 | 不可放内容 |
+| 路径 | 唯一职责 | 可以放 | 禁止放 |
 |---|---|---|---|
-| `I:\ai-studybuddy` | 主系统源码与文档 | `packages/`、`docs/`、正式 Adapter、Phase 0.8 代码 | 真实数据、密钥、长期日志 |
-| `I:\ai-studybuddy-composer\windows-native` | Phase 0.7 组件试炼场 | 最小样例、非隐私 fixtures、smoke test、能力卡 | 主系统业务代码、真实学习资料 |
-| `APP_DATA_ROOT` | 单机运行数据根目录 | SQLite、资料、导出、日志、临时文件 | 源码、git 配置 |
-| `APP_DATA_ROOT\data` | 数据库目录 | `studybuddy.sqlite`、备份文件 | 原始资料 |
-| `APP_DATA_ROOT\materials` | 正式学习资料 | `storage_key` 对应文件 | 临时 OCR 切片 |
-| `APP_DATA_ROOT\tmp` | 可清理临时目录 | OCR/导出临时文件 | 长期数据 |
-| `APP_DATA_ROOT\exports` | 报告附件和导出 | HTML/PDF 摘要 | API Key |
-| `APP_DATA_ROOT\logs` | 运行日志 | 脱敏诊断、任务状态 | 密钥、资料原文、完整答案 |
+| `I:\ai-studybuddy` | 主系统 Git 仓库 | `docs/`、`packages/`、脚本、正式测试、正式 Adapter | `.env.local`、真实学习资料、长期日志、试炼场依赖 |
+| `I:\ai-studybuddy-composer` | 外部组件试炼场 | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码、真实学习资料、主仓库 workspace 配置 |
+| `I:\ai-studybuddy-data` | 运行数据根目录建议值 | SQLite、`materials/`、`exports/`、受控备份 | 源码、Git 元数据、密钥明文 |
+| `I:\ai-studybuddy-day-study` | 人工学习工作区 | 用户自己创建或整理的资料副本 | 系统唯一数据源、应用数据库 |
+| `I:\ai-studybuddy-logs` | 运行日志汇总 | 脱敏诊断、任务状态、错误摘要 | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
+| `I:\ai-studybuddy-tmp` | 可再生临时空间 | OCR 切片、导出中间件、临时测试结果 | SQLite 正式库、`materials/`、唯一备份 |
+| `I:\ai-studybuddy-backup` | 只读历史备份 | 阶段 ZIP、旧稿归档、恢复说明 | 当前 SoT 文档的直接编辑副本 |
 
-推荐默认值：`APP_DATA_ROOT=%LOCALAPPDATA%\AIStudyBuddy`。代码只能读取环境变量或安装器配置，不能写死盘符。
+正式产品通过 `APP_DATA_ROOT` 指定运行数据根目录。当前开发机建议 `APP_DATA_ROOT=I:\ai-studybuddy-data`；成品安装时可改为 `%LOCALAPPDATA%\AIStudyBuddy`。业务代码不得写死盘符。
 
-## 三、组件试炼场规则
+## 三、外部组件试炼场
 
-`I:\ai-studybuddy-composer\windows-native\` 使用独立 `package.json` 和 `npm install`，不加入 `I:\ai-studybuddy\pnpm-workspace.yaml`。每个编号目录必须有：
+`I:\ai-studybuddy-composer\windows-native` 是 Phase 0.7 的独立 Node/Python 验证目录，使用自己的 `package.json`、`.venv` 和 `.env.local`，不加入 `I:\ai-studybuddy\pnpm-workspace.yaml`。
+
+每个组件样例至少包含：
 
 ```text
 smoke-test/       可重复执行脚本
-output/           可再生结果，加入 gitignore
-COMPONENT-CARD.md 能力边界与结果
+output/           可再生结果，必须忽略
+COMPONENT-CARD.md 版本、命令、输入输出、耗时、内存、失败边界
 ```
 
-组件从试炼场进入主系统前必须满足：安装可重复、输入输出明确、失败边界明确、内存基线已记录、真实密钥不进仓库、能力卡已回填。
+严格禁止：
 
-## 四、环境变量规范
+- 主系统 `packages/` import、执行或直接复制试炼场样例；
+- 把 `.env.local`、`.venv/`、`node_modules/`、真实凭据、真实学习资料或 output 放回主仓库；
+- 用“试炼场曾经跑过”替代产品代码的正式测试。
 
-`.env.example` 只保留变量名：
+唯一接入路径：`试炼场 smoke test → 能力卡 → 04 任务状态 → 09 验收结果 → 08 Adapter 边界 → Phase 0.8 在 packages 重新实现`。
 
-```env
-APP_DATA_ROOT=
-BACKEND_PORT=3000
-AI_BASE_URL=
-AI_API_KEY=
-AI_MODEL=
-SMTP_HOST=smtp.qq.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=
-SMTP_AUTH_CODE=
-SMTP_TO=
-FEISHU_WEBHOOK_URL=
+## 四、运行数据结构与清理
+
+```text
+APP_DATA_ROOT\
+  data\studybuddy.sqlite
+  data\backups\
+  materials\<course-id>\<yyyy-mm-dd>\<generated-name>
+  tmp\<job-id>\
+  exports\<yyyy-mm>\
+  logs\
 ```
 
-`.env.local` 永不提交。日志不得输出 `AI_API_KEY`、`SMTP_AUTH_CODE`、完整 `FEISHU_WEBHOOK_URL`、资料原文或完整答案。
+- 数据表只保存逻辑 `storage_key`，不保存绝对文件路径。
+- SQLite 关闭后才能复制到 `data\backups`；恢复前保留原库的只读副本。
+- `tmp` 和 `I:\ai-studybuddy-tmp` 可以清理，但清理脚本必须拒绝跨目录删除，且绝不删除 `materials`、`data` 或备份。
+- 邮件附件和导出放在 `exports`；发送记录由 SQLite 的 `report_deliveries` 去重。
 
-## 五、备份与清理
+## 五、密钥、日志与备份
 
-- SQLite 关闭后复制到 `APP_DATA_ROOT\data\backups`；
-- `tmp` 可清空，清理前不得删除 `materials` 和 SQLite；
-- 每个里程碑完成后打包源码与文档；
-- 真实学习数据备份由家长确认后写入外接盘或受控目录。
+`.env.example` 仅列变量名；`.env.local` 永不提交。日志不得记录 `AI_API_KEY`、`SMTP_AUTH_CODE`、完整 `FEISHU_WEBHOOK_URL`、资料原文、笔记正文、答案或聊天内容。
 
-## 六、主系统接入门槛
+每个里程碑完成后：先对 `I:\ai-studybuddy` 做 Git 提交，再把源码与文档的阶段快照放到 `I:\ai-studybuddy-backup`；真实学习数据由家长确认后单独备份。备份只用于恢复，不得直接恢复为 `docs/` 的当前设计依据。
 
-Phase 0.7 只验证。Phase 0.8 接入 SQLite、本地文件、SQLite Job Worker 和报告 Adapter 前，必须已有通过的能力卡、`docs/09-*` 验收结果和文档治理检查结果。
+## 六、Phase 0.8 接入门槛
+
+Phase 0.7 只验证，不修改主系统。SQLite、本地文件、SQLite Job Worker、RapidOCR、报告 Adapter 只有在能力卡、`docs/09-*` 实测结果、`docs/08-*` 边界和文档治理检查都齐全后，才可以在 Phase 0.8 重新实现。Windows 任务计划、Node 22 LTS 与孩子 HP 16GB 未完成前，Phase 0.7 不能标记完成。

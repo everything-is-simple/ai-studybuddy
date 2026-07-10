@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v1.2
-**日期**：2026-07-09
+**版本**：v1.3
+**日期**：2026-07-10
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -16,10 +16,19 @@
 | 03 | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md) | ✅ 有效 | S1 轻量 PRD，第一个子系统设计 |
 | 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | Phase 0.5 历史结论、Phase 0.7 Windows 原生验证、Phase 0.8/1 具体任务拆解 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
-| 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `G:\ai-studybuddy-*` 目录职责 |
+| 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `I:\ai-studybuddy-*` 七目录职责、外部试炼场与单机数据边界 |
 | 07 | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md) | ✅ 有效 | 文档分层、子系统文档触发条件 |
 | 08 | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md) | ✅ 有效 | 共同底座最小架构（S1 开工前必读） |
 | 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5 历史 smoke test、Phase 0.7 Windows 原生验证与 Phase 0.8 验收标准 |
+
+---
+
+## 一点五、代码与试炼场边界
+
+- `I:\ai-studybuddy` 是唯一主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。
+- `I:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
+- 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库；通过验证的能力必须先回填 `04`、`08`、`09`，再由 Phase 0.8 重新以 Adapter 方式实现。
+- 试炼场 README 属于本机操作说明；它不是主仓库的 Git 跟踪文件。正式产品结论以本索引登记的编号文档为准。
 
 ---
 
@@ -56,7 +65,7 @@
 旧版"大一统"设计文档已归档到：
 
 ```
-G:\ai-studybuddy-backup\system-design-docs-draft_2026-07-07_125549.zip
+I:\ai-studybuddy-backup\system-design-docs-draft_2026-07-07_125549.zip
 ```
 
 归档原因：旧设计 1487 行架构文档 + 20+ 张表一次性设计，超出个人开发者认知边界。
@@ -129,7 +138,7 @@ git diff --check
 
 1. 重读 [08-共同底座架构](08-共同底座架构-Architecture.md)；
 2. 创建 `subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`；
-3. 在 composer 先调通 pdf-parse/RapidOCR/Markmap；
+3. 在外部 `I:\ai-studybuddy-composer` 先调通 pdf-parse/RapidOCR/Markmap；
 4. 开工。
 
 ---
@@ -152,7 +161,7 @@ git diff --check
 
 - ❌ 不要凭记忆新建文档；
 - ❌ 不要从旧 zip 直接恢复旧稿到 `docs/`；
-- ❌ 不要硬编码 `G:\...` 路径到未来业务代码中；
+- ❌ 不要硬编码任何盘符路径（例如 `I:\...`）到未来业务代码中；
 - ❌ 不要跳过文档门禁规则。
 
 ---

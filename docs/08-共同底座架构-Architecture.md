@@ -1,137 +1,94 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.3
+**版本**：v1.4
 **日期**：2026-07-10
-**状态**：Phase 0.7 验证中；Phase 0.8 开工前基线
-**原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只写当前要用的底座。
+**状态**：Phase 0.7 验证进行中；Phase 0.8 开工前架构基线
+**原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
 
-## 1. 当前默认路径
+## 一、默认产品路径
 
 ```text
 孩子在 Windows 本机浏览器使用 Express localhost
   → 创建课程 / 任务 / 考试日期
-  → 上传 PDF / 图片 / 文本到本地资料目录
-  → SQLite Job Worker 调 RapidOCR / AI
-  → SQLite 保存业务数据、任务和报告发送记录
-  → Windows 任务计划在 22:30 运行独立 report.js
-  → QQ 邮件 + 飞书完整报告卡片发送给父母
+  → 本地文件目录保存资料（只存 storage_key）
+  → SQLite jobs 串行调 RapidOCR / AI
+  → SQLite 保存业务数据、任务和 report_deliveries
+  → Windows 任务计划在 22:30 独立运行 report.js
+  → QQ SMTP 邮件 + 飞书卡片主动发送给父母
 ```
 
-不做：家用主机、隧道、公网入口、家长远程登录、Docker/WSL2 常驻、家长 Web 看板。
+系统不做家用主机、隧道、公网入口、远程登录、家长 Web 面板或 Docker/WSL2 常驻。Express 仅监听 `127.0.0.1`；父母不是系统登录用户。
 
-## 2. 最小组件关系
+## 二、最小组件与目录边界
 
-| 能力 | 默认组件 | 接入边界 |
+| 能力 | 当前默认组件 | 必须遵守的边界 |
 |---|---|---|
-| 本地 Web | Express | 只监听 `127.0.0.1`；孩子浏览器访问 localhost |
-| 数据库 | SQLite + `better-sqlite3` | WAL、单 Node 写进程、关闭后文件备份 |
-| 文件 | Node `fs` + `storage_key` | `StorageAdapter` 不暴露绝对路径 |
-| 任务 | SQLite `jobs` + 单进程 Worker | 串行领取、有限重试、重启恢复 |
-| PDF/OCR | pdf-parse、RapidOCR Python 子进程 | 统一 `ConverterResult`；OCR 按需退出 |
-| AI | `NoteAiProvider` | 默认中转 GPT/Claude；失败可返回错误或报告降级 |
-| 报告 | 规则统计 + 可选 AI 润色 | AI 失败也发送规则报告 |
-| 邮件 | `nodemailer` + QQ SMTP | HTML 正式报告、可选附件 |
-| 飞书 | 自定义机器人 Webhook | 完整报告卡片、无需公网入口 |
-| 调度 | Windows Task Scheduler | 独立 `report.js`，错过后尽快运行 |
+| 本地 Web | Express | 只监听 `127.0.0.1`；孩子从本机浏览器使用 |
+| 数据库 | SQLite + `better-sqlite3` | WAL、单 Node 写进程、关闭后备份 |
+| 文件 | Node `fs` + `StorageAdapter` | 业务数据只存 `storage_key`，拒绝路径逃逸 |
+| 持久化任务 | SQLite `jobs` + 单进程 Worker | 串行领取、有限重试、过期 running 恢复 |
+| OCR | RapidOCR Python 子进程 | stdin/参数只传文件路径；stdout 仅 JSON；用完退出 |
+| AI | `NoteAiProvider` | 用于笔记和可选报告润色；报告 AI 失败必须降级 |
+| 报告 | `ReportService` | SQLite 确定性统计；不读取资料正文、答案或聊天内容 |
+| 邮件 | `nodemailer` + QQ SMTP | HTML 正式报告；密钥仅在 `.env.local` |
+| 飞书 | 自定义机器人 Webhook | 完整脱敏报告卡片；不暴露完整 URL |
+| 调度 | Windows Task Scheduler | 独立 `report.js`；不启动 OCR 或学习 Web 服务 |
 
-Phase 0.5 的 PostgreSQL、MinIO、Redis/BullMQ smoke test 结论保留为历史能力，不作为当前单机成品默认依赖。
+主系统位于 `I:\ai-studybuddy`；最小验证位于外部 `I:\ai-studybuddy-composer\windows-native`。后者不加入 workspace，不能被 `packages/` import。数据根目录通过 `APP_DATA_ROOT` 配置，开发机建议 `I:\ai-studybuddy-data`，成品可使用 `%LOCALAPPDATA%\AIStudyBuddy`。
 
-## 3. 最小数据模型
+Phase 0.5 的 PostgreSQL/pgvector、MinIO、Redis/BullMQ 和 Docker/WSL2 结论仅保留为历史能力；它们不属于当前单机成品默认依赖。
 
-| 对象 | 用途 | 关键字段 |
+## 三、数据、任务与报告
+
+### 3.1 最小数据模型
+
+| 对象 | 用途 | 关键规则 |
 |---|---|---|
-| `users` | 最小学生身份 | `id`、`name`、`role`、时间戳 |
-| `courses` | 课程和考试节点 | `id`、`student_id`、`name`、`exam_at` |
-| `study_tasks` | 学习任务 | `id`、`course_id`、`title`、`status`、`deadline` |
-| `study_events` | 学习时间线/报告统计 | `id`、`task_id`、`event_type`、`payload_json`、`created_at` |
-| `materials` | 本地资料索引 | `id`、`task_id`、`storage_key`、`status` |
-| `normalized_texts` | 统一纯文本 | `id`、`material_id`、`text` |
-| `structured_notes` | AI 笔记 | `id`、`task_id`、`markdown`、`model` |
-| `mind_maps` | 导图数据 | `id`、`note_id`、`data` |
-| `jobs` | 持久化任务 | `id`、`job_type`、`status`、`payload_json`、`attempts`、`max_attempts`、时间戳、`error_summary` |
-| `report_deliveries` | 报告渠道去重 | `report_key`、`channel`、`status`、`sent_at`；唯一键为 `report_key + channel` |
+| `courses` | 课程与考试节点 | `name`、`exam_at`；考试日驱动提醒 |
+| `study_tasks` | 学习任务 | 标题、状态、截止时间、预计/实际时长 |
+| `study_events` | 时间线与统计 | 只记录事件摘要；供 S6 聚合 |
+| `materials` | 文件索引 | 只保存 `storage_key`，不保存绝对路径 |
+| `jobs` | 持久化后台任务 | `pending/running/completed/failed`、重试与错误摘要 |
+| `report_deliveries` | 报告渠道去重 | 唯一键 `report_key + channel` |
 
-不提前创建 S3/S4/S5/S6/S7 的业务表；考试日期只在课程/任务正式输入触发时落表。
+Phase 0.8 只按当前 S1/S2 闭环创建必要表；不提前创建 S3–S7 的业务表。
 
-## 4. Job 与报告规则
+### 3.2 Job 状态
 
-Job 状态：`pending → running → completed`；可重试失败回到 `pending`；达到上限为 `failed`。过期 `running` Job 在 Worker 启动时恢复为 `pending`。
-
-报告由 SQLite 确定性统计课程名、任务标题、完成/逾期、学习时长、趋势和考前提醒。AI 只可选润色，失败不得阻止报告发送。
-
-- 日报：每天 22:30；
-- 周报：周日 22:30；
-- 月报：每月最后一天 22:30；
-- 考前提醒：考试前 7/3/1 天 22:30；
-- 同日重合时，邮件和飞书各发送一条合并报告；
-- 电脑关机/休眠错过时，下次 Windows 登录尽快补发；成功渠道不重复发送。
-
-报告不包含资料原文、笔记正文、答案或聊天内容。
-
-## 5. Adapter 边界
-
-```ts
-type ConverterResult = {
-  ok: boolean
-  sourceType: "pdf" | "image" | "text"
-  text?: string
-  warnings?: string[]
-  error?: string
-}
+```text
+pending → running → completed
+pending → running → pending  （可重试）
+pending → running → failed   （达到 max_attempts）
 ```
 
-Phase 0.8 正式需要：`SqliteDatabase`、`StorageAdapter`、`JobWorker`、`PdfConverter`、`OcrConverter`、`TextConverter`、`NoteAiProvider`、`ReportService`、`EmailSender`、`FeishuSender`。业务代码不得直接依赖 Python 命令、SMTP 细节或 Webhook URL。
+Worker 启动时将超时的 `running` Job 恢复为 `pending`。单进程串行执行 OCR、AI 与报告 Job，避免孩子 16GB 机器的内存竞争。
 
-## 6. Phase 0.7 / Phase 0.8 前置清单
+### 3.3 报告、合并与去重
 
-### 6.1 Phase 0.7
+- 每天 22:30 生成 `report:<yyyy-mm-dd>`；
+- 周日增加周报区块，月末增加月报区块；考试前 7、3、1 天增加提醒区块；同日只发送一个合并批次；
+- `report_deliveries` 以 `report_key + channel` 去重；邮件成功、飞书失败时只重试飞书；
+- Windows 关机或休眠错过时，在下次登录尽快补发；成功渠道不重复发送；
+- 报告只含课程名、任务标题、完成/逾期、学习时长、趋势和考前提醒；不含资料原文、笔记正文、答案或聊天内容。
 
-1. 在 `I:\ai-studybuddy-composer\windows-native\` 独立验证 Windows 原生组件；
-2. 每项填写能力卡，记录版本、命令、输入输出、耗时、内存、失败边界；
-3. QQ SMTP、飞书 Webhook、Windows 任务计划和孩子 HP 16GB 实机未验证前，不标记完成；
-4. 不修改 `packages/` 主系统代码。
+## 四、Adapter 边界
 
-### 6.1.1 开发机验证记录（2026-07-10）
+Phase 0.8 正式实现以下 Adapter：`SqliteDatabase`、`StorageAdapter`、`JobWorker`、`PdfConverter`、`OcrConverter`、`TextConverter`、`NoteAiProvider`、`ReportService`、`EmailSender`、`FeishuSender`。
 
-- 开发机：Windows 10 专业版 19045、Node 25.4.0、Python 3.10.19、约 28.92GB 可见内存；这是兼容性基线，不替代 Node 22 LTS 与孩子 HP 16GB 验收。
-- 已离线通过：SQLite WAL/事务/备份、本地文件越界保护、SQLite Job 重试恢复、RapidOCR 按需子进程、规则报告/AI 降级、固定周期的日报周报月报与考前提醒合并、渠道去重。
-- 已真实通过：QQ SMTP 发送到父母 163 测试邮箱；飞书 Webhook 推送到父母飞书群。
-- 仍为阻塞：任务计划实际创建/触发/清理/登录补发（当前会话拒绝创建任务）、HP 16GB 内存门槛。
-- 因此 Phase 0.7 仍为“验证中”，不得进入 Phase 0.8 正式接入。
-### 6.2 Phase 0.8
+业务代码不得直接依赖 Python 命令、绝对路径、SMTP 授权码或 Webhook URL。Converter 的统一输出至少包含 `ok`、`sourceType`、`text`、`warnings` 和 `error`；报告发送必须返回按渠道划分的结果，便于只重试失败渠道。
 
-1. Phase 0.7 全部通过；
-2. 用 SQLite migration/schema 创建最小表；
-3. 封装本地 `StorageAdapter` 和 SQLite `JobWorker`；
-4. 接入 PDF/OCR/AI 和最小报告接口；
-5. 孩子通过 localhost 使用，父母只接收脱敏报告；
-6. 端到端演示并验证临时目录清理不影响长期数据。
+## 五、Phase 0.7 验证状态与门槛
 
-## 7. 环境变量最小清单
+开发机记录：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB 可见内存。这只是兼容性证据，不能替代 Node 22 LTS 和孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）的最终验收。
 
-```env
-APP_DATA_ROOT=
-BACKEND_PORT=3000
-AI_BASE_URL=
-AI_API_KEY=
-AI_MODEL=
-SMTP_HOST=smtp.qq.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=
-SMTP_AUTH_CODE=
-SMTP_TO=
-FEISHU_WEBHOOK_URL=
-```
+已取得开发机证据：SQLite WAL/事务/备份、本地文件越界保护、SQLite Job 重试恢复、RapidOCR 按需子进程、规则报告与 AI 降级、固定周期合并去重、QQ SMTP 真实送达、飞书 Webhook 真实送达。
 
-`.env.local` 不提交。日志不得记录 API Key、SMTP 授权码、完整 Webhook、学生隐私全文或完整答案。
+尚未通过：Windows Task Scheduler 的真实临时任务创建/触发/清理与错过计划补发；孩子 HP 上的 Node 22 LTS、16GB 内存门槛、进程退出与重复周期去重复测。未完成前 Phase 0.7 不得标记完成，Phase 0.8 不得开始产品接入。
 
-## 8. 非目标
+## 六、安全与运行门槛
 
-- 不在 Phase 0.7/0.8 使用 Docker Desktop 或 WSL2 作为成品运行依赖；
-- 不提供公网访问、隧道、域名、反向代理或家长登录；
-- 不在 Phase 0.7 长期安装 Windows 任务计划；
-- 不在 Phase 0.8 提前开发 S3/S4/S5/S6/S7 业务表；
-- 不用 AI 替代学习状态、统计、去重或任务调度规则。
+`.env.local`、`.venv`、`node_modules`、真实资料、输出和日志不进主仓库 Git。日志不得输出 API Key、SMTP 授权码、完整 Feishu Webhook 或学生隐私全文。
+
+HP 最终验收要求：Docker Desktop 与 WSL2 未运行；学习服务运行时可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出。
