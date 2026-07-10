@@ -88,7 +88,7 @@ Phase 0.8 正式需要：`SqliteDatabase`、`StorageAdapter`、`JobWorker`、`Pd
 
 ### 6.1 Phase 0.7
 
-1. 在 `composer/windows-native/` 独立验证 Windows 原生组件；
+1. 在 `I:\ai-studybuddy-composer\windows-native\` 独立验证 Windows 原生组件；
 2. 每项填写能力卡，记录版本、命令、输入输出、耗时、内存、失败边界；
 3. QQ SMTP、飞书 Webhook、Windows 任务计划和孩子 HP 16GB 实机未验证前，不标记完成；
 4. 不修改 `packages/` 主系统代码。

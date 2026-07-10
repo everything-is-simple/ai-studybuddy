@@ -329,7 +329,7 @@ flowchart TD
 ### 7.3 目录治理
 
 - 主系统源码与文档：仓库根目录；
-- 组件试炼场：`I:\ai-studybuddy\composer\windows-native`；
+- 组件试炼场：`I:\ai-studybuddy-composer\windows-native`；
 - 生产数据：由 `APP_DATA_ROOT` 指向 Windows 用户目录，例如 `%LOCALAPPDATA%\AIStudyBuddy`；
 - 资料、导出、日志和临时文件均位于 `APP_DATA_ROOT` 下；
 - 真实数据不进 git，组件测试资料不使用真实学习内容。

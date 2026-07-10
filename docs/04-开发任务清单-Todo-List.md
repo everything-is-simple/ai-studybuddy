@@ -160,12 +160,12 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ## Phase 0.7：Windows 原生轻量底座验证
 
-**目标**：在仓库内 `composer\windows-native\` 独立验证单机 Windows 方案。Phase 0.7 不修改 `packages/` 主系统代码；验证失败不得污染主系统骨架。
+**目标**：在外部组件试炼场 `I:\ai-studybuddy-composer\windows-native\` 独立验证单机 Windows 方案。Phase 0.7 不修改 `I:\ai-studybuddy\packages\` 主系统代码；验证失败不得污染主系统骨架。
 
 **完成标准**：SQLite、本地文件、SQLite Job Worker、RapidOCR 子进程、规则报告、QQ SMTP、飞书 Webhook、Windows 任务计划和整合链路均有能力卡。真实 QQ/飞书凭据与孩子 HP 16GB 实机未验证前，不得宣称 Phase 0.7 完成。
 
 ### 0.7-T01：Windows 原生环境基线
-- [ ] 在 `composer\windows-native\` 建立独立 Node.js 22 LTS 样例，不加入 pnpm workspace
+- [ ] 在外部试炼场 `I:\ai-studybuddy-composer\windows-native\` 建立独立 Node.js 22 LTS 样例，不加入主系统 pnpm workspace
 - [ ] 记录 Windows、Node、Python、内存、Docker/WSL2 未运行状态
 - [ ] 创建 `.env.example`，不写真实 SMTP 授权码、Webhook 或 API Key
 

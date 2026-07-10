@@ -1,3 +1,0 @@
-const test=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');const {runOcr}=require('../../shared/ocr-runner');
-test('OCR missing file reports a clean child-process error',async()=>{await assert.rejects(()=>runOcr(path.join(__dirname,'missing.png'),3000),/input file does not exist|OCR exited/);});
-test('OCR installed runtime is required for success path',async(t)=>{const fixture=path.join(__dirname,'..','..','fixtures','sample.png');try{await runOcr(fixture,30000);}catch(error){if(/RapidOCR unavailable/.test(error.message)){t.skip('BLOCKED_EXTERNAL: rapidocr-onnxruntime not installed');return;}throw error;}});

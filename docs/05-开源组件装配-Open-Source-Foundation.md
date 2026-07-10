@@ -67,9 +67,9 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 思维导图渲染 | [Markmap](https://github.com/markmap/markmap) | `composer\mindmap\markmap-test` | Markdown/层级结构 → 思维导图 | MVP 必接 |
 | 数学公式渲染 | [KaTeX](https://github.com/KaTeX/KaTeX) | `composer\markdown\katex-test` | Markdown 公式展示 | MVP 必接 |
 | Markdown 渲染 | [react-markdown](https://github.com/remarkjs/react-markdown) | `composer\markdown\react-markdown-test` | 结构化笔记展示 | MVP 必接 |
-| 持久化任务 | SQLite `jobs` 表 + 单进程 Worker | `composer\windows-native\03-job-worker` | 格式转换 / AI / 报告 Job 串行执行 | Phase 0.7 必接 |
-| 本地文件 | Node.js `fs` + 逻辑 `storage_key` | `composer\windows-native\02-local-storage` | 原始资料、导出和临时文件 | Phase 0.7 必接 |
-| 数据库 | [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | `composer\windows-native\01-sqlite` | 单用户业务数据、任务、发送记录 | Phase 0.7 必接 |
+| 持久化任务 | SQLite `jobs` 表 + 单进程 Worker | `I:\ai-studybuddy-composer\windows-native\03-job-worker` | 格式转换 / AI / 报告 Job 串行执行 | Phase 0.7 必接 |
+| 本地文件 | Node.js `fs` + 逻辑 `storage_key` | `I:\ai-studybuddy-composer\windows-native\02-local-storage` | 原始资料、导出和临时文件 | Phase 0.7 必接 |
+| 数据库 | [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | `I:\ai-studybuddy-composer\windows-native\01-sqlite` | 单用户业务数据、任务、发送记录 | Phase 0.7 必接 |
 | 默认文本 AI | GPT/Claude 中转（Pixel API） | `composer\ai-provider\gpt-test` | 文本理解、笔记整理、普通解析 | MVP 必接 |
 | 文本 AI 备选 | Kimi | `composer\ai-provider\kimi-test` | 文本理解、笔记整理、多模态；当前无 Key | 备选 |
 | 文本 AI 备选 | Qwen | `composer\ai-provider\qwen-test` | 文本任务备选；Qwen-VL 只作多模态兜底 | P1 |

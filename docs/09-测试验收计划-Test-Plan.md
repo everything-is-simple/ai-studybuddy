@@ -11,7 +11,7 @@
 | 层级 | 位置 | 目标 |
 |---|---|---|
 | Phase 0.5 历史 smoke test | 旧 composer 能力卡/文档记录 | 保留已验证组件事实，不作为当前默认单机栈 |
-| Phase 0.7 独立 smoke test | `composer/windows-native/` | 验证 Windows 原生替代底座，不改主系统 |
+| Phase 0.7 独立 smoke test | `I:\ai-studybuddy-composer\windows-native\` | 验证 Windows 原生替代底座，不改主系统 |
 | Phase 0.8 Adapter/E2E | `packages/` | 正式接入后验证真实学习路径 |
 | HP 实机验收 | 孩子 HP Windows 11 | 验证 16GB 支持门槛 |
 
@@ -88,7 +88,7 @@ powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1
 git diff --check
 ```
 
-`composer/windows-native/` 只放独立验证样例；`packages/` 只放通过验证后正式接入的主系统代码；真实数据、密钥、日志和 output 不进 git。
+`I:\ai-studybuddy-composer\windows-native\` 只放独立验证样例；`I:\ai-studybuddy\packages\` 只放通过验证后正式接入的主系统代码；真实数据、密钥、日志和 output 不进主系统 git。
 
 ## 9. 暂不测试
 

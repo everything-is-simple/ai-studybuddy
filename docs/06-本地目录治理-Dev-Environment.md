@@ -21,7 +21,7 @@
 | 路径/变量 | 职责 | 可放内容 | 不可放内容 |
 |---|---|---|---|
 | `I:\ai-studybuddy` | 主系统源码与文档 | `packages/`、`docs/`、正式 Adapter、Phase 0.8 代码 | 真实数据、密钥、长期日志 |
-| `I:\ai-studybuddy\composer\windows-native` | Phase 0.7 组件试炼场 | 最小样例、非隐私 fixtures、smoke test、能力卡 | 主系统业务代码、真实学习资料 |
+| `I:\ai-studybuddy-composer\windows-native` | Phase 0.7 组件试炼场 | 最小样例、非隐私 fixtures、smoke test、能力卡 | 主系统业务代码、真实学习资料 |
 | `APP_DATA_ROOT` | 单机运行数据根目录 | SQLite、资料、导出、日志、临时文件 | 源码、git 配置 |
 | `APP_DATA_ROOT\data` | 数据库目录 | `studybuddy.sqlite`、备份文件 | 原始资料 |
 | `APP_DATA_ROOT\materials` | 正式学习资料 | `storage_key` 对应文件 | 临时 OCR 切片 |
@@ -33,7 +33,7 @@
 
 ## 三、组件试炼场规则
 
-`composer/windows-native/` 使用独立 `package.json` 和 `npm install`，不加入根 `pnpm-workspace.yaml`。每个编号目录必须有：
+`I:\ai-studybuddy-composer\windows-native\` 使用独立 `package.json` 和 `npm install`，不加入 `I:\ai-studybuddy\pnpm-workspace.yaml`。每个编号目录必须有：
 
 ```text
 smoke-test/       可重复执行脚本
