@@ -1,0 +1,13 @@
+{
+  "name": "@ai-studybuddy/shared",
+  "version": "0.8.0",
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

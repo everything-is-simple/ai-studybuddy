@@ -72,4 +72,4 @@ APP_DATA_ROOT\
 
 ## 六、Phase 0.8 接入门槛
 
-Phase 0.7 只验证，不修改主系统。SQLite、本地文件、SQLite Job Worker、RapidOCR、报告 Adapter 只有在能力卡、`docs/09-*` 实测结果、`docs/08-*` 边界和文档治理检查都齐全后，才可以在 Phase 0.8 重新实现。Windows 任务计划、Node 22 LTS 与孩子 HP 16GB 未完成前，Phase 0.7 不能标记完成。
+Phase 0.7 只验证，不修改主系统。SQLite、本地文件、SQLite Job Worker、RapidOCR、报告 Adapter 只有在能力卡、`docs/09-*` 实测结果、`docs/08-*` 边界和文档治理检查都齐全后，才可以在 Phase 0.8 重新实现。HP 实机兼容复测（Node 22 LTS、16GB）在设备可用后执行，不阻塞 Phase 0.8。

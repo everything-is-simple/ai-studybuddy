@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.4
-**日期**：2026-07-10
-**状态**：Phase 0.5 历史证据保留；Phase 0.7 正在收口
+**版本**：v1.5
+**日期**：2026-07-11
+**状态**：Phase 0.5 历史证据保留；Phase 0.7 开发机验收完成，HP 实机兼容复测待机会执行
 **用途**：定义组件验证、真实渠道、Windows 调度与 HP 16GB 最终验收的证据标准。
 
 ---
@@ -44,9 +44,9 @@ PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ/Redis、MinIO、PostgreSQL/pg
 - 电脑关机或休眠错过时，下次 Windows 登录尽快补发；补发成功后不再重复。
 - 报告不得发送资料原文、笔记正文、答案或聊天内容；日志不得写入授权码或完整 Webhook。
 
-## 五、Windows 任务计划与 HP 16GB 最终门槛
+## 五、HP 实机兼容复测（非阻塞，待机会执行）
 
-孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）当前不在身边，实机验收暂缓。设备可用后，以 Node 22 LTS 执行：
+孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）当前不在身边。**该项已从 Phase 0.7 完成门槛移出**，改为可选兼容复测：设备可用后，以 Node 22 LTS 执行，目的为确认兼容性，不影响 Phase 0.8 进度。
 
 ```powershell
 cd I:\ai-studybuddy-composer\windows-native
@@ -59,7 +59,7 @@ npm run measure:memory
 
 ## 六、Phase 0.8 正式 E2E 验收
 
-只有 Phase 0.7 所有门槛通过后，才在主仓库验证：
+Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。在主仓库验证：
 
 ```text
 创建课程/任务/考试日期

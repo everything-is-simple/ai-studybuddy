@@ -1,0 +1,16 @@
+{
+  "name": "ai-studybuddy",
+  "version": "0.8.0",
+  "description": "AI-powered personal study assistant",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "type-check": "pnpm -r run type-check",
+    "lint": "pnpm -r run lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "prettier": "^3.2.5"
+  }
+}

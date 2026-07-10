@@ -1,28 +1,49 @@
 # CLAUDE.md
 
-**Version**: v0.01
+**Version**: v0.02
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 本仓库是什么
 
-AI StudyBuddy 是一个个人规模的学生学习助手，规划为**一个共同底座 + 七个场景子系统（S1–S7）**。仓库当前处于**文档先行阶段**：还没有任何业务代码，只有 `docs/` 下的设计文档和一个治理脚本。当前所有工作都是在严格治理规则下编写/维护文档。所有文档和提交信息**中文优先**，英文只作辅助。
+AI StudyBuddy 是一个个人规模的学生学习助手，规划为**一个共同底座 + 七个场景子系统（S1–S7）**。仓库当前处于 **Phase 0.8 准备阶段**：`docs/` 下有完整设计文档，`packages/shared` 和 `packages/backend` 已有 monorepo 骨架和类型定义，尚无业务实现代码。所有文档和提交信息**中文优先**，英文只作辅助。
 
 `AGENTS.md` 是面向人的协作指南，与本文件内容大量重叠；任一文件变更时，保持两者一致。
 
 ## 常用命令
 
-目前还没有 build/test 工具链（没有 `package.json`，没有源码）。唯一的检查是针对文档的：
+### 文档治理（每次提交前必须运行）
 
 ```bash
-# 文档治理检查（命名、索引登记、旧草稿误恢复防护）—— 每次提交前必须运行
+# 文档治理检查（命名、索引登记、旧草稿误恢复防护）
 powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
 
 # 空白行 / 行尾空格检查
 git diff --check
 ```
 
-将来引入业务代码时，其 build/lint/test 命令必须届时补充到此处。
+### 工程命令（Phase 0.8 monorepo 骨架已就位，按包现状说明）
+
+```bash
+# 安装依赖（需先安装 pnpm：npm install -g pnpm）
+pnpm install
+
+# 类型检查（安装依赖后可用；所有子包都支持 type-check）
+pnpm type-check
+
+# 构建（packages/backend 已有 build 脚本；packages/shared 暂无）
+pnpm -r run build
+# 或仅构建 backend：
+pnpm -r --filter backend run build
+
+# 开发模式启动（packages/backend 已有 dev 脚本；packages/shared 暂无，故根命令可能失败）
+# 当前阶段可用的做法：
+pnpm -r --filter backend run dev
+# 或等待 shared 补充 dev 脚本后，再用根命令：
+# pnpm dev
+```
+
+> **注意**：`packages/shared` 是纯类型库，暂无 `dev`/`build` 脚本。`packages/backend` 已具备完整的开发脚本。安装依赖后建议先运行 `pnpm type-check` 验证 TypeScript 配置和交叉引用；若 type-check 失败，需要修正 tsconfig 或包引用再继续。
 
 ## 文档治理（核心工作流）
 

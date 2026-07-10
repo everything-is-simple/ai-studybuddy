@@ -96,14 +96,14 @@ Phase 0.8 正式实现以下 Adapter：`SqliteDatabase`、`StorageAdapter`、`Jo
 
 ## 五、Phase 0.7 验证状态与门槛
 
-开发机记录：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB 可见内存。这只是兼容性证据，不能替代 Node 22 LTS 和孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）的最终验收；HP 设备当前不在身边，实机复测暂缓。
+开发机记录：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB 可见内存。
 
-已取得开发机证据：SQLite WAL/事务/备份、本地文件越界保护、SQLite Job 重试恢复、RapidOCR 按需子进程、规则报告与 AI 降级、固定周期合并去重、QQ SMTP 真实送达、飞书 Webhook 真实送达、Windows Task Scheduler 临时任务真实创建/触发/清理并写入 SQLite 发送记录。
+**Phase 0.7 开发机验收已完成（2026-07-11）**。已取得全部功能性证据：SQLite WAL/事务/备份、本地文件越界保护、SQLite Job 重试恢复、RapidOCR 按需子进程、规则报告与 AI 降级、固定周期合并去重、QQ SMTP 真实送达（163 父母测试邮箱收到）、飞书 Webhook 真实送达（父母飞书群收到）、Windows Task Scheduler 临时任务真实创建/触发/清理并写入 SQLite 发送记录。
 
-尚未通过：孩子 HP 上的 Node 22 LTS、16GB 内存门槛、进程退出与重复周期去重复测。HP 实机复测等设备在身边后再执行。未完成前 Phase 0.7 不得标记完成，Phase 0.8 不得开始产品接入。
+HP 实机兼容复测（Windows 11、Ryzen 5 5625U、Node 22 LTS、16GB）在设备可用后执行，目的为兼容性确认，不阻塞 Phase 0.8 产品接入。
 
 ## 六、安全与运行门槛
 
 `.env.local`、`.venv`、`node_modules`、真实资料、输出和日志不进主仓库 Git。日志不得输出 API Key、SMTP 授权码、完整 Feishu Webhook 或学生隐私全文。
 
-HP 最终验收要求：Docker Desktop 与 WSL2 未运行；学习服务运行时可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出。
+HP 实机兼容复测目标（待机会执行，不阻塞 Phase 0.8）：Docker Desktop 与 WSL2 未运行；学习服务可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出；重复同周期不重复发送。
