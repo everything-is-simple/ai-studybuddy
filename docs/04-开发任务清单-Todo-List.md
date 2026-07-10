@@ -14,7 +14,7 @@
 |---|---|---|
 | Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
 | Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
-| Phase 0.6 | 免费隧道 / 内网穿透选型与 smoke test | ⏳ 待开始 |
+| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | ⏳ 待开始 |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ⏳ 待开始 |
 | Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
 | Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
@@ -154,48 +154,67 @@
 
 截至 2026-07-09，Phase 0.5 已完成并复测通过：PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ、MinIO、PostgreSQL/pgvector、Pixel API 中转 AI Provider 均已通过 smoke test，T10 共同底座汇总已回填。
 
-Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该缺口独立收口为 Phase 0.6；Phase 0.6 完成后再进入 Phase 0.8 主系统实现。
+Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家长报告与 Windows 任务计划验证。这些替代底座能力独立收口为 Phase 0.7；Phase 0.7 完成后再进入 Phase 0.8 主系统实现。
 
 ---
 
-## Phase 0.6：免费隧道 / 内网穿透验证
+## Phase 0.7：Windows 原生轻量底座验证
 
-**目标**：在不提前创建 `13-部署运维指南-Deployment.md` 的前提下，先完成试用阶段外网接入的最小选型和 smoke test，证明“学生异地通过浏览器访问家用主机”可行且不裸奔。
+**目标**：在仓库内 `composer\windows-native\` 独立验证单机 Windows 方案。Phase 0.7 不修改 `packages/` 主系统代码；验证失败不得污染主系统骨架。
 
-**完成标准**：选定 1 个 Phase 0.8 试用默认隧道方案，记录备选取舍；本机启动最小 Web 服务后，能从非同一局域网访问；访问入口必须经过系统登录或临时鉴权页；不得暴露 MinIO、PostgreSQL、Redis、管理控制台和真实 token。
+**完成标准**：SQLite、本地文件、SQLite Job Worker、RapidOCR 子进程、规则报告、QQ SMTP、飞书 Webhook、Windows 任务计划和整合链路均有能力卡。真实 QQ/飞书凭据与孩子 HP 16GB 实机未验证前，不得宣称 Phase 0.7 完成。
 
-### 0.6-T01：隧道候选方案对比
+### 0.7-T01：Windows 原生环境基线
+- [ ] 在 `composer\windows-native\` 建立独立 Node.js 22 LTS 样例，不加入 pnpm workspace
+- [ ] 记录 Windows、Node、Python、内存、Docker/WSL2 未运行状态
+- [ ] 创建 `.env.example`，不写真实 SMTP 授权码、Webhook 或 API Key
 
-- [ ] 对比 Cloudflare Tunnel、Tailscale Funnel/Serve、frp、ngrok 等候选项
-- [ ] 记录每个方案的免费额度、是否需域名、国内可达性、Windows 支持、开机自启动、HTTPS、访问控制和封禁/限速风险
-- [ ] 选出 Phase 0.8 试用默认方案和 1 个备选方案
+### 0.7-T02：SQLite 基础与备份
+- [x] 安装并验证 `better-sqlite3` 的 Windows x64 预编译模块（开发机 Node 25.4.0 兼容通过；Node 22 LTS/HP 待复测）
+- [x] 验证 WAL、CRUD、唯一约束、事务提交/回滚、关闭后备份与恢复（开发机离线通过）
+- [x] 建立 `courses`、`study_tasks`、`study_events`、`jobs`、`report_deliveries` 最小 schema（开发机离线通过）
 
-### 0.6-T02：本机最小 Web 服务准备
+### 0.7-T03：本地文件存储
+- [x] 验证 `materials/<course-id>/<yyyy-mm-dd>/`、`tmp/<job-id>/`、`exports/<yyyy-mm>/` 目录（开发机离线通过）
+- [x] 验证写入、读取、删除、临时文件清理和路径越界拒绝（开发机离线通过）
+- [x] 只保存逻辑 `storage_key`，不把绝对路径写入业务数据（开发机离线通过）
 
-- [ ] 启动一个只用于 smoke test 的本地 Web 服务（可用临时静态页或未来前端 dev server）
-- [ ] 页面只显示健康检查信息，不展示真实学生资料、API Key、token 或内部路径
-- [ ] 确认本机局域网访问和 `localhost` 访问均正常
+### 0.7-T04：SQLite Job Worker
+- [x] 验证单进程串行领取 `pending` Job（开发机离线通过）
+- [x] 验证首次失败后重试成功、达到上限后失败、过期 `running` Job 恢复（开发机离线通过）
+- [x] 验证进程重启后待处理 Job 不丢失（开发机离线通过）
 
-### 0.6-T03：隧道连通性 smoke test
+### 0.7-T05：RapidOCR 子进程
+- [x] Node 用 `child_process` 调 Python RapidOCR，stdout 只返回 JSON（开发机离线通过）
+- [x] 验证成功、文件不存在、非零退出、超时终止（开发机离线通过；HP 峰值待测）
+- [ ] 记录 OCR 运行峰值内存，确认 Python 进程完成后退出
 
-- [ ] 按候选方案建立隧道，将公网入口只转发到最小 Web 服务端口
-- [ ] 用手机蜂窝网络或另一条非同局域网网络访问公网 URL
-- [ ] 记录：访问 URL 形态、首次连接耗时、页面加载是否稳定、断线重连表现
+### 0.7-T06：规则报告与 AI 失败兜底
+- [x] 用 SQLite 统计课程、任务、完成/逾期、学习时长、日周月趋势和考前提醒（开发机离线通过）
+- [x] 验证 AI 润色成功时附加总结，失败时仍发送规则报告（开发机离线通过）
+- [x] 验证报告不含资料原文、笔记正文、答案或聊天内容（开发机离线通过）
 
-### 0.6-T04：安全边界检查
+### 0.7-T07：QQ SMTP 邮件
+- [x] 用 `nodemailer` 验证 QQ SMTP HTML 中文报告和可选附件（真实通过）
+- [x] 验证错误授权码/网络失败写入诊断但不泄露授权码
+- [x] 用真实父母收件邮箱完成一次手工验证（163 测试邮箱已收到）
 
-- [ ] 确认公网入口只暴露 Web 入口，不暴露 MinIO Console、PostgreSQL、Redis、Docker Desktop、调试端口
-- [ ] 确认访问入口必须登录或至少有临时鉴权，不允许裸奔访问学习数据
-- [ ] 确认日志不记录隧道 token、学生隐私全文、完整答案和真实 API Key
-- [ ] 确认 `.env.local` / token 文件不提交 git
+### 0.7-T08：飞书 Webhook
+- [x] 验证完整日报卡片、周报/月报合并区块、考前提醒区块（真实通过）
+- [x] 验证 Webhook 失败不阻止邮件渠道
+- [x] 用父母飞书群真实收到卡片完成手工验证
 
-### 0.6-T05：重启恢复与记录回填
+### 0.7-T09：Windows 任务计划
+- [ ] 使用临时 `AIStudyBuddy-Phase07-Smoke` 任务验证 `report.js`、日志、退出码和删除清理
+- [ ] 验证 `StartWhenAvailable=true` 和下次 Windows 登录补发
+- [ ] 记录正式 22:30 日报、周日/月末合并报告、考前 7/3/1 天提醒的规则
 
-- [ ] 重启本地 Web 服务后，验证隧道访问恢复
-- [ ] 重启隧道进程或 Windows 后，验证恢复步骤可执行
-- [ ] 将最终选型、命令摘要、风险和 smoke test 结果回填到 `docs/08-共同底座架构-Architecture.md` 与 `docs/09-测试验收计划-Test-Plan.md`
-
-> Phase 0.6 只解决“试用阶段外网入口是否可行”。详细安装、备份、监控、域名、证书、开机自启动和长期运维流程仍等 `13-部署运维指南-Deployment.md` 触发后再写。
+### 0.7-T10：整合链路与 HP 实机验收
+- [ ] 跑通：课程/任务 → 本地资料 → OCR → AI → SQLite/文件 → 报告 → 邮件/飞书 → 去重
+- [x] 用固定 `2026-05-31 22:30 Asia/Shanghai` 验证日报、周报、月报、考前提醒合并（开发机离线通过）
+- [ ] 在孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）复测
+- [ ] 验收：学习服务可用内存 ≥6GB；OCR/AI/报告峰值可用内存 ≥3GB；无持续分页增长
+- [ ] 回填全部 `COMPONENT-CARD.md`、`docs/08-*` 和 `docs/09-*`，并运行文档治理检查
 
 ---
 
@@ -211,7 +230,7 @@ Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该�
   → 前端能看到笔记和导图
 ```
 
-**完成标准**：端到端流程可以演示，不需要完整功能，只需核心路径跑通。
+**完成标准**：Phase 0.7 全部通过后，端到端流程可以演示；不需要完整功能，只需核心路径跑通。
 
 ### 0.8-T01：项目结构初始化
 
@@ -222,16 +241,16 @@ Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该�
 
 ### 0.8-T02：共同底座——数据库与迁移
 
-- [ ] 选定数据库迁移工具（推荐 drizzle-orm 或 prisma）
-- [ ] 创建第一批表：`users`、`courses`、`study_tasks`、`study_events`
+- [ ] 基于 Phase 0.7 结果选定 SQLite schema/migration 工具
+- [ ] 创建第一批表：`users`、`courses`、`study_tasks`、`study_events`、`jobs`、`report_deliveries`
 - [ ] 创建第二批表：`materials`、`normalized_texts`、`structured_notes`、`mind_maps`
-- [ ] 运行迁移，验证表结构
+- [ ] 启用 WAL，运行迁移并验证备份恢复
 
 ### 0.8-T03：共同底座——文件存储接口
 
-- [ ] 封装 `StorageAdapter`，对接 MinIO
-- [ ] 实现：上传文件、下载文件、生成临时访问 URL
-- [ ] 文件写入 `G:\ai-studybuddy-data`（通过环境变量配置）
+- [ ] 封装 `StorageAdapter`，对接本地文件目录
+- [ ] 实现：上传文件、localhost API 流式下载、逻辑 `storage_key`
+- [ ] 文件写入 `APP_DATA_ROOT`（通过环境变量配置）
 
 ### 0.8-T04：共同底座——格式转换层
 
@@ -257,7 +276,7 @@ Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该�
 
 - [ ] 开工前按索引触发并创建 `docs/subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`
 - [ ] 实现 `POST /materials/upload`（上传 PDF / 图片 / 文本）
-- [ ] 接入格式转换层，异步处理（BullMQ Job）
+- [ ] 接入格式转换层，由 SQLite Job Worker 异步处理
 - [ ] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据
 - [ ] 实现 `GET /notes/:id`（获取笔记详情）
 
@@ -281,7 +300,7 @@ Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该�
 
 **目标**：跑通 S1 + S2 + S3 + S4 + S6 简版，五个子系统协同。
 
-**前置条件**：Phase 0.8 里程碑完成并演示成功。
+**前置条件**：Phase 0.7 验证完成，且 Phase 0.8 里程碑演示成功。
 
 > 详细任务清单在 S3/S4/S6 轻量 PRD 创建后补入本文件。
 
@@ -289,7 +308,7 @@ Phase 0.5 不包含免费隧道 / 内网穿透选型与外网访问测试。该�
 
 - [ ] S3 PracticeRunner：根据笔记生成练习，客观题规则批改，错题进 S4
 - [ ] S4 ErrorFixer：错题入库，错因分类，艾宾浩斯排程，原题 / 变题重做
-- [ ] S6 ParentWindow 简版：家长查看时间线、完成次数、逾期状态（不看隐私原文）
+- [ ] S6 ParentReport 简版：发送邮件/飞书日报、周报、月报和考前提醒（不含隐私原文）
 - [ ] S1 扩展：完整接收 S2/S3/S4 的 StudyEvent 写入，时间线完整
 
 ---

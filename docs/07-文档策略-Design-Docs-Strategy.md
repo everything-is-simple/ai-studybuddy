@@ -34,7 +34,7 @@
 本项目额外保留两份工程治理文档：
 
 - `05-开源组件装配-Open-Source-Foundation.md`：开源组件先行装配；
-- `06-本地目录治理-Dev-Environment.md`：`G:\ai-studybuddy-*` 目录治理。
+- `06-本地目录治理-Dev-Environment.md`：仓库内组件试炼场与 Windows 单机数据目录治理。
 
 ---
 
@@ -61,7 +61,7 @@ flowchart TD
 | S2 资料笔记 | 是，第一批 | MVP 价值展示最快 |
 | S3 限时练习 | 第二批 | 等笔记输出稳定后接 |
 | S4 错题改错 | 第二批 | 依赖练习结果 |
-| S6 家长观察 | 第二批简版 | 先只做时间线和数量 |
+| S6 家长观察 | 第二批简版 | 先做邮件/飞书异步报告，不做家长 Web 面板 |
 | S5 期末冲刺 | 后写 | 真题解析/变题复杂 |
 | S7 课堂采集 | 后写 | ASR/视频组件运维重 |
 
@@ -110,7 +110,7 @@ G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 - `users`、`courses`、`study_tasks`、`study_events` 等跨子系统基础数据结构；
 - 数据库连接、迁移目录、环境变量读取；
 - 统一 API 响应格式；
-- MinIO、BullMQ、AI Provider、FormatConverter 等共同底座接口。
+- SQLite、本地文件、持久化 Job Worker、AI Provider、Report Adapter、FormatConverter 等共同底座接口。
 
 原则：08 只写“当前要用的共同底座”，不要恢复旧版 1487 行大架构。
 
@@ -124,7 +124,7 @@ G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 学生创建课程
   → 上传 PDF/图片/文本
   → 格式转换为纯文本
-  → Kimi 生成结构化笔记 + 重点 + 思维导图
+  → 中转 GPT/Claude 生成结构化笔记 + 重点 + 思维导图
   → 前端能看到笔记和导图
 ```
 
@@ -142,7 +142,7 @@ G:\ai-studybuddy-backup\system-design-docs-draft_*.zip
 | S2 | `materials`、`normalized_texts`、`structured_notes`、`mind_maps` |
 | S3 | `practices`、`questions`、`answers`、`grading_results` |
 | S4 | `error_items`、`review_schedules`、`error_fix_logs` |
-| S6 | `parent_bindings`、`parent_timeline_views` |
+| S6 | `report_deliveries`、`report_schedules`（按报告能力触发） |
 
 原则：子系统不开工，不提前建它的表；跨子系统字段先放共同底座，业务字段留给对应子系统。
 

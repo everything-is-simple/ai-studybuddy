@@ -21,7 +21,7 @@ AI StudyBuddy 的开发方式：
 
 > 学生是在什么场景下使用它？
 
-**主视角**：系统属于学生，她是唯一操作者。S1–S5、S7 都是她的工具；S6 是给家长的**只读旁观窗**，保持简版，不升级为核心、不做监控。判断功能归属时，凡是“家长操作”的需求都要警惕——家长只读，不操作。
+**主视角**：系统属于学生，她是唯一操作者。S1–S5、S7 都是她的工具；S6 是给家长的**异步报告通道**，保持简版，不升级为核心、不做监控。判断功能归属时，凡是“家长登录或操作系统”的需求都要警惕——家长只接收报告，不操作。
 
 ---
 
@@ -29,12 +29,12 @@ AI StudyBuddy 的开发方式：
 
 | 编号 | 子系统 | 场景 | 学生动作 | 系统输出 | 主要开源组件 | AI 使用点 |
 |---|---|---|---|---|---|---|
-| S1 | 学习节奏 StudyRhythm | 每日/每周学习安排 | 建课程、课次、任务、截止时间 | 时间线、工作量、逾期提醒 | BullMQ、PostgreSQL、Redis | 一般不用；后续可生成复习建议 |
+| S1 | 学习节奏 StudyRhythm | 每日/每周学习安排 | 建课程、课次、任务、截止时间 | 时间线、工作量、逾期提醒 | SQLite、持久化 Job Worker | 一般不用；后续可生成复习建议 |
 | S2 | 资料笔记 NoteBuilder | 课后整理资料 | 上传 PDF/文本/图片 | 笔记、重点、导图 | pdf-parse、RapidOCR（PaddleOCR 备选）、react-markdown、KaTeX、Markmap | 默认中转 GPT/Claude（Pixel API/Responses 已测），Kimi/Qwen 后续备选 |
-| S3 | 限时练习 PracticeRunner | 学完后练习 | 做限时题、提交答案 | 批改结果、解析、完成记录 | 规则引擎、PostgreSQL | 主观题评分、题目生成 |
-| S4 | 错题改错 ErrorFixer | 复盘错题 | 查看错因、重做 | 错题本、复习排程、变题 | 规则引擎、BullMQ | 错因分类、改错建议、变题 |
+| S3 | 限时练习 PracticeRunner | 学完后练习 | 做限时题、提交答案 | 批改结果、解析、完成记录 | 规则引擎、SQLite | 主观题评分、题目生成 |
+| S4 | 错题改错 ErrorFixer | 复盘错题 | 查看错因、重做 | 错题本、复习排程、变题 | 规则引擎、SQLite Job Worker | 错因分类、改错建议、变题 |
 | S5 | 期末冲刺 ExamCrammer | 考前冲刺 | 上传真题、限时模拟 | 真题解析、模拟卷、冲刺计划 | PDF/OCR、计时器、题库 | 教学解析、变题组卷、难题走中转/官方兜底 |
-| S6 | 家长观察 ParentWindow | 家长查看节奏 | 打开只读旁观窗 | 完成状态、趋势、预警 | Web/PWA、图表库、Server酱/Bark 推送 | 可选生成周报摘要 |
+| S6 | 家长观察 ParentReport | 家长接收节奏报告 | 阅读邮件/飞书报告 | 日报、周报、月报、考前提醒 | QQ SMTP、飞书 Webhook | 可选润色总结，失败不阻塞发送 |
 | S7 | 课堂采集 ClassCapture | 上课现场 | 录音/视频/拍笔记 | 转写文本、课堂素材 | SenseVoice、FunASR、FFmpeg、RapidOCR/PaddleOCR | 默认不用；失败兜底可用视觉模型 |
 
 ---
@@ -43,7 +43,7 @@ AI StudyBuddy 的开发方式：
 
 ```mermaid
 flowchart TD
-  Base["共同底座：账号/课程/文件/任务/AI路由/队列"] --> S1["S1 学习节奏"]
+  Base["共同底座：本机身份/课程/本地文件/SQLite Job/AI路由/报告"] --> S1["S1 学习节奏"]
   Base --> S2["S2 资料笔记"]
   Base --> S3["S3 限时练习"]
   Base --> S4["S4 错题改错"]
@@ -76,7 +76,7 @@ flowchart TD
 | 2 | S2 资料笔记 | 最容易展示价值：上传资料就有笔记 |
 | 3 | S3 限时练习 | 从“看资料”进入“做题” |
 | 4 | S4 错题改错 | 形成学习闭环 |
-| 5 | S6 家长观察简版 | 家长看到“有没有在做” |
+| 5 | S6 家长报告简版 | 家长收到“有没有在做”的异步报告 |
 | 6 | S5 期末冲刺 | 更复杂，等题库和错题稳定后做 |
 | 7 | S7 课堂采集 | ASR/视频运维重，后做 |
 
@@ -124,7 +124,7 @@ S5、S7 先留接口，不进入第一轮开发主线。
 | S3 | 限时练习子系统 | PracticeRunner | `packages/practice-runner` |
 | S4 | 错题改错子系统 | ErrorFixer | `packages/error-fixer` |
 | S5 | 期末冲刺子系统 | ExamCrammer | `packages/exam-crammer` |
-| S6 | 家长观察子系统 | ParentWindow | `packages/parent-window` |
+| S6 | 家长观察子系统 | ParentReport | `packages/parent-report` |
 | S7 | 课堂采集子系统 | ClassCapture | `packages/class-capture` |
 
 ---

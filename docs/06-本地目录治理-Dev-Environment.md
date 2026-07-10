@@ -1,256 +1,76 @@
 # AI StudyBuddy 本地目录与组件装配开发规范
 
-**版本**：v0.01
+**版本**：v1.3
 **状态**：已确认
-**日期**：2026-07-08（修订：补充运行主机与按需开机/自助唤醒说明）
-**用途**：定义本项目本地目录职责、开源组件先行调试流程、运行数据隔离、日志、临时文件和备份规则。本文是本地开发环境与目录治理的单一事实来源（SoT）。
+**日期**：2026-07-10
+**用途**：定义仓库内组件试炼场、Windows 单机运行数据、日志、临时文件和备份规则。本文件是本地开发环境与目录治理的单一事实来源（SoT）。
 
-## 零、运行主机与开机方式（本次修订补充）
+---
 
-本项目的运行环境是**家用主机按需开机**，不是 7×24 常开服务器，也不上云。目录规范（第二节起）在开发机和运行主机上一致适用。
+## 一、运行形态
 
-| 项 | 说明 |
-|---|---|
-| 运行主机 | 家中一台闲置 i7 笔记本（16G/2T）为常用主机；笔记本自带电池 = 免费 UPS，市电波动不丢数据 |
-| 重活兜底 | Maxtang FP650（8 核/32G）作开发机 + OCR/ASR 重负载兜底 |
-| 开机方式 | **按需开机**：孩子要用时才开，不空转，电费几乎为零 |
-| 自助唤醒 | 智能插座（首选，物理通电最稳）或网络唤醒 WoL（有公网 IP 时加分项）——学生自己点亮，不依赖家长在场 |
-| 外网接入 | 免费隧道（主机主动外连，家宽无公网 IP 也可用）；详见 `08-共同底座架构` 第 12 节 |
-| 安全底线 | 主机一开机即对外可达，**必须登录鉴权**；学生为 owner，家长为受限只读 |
+当前默认产品运行在孩子 Windows 电脑：学习服务按需启动，报告脚本由 Windows 任务计划触发，父母只接收邮件和飞书报告。Docker/WSL2、家用主机、隧道和公网入口不属于单机成品默认形态。
 
-> 具体隧道工具选型和安装步骤见 `08-共同底座架构` 第 12 节与将来的 `13-部署运维指南`。本文只声明主机形态，不重复。
+- 当前正式支持目标：Windows 11、Ryzen 5 5625U、16GB 内存、512GB SSD；
+- 新设备推荐：32GB 内存；
+- OCR、AI、报告 Worker 按需启动后退出；
+- 真实数据、SMTP 授权码、Webhook 和 API Key 不进 git。
 
-## 一、总原则：分解 → 调试 → 组合 → 固化 → 备份
+## 二、目录职责
 
-AI StudyBuddy 不是先写一个大而全系统，再临时寻找外部能力；而是把系统能力拆成可验证组件，先独立调通，再通过 Adapter 组装。
-
-```text
-成熟开源组件下载
-  → 本地/容器独立调通
-  → 最小输入输出样例验证
-  → 形成组件能力卡
-  → 封装为本项目 Adapter
-  → 写 smoke test
-  → 接入 FormatConverter / Renderer / Worker / Provider
-  → 组合成完整学习闭环
-  → 里程碑 zip 备份
-```
-
-硬规则：
-
-- `G:\ai-studybuddy` 是主系统源码和文档目录，不做乱试验。
-- `G:\ai-studybuddy-composer` 是成熟开源组件试炼场，组件未 smoke test 通过，不得接入主系统。
-- 业务代码不得硬编码 `G:\...` 绝对路径，必须读取环境变量。
-- 运行数据、学习文件、日志、临时文件、备份分目录隔离。
-- `tmp` 可随时清空，系统不得长期依赖其中任何文件。
-- `logs` 不得保存完整 API Key、学生隐私全文、完整题目答案。
-- `data`、`day-study`、`backup`、`composer` 不进入主 repo。
-
-## 二、本地目录职责
-
-| 目录 | 角色 | 放什么 | 不放什么 |
+| 路径/变量 | 职责 | 可放内容 | 不可放内容 |
 |---|---|---|---|
-| `G:\ai-studybuddy` | 主系统工程 | 源码、设计文档、正式 Adapter、数据库 schema、Docker Compose | 组件原仓库、大型测试素材、真实运行数据、长期日志 |
-| `G:\ai-studybuddy-composer` | 组件试炼场 | RapidOCR/PaddleOCR、SenseVoice、PDF.js、Markmap、MinIO、BullMQ、AI Provider 最小样例 | 主系统业务代码、真实学习数据 |
-| `G:\ai-studybuddy-backup` | 里程碑备份 | 每个阶段完成后的 zip 包、`COMMIT.txt` | 未压缩源码散落文件、运行日志 |
-| `G:\ai-studybuddy-data` | 数据库持久化 | PostgreSQL、Redis、pgvector 数据目录 | 源码、日志、学习文件原件 |
-| `G:\ai-studybuddy-day-study` | 学习文件存储 | MinIO 对象存储后端目录、PDF、图片、音频、导出文件 | 数据库文件、临时切片 |
-| `G:\ai-studybuddy-logs` | 日志中心 | 后端、worker、组件、AI Provider 的运行日志 | 学生隐私全文、完整答案、API Key |
-| `G:\ai-studybuddy-tmp` | 临时工作区 | OCR 中间图片、PDF 拆页、ASR 切片、视频音轨、调试 JSON | 任何业务长期依赖文件 |
+| `I:\ai-studybuddy` | 主系统源码与文档 | `packages/`、`docs/`、正式 Adapter、Phase 0.8 代码 | 真实数据、密钥、长期日志 |
+| `I:\ai-studybuddy\composer\windows-native` | Phase 0.7 组件试炼场 | 最小样例、非隐私 fixtures、smoke test、能力卡 | 主系统业务代码、真实学习资料 |
+| `APP_DATA_ROOT` | 单机运行数据根目录 | SQLite、资料、导出、日志、临时文件 | 源码、git 配置 |
+| `APP_DATA_ROOT\data` | 数据库目录 | `studybuddy.sqlite`、备份文件 | 原始资料 |
+| `APP_DATA_ROOT\materials` | 正式学习资料 | `storage_key` 对应文件 | 临时 OCR 切片 |
+| `APP_DATA_ROOT\tmp` | 可清理临时目录 | OCR/导出临时文件 | 长期数据 |
+| `APP_DATA_ROOT\exports` | 报告附件和导出 | HTML/PDF 摘要 | API Key |
+| `APP_DATA_ROOT\logs` | 运行日志 | 脱敏诊断、任务状态 | 密钥、资料原文、完整答案 |
 
-## 三、目录流转图
+推荐默认值：`APP_DATA_ROOT=%LOCALAPPDATA%\AIStudyBuddy`。代码只能读取环境变量或安装器配置，不能写死盘符。
 
-```mermaid
-flowchart TD
-  A["G:\\ai-studybuddy-composer<br/>成熟开源组件下载/调试"] --> B["组件 smoke test 通过"]
-  B --> C["封装 Adapter"]
-  C --> D["G:\\ai-studybuddy<br/>主系统接入"]
-  D --> E["运行数据写入 G:\\ai-studybuddy-data"]
-  D --> F["学习文件写入 G:\\ai-studybuddy-day-study"]
-  D --> G["日志写入 G:\\ai-studybuddy-logs"]
-  D --> H["临时文件写入 G:\\ai-studybuddy-tmp"]
-  D --> I["里程碑完成"]
-  I --> J["G:\\ai-studybuddy-backup<br/>打包 zip 备份"]
-```
+## 三、组件试炼场规则
 
-## 四、`COMPOSER_ROOT` 建议结构
+`composer/windows-native/` 使用独立 `package.json` 和 `npm install`，不加入根 `pnpm-workspace.yaml`。每个编号目录必须有：
 
 ```text
-G:\ai-studybuddy-composer
-  ├── reference
-  │   ├── kaobuddy
-  │   ├── miaowtest
-  │   └── exam-porridge
-  ├── asr
-  │   ├── SenseVoice
-  │   └── FunASR
-  ├── ocr
-  │   ├── RapidOCR
-  │   └── PaddleOCR
-  ├── pdf
-  │   ├── pdfjs
-  │   └── pdf-parse-demo
-  ├── video
-  │   └── ffmpeg-test
-  ├── webpage
-  │   └── readability-test
-  ├── mindmap
-  │   └── markmap-test
-  ├── markdown
-  │   ├── react-markdown-test
-  │   └── katex-test
-  ├── storage
-  │   └── minio-test
-  ├── queue
-  │   └── bullmq-test
-  ├── db
-  │   └── pgvector-test
-  ├── ai-provider
-  │   ├── kimi-test
-  │   ├── qwen-test
-  │   ├── vision-fallback-test
-  │   └── gpt-test
-  └── README.md
+smoke-test/       可重复执行脚本
+output/           可再生结果，加入 gitignore
+COMPONENT-CARD.md 能力边界与结果
 ```
 
-每个组件目录至少保留：
+组件从试炼场进入主系统前必须满足：安装可重复、输入输出明确、失败边界明确、内存基线已记录、真实密钥不进仓库、能力卡已回填。
 
-- `README.md`：安装方式、启动方式、测试命令、输入输出样例；
-- `samples/`：最小测试输入；
-- `output/`：最小测试输出示例，可定期清理；
-- `smoke-test.*`：最小可运行测试脚本；
-- `COMPONENT-CARD.md`：组件能力卡。
+## 四、环境变量规范
 
-## 五、环境变量规范
-
-`.env.example` 与部署文档必须包含以下变量。代码只读取环境变量，不写死本机路径。
+`.env.example` 只保留变量名：
 
 ```env
-APP_ROOT=G:\ai-studybuddy
-COMPOSER_ROOT=G:\ai-studybuddy-composer
-DATA_ROOT=G:\ai-studybuddy-data
-STUDY_FILE_ROOT=G:\ai-studybuddy-day-study
-LOG_ROOT=G:\ai-studybuddy-logs
-TMP_ROOT=G:\ai-studybuddy-tmp
-BACKUP_ROOT=G:\ai-studybuddy-backup
+APP_DATA_ROOT=
+BACKEND_PORT=3000
+AI_BASE_URL=
+AI_API_KEY=
+AI_MODEL=
+SMTP_HOST=smtp.qq.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_AUTH_CODE=
+SMTP_TO=
+FEISHU_WEBHOOK_URL=
 ```
 
-跨平台实现时，Windows 路径只作为默认示例；服务内部统一使用配置读取和 `path` 工具拼接。
+`.env.local` 永不提交。日志不得输出 `AI_API_KEY`、`SMTP_AUTH_CODE`、完整 `FEISHU_WEBHOOK_URL`、资料原文或完整答案。
 
-## 六、运行数据目录建议
+## 五、备份与清理
 
-```text
-G:\ai-studybuddy-data
-  ├── dev
-  │   ├── postgres
-  │   └── redis
-  └── prod-family
-      ├── postgres
-      └── redis
-```
+- SQLite 关闭后复制到 `APP_DATA_ROOT\data\backups`；
+- `tmp` 可清空，清理前不得删除 `materials` 和 SQLite；
+- 每个里程碑完成后打包源码与文档；
+- 真实学习数据备份由家长确认后写入外接盘或受控目录。
 
-规则：
+## 六、主系统接入门槛
 
-- 开发数据和家庭真实学习数据必须隔离。
-- 数据库持久化目录不进 git。
-- 执行危险迁移前，先备份数据库和主系统 zip。
-
-## 七、学习文件存储目录建议
-
-```text
-G:\ai-studybuddy-day-study
-  └── minio
-      ├── raw-materials
-      ├── converted-text
-      ├── notes
-      ├── exams
-      └── exports
-```
-
-应用通过 MinIO/S3 API 访问学习文件，不在业务代码里直接拼本地文件路径。
-
-## 八、日志目录建议
-
-```text
-G:\ai-studybuddy-logs
-  ├── backend
-  │   ├── app.log
-  │   ├── error.log
-  │   └── access.log
-  ├── worker
-  │   ├── format-converter.log
-  │   ├── ai-jobs.log
-  │   └── queue.log
-  ├── components
-  │   ├── rapidocr.log
-  │   ├── paddleocr.log
-  │   ├── sensevoice.log
-  │   ├── pdf.log
-  │   └── markmap.log
-  └── ai-provider
-      ├── kimi.log
-      ├── qwen.log
-      └── gpt.log
-```
-
-日志只记录任务状态、耗时、错误码、模型名、token 消耗、摘要级追踪 ID。不得长期保存学生隐私原文、完整试卷答案、完整 API Key。
-
-## 九、临时目录规则
-
-```text
-G:\ai-studybuddy-tmp
-  ├── pdf-pages
-  ├── ocr-images
-  ├── audio-chunks
-  ├── video-audio
-  └── ai-debug
-```
-
-规则：
-
-- `TMP_ROOT` 中任何文件都可被定时清理。
-- OCR、ASR、PDF、视频等中间文件必须写入 `TMP_ROOT`。
-- 系统清空 `TMP_ROOT` 后必须仍可正常运行，只允许重跑转换任务。
-
-## 十、备份规则
-
-每个里程碑完成后，将主系统文档和代码打包到 `BACKUP_ROOT`。
-
-建议命名：
-
-```text
-2026-07-07_phase0_docs-baseline_commit-xxxx.zip
-2026-07-10_phase0.5_components-pdf-ocr-markmap_commit-xxxx.zip
-2026-07-15_phase1_material-to-note_commit-xxxx.zip
-2026-07-22_phase1_practice-errorbook_commit-xxxx.zip
-```
-
-每个 zip 包内必须包含 `COMMIT.txt`：
-
-```text
-备份时间：
-阶段名称：
-Git Commit：
-本阶段完成内容：
-未完成风险：
-恢复方式：
-```
-
-备份触发点：
-
-- 每个 Phase 完成；
-- 重大架构调整前；
-- 接入大型组件前；
-- 数据库 schema 重大迁移前。
-
-## 十一、主系统接入门槛
-
-一个组件从 `COMPOSER_ROOT` 进入 `APP_ROOT` 前必须满足：
-
-1. License 可接受；
-2. 安装方式可重复；
-3. 最小输入输出样例跑通；
-4. 有组件能力卡；
-5. 有 smoke test；
-6. Adapter 只暴露统一输入输出；
-7. 日志、临时文件、运行数据路径符合本规范。
+Phase 0.7 只验证。Phase 0.8 接入 SQLite、本地文件、SQLite Job Worker 和报告 Adapter 前，必须已有通过的能力卡、`docs/09-*` 验收结果和文档治理检查结果。

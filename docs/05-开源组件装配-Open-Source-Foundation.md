@@ -1,11 +1,11 @@
 # AI StudyBuddy 开源组件装配 SoT
 
 **版本**：v1.2
-**状态**：Phase 0.5 已完成；Phase 0.6 隧道验证独立收口；Phase 0.8 可按主路径接入
+**状态**：Phase 0.5 历史组件已验证；Phase 0.7 验证 Windows 原生替代组件；Phase 0.8 按结果正式接入
 **日期**：2026-07-09
 **用途**：定义本项目如何优先使用成熟开源组件，如何在 `G:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
 
-> 注：免费隧道 / 内网穿透不是开源业务组件装配项，已独立纳入 Phase 0.6，在 Phase 0.8 主系统实现前完成选型与 smoke test。
+> 注：PostgreSQL、MinIO、Redis/BullMQ 已保留为 Phase 0.5 历史能力卡，不进入当前单机成品默认栈；Phase 0.7 以 SQLite、本地文件与 SQLite Job Worker 验证替代路径。
 
 ## 一、核心原则：先分解，再组合
 
@@ -67,9 +67,9 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 思维导图渲染 | [Markmap](https://github.com/markmap/markmap) | `composer\mindmap\markmap-test` | Markdown/层级结构 → 思维导图 | MVP 必接 |
 | 数学公式渲染 | [KaTeX](https://github.com/KaTeX/KaTeX) | `composer\markdown\katex-test` | Markdown 公式展示 | MVP 必接 |
 | Markdown 渲染 | [react-markdown](https://github.com/remarkjs/react-markdown) | `composer\markdown\react-markdown-test` | 结构化笔记展示 | MVP 必接 |
-| 异步任务队列 | [BullMQ](https://github.com/taskforcesh/bullmq) + Redis | `composer\queue\bullmq-test` | 格式转换 / AI Job 异步执行 | MVP 必接 |
-| 对象存储 | [MinIO](https://github.com/minio/minio) | `composer\storage\minio-test` | 原始素材、PDF、图片、音频存储 | MVP 必接 |
-| 数据库 / 向量 | [PostgreSQL](https://www.postgresql.org/) + [pgvector](https://github.com/pgvector/pgvector) | `composer\db\pgvector-test` | 业务数据 + 后续知识检索 | MVP 必接 |
+| 持久化任务 | SQLite `jobs` 表 + 单进程 Worker | `composer\windows-native\03-job-worker` | 格式转换 / AI / 报告 Job 串行执行 | Phase 0.7 必接 |
+| 本地文件 | Node.js `fs` + 逻辑 `storage_key` | `composer\windows-native\02-local-storage` | 原始资料、导出和临时文件 | Phase 0.7 必接 |
+| 数据库 | [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | `composer\windows-native\01-sqlite` | 单用户业务数据、任务、发送记录 | Phase 0.7 必接 |
 | 默认文本 AI | GPT/Claude 中转（Pixel API） | `composer\ai-provider\gpt-test` | 文本理解、笔记整理、普通解析 | MVP 必接 |
 | 文本 AI 备选 | Kimi | `composer\ai-provider\kimi-test` | 文本理解、笔记整理、多模态；当前无 Key | 备选 |
 | 文本 AI 备选 | Qwen | `composer\ai-provider\qwen-test` | 文本任务备选；Qwen-VL 只作多模态兜底 | P1 |
@@ -211,11 +211,11 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | **S6 家长观察** | **自建 [ECharts](https://github.com/apache/echarts)/Recharts 只读面板**（决策见 8.3） | ECharts Apache-2.0 | 家长只读图表（完成状态/趋势/逾期预警），数据从后端 API 出。不引入独立 BI 服务 |
 | **S7 课堂采集** | [FunASR](https://github.com/modelscope/FunASR) 或 [SenseVoice.cpp](https://github.com/lovemefan/SenseVoice.cpp)（CPU）；省心可用 [Scriberr](https://github.com/rishikanthc/Scriberr)(MIT) 独立服务或云 ASR | 中文优先；见 9.2 硬件注意 | 覆盖课堂转写。自建：说话人登记/命名（ASR 只给匿名 spk0/spk1）。**SenseVoice.cpp 无 Windows 预编译二进制，须自编译** |
 
-### 8.3 S6 家长看板选型决策
+### 8.3 S6 家长报告选型决策
 
-**决策：自建 ECharts/Recharts 只读面板，不引入独立 BI 服务。**
+**决策：不做家长 Web 看板；使用 QQ SMTP 邮件 + 飞书 Webhook 发送脱敏结构化报告。**
 
-理由：Apache Superset 官方基线即需 8GB 内存（占单机 32GB 的 1/4）；Metabase 为 JVM、同样吃内存且 **AGPL-3.0** 对「未来半公开」有 copyleft 暴露；Chartbrew v4+ 为 FSL-1.1-MIT（非 OSI 开源，禁商业 SaaS 再分发）。家长面板需求简单（几张只读图表），在内存吃紧的单机上为它养一个重型 BI 不划算。自建 ECharts 面板省一个服务、省内存、无许可包袱、无多余鉴权面。若日后需自助探索式分析，再单独上 Superset（Apache-2.0，许可最干净）。
+理由：Apache Superset 官方基线即需 8GB 内存（占单机 32GB 的 1/4）；Metabase 为 JVM、同样吃内存且 **AGPL-3.0** 对「未来半公开」有 copyleft 暴露；Chartbrew v4+ 为 FSL-1.1-MIT（非 OSI 开源，禁商业 SaaS 再分发）。家长当前需要的是知道学习节奏、完成情况和考前节点，而不是远程登录孩子电脑。邮件和飞书均由孩子电脑主动出站发送，不需要公网入口、隧道、域名或额外鉴权面；正式报告采用规则统计，AI 仅可选润色且失败不阻塞发送。
 
 ### 8.4 偷懒优先级（结合硬件修订版）
 
