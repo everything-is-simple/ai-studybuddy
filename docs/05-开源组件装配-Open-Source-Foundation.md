@@ -60,6 +60,8 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 轻量 MVP 参考 | [考试粥助手](https://github.com/zjuhechao/exam-porridge-assistant) | `composer\reference\exam-porridge` | 参考资料上传、AI笔记、练习、错题追踪 | 必参考 |
 | PDF 文本提取 | [PDF.js](https://github.com/mozilla/pdf.js) / [pdf-parse](https://www.npmjs.com/package/pdf-parse) | `composer\pdf` | PDF → 文本，封装 `PdfConverter` | MVP 必接 |
 | 图片 / 试卷 OCR | [RapidOCR](https://github.com/RapidAI/RapidOCR)（首选）/ [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)（备选对比） | `composer\ocr\RapidOCR` / `composer\ocr\PaddleOCR` | 图片 → 文本，封装 `OcrConverter` | MVP 必接 |
+| DOCX 文本提取 | [Mammoth.js](https://github.com/mwilliamson/mammoth.js) | `composer\converter\docx-test` | DOCX → HTML/纯文本，封装 `DocxConverter` | Phase 0.8 T04A/T04B |
+| PPTX 文字层提取 | [JSZip](https://github.com/Stuk/jszip) + OOXML XML 解析 | `composer\converter\pptx-test` | PPTX → 按页纯文本，封装 `PptxConverter` | Phase 0.8 T04A/T04B |
 | 音频转文字 | [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) | `composer\asr\SenseVoice` | 音频 → 文本，封装 `AudioConverter` | Phase 1.5 |
 | ASR 备选 | [FunASR](https://github.com/modelscope/FunASR) | `composer\asr\FunASR` | 更完整 ASR pipeline | Phase 1.5 |
 | 视频处理 | [FFmpeg](https://ffmpeg.org/) | `composer\video\ffmpeg-test` | 视频 → 音轨 → ASR | 后接 |

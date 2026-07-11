@@ -276,6 +276,20 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 统一输出格式：`ConverterResult { ok, sourceType, text, metadata, warnings, error }`
 
 > 2026-07-11 T04 收尾证据：`pnpm type-check`、`pnpm build`、`pnpm test` 均通过；新增 `PdfConverter`/`OcrConverter`/`TextConverter`、`ocr-worker.py`、`/api/dev/converter/*` 与回归测试；`pdf-parse` 固定版本 2.4.5，OCR Python 脚本通过 build 脚本复制到 `dist/scripts`。
+**资料格式边界（T04 基线）**：
+
+| 输入 | 当前策略 | 目标阶段 |
+|---|---|---|
+| PDF | `PdfConverter` 提取文本；扫描版转 OCR 路径 | T04 已支持 |
+| JPG/JPEG/PNG 等图片 | `OcrConverter` 调 RapidOCR | T04 已支持 |
+| TXT/MD/CSV/JSON | UTF-8 文本直接读取；不承诺结构化语义 | T04 已支持 |
+| DOCX | `mammoth` 提取正文 | T04A 验证，T04B 装配 |
+| PPTX | `jszip` + XML 提取文字层；图片文字转 OCR | T04A 验证，T04B 装配 |
+| HTML/HTM、网页 URL | DOM 解析 + Readability 提取正文 | T04A 验证，T04B 装配 |
+| 音频 | 暂不处理，后续 ASR 任务 | 后续阶段 |
+| 视频 | 仅预留，不进入当前上传支持 | 后续阶段 |
+
+**明确不支持**：`.doc`、`.xls/.xlsx`、`.ppt`、`.odt/.ods/.odp`、`.rtf`、`.epub`、`.zip/.rar/7z`、`.eml/.msg` 及其他 Office/容器格式。上传这些格式必须返回明确的“请另存为 PDF、DOCX、PPTX 或文本/图片”提示；不得静默按二进制文本读取。
 
 ### 0.8-T04A：扩展格式支持——composer 试炼场调通
 
@@ -291,11 +305,12 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
   - 旧版 `.doc`（Word 97-2003）：提示用户"另存为 DOCX 后重新上传"，不做二进制解析
 
 - [ ] **URL 抓取**（网页链接）
-  - 方案：Node 内置 `fetch` 请求 HTML + `@mozilla/readability` 提取正文（MIT 许可）
+  - 方案：Node 内置 `fetch` 请求 HTML + `jsdom` 构造 DOM + `@mozilla/readability` 提取正文（均为成熟开源方案）
   - 新建 `composer\converter\url-fetch-test\`，准备 2 个测试 URL（课程公告类、教务通知类），运行 smoke test
   - 完成标准：正文去除导航栏/广告，中文编码正确，请求失败（超时/404/反爬）返回明确错误
   - 填写能力卡
   - 百度百科、知乎等强反爬 URL：当前以"抓取失败，请手动复制正文"提示，不做代理绕过
+  - 安全边界：仅允许 `http/https`；禁止 localhost、私网、回环、链路本地和文件协议；限制响应大小、重定向次数和请求超时；不执行网页脚本
 
 - [ ] **PPTX**（PowerPoint 现代格式）
   - 方案：`jszip`（MIT 许可）解压 .pptx zip 包，正则提取 `<a:t>` 节点文本，按幻灯片序号组装
@@ -305,11 +320,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
   - 旧版 `.ppt`（PowerPoint 97-2003）：提示用户"另存为 PPTX 或 PDF 后重新上传"
 
 - [ ] **HTML 文件**（`.html`/`.htm` 本地文件）
-  - 方案：`@mozilla/readability` 解析本地 HTML（与 URL 方案共用同一库）
+  - 方案：`jsdom` 构造 DOM + `@mozilla/readability` 解析本地 HTML（与 URL 方案共用）
   - 在 url-fetch-test 中追加本地 HTML smoke test，不单独新建目录
   - 完成标准：正文提取正确，`<script>`/`<style>` 剥除，中文无乱码
 
-> **不在本任务范围**：`.xlsx/.xls`（Excel）暂缓，提示用户复制内容为文本或截图；`.doc` 旧 Word 二进制、`.rtf`、音频/视频格式均另行排期。
+> **不在本任务范围**：Excel、旧版 Office、OpenDocument、RTF、EPUB、压缩包、邮件附件、音频和视频均不在 T04A/T04B；需要时另立任务并先在 composer 验证。
 
 ### 0.8-T04B：扩展格式支持——装配进主系统
 
