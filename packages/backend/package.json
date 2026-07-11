@@ -5,7 +5,8 @@
   "main": "./src/server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "pnpm run clean && tsc --build",
+    "build": "pnpm run clean && tsc --build && pnpm run copy-assets",
+    "copy-assets": "node -e \"const fs=require('fs'); const path=require('path'); const src=path.join('src','scripts','ocr-worker.py'); const dst=path.join('dist','scripts','ocr-worker.py'); if(!fs.existsSync(src)){ console.error('missing '+src); process.exit(1); } fs.mkdirSync(path.dirname(dst),{recursive:true}); fs.copyFileSync(src,dst); console.log('copied ocr-worker.py -> dist/scripts/ocr-worker.py');\"",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
     "clean": "node -e \"const fs=require(\\\"fs\\\"); for (const path of [\\\"dist\\\", \\\"tsconfig.tsbuildinfo\\\"]) fs.rmSync(path, { recursive: true, force: true });\"",
@@ -18,7 +19,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "pdf-parse": "2.4.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

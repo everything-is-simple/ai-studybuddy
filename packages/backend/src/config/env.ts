@@ -54,6 +54,10 @@ export const config = {
   backendPort: Number(process.env.BACKEND_PORT ?? 3000),
   backendHost: process.env.BACKEND_HOST ?? "127.0.0.1",
 
+  // OCR 子进程配置（T04 使用）
+  pythonPath: process.env.PYTHON_PATH ?? "python",
+  ocrTimeoutMs: Number(process.env.OCR_TIMEOUT_MS ?? 60000),
+
   // AI Provider（T05 时使用）
   aiBaseUrl: process.env.AI_BASE_URL ?? "",
   aiApiKey: process.env.AI_API_KEY ?? "",

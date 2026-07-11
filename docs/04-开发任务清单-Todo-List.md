@@ -270,10 +270,12 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 0.8-T04：共同底座——格式转换层
 
-- [ ] 封装 `PdfConverter`（复用 0.5-T02 调通的 pdf-parse）
-- [ ] 封装 `OcrConverter`（复用 0.5-T03 调通的 RapidOCR；PaddleOCR 作为备选对比，不阻塞）
-- [ ] 封装 `TextConverter`（Markdown/纯文本直接入库）
-- [ ] 统一输出格式：`{ text: string, source_type: string, metadata: object }`
+- [x] 封装 `PdfConverter`（复用 0.5-T02 调通的 pdf-parse）
+- [x] 封装 `OcrConverter`（复用 0.5-T03 调通的 RapidOCR；PaddleOCR 作为备选对比，不阻塞）
+- [x] 封装 `TextConverter`（Markdown/纯文本直接入库）
+- [x] 统一输出格式：`ConverterResult { ok, sourceType, text, metadata, warnings, error }`
+
+> 2026-07-11 T04 收尾证据：`pnpm type-check`、`pnpm build`、`pnpm test` 均通过；新增 `PdfConverter`/`OcrConverter`/`TextConverter`、`ocr-worker.py`、`/api/dev/converter/*` 与回归测试；`pdf-parse` 固定版本 2.4.5，OCR Python 脚本通过 build 脚本复制到 `dist/scripts`。
 
 ### 0.8-T05：共同底座——AI Provider Router
 
