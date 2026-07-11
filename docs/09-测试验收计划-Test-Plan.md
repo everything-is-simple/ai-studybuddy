@@ -64,15 +64,15 @@ npm run measure:memory
 | 格式 | 位置 | 关键证据 | 状态 |
 |---|---|---|---|
 | DOCX | `converter\docx-test` | mammoth 1.12.0；中文正文、视觉占位、空文档错误；`npm test` 4/4 通过 | ✅ |
-| URL | `converter\url-fetch-test` | undici 7.28.0；SSRF 全阻断、5 MB/3 跳/10 秒限制；真实 URL 首次成功 | ✅ |
+| URL | `converter\url-fetch-test` | undici 7.28.0；SSRF 全阻断、连接层回环 DNS 拒绝、5 MB/3 跳/10 秒限制、错误 body 取消与 Agent 关闭；真实 URL 首次成功；`npm test` 25/25 | ✅ |
 | HTML | `converter\url-fetch-test` | jsdom + Readability；script/style 剥除、中文正文、fallback 路径 | ✅ |
-| PPTX | `converter\pptx-test` | jszip 3.10.1；数字页序、图片 OCR 提示、纯图片成功、损坏容器失败 | ✅ |
+| PPTX | `converter\pptx-test` | jszip 3.10.1；数字页序、图片 OCR 提示、纯图片成功、损坏容器失败、命名/十进制/十六进制 XML entity 解码 | ✅ |
 
 T04A 硬门槛：
 - DOCX 中文正文、空文档错误、图片/图表占位均通过。
-- URL 所有安全测试通过；至少一条真实 URL 成功（`zh.wikipedia.org` 首次抓取成功，重复访问触发 429 后返回人工出口）。
+- URL 所有安全测试通过：协议/SSRF 拒绝、连接层回环 DNS 拒绝、5 MB/3 跳/10 秒限制、错误 body 取消和 Agent 关闭；至少一条真实 URL 成功（`zh.wikipedia.org` 首次抓取成功，重复访问触发 429 后返回人工出口）。
 - HTML 中文正文可取，`script/style` 剥除。
-- PPTX 页序、图片 OCR 提示、纯图片成功、损坏容器错误均通过。
+- PPTX 页序、图片 OCR 提示、纯图片成功、损坏容器错误、命名/十进制/十六进制 XML entity 解码均通过。
 
 ## 七、Phase 0.8 正式 E2E 验收
 

@@ -61,11 +61,11 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | PDF 文本提取 | [PDF.js](https://github.com/mozilla/pdf.js) / [pdf-parse](https://www.npmjs.com/package/pdf-parse) | `composer\pdf` | PDF → 文本，封装 `PdfConverter` | MVP 必接 |
 | 图片 / 试卷 OCR | [RapidOCR](https://github.com/RapidAI/RapidOCR)（首选）/ [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)（备选对比） | `composer\ocr\RapidOCR` / `composer\ocr\PaddleOCR` | 图片 → 文本，封装 `OcrConverter` | MVP 必接 |
 | DOCX 文本提取 | [Mammoth.js](https://github.com/mwilliamson/mammoth.js) | `composer\converter\docx-test` | DOCX → HTML/纯文本，封装 `DocxConverter` | ✅ T04A 完成，T04B 待装配 |
-| PPTX 文字层提取 | [JSZip](https://github.com/Stuk/jszip) + OOXML XML 解析 | `composer\converter\pptx-test` | PPTX → 按页纯文本，封装 `PptxConverter` | ✅ T04A 完成，T04B 待装配 |
+| PPTX 文字层提取 | [JSZip](https://github.com/Stuk/jszip) + OOXML XML 解析 | `composer\converter\pptx-test` | PPTX → 按页纯文本；T04A 已实测命名/十进制/十六进制 XML entity 解码；T04B 重新封装 `PptxConverter` | ✅ T04A 完成，T04B 待装配 |
 | 音频转文字 | [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) | `composer\asr\SenseVoice` | 音频 → 文本，封装 `AudioConverter` | Phase 1.5 |
 | ASR 备选 | [FunASR](https://github.com/modelscope/FunASR) | `composer\asr\FunASR` | 更完整 ASR pipeline | Phase 1.5 |
 | 视频处理 | [FFmpeg](https://ffmpeg.org/) | `composer\video\ffmpeg-test` | 视频 → 音轨 → ASR | 后接 |
-| 网页 / 本地 HTML 正文提取 | [Mozilla Readability](https://github.com/mozilla/readability) + jsdom + undici | `composer\converter\url-fetch-test` | URL/本地 HTML → 正文文本，封装 `UrlConverter` / `HtmlConverter` | ✅ T04A 完成，T04B 待装配 |
+| 网页 / 本地 HTML 正文提取 | [Mozilla Readability](https://github.com/mozilla/readability) + jsdom + undici | `composer\converter\url-fetch-test` | URL/本地 HTML → 正文文本；T04A 已验证连接层回环 DNS 拒绝、错误 body 取消与 Agent 关闭；T04B 重新封装 `UrlConverter` / `HtmlConverter` | ✅ T04A 完成，T04B 待装配 |
 | 思维导图渲染 | [Markmap](https://github.com/markmap/markmap) | `composer\mindmap\markmap-test` | Markdown/层级结构 → 思维导图 | MVP 必接 |
 | 数学公式渲染 | [KaTeX](https://github.com/KaTeX/KaTeX) | `composer\markdown\katex-test` | Markdown 公式展示 | MVP 必接 |
 | Markdown 渲染 | [react-markdown](https://github.com/remarkjs/react-markdown) | `composer\markdown\react-markdown-test` | 结构化笔记展示 | MVP 必接 |
@@ -261,7 +261,7 @@ I:\ai-studybuddy-composer 的最小样例
   → Phase 0.8 在 I:\ai-studybuddy\packages 重新实现
 ```
 
-`.env.local`、`.venv`、`node_modules`、output、真实凭据和真实学习材料只留在本机试炼场或 `APP_DATA_ROOT`；不进入主仓库 Git。任何一环缺失，组件不得视为可接入产品。
+`.env.local`、`.venv`、`node_modules`、output、真实凭据和真实学习材料只留在本机试炼场或 `APP_DATA_ROOT`；不进入主仓库 Git。T04A 的审查修复同样只留在 composer：主仓库只登记计划、能力结论与验收证据，T04B 必须独立实现 Adapter 和正式测试。任何一环缺失，组件不得视为可接入产品。
 
 ---
 
