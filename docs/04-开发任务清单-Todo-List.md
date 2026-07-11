@@ -277,6 +277,53 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > 2026-07-11 T04 收尾证据：`pnpm type-check`、`pnpm build`、`pnpm test` 均通过；新增 `PdfConverter`/`OcrConverter`/`TextConverter`、`ocr-worker.py`、`/api/dev/converter/*` 与回归测试；`pdf-parse` 固定版本 2.4.5，OCR Python 脚本通过 build 脚本复制到 `dist/scripts`。
 
+### 0.8-T04A：扩展格式支持——composer 试炼场调通
+
+**目标**：在 `I:\ai-studybuddy-composer` 逐一调通四类格式的开源处理方案，形成能力卡，再装配进主系统。处理后均输出纯文本，接口与 T04 已有的 `ConverterResult` 保持一致。
+
+**优先级排序（高→低）**：
+
+- [ ] **DOCX**（Word 现代格式）
+  - 方案：`mammoth`（MIT 许可，KaoBuddy / exam-porridge 均已验证）
+  - 新建 `composer\converter\docx-test\`，npm install，准备含中文正文的真实 `.docx`，运行 smoke test
+  - 完成标准：正文提取完整，图片/图表占位符标注，空文档返回明确错误提示
+  - 填写能力卡 `COMPONENT-CARD.md`
+  - 旧版 `.doc`（Word 97-2003）：提示用户"另存为 DOCX 后重新上传"，不做二进制解析
+
+- [ ] **URL 抓取**（网页链接）
+  - 方案：Node 内置 `fetch` 请求 HTML + `@mozilla/readability` 提取正文（MIT 许可）
+  - 新建 `composer\converter\url-fetch-test\`，准备 2 个测试 URL（课程公告类、教务通知类），运行 smoke test
+  - 完成标准：正文去除导航栏/广告，中文编码正确，请求失败（超时/404/反爬）返回明确错误
+  - 填写能力卡
+  - 百度百科、知乎等强反爬 URL：当前以"抓取失败，请手动复制正文"提示，不做代理绕过
+
+- [ ] **PPTX**（PowerPoint 现代格式）
+  - 方案：`jszip`（MIT 许可）解压 .pptx zip 包，正则提取 `<a:t>` 节点文本，按幻灯片序号组装
+  - 新建 `composer\converter\pptx-test\`，准备含中文文字层的真实 `.pptx`，运行 smoke test
+  - 完成标准：各页文本按顺序提取，嵌入图片内的字注明"需走 OCR"，纯图片幻灯片不报错
+  - 填写能力卡
+  - 旧版 `.ppt`（PowerPoint 97-2003）：提示用户"另存为 PPTX 或 PDF 后重新上传"
+
+- [ ] **HTML 文件**（`.html`/`.htm` 本地文件）
+  - 方案：`@mozilla/readability` 解析本地 HTML（与 URL 方案共用同一库）
+  - 在 url-fetch-test 中追加本地 HTML smoke test，不单独新建目录
+  - 完成标准：正文提取正确，`<script>`/`<style>` 剥除，中文无乱码
+
+> **不在本任务范围**：`.xlsx/.xls`（Excel）暂缓，提示用户复制内容为文本或截图；`.doc` 旧 Word 二进制、`.rtf`、音频/视频格式均另行排期。
+
+### 0.8-T04B：扩展格式支持——装配进主系统
+
+**前置条件**：0.8-T04A 全部完成（能力卡已填，smoke test 通过）。
+
+- [ ] 新增 `DocxConverter` 封装 mammoth，统一实现 `convert(input: Buffer | string): Promise<ConverterResult>`
+- [ ] 新增 `UrlFetcher` 封装 fetch + Readability，统一接口 `fetch(url: string): Promise<ConverterResult>`
+- [ ] 新增 `PptxConverter` 封装 jszip + XML 提取，统一接口与上一致
+- [ ] `TextConverter` 扩展支持 `.html`/`.htm` 文件（复用 Readability）
+- [ ] 在 `dev-converter.ts` 补充对应 `/api/dev/converter/docx`、`/url`、`/pptx` 端点，供 smoke test 验证
+- [ ] 更新文件类型路由：上传接口按扩展名/MIME 分派到对应 Converter，`.doc`/`.ppt`/`.xls` 返回友好提示而非静默失败
+- [ ] `pnpm type-check`、`pnpm build`、`pnpm test` 全部通过
+- [ ] 运行 `scripts/check-docs-governance.ps1`，无报错后提交
+
 ### 0.8-T05：共同底座——AI Provider Router
 
 - [ ] 封装 `AiProviderRouter`，支持按任务类型选择 Provider
