@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.5
+**版本**：v1.6
 **日期**：2026-07-11
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -295,40 +295,48 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：在 `I:\ai-studybuddy-composer` 逐一调通四类格式的开源处理方案，形成能力卡，再装配进主系统。处理后均输出纯文本，接口与 T04 已有的 `ConverterResult` 保持一致。
 
+**状态**：✅ 已完成（2026-07-11）。能力卡与 smoke test 均通过，四类格式输出结构已与 `ConverterResult` 对齐。
+
 **优先级排序（高→低）**：
 
-- [ ] **DOCX**（Word 现代格式）
-  - 方案：`mammoth`（MIT 许可，KaoBuddy / exam-porridge 均已验证）
-  - 新建 `composer\converter\docx-test\`，npm install，准备含中文正文的真实 `.docx`，运行 smoke test
+- [x] **DOCX**（Word 现代格式）
+  - 方案：`mammoth`（MIT 许可）+ `jszip` + `jsdom`
+  - 目录：`I:\ai-studybuddy-composer\converter\docx-test\`
   - 完成标准：正文提取完整，图片/图表占位符标注，空文档返回明确错误提示
-  - 填写能力卡 `COMPONENT-CARD.md`
+  - 能力卡：`I:\ai-studybuddy-composer\converter\docx-test\COMPONENT-CARD.md`
   - 旧版 `.doc`（Word 97-2003）：提示用户"另存为 DOCX 后重新上传"，不做二进制解析
 
-- [ ] **URL 抓取**（网页链接）
-  - 方案：Node 内置 `fetch` 请求 HTML + `jsdom` 构造 DOM + `@mozilla/readability` 提取正文（均为成熟开源方案）
-  - 新建 `composer\converter\url-fetch-test\`，准备 2 个测试 URL（课程公告类、教务通知类），运行 smoke test
+- [x] **URL 抓取**（网页链接）
+  - 方案：`undici`（显式 `fetch` + `Agent` 作为 `dispatcher`）+ `jsdom` + `@mozilla/readability`
+  - 目录：`I:\ai-studybuddy-composer\converter\url-fetch-test\`
   - 完成标准：正文去除导航栏/广告，中文编码正确，请求失败（超时/404/反爬）返回明确错误
-  - 填写能力卡
+  - 能力卡：`I:\ai-studybuddy-composer\converter\url-fetch-test\COMPONENT-CARD.md`
   - 百度百科、知乎等强反爬 URL：当前以"抓取失败，请手动复制正文"提示，不做代理绕过
-  - 安全边界：仅允许 `http/https`；禁止 localhost、私网、回环、链路本地和文件协议；限制响应大小、重定向次数和请求超时；不执行网页脚本
+  - 安全边界：仅允许 `http/https`；禁止 user-info、localhost、私网、回环、链路本地和文件协议；DNS 全地址公网校验；连接复验（`undici.Agent.lookup`）；限制响应大小 5 MB、重定向 3 次、请求超时 10 秒；不执行网页脚本
 
-- [ ] **PPTX**（PowerPoint 现代格式）
+- [x] **PPTX**（PowerPoint 现代格式）
   - 方案：`jszip`（MIT 许可）解压 .pptx zip 包，正则提取 `<a:t>` 节点文本，按幻灯片序号组装
-  - 新建 `composer\converter\pptx-test\`，准备含中文文字层的真实 `.pptx`，运行 smoke test
+  - 目录：`I:\ai-studybuddy-composer\converter\pptx-test\`
   - 完成标准：各页文本按顺序提取，嵌入图片内的字注明"需走 OCR"，纯图片幻灯片不报错
-  - 填写能力卡
+  - 能力卡：`I:\ai-studybuddy-composer\converter\pptx-test\COMPONENT-CARD.md`
   - 旧版 `.ppt`（PowerPoint 97-2003）：提示用户"另存为 PPTX 或 PDF 后重新上传"
 
-- [ ] **HTML 文件**（`.html`/`.htm` 本地文件）
+- [x] **HTML 文件**（`.html`/`.htm` 本地文件）
   - 方案：`jsdom` 构造 DOM + `@mozilla/readability` 解析本地 HTML（与 URL 方案共用）
-  - 在 url-fetch-test 中追加本地 HTML smoke test，不单独新建目录
-  - 完成标准：正文提取正确，`<script>`/`<style>` 剥除，中文无乱码
+  - 在 `url-fetch-test` 中追加本地 HTML smoke test：`npm run smoke:html -- samples\course-notice.html`
+  - 完成标准：正文提取正确，`<script>`/`<style>` 剥除，中文无乱码；Readability 失败时 fallback 到 body 并给出 warning
+
+> **T04A 收尾证据（2026-07-11）**：
+> - DOCX：`npm test` 4/4 通过；`samples/chinese-with-image-and-chart.docx` 中文正文完整、`embeddedVisualCount=3`；`samples/empty.docx` 受控失败；版本 mammoth 1.12.0 / jszip 3.10.1 / jsdom 26.1.0。
+> - URL/HTML：`npm test` 22/22 通过；本地 HTML 中文正文提取成功；真实 URL `https://zh.wikipedia.org/wiki/%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD` 首次抓取成功（`ok: true`，`charCount=124722`，`byteCount=2375227`，`durationMs=5467`），重复访问触发 429 反爬后受控返回人工出口；版本 undici 7.28.0 / jsdom 26.1.0 / @mozilla/readability 0.6.0。
+> - PPTX：`npm test` 5/5 通过；三页按数字序、含图页 OCR 提示、纯图片页 `ok: true`；版本 jszip 3.10.1。
+> - 全部能力卡已填，主系统 `I:\ai-studybuddy\packages` 未修改。
 
 > **不在本任务范围**：Excel、旧版 Office、OpenDocument、RTF、EPUB、压缩包、邮件附件、音频和视频均不在 T04A/T04B；需要时另立任务并先在 composer 验证。
 
 ### 0.8-T04B：扩展格式支持——装配进主系统
 
-**前置条件**：0.8-T04A 全部完成（能力卡已填，smoke test 通过）。
+**前置条件**：0.8-T04A 全部完成（能力卡已填，smoke test 通过）—— 已满足。
 
 - [ ] 新增 `DocxConverter` 封装 mammoth，统一实现 `convert(input: Buffer | string): Promise<ConverterResult>`
 - [ ] 新增 `UrlFetcher` 封装 fetch + Readability，统一接口 `fetch(url: string): Promise<ConverterResult>`

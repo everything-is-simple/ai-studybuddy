@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.6
+**版本**：v1.7
 **日期**：2026-07-11
-**状态**：Phase 0.5 历史证据保留；Phase 0.7 开发机验收完成，HP 实机兼容复测待机会执行；已补充 Phase 0.8 分学期与证据闭环的正式验收要求
+**状态**：Phase 0.5 历史证据保留；Phase 0.7 开发机验收完成，HP 实机兼容复测待机会执行；已补充 Phase 0.8 T04A composer 试炼场证据与正式 E2E 验收要求
 **用途**：定义组件验证、真实渠道、Windows 调度、Phase 0.8 业务闭环与 HP 16GB 兼容复测的证据标准。
 
 ---
@@ -57,7 +57,24 @@ npm run measure:memory
 
 必须同时满足：Docker Desktop 和 WSL2 未运行；学习服务可用内存至少 6GB；OCR、AI、邮件或报告峰值可用内存至少 3GB；无明显卡顿或持续分页增长；OCR 后 Python 退出；报告后 Node 退出；重复同周期不重复发送。
 
-## 六、Phase 0.8 正式 E2E 验收
+## 六、Phase 0.8 composer 试炼场验收（T04A）
+
+在 `I:\ai-studybuddy-composer\converter\` 完成 DOCX、URL、本地 HTML、PPTX 的独立调通，形成能力卡与可重复 smoke test。T04A 不属于主系统正式验收，但为 T04B 在 `I:\ai-studybuddy\packages` 重新装配 Adapter 提供接口、安全、错误与验收证据。
+
+| 格式 | 位置 | 关键证据 | 状态 |
+|---|---|---|---|
+| DOCX | `converter\docx-test` | mammoth 1.12.0；中文正文、视觉占位、空文档错误；`npm test` 4/4 通过 | ✅ |
+| URL | `converter\url-fetch-test` | undici 7.28.0；SSRF 全阻断、5 MB/3 跳/10 秒限制；真实 URL 首次成功 | ✅ |
+| HTML | `converter\url-fetch-test` | jsdom + Readability；script/style 剥除、中文正文、fallback 路径 | ✅ |
+| PPTX | `converter\pptx-test` | jszip 3.10.1；数字页序、图片 OCR 提示、纯图片成功、损坏容器失败 | ✅ |
+
+T04A 硬门槛：
+- DOCX 中文正文、空文档错误、图片/图表占位均通过。
+- URL 所有安全测试通过；至少一条真实 URL 成功（`zh.wikipedia.org` 首次抓取成功，重复访问触发 429 后返回人工出口）。
+- HTML 中文正文可取，`script/style` 剥除。
+- PPTX 页序、图片 OCR 提示、纯图片成功、损坏容器错误均通过。
+
+## 七、Phase 0.8 正式 E2E 验收
 
 Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**正式实现后的待验收清单，不代表当前已通过**：
 
@@ -73,7 +90,7 @@ Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**�
 
 验收时还要证明：`APP_DATA_ROOT\tmp` 清理不影响长期资料和笔记；正式 Adapter 不直接依赖试炼场脚本；真实数据和密钥不在 Git 中。
 
-## 七、Phase 0.8 设计回填验收矩阵
+## 八、Phase 0.8 设计回填验收矩阵
 
 | 编号 | 场景 | 必须证明的行为 | 通过证据 |
 |---|---|---|---|
@@ -88,7 +105,7 @@ Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**�
 | 0.8-E09 | 异常与报告尺度 | AI 仅生成异常候选及证据；孩子确认的合理特例不进入负面趋势；日报 INFO 非评价，周报 SIGNAL 只报重复模式，月报 TREND 需足够样本 | 固定时间窗测试数据、报告快照、基线/特例/置信度断言 |
 | 0.8-E10 | 隐私与报告发送 | 报告和日志不含资料正文、笔记正文、答案、API Key、SMTP 授权码或完整 Webhook；渠道按 `report_key + channel` 去重/单独重试 | 邮件/飞书 payload 快照、日志扫描、渠道失败重试测试 |
 
-## 八、文档治理检查
+## 九、文档治理检查
 
 每轮证据回填后运行：
 
@@ -97,4 +114,4 @@ powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1
 git diff --check
 ```
 
-Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
+Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 0.8 T04A composer 试炼场证据已同步回 `docs/04-*`、`docs/05-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。

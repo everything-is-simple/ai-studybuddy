@@ -1,7 +1,7 @@
 # AI StudyBuddy 开源组件装配 SoT
 
-**版本**：v1.4
-**状态**：Phase 0.5 历史组件与 Phase 0.7 Windows 原生底座均已留证；Phase 0.8 只按 Adapter 边界重新实现当前单机主路径
+**版本**：v1.5
+**状态**：Phase 0.5 历史组件、Phase 0.7 Windows 原生底座与 Phase 0.8 T04A composer 试炼场均已留证；Phase 0.8 只按 Adapter 边界重新实现当前单机主路径
 **日期**：2026-07-11
 **用途**：定义本项目如何优先使用成熟开源组件，如何在 `I:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
 
@@ -60,12 +60,12 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 轻量 MVP 参考 | [考试粥助手](https://github.com/zjuhechao/exam-porridge-assistant) | `composer\reference\exam-porridge` | 参考资料上传、AI笔记、练习、错题追踪 | 必参考 |
 | PDF 文本提取 | [PDF.js](https://github.com/mozilla/pdf.js) / [pdf-parse](https://www.npmjs.com/package/pdf-parse) | `composer\pdf` | PDF → 文本，封装 `PdfConverter` | MVP 必接 |
 | 图片 / 试卷 OCR | [RapidOCR](https://github.com/RapidAI/RapidOCR)（首选）/ [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)（备选对比） | `composer\ocr\RapidOCR` / `composer\ocr\PaddleOCR` | 图片 → 文本，封装 `OcrConverter` | MVP 必接 |
-| DOCX 文本提取 | [Mammoth.js](https://github.com/mwilliamson/mammoth.js) | `composer\converter\docx-test` | DOCX → HTML/纯文本，封装 `DocxConverter` | Phase 0.8 T04A/T04B |
-| PPTX 文字层提取 | [JSZip](https://github.com/Stuk/jszip) + OOXML XML 解析 | `composer\converter\pptx-test` | PPTX → 按页纯文本，封装 `PptxConverter` | Phase 0.8 T04A/T04B |
+| DOCX 文本提取 | [Mammoth.js](https://github.com/mwilliamson/mammoth.js) | `composer\converter\docx-test` | DOCX → HTML/纯文本，封装 `DocxConverter` | ✅ T04A 完成，T04B 待装配 |
+| PPTX 文字层提取 | [JSZip](https://github.com/Stuk/jszip) + OOXML XML 解析 | `composer\converter\pptx-test` | PPTX → 按页纯文本，封装 `PptxConverter` | ✅ T04A 完成，T04B 待装配 |
 | 音频转文字 | [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) | `composer\asr\SenseVoice` | 音频 → 文本，封装 `AudioConverter` | Phase 1.5 |
 | ASR 备选 | [FunASR](https://github.com/modelscope/FunASR) | `composer\asr\FunASR` | 更完整 ASR pipeline | Phase 1.5 |
 | 视频处理 | [FFmpeg](https://ffmpeg.org/) | `composer\video\ffmpeg-test` | 视频 → 音轨 → ASR | 后接 |
-| 网页正文提取 | [Mozilla Readability](https://github.com/mozilla/readability) + jsdom | `composer\webpage\readability-test` | URL → 正文文本 | P1/P2 |
+| 网页 / 本地 HTML 正文提取 | [Mozilla Readability](https://github.com/mozilla/readability) + jsdom + undici | `composer\converter\url-fetch-test` | URL/本地 HTML → 正文文本，封装 `UrlConverter` / `HtmlConverter` | ✅ T04A 完成，T04B 待装配 |
 | 思维导图渲染 | [Markmap](https://github.com/markmap/markmap) | `composer\mindmap\markmap-test` | Markdown/层级结构 → 思维导图 | MVP 必接 |
 | 数学公式渲染 | [KaTeX](https://github.com/KaTeX/KaTeX) | `composer\markdown\katex-test` | Markdown 公式展示 | MVP 必接 |
 | Markdown 渲染 | [react-markdown](https://github.com/remarkjs/react-markdown) | `composer\markdown\react-markdown-test` | 结构化笔记展示 | MVP 必接 |
@@ -181,6 +181,9 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | MinIO | ✅ 已测 | 2026-07-09 | MinIO RELEASE.2025-09-07 / SDK 8.0.7 | 上传/下载一致、presigned URL、对象删除、控制台登录通过；Docker Hub TLS 超时后使用 daocloud 镜像代理 |
 | PostgreSQL + pgvector | ✅ 已测 | 2026-07-09 | PostgreSQL 16.14 / pgvector 0.8.5 | CRUD、向量搜索、IVFFlat 索引通过；测试后已清理容器 |
 | GPT/Claude 中转 API | ✅ 已测 | 2026-07-09 | Pixel API / gpt-5.5 / Responses API | `gpt-test` 通过：11.9s，总 tokens 988，Markdown、中文、思维导图 JSON 均通过；最初 401 为 `.env.local` 手填 Key 与 cc-switch provider key 不一致 |
+| Mammoth.js / DOCX | ✅ 已测 | 2026-07-11 | mammoth 1.12.0 / jszip 3.10.1 / jsdom 26.1.0 | `docx-test` 通过：中文正文、视觉占位、空文档错误；能力卡已填 |
+| JSZip / PPTX 文字层 | ✅ 已测 | 2026-07-11 | jszip 3.10.1 | `pptx-test` 通过：数字页序、图片 OCR 提示、纯图片成功、损坏容器失败；能力卡已填 |
+| undici + Readability / URL + HTML | ✅ 已测 | 2026-07-11 | undici 7.28.0 / jsdom 26.1.0 / @mozilla/readability 0.6.0 | `url-fetch-test` 通过：SSRF 全阻断、5 MB/3 跳/10 秒限制、本地 HTML 清理、真实 URL 首次成功；能力卡已填 |
 | Kimi API | ⏳ 待测 | — | — | 当前无 Key |
 | Qwen API | ⏳ 待测 | — | — | — |
 
