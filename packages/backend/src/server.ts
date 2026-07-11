@@ -1,14 +1,12 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import path from "path";
 import type { ApiSuccess } from "@ai-studybuddy/shared";
-
-// 从 monorepo 根目录读取 .env.local
-dotenv.config({ path: path.resolve(__dirname, "../../../.env.local") });
+import { config } from "./config/env";
+import devRouter from "./api/dev";
 
 const app = express();
-const PORT = process.env.BACKEND_PORT || 3000;
+const PORT = config.backendPort;
+const HOST = config.backendHost;
 
 // ── 中间件 ───────────────────────────────────────────────
 app.use(cors());
@@ -26,14 +24,18 @@ app.get("/api/health", (_req, res) => {
   res.json(response);
 });
 
-// ── TODO: 路由 ────────────────────────────────────────────
+// ── 开发验证路由 ────────────────────────────────────────────
+app.use("/api/dev", devRouter);
+
+// ── TODO: 正式业务路由 ────────────────────────────────────
 // app.use("/api/courses", coursesRouter);
 // app.use("/api/study-tasks", studyTasksRouter);
 // app.use("/api/materials", materialsRouter);
 // app.use("/api/notes", notesRouter);
 
 // ── 启动 ──────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
-  console.log(`   - Health: http://localhost:${PORT}/api/health`);
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Backend running on http://${HOST}:${PORT}`);
+  console.log(`   - Health: http://${HOST}:${PORT}/api/health`);
+  console.log(`   - Dev:    http://${HOST}:${PORT}/api/dev/db-health`);
 });
