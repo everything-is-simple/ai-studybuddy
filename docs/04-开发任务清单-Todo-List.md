@@ -15,7 +15,7 @@
 | Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
 | Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
-| Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ⏳ 待开始 |
+| Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | 🔄 进行中 |
 | Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
 | Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
 | Phase 2 | 期末真题冲刺（S5） | ⏳ 待开始 |
@@ -240,10 +240,10 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 0.8-T01：项目结构初始化
 
-- [ ] 在 `I:\ai-studybuddy` 初始化 monorepo（推荐 pnpm workspace）
-- [ ] 创建基础包结构：`packages/shared`、`packages/backend`、`packages/frontend`（或类似结构）
-- [ ] 配置 TypeScript、ESLint、Prettier（对齐项目语言）
-- [ ] 配置环境变量读取（`.env.local`，不 commit 真实 Key）
+- [x] 在 `I:\ai-studybuddy` 初始化 monorepo（pnpm workspace，已存在并验证）
+- [x] 创建基础包结构：`packages/shared`、`packages/backend`（已验证编译通过）；`packages/frontend` 目录存在，待补 `package.json`（T08 阶段补齐）
+- [ ] 配置 TypeScript（已完成）；ESLint、Prettier 待补（非阻塞 T02）
+- [x] 配置 `.env.example`（T02 开发时同步补齐，已完成）
 
 ### 0.8-T02：共同底座——数据库与迁移
 

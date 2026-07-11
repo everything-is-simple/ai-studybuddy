@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v1.4
-**日期**：2026-07-10
+**版本**：v1.5
+**日期**：2026-07-11
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -20,6 +20,7 @@
 | 07 | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md) | ✅ 有效 | 文档分层、子系统文档触发条件 |
 | 08 | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md) | ✅ 有效 | 共同底座最小架构与 Exam/KnowledgeModule 未来数据边界（S1 开工前必读） |
 | 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5 历史 smoke test、Phase 0.7 Windows 原生验证与 Phase 0.8 验收标准 |
+| 10 | [后端开发规范-Backend-Guidelines.md](10-后端开发规范-Backend-Guidelines.md) | ✅ 有效 | 后端目录结构、SQLite 约定、Adapter 输出、日志规范、环境变量约定 |
 
 ---
 
@@ -50,7 +51,7 @@
 
 | 文档 | 触发条件 | 当前状态 |
 |---|---|---|
-| 10-后端开发规范-Backend-Guidelines.md | 写第一个后端服务 / Adapter / API / Worker 前 | 未触发 |
+| 10-后端开发规范-Backend-Guidelines.md | 写第一个后端服务 / Adapter / API / Worker 前 | ✅ 已创建 |
 | 11-前端开发规范-Frontend-Guidelines.md | 写第一个正式前端页面前 | 未触发 |
 | 12-开发规范-Dev-Rules.md | 多 AI / 多分支 / 多人协作时 | 未触发 |
 | 13-部署运维指南-Deployment.md | Phase 1 完成后准备部署时 | 未触发 |
@@ -170,6 +171,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 |---|---|---|
+| v1.5 | 2026-07-11 | 触发文档门禁：创建 10-后端开发规范，登记为有效文档 |
 | v1.4 | 2026-07-10 | 吸收参考系统的产品闭环：将 Exam、KnowledgeModule、练习记录与错题回流纳入有效设计和后续任务边界 |
 | v1.3 | 2026-07-10 | 产品默认形态改为孩子 Windows 本机 + 邮件/飞书异步家长报告；以 Phase 0.7 替代隧道验证 |
 | v1.2 | 2026-07-09 | Phase 0.5 完成交割后，统一任务清单、底座架构、测试计划和组件路线图状态 |
