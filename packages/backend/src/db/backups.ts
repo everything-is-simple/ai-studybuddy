@@ -7,7 +7,13 @@
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { backupDb, checkpointAndClose, openDbAtPath, runIntegrityCheck } from "./connection";
+import {
+  backupDb,
+  checkpointAndClose,
+  openDbAtPath,
+  openExistingDbAtPath,
+  runIntegrityCheck,
+} from "./connection";
 import { initGlobalDbAtPath } from "./migrations";
 
 export interface CreateDatabaseBackupInput {
@@ -32,7 +38,7 @@ export interface RestoreDatabaseInput {
 /** 返回 ok 或可记录的错误摘要，供健康检查与恢复前校验使用。 */
 export function checkDatabaseIntegrityAtPath(databasePath: string): string {
   try {
-    const db = openDbAtPath(databasePath);
+    const db = openExistingDbAtPath(databasePath);
     try {
       return runIntegrityCheck(db);
     } finally {

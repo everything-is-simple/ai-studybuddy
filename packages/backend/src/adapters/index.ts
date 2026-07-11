@@ -5,4 +5,6 @@
 // - OcrConverter    → RapidOCR 图片识别（PaddleOCR 为备选实现）
 // - TextConverter   → Markdown/纯文本直接入库
 // - NoteAiProvider  → 中转 GPT/Claude 生成结构化笔记
-export {};
+export { StorageAdapter } from "./storage";
+export type { PutFileInput, PutFileResult, GetFileResult } from "./storage";
+export { StoragePathEscapeError, StorageKeyNotFoundError } from "./storage";

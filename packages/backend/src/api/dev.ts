@@ -10,8 +10,7 @@ import type { ApiError, ApiSuccess } from "@ai-studybuddy/shared";
 import {
   isForeignKeysOn,
   isWalEnabled,
-  openGlobalDb,
-  openSemesterDb,
+  openExistingDbAtPath,
   runIntegrityCheck,
 } from "../db/connection";
 import {
@@ -82,7 +81,7 @@ router.get("/db-health", (_req: Request, res: Response) => {
         integrity: "not_initialized",
       };
     } else {
-      const db = openGlobalDb();
+      const db = openExistingDbAtPath(globalDbPath);
       const wal = isWalEnabled(db);
       const fk = isForeignKeysOn(db);
       const integrity = runIntegrityCheck(db);
@@ -99,7 +98,7 @@ router.get("/db-health", (_req: Request, res: Response) => {
     }> = [];
 
     if (globalDbExists) {
-      const db = openGlobalDb();
+      const db = openExistingDbAtPath(globalDbPath);
       const rows = db
         .prepare(
           "SELECT id, semester_code, status FROM semesters WHERE ready = 1"
@@ -111,7 +110,7 @@ router.get("/db-health", (_req: Request, res: Response) => {
         const dbExists = fs.existsSync(semesterDbPath);
         let integrity = "not_initialized";
         if (dbExists) {
-          const semesterDb = openSemesterDb(row.id);
+          const semesterDb = openExistingDbAtPath(semesterDbPath);
           integrity = runIntegrityCheck(semesterDb);
           semesterDb.close();
         }

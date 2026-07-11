@@ -11,6 +11,7 @@ import { getGlobalDbPath, getSemesterDbPath } from "./paths";
 
 /**
  * 打开 SQLite 数据库，启用 WAL 和 foreign_keys。
+ * 允许创建新库，用于初始化/写入路径。
  */
 export function openDbAtPath(dbPath: string): DatabaseType {
   // 确保父目录存在
@@ -20,6 +21,20 @@ export function openDbAtPath(dbPath: string): DatabaseType {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
 
+  return db;
+}
+
+/**
+ * 仅打开已存在的数据库，禁止隐式创建空库或目录。
+ * 用于健康检查、完整性检查等只读/诊断路径。
+ */
+export function openExistingDbAtPath(dbPath: string): DatabaseType {
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(`DB_NOT_FOUND ${dbPath}`);
+  }
+  const db = new Database(dbPath, { fileMustExist: true });
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
   return db;
 }
 

@@ -3,6 +3,7 @@ import cors from "cors";
 import type { ApiSuccess } from "@ai-studybuddy/shared";
 import { config } from "./config/env";
 import devRouter from "./api/dev";
+import storageDevRouter from "./api/dev-storage";
 
 const app = express();
 const PORT = config.backendPort;
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 
 // ── 开发验证路由 ────────────────────────────────────────────
 app.use("/api/dev", devRouter);
+app.use("/api/dev/storage", storageDevRouter);
 
 // ── TODO: 正式业务路由 ────────────────────────────────────
 // app.use("/api/courses", coursesRouter);

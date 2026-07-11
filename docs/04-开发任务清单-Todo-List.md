@@ -260,9 +260,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 0.8-T03：共同底座——文件存储接口
 
-- [ ] 封装 `StorageAdapter`，对接本地文件目录
-- [ ] 实现：上传文件、localhost API 流式下载、逻辑 `storage_key`
-- [ ] 文件写入 `APP_DATA_ROOT`（通过环境变量配置）
+- [x] 封装 `StorageAdapter`，对接本地文件目录
+- [x] 实现：上传文件、localhost API 流式下载、逻辑 `storage_key`
+- [x] 文件写入 `APP_DATA_ROOT`（通过环境变量配置）
+- [x] 路径越界拒绝与 `storage_key` normalize 校验
+- [x] 吸纳 GPT 反馈：读操作不隐式创建空库/目录
+
+> 2026-07-11 T03 收尾证据：`pnpm type-check`、`pnpm test` 均通过；新增 `StorageAdapter`、`/api/dev/storage/*`、db-readonly 回归测试；`multer` 单文件大小限制 50MB。
 
 ### 0.8-T04：共同底座——格式转换层
 
