@@ -1,8 +1,8 @@
 # AI StudyBuddy 开源组件装配 SoT
 
-**版本**：v1.3
-**状态**：Phase 0.5 历史组件已验证；Phase 0.7 验证 Windows 原生替代组件；Phase 0.8 按结果正式接入
-**日期**：2026-07-10
+**版本**：v1.4
+**状态**：Phase 0.5 历史组件与 Phase 0.7 Windows 原生底座均已留证；Phase 0.8 只按 Adapter 边界重新实现当前单机主路径
+**日期**：2026-07-11
 **用途**：定义本项目如何优先使用成熟开源组件，如何在 `I:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
 
 > 注：PostgreSQL、MinIO、Redis/BullMQ 已保留为 Phase 0.5 历史能力卡，不进入当前单机成品默认栈；Phase 0.7 以 SQLite、本地文件与 SQLite Job Worker 验证替代路径。
@@ -113,11 +113,11 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 | 任务 | 默认 Provider | 兑底策略 |
 |---|---|---|
-| 结构化笔记 + 重点 + 思维导图数据 | GPT/Claude 中转 | Kimi/Qwen 备选 |
-| 教学解析步骤 / 解题路径 | GPT/Claude 中转 | Kimi/Qwen 备选 |
-| 出题 / 变题 | GPT/Claude 中转 | Kimi/Qwen 备选 |
-| 主观题评分 / 错因分类 | GPT/Claude 中转 | Kimi/Qwen 备选 |
-| OCR/版面失败兑底 | Kimi 视觉 / Qwen-VL | 仅在开源 OCR 失败后使用 |
+| 结构化笔记 + 重点 + 思维导图数据 | GPT/Claude 中转 | Kimi/Qwen 备选；全部失败则保留待处理文本 |
+| 教学解析步骤 / 解题路径 | GPT/Claude 中转 | Kimi/Qwen 备选；只给教学步骤，不暴露思维链 |
+| 出题 / 变题 | GPT/Claude 中转 | Kimi/Qwen 备选；失败不阻塞既有练习 |
+| 主观题评分 / 错因分类 | GPT/Claude 中转 | Kimi/Qwen 备选；进入分级质量门，不作单方面最终裁决 |
+| OCR/版面失败兜底 | Kimi 视觉 / Qwen-VL | 仅在开源 OCR 失败后使用；最终允许孩子手工校正 |
 
 ### 5.3 规则引擎层：不走 LLM
 
@@ -205,7 +205,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 |---|---|---|---|
 | **S1 学习节奏** | [frappe-gantt](https://github.com/frappe/gantt) + [react-big-calendar](https://github.com/jquense/react-big-calendar)；复杂甘特可选 [DHTMLX Gantt](https://github.com/DHTMLX/gantt) | 全 **MIT**，React/JS 库可嵌入 ✅ | 覆盖时间线/日历/甘特渲染。自建：课程/任务数据模型、工作量聚合（甘特无原生工作量视图）、逾期提醒（SQLite Job Worker + Windows 调度）。**DHTMLX 仅 v10+ Community 版为 MIT，须锁版本，v9 及更早为 GPLv2** |
 | **S2 资料笔记** | [markmap](https://github.com/markmap/markmap)（导图）+ 既有 pdf-parse/RapidOCR/react-markdown/KaTeX；检索可参考 [Quivr](https://github.com/quivrhq/quivr)(Apache-2.0,原生 pgvector) | markmap **MIT**，JS/TS 原生 ✅ | 覆盖导图渲染与格式转换。自建：上传→转文本→喂中转 GPT/Claude→存 markdown/导图数据 的编排线 |
-| **S3 限时练习** | [@lumieducation/h5p-server](https://github.com/Lumieducation/H5P-Nodejs-library) | 纯 **TypeScript**，npm 可嵌入 ✅ 最契合 | Question Set 内置多选/填空/拖词等客观题型→规则批改。自建：主观题 AI 评分（Kimi）、题目生成（Kimi）、限时逻辑。Moodle 题引擎(PHP 耦合)/E-Quiz(需 K8s)/obsidian 插件(绑 Obsidian) 均不宜嵌入 |
+| **S3 限时练习** | 自建最小题型（单选/多选、填空、简答）为 MVP 主路径；[@lumieducation/h5p-server](https://github.com/Lumieducation/H5P-Nodejs-library) 只作为后续 `H5PContentAdapter` | H5P 为纯 TypeScript、npm 可嵌入，但内容模型和接入成本不应阻塞 MVP | MVP 先以稳定的数据模型和规则批改实现三种题型；主观题进入 AI 质量门，限时与作答记录自建。后续需要互操作内容或更多交互题型时，再以 Adapter 接入 H5P 渲染/导入；Moodle 题引擎(PHP 耦合)/E-Quiz(需 K8s)/obsidian 插件(绑 Obsidian) 均不宜嵌入 |
 | **S4 错题改错** | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs)（~704★，FSRS-v6） | **MIT**，同栈原生 TS 库 ✅ 最契合 | 覆盖艾宾浩斯间隔复习调度引擎（喂评分→返回下次复习时间）。自建：错题本模型、错因分类、变题重做、录入 UI、卡片状态持久化到 SQLite |
 | **S5 期末冲刺** | ⚠️ **组卷算法无可复用 TS/Node 底座，需自研** | — | 自建：按知识点/难度加权抽样组卷（TS 实现，不复杂）。真题解析/变题走 Kimi。限时模拟考复用 S3 的 H5P。（RecruitSystem 用遗传算法组卷但为 Java SSM 整站，不可复用） |
 | **S6 家长观察** | `nodemailer` + QQ SMTP、飞书自定义机器人 Webhook | Node 出站发送，无需公网入口 | 规则统计生成 HTML 报告与卡片；AI 仅可选润色；不做家长 Web 面板或远程登录 |
@@ -221,7 +221,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 | 档位 | 子系统 → 底座 | 自研量 |
 |---|---|---|
-| **第一档 直接套库** | S4→ts-fsrs；S1→frappe-gantt+react-big-calendar；S3→@lumieducation/h5p-server | 极少 |
+| **第一档 直接套库** | S4→ts-fsrs；S1→frappe-gantt+react-big-calendar；S3 的 H5P 仅后续 Adapter 候选 | 极少 |
 | **第二档 套组件配薄胶水** | S2→markmap+OCR+PDF.js+react-markdown/KaTeX；S6→邮件 HTML + 飞书卡片 | 编排线 |
 | **第三档 主要自研（但薄）** | S5→组卷算法自研+Kimi 解析；S7→本地 ASR 自编译或用云/独立服务 | 较多 |
 
@@ -245,6 +245,7 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 
 PostgreSQL/pgvector、MinIO、Redis/BullMQ、Docker Desktop/WSL2 的 smoke test 结论仍有效，适用于未来多用户、云端或更重的部署形态；它们不构成孩子 16GB Windows 本机版的默认依赖，也不得在 Phase 0.8 中无重新决策地带回主路径。
 
+
 ### 9.3 试炼场到产品的唯一通道
 
 ```text
@@ -256,3 +257,17 @@ I:\ai-studybuddy-composer 的最小样例
 ```
 
 `.env.local`、`.venv`、`node_modules`、output、真实凭据和真实学习材料只留在本机试炼场或 `APP_DATA_ROOT`；不进入主仓库 Git。任何一环缺失，组件不得视为可接入产品。
+
+---
+
+### 9.4 当前单机主路径的分级 fallback
+
+| 能力 | 主路径 | 自动降级 | 最终人工出口 |
+|---|---|---|---|
+| PDF / 文本 | `pdf-parse` | PDF.js / 页面渲染 → OCR → 视觉 Provider | 孩子粘贴或修正文本 |
+| 图片 OCR | RapidOCR | 图像预处理重试 → PaddleOCR / 视觉 Provider | 孩子校正识别结果 |
+| AI 笔记、练习质量 | GPT/Claude 中转 | Kimi / Qwen 官方直连 → `pending_quality_check` | 孩子核对、保存覆盖理由；不因 Provider 故障锁死学习 |
+| 家长报告 | QQ SMTP + 飞书 Webhook | 仅重试失败渠道；下次登录补发 | 保存本地 HTML 与错误摘要，维护者手工重发 |
+| 单学期数据库 | SQLite WAL + 备份 | 停止该学期写入 → `integrity_check` → 最近备份恢复 | 维护者按恢复记录处理；其他学期保持可用 |
+
+Fallback 是产品能力的一部分：组件或 Provider 失败时，必须保留输入、错误摘要和下一步，而不是静默丢失资料或把技术故障标为孩子未完成。
