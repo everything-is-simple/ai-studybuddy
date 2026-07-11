@@ -7,7 +7,8 @@
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r run build",
     "type-check": "pnpm -r run type-check",
-    "lint": "pnpm -r run lint"
+    "lint": "pnpm -r run lint",
+    "test": "pnpm build && pnpm --filter @ai-studybuddy/backend run test"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

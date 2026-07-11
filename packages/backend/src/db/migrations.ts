@@ -1,22 +1,46 @@
 // ============================================================
-// Migration 执行器 — 后端开发规范第 4 节
-// SQL schema 以 TS 常量内联，避免编译产物丢失 .sql 文件。
-// 简单 version 递增，不引入复杂 migration 框架。
+// SQLite migration 执行器
+// - schema 以内联 TS 常量作为唯一事实来源；
+// - 每个版本在独立 SQLite transaction 中执行并记录；
+// - 正式路径与 staging 路径调用同一套 migration。
 // ============================================================
 
+import fs from "fs";
 import type { DatabaseType } from "./connection";
-import { openGlobalDb, openSemesterDb } from "./connection";
-import { getSemesterDbPath, getSemesterFilesDir, getSemesterTmpDir } from "./paths";
+import { openDbAtPath, openGlobalDb, openSemesterDb } from "./connection";
+import {
+  getSemesterDbPath,
+  getSemesterFilesDir,
+  getSemesterTmpDir,
+} from "./paths";
 import { SCHEMA_GLOBAL_SQL } from "./sql/schema-global";
 import { SCHEMA_SEMESTER_SQL } from "./sql/schema-semester";
-import fs from "fs";
 
-const GLOBAL_SCHEMA_VERSION = 1;
-const SEMESTER_SCHEMA_VERSION = 1;
+export interface Migration {
+  version: number;
+  sql: string;
+}
 
-/**
- * 查询已执行的最高 migration version。
- */
+const GLOBAL_MIGRATIONS: readonly Migration[] = [
+  { version: 1, sql: SCHEMA_GLOBAL_SQL },
+];
+
+const SEMESTER_MIGRATIONS: readonly Migration[] = [
+  { version: 1, sql: SCHEMA_SEMESTER_SQL },
+];
+
+function ensureMigrationTable(db: DatabaseType): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      scope TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      applied_at TEXT NOT NULL,
+      PRIMARY KEY(scope, version)
+    );
+  `);
+}
+
+/** 查询已执行的最高 migration version。 */
 export function getAppliedVersion(db: DatabaseType, scope: string): number {
   const row = db
     .prepare("SELECT MAX(version) as v FROM schema_migrations WHERE scope = ?")
@@ -25,58 +49,95 @@ export function getAppliedVersion(db: DatabaseType, scope: string): number {
 }
 
 /**
- * 记录已执行的 migration version。
+ * 顺序执行尚未应用的 migration。
+ * 每一个版本的 SQL 和 migration 记录在同一 transaction 内提交。
  */
-function recordMigration(db: DatabaseType, scope: string, version: number): void {
-  db.prepare(
-    "INSERT OR IGNORE INTO schema_migrations (scope, version, applied_at) VALUES (?, ?, ?)"
-  ).run(scope, version, new Date().toISOString());
+export function applyMigrations(
+  db: DatabaseType,
+  scope: "global" | "semester",
+  migrations: readonly Migration[]
+): void {
+  ensureMigrationTable(db);
+
+  const ordered = [...migrations].sort((a, b) => a.version - b.version);
+  const current = getAppliedVersion(db, scope);
+  const latest = ordered.at(-1)?.version ?? 0;
+
+  if (current > latest) {
+    throw new Error(
+      `[MIGRATION] ${scope} database version ${current} is newer than application version ${latest}`
+    );
+  }
+
+  let expectedVersion = current + 1;
+  for (const migration of ordered) {
+    if (migration.version <= current) continue;
+    if (migration.version !== expectedVersion) {
+      throw new Error(
+        `[MIGRATION] ${scope} migration gap: expected ${expectedVersion}, got ${migration.version}`
+      );
+    }
+
+    db.transaction(() => {
+      db.exec(migration.sql);
+      db.prepare(
+        "INSERT INTO schema_migrations (scope, version, applied_at) VALUES (?, ?, ?)"
+      ).run(scope, migration.version, new Date().toISOString());
+    })();
+
+    expectedVersion += 1;
+  }
 }
 
-/**
- * 初始化全局库 studybuddy.db。
- * - 创建所有全局表（CREATE TABLE IF NOT EXISTS，幂等）
- * - 记录 schema version 1
- */
+export function migrateGlobalDb(db: DatabaseType): void {
+  applyMigrations(db, "global", GLOBAL_MIGRATIONS);
+}
+
+export function migrateSemesterDb(db: DatabaseType): void {
+  applyMigrations(db, "semester", SEMESTER_MIGRATIONS);
+}
+
+/** 初始化任意绝对路径上的全局库，供正式运行与集成测试复用。 */
+export function initGlobalDbAtPath(dbPath: string): DatabaseType {
+  const db = openDbAtPath(dbPath);
+  migrateGlobalDb(db);
+  return db;
+}
+
+/** 初始化任意绝对路径上的学期库，供 staging 与正式路径复用。 */
+export function initSemesterDbAtPath(dbPath: string): DatabaseType {
+  const db = openDbAtPath(dbPath);
+  migrateSemesterDb(db);
+  return db;
+}
+
+/** 初始化标准全局库 studybuddy.db。 */
 export function initGlobalDb(): DatabaseType {
   const db = openGlobalDb();
-  db.exec(SCHEMA_GLOBAL_SQL);
-  recordMigration(db, "global", GLOBAL_SCHEMA_VERSION);
+  migrateGlobalDb(db);
   return db;
 }
 
-/**
- * 初始化学期库 semester.db。
- * - 确保学期目录结构存在（files/ tmp/）
- * - 创建所有学期表（幂等）
- * - 记录 schema version 1
- */
+/** 初始化标准学期库 semester.db，同时确保 files/ 与 tmp/ 目录存在。 */
 export function initSemesterDb(semesterId: string): DatabaseType {
-  const filesDir = getSemesterFilesDir(semesterId);
-  const tmpDir = getSemesterTmpDir(semesterId);
-  fs.mkdirSync(filesDir, { recursive: true });
-  fs.mkdirSync(tmpDir, { recursive: true });
+  fs.mkdirSync(getSemesterFilesDir(semesterId), { recursive: true });
+  fs.mkdirSync(getSemesterTmpDir(semesterId), { recursive: true });
 
   const db = openSemesterDb(semesterId);
-  db.exec(SCHEMA_SEMESTER_SQL);
-  recordMigration(db, "semester", SEMESTER_SCHEMA_VERSION);
+  migrateSemesterDb(db);
   return db;
 }
 
-/**
- * 检查学期库是否已初始化（文件存在且有 schema_migrations 记录）。
- */
+/** 检查标准学期库是否已初始化。 */
 export function isSemesterDbInitialized(semesterId: string): boolean {
   const dbPath = getSemesterDbPath(semesterId);
   if (!fs.existsSync(dbPath)) return false;
 
   try {
     const db = openSemesterDb(semesterId);
-    const row = db
-      .prepare("SELECT COUNT(*) as c FROM schema_migrations WHERE scope = 'semester'")
-      .get() as { c: number };
+    const version = getAppliedVersion(db, "semester");
     db.close();
-    return row.c > 0;
+    return version > 0;
   } catch {
     return false;
   }

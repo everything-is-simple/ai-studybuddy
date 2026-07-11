@@ -85,14 +85,14 @@ APP_DATA_ROOT/
 
 ## 四、Migration 约定
 
-- SQL 文件放在 `src/db/sql/` 目录。
-- `schema_migrations` 表记录已执行 version。
-- 简单 version 递增，不引入复杂 migration 框架。
-- 全局库和学期库各自维护独立的 `schema_migrations` 记录。
-- 初始化时执行 `CREATE TABLE IF NOT EXISTS`，可重复运行不报错。
+- Schema 与 migration SQL 以 `src/db/sql/*.ts` 的字符串常量维护，并由 `migrations.ts` 直接 import；不得在运行时读取未复制到 `dist/` 的 `.sql` 文件。
+- `schema_migrations` 表记录已执行 version；全局库和学期库各自维护独立记录。
+- Migration 版本必须从 1 连续递增。runner 先检查已执行版本，再按顺序执行未执行版本；发现版本缺口必须失败，不得静默跳过。
+- 每个 migration 的 SQL 与其 version 记录必须在同一个 SQLite 事务内提交。首版 schema 作为 v1，后续结构变更新增 v2、v3……，不改写已发布版本。
+- Schema 可使用 `CREATE TABLE IF NOT EXISTS` 保持首版初始化幂等，但不能以幂等 SQL 代替版本化迁移。
+- 构建脚本清理 `dist/` 时必须同步清理 `tsconfig.tsbuildinfo`，再执行 project build；测试必须覆盖干净构建后的 `dist` 运行态。
 
 ---
-
 ## 五、Adapter 统一输出格式
 
 ### 5.1 Converter 输出

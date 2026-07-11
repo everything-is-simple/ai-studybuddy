@@ -12,7 +12,7 @@ import { getGlobalDbPath, getSemesterDbPath } from "./paths";
 /**
  * 打开 SQLite 数据库，启用 WAL 和 foreign_keys。
  */
-function openDb(dbPath: string): DatabaseType {
+export function openDbAtPath(dbPath: string): DatabaseType {
   // 确保父目录存在
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
@@ -27,14 +27,14 @@ function openDb(dbPath: string): DatabaseType {
  * 打开全局库 studybuddy.db。
  */
 export function openGlobalDb(): DatabaseType {
-  return openDb(getGlobalDbPath());
+  return openDbAtPath(getGlobalDbPath());
 }
 
 /**
  * 打开学期库 semester.db。
  */
 export function openSemesterDb(semesterId: string): DatabaseType {
-  return openDb(getSemesterDbPath(semesterId));
+  return openDbAtPath(getSemesterDbPath(semesterId));
 }
 
 /**

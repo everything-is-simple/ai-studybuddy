@@ -1,0 +1,256 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import test from "node:test";
+
+const backendDir = path.resolve(import.meta.dirname, "..");
+const require = createRequire(import.meta.url);
+const Database = require("better-sqlite3");
+
+async function startBackend(t) {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-test-"));
+  const port = 40000 + Math.floor(Math.random() * 10000);
+  const processHandle = spawn(process.execPath, ["dist/server.js"], {
+    cwd: backendDir,
+    env: {
+      ...process.env,
+      APP_DATA_ROOT: dataRoot,
+      BACKEND_HOST: "127.0.0.1",
+      BACKEND_PORT: String(port),
+    },
+    stdio: "ignore",
+  });
+
+  t.after(async () => {
+    processHandle.kill();
+    await rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  });
+
+  const healthUrl = `http://127.0.0.1:${port}/api/health`;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    try {
+      const response = await fetch(healthUrl);
+      if (response.ok) return { dataRoot, port };
+    } catch {
+      // 后端尚未开始监听，继续等待。
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  throw new Error("built backend did not become healthy");
+}
+
+async function postJson(port, pathname, body) {
+  const response = await fetch(`http://127.0.0.1:${port}${pathname}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return { status: response.status, json: await response.json() };
+}
+
+function semesterInput(overrides = {}) {
+  return {
+    studentName: "Alice",
+    semesterCode: "2026-spring",
+    teachingStartDate: "2026-02-20",
+    teachingEndDate: "2026-06-30",
+    ...overrides,
+  };
+}
+
+test("built initializer rejects a calendar date that does not exist", async (t) => {
+  const backend = await startBackend(t);
+
+  const result = await postJson(
+    backend.port,
+    "/api/dev/init-semester",
+    semesterInput({ teachingStartDate: "2026-02-30" })
+  );
+
+  assert.equal(result.status, 400);
+  assert.equal(result.json.success, false);
+  assert.equal(result.json.error.code, "INVALID_DATE");
+});
+
+test("rename failure removes new student, semester index, staging, and formal directory", async (t) => {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-rename-"));
+  t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+
+  const { initializeSemester } = await import("../dist/db/semester-initializer.js");
+
+  assert.throws(
+    () =>
+      initializeSemester(semesterInput(), {
+        appDataRoot: dataRoot,
+        promoteStaging() {
+          throw new Error("injected rename failure");
+        },
+      }),
+    { code: "RENAME_FAILED" }
+  );
+
+  const globalDb = new Database(path.join(dataRoot, "studybuddy.db"));
+  assert.equal(globalDb.prepare("SELECT COUNT(*) AS count FROM students").get().count, 0);
+  assert.equal(globalDb.prepare("SELECT COUNT(*) AS count FROM semesters").get().count, 0);
+  globalDb.close();
+
+  const semestersRoot = path.join(dataRoot, "semesters");
+  const entries = await readdir(semestersRoot).catch(() => []);
+  assert.deepEqual(entries, []);
+});
+test("restores one damaged semester database from a recorded backup without affecting another semester", async (t) => {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-backup-"));
+  t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+
+  const { initializeSemester } = await import("../dist/db/semester-initializer.js");
+  const { createDatabaseBackup, restoreDatabaseFromBackup, checkDatabaseIntegrityAtPath } =
+    await import("../dist/db/backups.js");
+
+  const first = initializeSemester(semesterInput({ semesterCode: "2026-spring" }), {
+    appDataRoot: dataRoot,
+  });
+  const second = initializeSemester(semesterInput({ semesterCode: "2026-fall" }), {
+    appDataRoot: dataRoot,
+  });
+
+  const backup = createDatabaseBackup({
+    scope: "semester",
+    databasePath: first.semesterDbPath,
+    globalDbPath: first.globalDbPath,
+    backupsDir: path.join(dataRoot, "backups"),
+    note: "integration test",
+  });
+
+  await writeFile(first.semesterDbPath, "deliberately corrupted", "utf8");
+  assert.notEqual(checkDatabaseIntegrityAtPath(first.semesterDbPath), "ok");
+
+  restoreDatabaseFromBackup({
+    backupPath: backup.backupPath,
+    destinationPath: first.semesterDbPath,
+  });
+
+  assert.equal(checkDatabaseIntegrityAtPath(first.semesterDbPath), "ok");
+  assert.equal(checkDatabaseIntegrityAtPath(second.semesterDbPath), "ok");
+
+  const globalDb = new Database(first.globalDbPath);
+  const record = globalDb
+    .prepare("SELECT scope, backup_path, note FROM backup_records")
+    .get();
+  globalDb.close();
+
+  assert.deepEqual(record, {
+    scope: "semester",
+    backup_path: backup.backupPath,
+    note: "integration test",
+  });
+});
+test("built initializer creates one ready index and isolated semester database", async (t) => {
+  const backend = await startBackend(t);
+  const result = await postJson(backend.port, "/api/dev/init-semester", semesterInput());
+
+  assert.equal(result.status, 200);
+  assert.equal(result.json.success, true);
+  assert.equal(result.json.data.status, "active");
+
+  const globalDb = new Database(path.join(backend.dataRoot, "studybuddy.db"));
+  const semester = globalDb
+    .prepare("SELECT id, semester_code, ready FROM semesters WHERE semester_code = ?")
+    .get("2026-spring");
+  globalDb.close();
+
+  assert.equal(semester.semester_code, "2026-spring");
+  assert.equal(semester.ready, 1);
+  assert.equal(
+    checkFile(path.join(backend.dataRoot, "semesters", semester.id, "semester.db")),
+    true
+  );
+});
+
+test("built initializer rejects a duplicate semester without creating another student", async (t) => {
+  const backend = await startBackend(t);
+  const first = await postJson(backend.port, "/api/dev/init-semester", semesterInput());
+  const duplicate = await postJson(
+    backend.port,
+    "/api/dev/init-semester",
+    semesterInput({ studentName: "Bob" })
+  );
+
+  assert.equal(first.status, 200);
+  assert.equal(duplicate.status, 409);
+  assert.equal(duplicate.json.error.code, "SEMESTER_CODE_EXISTS");
+
+  const globalDb = new Database(path.join(backend.dataRoot, "studybuddy.db"));
+  const students = globalDb.prepare("SELECT name FROM students ORDER BY name").all();
+  globalDb.close();
+  assert.deepEqual(students, [{ name: "Alice" }]);
+});
+
+test("ready flag failure removes promoted directory and all new global records", async (t) => {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-ready-"));
+  t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+
+  const { initializeSemester } = await import("../dist/db/semester-initializer.js");
+
+  assert.throws(
+    () =>
+      initializeSemester(semesterInput(), {
+        appDataRoot: dataRoot,
+        markReady() {
+          throw new Error("injected ready update failure");
+        },
+      }),
+    { code: "READY_FLAG_FAILED" }
+  );
+
+  const globalDb = new Database(path.join(dataRoot, "studybuddy.db"));
+  assert.equal(globalDb.prepare("SELECT COUNT(*) AS count FROM students").get().count, 0);
+  assert.equal(globalDb.prepare("SELECT COUNT(*) AS count FROM semesters").get().count, 0);
+  globalDb.close();
+
+  const entries = await readdir(path.join(dataRoot, "semesters")).catch(() => []);
+  assert.deepEqual(entries, []);
+});
+
+test("versioned migration applies each version once and rejects a gap", async (t) => {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-migration-"));
+  t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+
+  const { openDbAtPath } = await import("../dist/db/connection.js");
+  const { applyMigrations, getAppliedVersion } = await import("../dist/db/migrations.js");
+  const db = openDbAtPath(path.join(dataRoot, "migration.db"));
+  try {
+    applyMigrations(db, "global", [
+      { version: 1, sql: "CREATE TABLE one (id INTEGER PRIMARY KEY);" },
+      { version: 2, sql: "CREATE TABLE two (id INTEGER PRIMARY KEY);" },
+    ]);
+    applyMigrations(db, "global", [
+      { version: 1, sql: "CREATE TABLE one (id INTEGER PRIMARY KEY);" },
+      { version: 2, sql: "CREATE TABLE two (id INTEGER PRIMARY KEY);" },
+    ]);
+
+    assert.equal(getAppliedVersion(db, "global"), 2);
+    assert.equal(
+      db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'global'").get().count,
+      2
+    );
+    assert.throws(
+      () => applyMigrations(db, "semester", [{ version: 2, sql: "SELECT 1;" }]),
+      /migration gap/
+    );
+  } finally {
+    db.close();
+  }
+});
+
+function checkFile(filePath) {
+  try {
+    require("node:fs").accessSync(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
