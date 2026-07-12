@@ -15,3 +15,10 @@ export type {
   DispatchConverterInput,
   UrlFetcherOptions,
 } from "./converter";
+export {
+  AiProviderRouter,
+  AiProviderError,
+  AllProvidersFailedError,
+  OpenAiProvider,
+} from "./ai";
+export type { AiProvider, AiProviderRouterOptions } from "./ai";

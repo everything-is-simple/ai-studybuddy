@@ -29,6 +29,33 @@ function requireEnv(key: string): string {
   return value;
 }
 
+// AI Provider 配置项（多 Provider 轮询链）
+export interface ProviderConfig {
+  name: string;
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  priority: number;
+}
+
+function parseAiProviders(): ProviderConfig[] {
+  const raw = process.env.AI_PROVIDERS;
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item, idx) => ({
+      name: String(item.name ?? `provider-${idx}`),
+      baseUrl: String(item.baseUrl ?? ""),
+      apiKey: String(item.apiKey ?? ""),
+      model: String(item.model ?? ""),
+      priority: Number(item.priority ?? 0),
+    }));
+  } catch {
+    throw new Error("[CONFIG] INVALID_AI_PROVIDERS AI_PROVIDERS must be a valid JSON array");
+  }
+}
+
 // ── APP_DATA_ROOT ──────────────────────────────────────────
 const APP_DATA_ROOT = requireEnv("APP_DATA_ROOT");
 const resolvedRoot = path.resolve(APP_DATA_ROOT);
@@ -59,9 +86,11 @@ export const config = {
   ocrTimeoutMs: Number(process.env.OCR_TIMEOUT_MS ?? 60000),
 
   // AI Provider（T05 时使用）
+  aiProviders: parseAiProviders(),
   aiBaseUrl: process.env.AI_BASE_URL ?? "",
   aiApiKey: process.env.AI_API_KEY ?? "",
   aiModel: process.env.AI_MODEL ?? "",
+  aiTimeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 60000),
 
   // SMTP（T06 时使用）
   smtpHost: process.env.SMTP_HOST ?? "",
