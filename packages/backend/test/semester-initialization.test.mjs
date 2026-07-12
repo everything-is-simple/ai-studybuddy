@@ -248,6 +248,74 @@ test("versioned migration applies each version once and rejects a gap", async (t
   }
 });
 
+test("semester migration v2 applies schedule_entries, confirmation columns and date changes table", async (t) => {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-v2-fresh-"));
+  t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+
+  const { initSemesterDbAtPath } = await import("../dist/db/migrations.js");
+  const { getAppliedVersion } = await import("../dist/db/migrations.js");
+  const db = initSemesterDbAtPath(path.join(dataRoot, "semester.db"));
+  try {
+    assert.equal(getAppliedVersion(db, "semester"), 2);
+    assert.ok(
+      db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schedule_entries'").get()
+    );
+    assert.ok(
+      db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assessment_date_changes'").get()
+    );
+    const columns = db.prepare("PRAGMA table_info(assessment_attempts)").all().map((row) => row.name);
+    assert.ok(columns.includes("confirmation_status"));
+    assert.ok(columns.includes("confirmed_at"));
+  } finally {
+    db.close();
+  }
+});
+
+test("semester migration v2 upgrades an existing v1 database with defaults", async (t) => {
+  const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-v2-upgrade-"));
+  t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+
+  const { openDbAtPath } = await import("../dist/db/connection.js");
+  const { migrateSemesterDb, getAppliedVersion } = await import("../dist/db/migrations.js");
+  const { SCHEMA_SEMESTER_SQL } = require("../dist/db/sql/schema-semester.js");
+
+  const db = openDbAtPath(path.join(dataRoot, "legacy-v1.db"));
+  try {
+    db.exec(SCHEMA_SEMESTER_SQL);
+    const v1AppliedAt = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO schema_migrations (scope, version, applied_at) VALUES (?, ?, ?)"
+    ).run("semester", 1, v1AppliedAt);
+
+    const courseId = "course-0000-0000-0000-000000000001";
+    const existingAttemptId = "attempt-0000-0000-0000-000000000001";
+    const now = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO course_instances (id, semester_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
+    ).run(courseId, "sem-0000-0000-0000-000000000001", "数学", now, now);
+    db.prepare(
+      `INSERT INTO assessment_attempts (
+        id, course_instance_id, name, exam_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(existingAttemptId, courseId, "期中考试", "2026-05-10T08:00:00.000Z", now, now);
+
+    migrateSemesterDb(db);
+
+    const existing = db
+      .prepare("SELECT id, name, confirmation_status, confirmed_at FROM assessment_attempts WHERE id = ?")
+      .get(existingAttemptId);
+    assert.deepEqual(existing, {
+      id: existingAttemptId,
+      name: "期中考试",
+      confirmation_status: "pending",
+      confirmed_at: null,
+    });
+    assert.equal(getAppliedVersion(db, "semester"), 2);
+  } finally {
+    db.close();
+  }
+});
+
 function checkFile(filePath) {
   try {
     require("node:fs").accessSync(filePath);

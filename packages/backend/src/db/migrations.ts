@@ -15,6 +15,7 @@ import {
 } from "./paths";
 import { SCHEMA_GLOBAL_SQL } from "./sql/schema-global";
 import { SCHEMA_SEMESTER_SQL } from "./sql/schema-semester";
+import { SEMESTER_V2_SQL } from "./sql/migration-semester-v2";
 
 export interface Migration {
   version: number;
@@ -27,6 +28,7 @@ const GLOBAL_MIGRATIONS: readonly Migration[] = [
 
 const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 1, sql: SCHEMA_SEMESTER_SQL },
+  { version: 2, sql: SEMESTER_V2_SQL },
 ];
 
 function ensureMigrationTable(db: DatabaseType): void {
