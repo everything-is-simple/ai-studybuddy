@@ -6,6 +6,7 @@ import devRouter from "./api/dev";
 import storageDevRouter from "./api/dev-storage";
 import converterDevRouter from "./api/dev-converter";
 import aiDevRouter from "./api/dev-ai";
+import studyRhythmRouter from "./api/study-rhythm";
 
 const app = express();
 const PORT = config.backendPort;
@@ -33,11 +34,8 @@ app.use("/api/dev/storage", storageDevRouter);
 app.use("/api/dev/converter", converterDevRouter);
 app.use("/api/dev/ai", aiDevRouter);
 
-// ── TODO: 正式业务路由 ────────────────────────────────────
-// app.use("/api/courses", coursesRouter);
-// app.use("/api/study-tasks", studyTasksRouter);
-// app.use("/api/materials", materialsRouter);
-// app.use("/api/notes", notesRouter);
+// ── S1 学习节奏业务路由 ───────────────────────────────────
+app.use("/api", studyRhythmRouter);
 
 // ── 启动 ──────────────────────────────────────────────────
 app.listen(PORT, HOST, () => {

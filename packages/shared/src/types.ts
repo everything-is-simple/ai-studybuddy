@@ -12,57 +12,68 @@ export interface User {
   updated_at: Date;
 }
 
-export interface Course {
+// ============================================================
+// S1 StudyRhythm API DTO（与学期库列对应，字段采用 camelCase）
+// ============================================================
+
+export interface CourseInstanceDto {
   id: string;
-  student_id: string;
+  semesterId: string;
   name: string;
-  term: string;
-  created_at: Date;
-  updated_at: Date;
+  retakeOfCourseInstanceId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Exam：考试目标，驱动考前提醒和任务优先级（Phase 0.8 必需对象）
-// 一个课程可有多个考试目标；exam_at 是考试日期
-export interface Exam {
+export type AttemptType = "normal" | "makeup" | "other";
+export type ConfirmationStatus = "pending" | "confirmed" | "rejected" | "superseded";
+
+export interface AssessmentAttemptDto {
   id: string;
-  course_id: string;
+  courseInstanceId: string;
   name: string;
-  exam_at: Date;
-  goal: string | null;
-  daily_study_minutes: number | null;
-  scope_summary: string | null;
-  created_at: Date;
-  updated_at: Date;
+  attemptType: AttemptType;
+  examAt: string;
+  confirmationStatus: ConfirmationStatus;
+  confirmedAt?: string;
+  goal?: string;
+  dailyStudyMinutes?: number;
+  scopeSummary?: string;
+  source?: string;
+  sourceConfidence?: number;
 }
 
-export interface StudyTask {
+export type StudyTaskType = "material_note" | "practice" | "error_review" | "exam_cram" | "custom";
+export type StudyTaskStatus = "todo" | "doing" | "pending_quality_check" | "done" | "skipped";
+
+export interface StudyTaskDto {
   id: string;
-  student_id: string;
-  course_id: string;
-  exam_id: string | null;
-  knowledge_module_id: string | null;
-  type: "material_note" | "practice" | "error_review" | "exam_cram" | "custom";
+  courseInstanceId: string;
+  assessmentAttemptId?: string;
+  knowledgeModuleId?: string;
+  type: StudyTaskType;
   title: string;
-  status: "todo" | "doing" | "done" | "overdue" | "skipped";
-  estimated_minutes: number | null;
-  deadline_at: Date | null;
-  completed_at: Date | null;
-  created_at: Date;
-  updated_at: Date;
+  status: StudyTaskStatus;
+  estimatedMinutes?: number;
+  deadlineAt?: string;
+  completedAt?: string;
+  derivedOverdue: boolean;
+  priorityBucket: 0 | 1 | 2 | 3;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface StudyEvent {
+export interface StudyEventDto {
   id: string;
-  student_id: string;
-  course_id: string;
-  task_id: string | null;
-  source_system: "S1" | "S2" | "S3" | "S4" | "S5" | "S7";
-  event_type: string;
+  courseInstanceId?: string;
+  taskId?: string;
+  sourceSystem: "S1" | "S2" | "S3" | "S4" | "S5" | "S7";
+  eventType: string;
   title: string;
-  workload_minutes: number | null;
-  parent_visible: boolean;
-  occurred_at: Date;
-  created_at: Date;
+  workloadMinutes?: number;
+  parentVisible: boolean;
+  occurredAt: string;
+  createdAt: string;
 }
 
 export interface Material {

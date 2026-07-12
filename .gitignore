@@ -20,6 +20,8 @@ build/
 .idea/
 # Local Claude Code settings
 .claude/
+# Trae IDE local settings
+.trae/
 *.swp
 *.swo
 *~
