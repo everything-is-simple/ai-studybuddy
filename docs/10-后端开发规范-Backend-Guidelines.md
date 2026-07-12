@@ -127,6 +127,12 @@ interface ReportSendResult {
 - 业务代码不得直接依赖 Python 命令、绝对路径、SMTP 授权码或 Webhook URL。
 - 分级 fallback 的最终人工出口必须明确（参见 `08-共同底座架构` 第四节）。
 
+### 5.4 AI Provider Adapter
+
+- OpenAI-compatible 接入统一通过 `OpenAiProvider`；业务 Service、Job 和 API 不得直接实例化 SDK 客户端。
+- `AiProviderRouter` 负责按 priority 轮询、首个成功返回、`fallbackUsed` 标记和失败汇总；未配置抛 `AI_NOT_CONFIGURED`，全部失败抛 `AI_ALL_PROVIDERS_FAILED`。
+- Provider 必须支持构造函数注入 `fetch`，以便单元测试模拟成功、失败和响应 `AbortSignal` 的超时；测试不得使用真实 API Key 或真实模型网络请求。
+
 ---
 
 ## 六、API 响应信封约定
@@ -143,6 +149,7 @@ interface ReportSendResult {
 
 - 所有 API 端点必须返回此信封格式。
 - 错误码使用大写蛇形命名（如 `SEMESTER_NOT_FOUND`、`DB_INIT_FAILED`）。
+- AI 开发验证路由 `POST /api/dev/ai/generate` 校验 `taskType`、`inputText`，并保持 `AI_NOT_CONFIGURED`（503）与 `AI_ALL_PROVIDERS_FAILED`（502）的稳定语义。
 
 ---
 
@@ -155,6 +162,8 @@ interface ReportSendResult {
 - 完整 Feishu Webhook URL
 - 学生隐私全文（资料正文、笔记正文、完整答案、聊天内容）
 - 完整堆栈跟踪到生产日志（开发环境可输出，生产只记摘要和 error code）
+
+AI Router 日志额外只允许记录 `taskType`、Provider 名称、model、token、耗时、fallback 和失败摘要；不得记录请求输入、模型输出或 Provider 配置中的密钥。
 
 ### 7.2 日志目录
 
@@ -189,9 +198,11 @@ interface ReportSendResult {
 | `APP_DATA_ROOT` | 运行数据根目录 | 是 |
 | `BACKEND_PORT` | 后端端口（默认 3000） | 否 |
 | `BACKEND_HOST` | 后端监听地址（默认 127.0.0.1） | 否 |
-| `AI_BASE_URL` | AI 中转 API 地址 | T05 时填 |
-| `AI_API_KEY` | AI 中转 API Key | T05 时填 |
-| `AI_MODEL` | AI 模型名 | T05 时填 |
+| `AI_PROVIDERS` | 多 Provider JSON 数组；按 `priority` 升序 fallback | 否；推荐配置 |
+| `AI_TIMEOUT_MS` | 单次 AI 请求超时毫秒数（默认 60000） | 否 |
+| `AI_BASE_URL` | legacy 单 Provider 的 OpenAI-compatible Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否 |
+| `AI_API_KEY` | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用 | 否 |
+| `AI_MODEL` | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用 | 否 |
 | `SMTP_HOST` | QQ SMTP 主机 | T06 时填 |
 | `SMTP_PORT` | QQ SMTP 端口 | T06 时填 |
 | `SMTP_SECURE` | 是否 SSL | T06 时填 |

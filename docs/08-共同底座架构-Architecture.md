@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.5
-**日期**：2026-07-11
-**状态**：Phase 0.7 开发机验收完成；Phase 0.8 开工前架构基线已对齐学期隔离、证据闭环与质量门
+**版本**：v1.6
+**日期**：2026-07-12
+**状态**：Phase 0.7 开发机验收完成；Phase 0.8 T01-T05 已正式接入，当前架构基线已覆盖学期隔离、证据闭环、质量门与 AI Provider Router
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
@@ -31,7 +31,7 @@
 | 文件 | Node `fs` + `StorageAdapter` | 业务数据只存 `storage_key`，按学期/课程实例隔离，拒绝路径逃逸 |
 | 持久化任务 | SQLite `jobs` + 单进程 Worker | 串行领取、有限重试、过期 running 恢复；任务归属到学期库 |
 | OCR | RapidOCR Python 子进程 | stdin/参数只传文件路径；stdout 仅 JSON；用完退出；失败可转入分级 fallback |
-| AI | `AiProviderRouter` + `QualityGateService` | 用于笔记、质量检查和可选报告润色；AI 故障只产生待质检，不阻断学习 |
+| AI | `AiProviderRouter` + `OpenAiProvider` + 后续 `QualityGateService` | T05 已接入 OpenAI-compatible Provider；按 priority 首个成功返回，故障不阻断学习，只产生待质检 |
 | 报告 | `ReportService` | 基于确定性证据聚合 INFO/SIGNAL/TREND；不读取资料正文、答案或聊天内容 |
 | 邮件 | `nodemailer` + QQ SMTP | HTML 正式报告；密钥仅在 `.env.local` |
 | 飞书 | 自定义机器人 Webhook | 完整脱敏报告卡片；不暴露完整 URL |
@@ -40,6 +40,14 @@
 主系统位于 `I:\ai-studybuddy`；最小验证位于外部 `I:\ai-studybuddy-composer\windows-native`。后者不加入 workspace，不能被 `packages/` import。数据根目录通过 `APP_DATA_ROOT` 配置，开发机建议 `I:\ai-studybuddy-data`，成品可使用 `%LOCALAPPDATA%\AIStudyBuddy`。
 
 Phase 0.5 的 PostgreSQL/pgvector、MinIO、Redis/BullMQ 和 Docker/WSL2 结论仅保留为历史能力；它们不属于当前单机成品默认依赖。
+
+### 2.1 AI Provider Router 已实现边界（0.8-T05）
+
+- 配置优先读取 `AI_PROVIDERS` JSON 数组；每项包含 `name`、`baseUrl`、`apiKey`、`model`、`priority`，按 `priority` 升序尝试。
+- `AI_PROVIDERS` 为空时，才使用 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL` 的 legacy 单 Provider 兼容配置；两种配置均不可用时返回 `AI_NOT_CONFIGURED`。
+- `OpenAiProvider` 只承载 OpenAI-compatible chat completion 调用与统一 `AiResponse` 转换；Router 负责失败记录、fallback 标记与全部失败的 `AI_ALL_PROVIDERS_FAILED`。
+- `POST /api/dev/ai/generate` 仅用于开发验证，成功返回 `ApiSuccess<AiResponse>`；未配置返回 503，全部 Provider 失败返回 502。正式业务 API 后续通过 Service/Job 调用 Router，不直接依赖具体 Provider。
+- AI 日志只记录 `taskType`、Provider、model、token、耗时、fallback 与失败摘要；不得记录 API Key、输入全文、输出全文或学生隐私正文。
 
 ## 三、数据、任务与报告
 

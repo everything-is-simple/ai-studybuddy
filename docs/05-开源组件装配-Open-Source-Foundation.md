@@ -1,8 +1,8 @@
 # AI StudyBuddy 开源组件装配 SoT
 
-**版本**：v1.5
-**状态**：Phase 0.5 历史组件、Phase 0.7 Windows 原生底座与 Phase 0.8 T04A composer 试炼场均已留证；Phase 0.8 只按 Adapter 边界重新实现当前单机主路径
-**日期**：2026-07-11
+**版本**：v1.6
+**状态**：Phase 0.5 历史组件、Phase 0.7 Windows 原生底座与 Phase 0.8 T04A composer 试炼场均已留证；Phase 0.8 T05 已在主仓库正式装配 OpenAI-compatible AI Provider Router，其余能力仍只按 Adapter 边界重新实现当前单机主路径
+**日期**：2026-07-12
 **用途**：定义本项目如何优先使用成熟开源组件，如何在 `I:\ai-studybuddy-composer` 先调通，再封装 Adapter 接入主系统。
 
 > 注：PostgreSQL、MinIO、Redis/BullMQ 已保留为 Phase 0.5 历史能力卡，不进入当前单机成品默认栈；Phase 0.7 以 SQLite、本地文件与 SQLite Job Worker 验证替代路径。
@@ -72,13 +72,15 @@ AI StudyBuddy 的系统能力来自成熟组件的组合，而不是从零造轮
 | 持久化任务 | SQLite `jobs` 表 + 单进程 Worker | `I:\ai-studybuddy-composer\windows-native\03-job-worker` | 格式转换 / AI / 报告 Job 串行执行 | Phase 0.7 必接 |
 | 本地文件 | Node.js `fs` + 逻辑 `storage_key` | `I:\ai-studybuddy-composer\windows-native\02-local-storage` | 原始资料、导出和临时文件 | Phase 0.7 必接 |
 | 数据库 | [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | `I:\ai-studybuddy-composer\windows-native\01-sqlite` | 单用户业务数据、任务、发送记录 | Phase 0.7 必接 |
-| 默认文本 AI | GPT/Claude 中转（Pixel API） | `composer\ai-provider\gpt-test` | 文本理解、笔记整理、普通解析 | MVP 必接 |
+| 默认文本 AI | GPT/Claude 中转（Pixel API）+ OpenAI SDK | `composer\ai-provider\gpt-test`；主仓库 `AiProviderRouter` | T05 已以 OpenAI-compatible Provider 重新装配；按 priority fallback，测试通过注入 mock fetch，不依赖真实网络 | ✅ T05 已接入 |
 | 文本 AI 备选 | Kimi | `composer\ai-provider\kimi-test` | 文本理解、笔记整理、多模态；当前无 Key | 备选 |
 | 文本 AI 备选 | Qwen | `composer\ai-provider\qwen-test` | 文本任务备选；Qwen-VL 只作多模态兜底 | P1 |
 | 复杂图片兜底 | Kimi 视觉 / Qwen-VL | `composer\ai-provider\vision-fallback-test` | OCR/版面失败时兜底 | P2 |
 | 最难推理兜底 | GPT/Claude 中转 | `composer\ai-provider\gpt-test` | 最难数学、证明、跨学科推理 | P2/高级兜底 |
 
 说明：Kimi / Qwen / GPT/Claude 是可替换 AI Provider，不属于“成熟开源组件下载清单”的开源组件范畴；它们出现在本表中，只表示也要先做最小接入验证。
+
+T05 正式接入边界：主仓库不复制 composer 样例；使用 `openai` SDK 封装 `OpenAiProvider`，通过 `AiProviderRouter` 按 `AI_PROVIDERS` 的 `priority` 轮询。`AI_PROVIDERS` 为空时才兼容单 Provider 变量；Provider 未配置与全部失败分别返回稳定错误码，真实模型连通性仍由本机 `.env.local` smoke test 另行确认。
 
 ## 四、产品流程参考边界
 

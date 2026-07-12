@@ -32,6 +32,7 @@ PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ/Redis、MinIO、PostgreSQL/pg
 | 0.7-T05 | RapidOCR 子进程 | JSON stdout、成功/缺文件/非零退出/超时、Python 退出 | ✅ 开发机离线通过；HP 峰值与退出复测暂缓 |
 | 0.7-T06 | 报告核心 | 规则统计、AI 失败降级、脱敏、合并与渠道去重 | ✅ 开发机离线通过；固定 `2026-05-31 22:30 Asia/Shanghai` 覆盖日报、周报、月报和考前 7 天 |
 | 0.7-T07 | QQ SMTP | UTF-8 中文 HTML、可选附件、日志不泄露授权码、父母邮箱实收 | ✅ 真实通过：QQ SMTP accepted，163 父母测试邮箱已收到 |
+| 0.8-T05 | AI Provider Router | 单 Provider 成功、priority fallback、全部失败、超时 fallback、未配置、OpenAI 响应解析；Dev API 返回标准信封 | ✅ 主仓库自动化通过：`ai-router.test.mjs` 6/6；全量 `pnpm test` 77/77 |
 | 0.7-T08 | 飞书 Webhook | 完整合并报告卡片、失败不阻断邮件、Webhook 不泄露、父母飞书群实收 | ✅ 真实通过：飞书 Webhook accepted，父母飞书群已收到 |
 | 0.7-T09 | Windows Task Scheduler | 临时 `AIStudyBuddy-Phase07-Smoke`：XML `StartWhenAvailable`、创建、手动触发、日志、退出码、清理、补发 | ✅ 管理员 PowerShell 真实通过：XML 单测通过；临时任务创建/触发/清理；`report-runner.js` 写入 `report:2026-05-31` SQLite 发送记录 |
 | 0.7-T10 | 整合与 HP 实机 | 课程/任务→本地文件→OCR→AI→SQLite→报告→双渠道去重；16GB 门槛 | ⏳ 开发机离线整合、合并、去重、QQ SMTP、飞书和 Windows 调度均通过；HP 实机因设备不在身边暂缓 |
@@ -105,6 +106,13 @@ Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**�
 | 0.8-E09 | 异常与报告尺度 | AI 仅生成异常候选及证据；孩子确认的合理特例不进入负面趋势；日报 INFO 非评价，周报 SIGNAL 只报重复模式，月报 TREND 需足够样本 | 固定时间窗测试数据、报告快照、基线/特例/置信度断言 |
 | 0.8-E10 | 隐私与报告发送 | 报告和日志不含资料正文、笔记正文、答案、API Key、SMTP 授权码或完整 Webhook；渠道按 `report_key + channel` 去重/单独重试 | 邮件/飞书 payload 快照、日志扫描、渠道失败重试测试 |
 
+### 8.1 已完成的 T05 Router 验收证据
+
+- `packages/backend/test/ai-router.test.mjs` 覆盖单 Provider 成功、首 Provider 失败后的 fallback、全部 Provider 失败、超时后的 fallback、未配置与 OpenAI-compatible 响应解析。
+- timeout mock 必须监听 `fetch` 第二参数中的 `AbortSignal`；忽略 abort 会让 SDK timeout 测试永久等待，不能作为有效的 fallback 验收。
+- 已复跑 `pnpm type-check`、`pnpm build`、`pnpm test`：全量 77/77 通过；文档治理与 `git diff --check` 同步通过。
+- 后端 API 测试以互不重叠的随机端口区间启动子进程，健康检查预算为 10 秒；用于避免并行测试时的 `EADDRINUSE` 与 CPU 竞争导致的偶发健康检查失败。
+
 ## 九、文档治理检查
 
 每轮证据回填后运行：
@@ -114,4 +122,4 @@ powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1
 git diff --check
 ```
 
-Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 0.8 T04A composer 试炼场证据已同步回 `docs/04-*`、`docs/05-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
+Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 0.8 T04A composer 试炼场证据与 T05 正式 AI Router 验收已同步回 `docs/04-*`、`docs/05-*`、`docs/08-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
