@@ -28,7 +28,8 @@ async function startBackend(t) {
   });
 
   const healthUrl = `http://127.0.0.1:${port}/api/health`;
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  // 100 次 × 100ms = 10s 预算，容忍多测试文件并发起后端时的 CPU 竞争
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     try {
       const response = await fetch(healthUrl);
       if (response.ok) return { port };

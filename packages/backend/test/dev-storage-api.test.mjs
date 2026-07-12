@@ -9,7 +9,8 @@ const backendDir = path.resolve(import.meta.dirname, "..");
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t03-api-"));
-  const port = 40000 + Math.floor(Math.random() * 10000);
+  // 独立端口区间，避免与其他并发起后端的测试文件端口冲突（EADDRINUSE）
+  const port = 45000 + Math.floor(Math.random() * 3000);
   const processHandle = spawn(process.execPath, ["dist/server.js"], {
     cwd: backendDir,
     env: {
@@ -27,7 +28,8 @@ async function startBackend(t) {
   });
 
   const healthUrl = `http://127.0.0.1:${port}/api/health`;
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  // 100 次 × 100ms = 10s 预算，容忍多测试文件并发起后端时的 CPU 竞争
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     try {
       const response = await fetch(healthUrl);
       if (response.ok) return { dataRoot, port };
