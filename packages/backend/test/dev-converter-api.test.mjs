@@ -126,9 +126,9 @@ test("dev converter /url rejects SSRF with 403", async (t) => {
 
   const json = await response.json();
   assert.equal(response.status, 403);
-  assert.equal(json.success, true);
-  assert.equal(json.data.ok, false);
-  assert.ok(json.data.error.includes("SSRF"));
+  assert.equal(json.success, false);
+  assert.equal(json.error.code, "URL_SSRF_BLOCKED");
+  assert.ok(json.error.message.includes("SSRF"));
 });
 
 test("dev converter /url rejects missing url with 400", async (t) => {

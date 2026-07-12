@@ -4,6 +4,7 @@
 // ============================================================
 
 import type { ConverterResult } from "@ai-studybuddy/shared";
+import fs from "fs";
 import mammoth from "mammoth";
 import { JSDOM } from "jsdom";
 import JSZip from "jszip";
@@ -136,7 +137,7 @@ async function readDocumentXml(zip: JSZip): Promise<string | null> {
 
 export class DocxConverter {
   async convert(input: Buffer | string): Promise<ConverterResult> {
-    const buffer = typeof input === "string" ? Buffer.from(input) : input;
+    const buffer = typeof input === "string" ? fs.readFileSync(input) : input;
 
     if (isBufferEmpty(buffer)) {
       return {

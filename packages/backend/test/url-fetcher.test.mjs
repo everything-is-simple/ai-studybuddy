@@ -30,6 +30,18 @@ function mockResponse({ status = 200, headers = {}, body = "", url = "http://exa
   return new Response(bodyInit, { status, headers, url });
 }
 
+function delayedResponse(delayMs, response, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve(response), delayMs);
+    if (signal) {
+      signal.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(new Error("request aborted by total timeout"));
+      }, { once: true });
+    }
+  });
+}
+
 function createRecordingResolver(records, address, family = 4) {
   return (hostname, options, callback) => {
     records.push({ hostname, options });
@@ -71,13 +83,36 @@ test("UrlFetcher rejects non-standard port", async () => {
   assert.ok(result.error.includes("端口"));
 });
 
-test("UrlFetcher rejects loopback IP literal at URL validation", async () => {
-  const fetcher = new UrlFetcher();
-  const result = await fetcher.fetch("http://127.0.0.1/secret");
+test("UrlFetcher rejects loopback and mapped IPv6 literals before dispatch", async () => {
+  let calls = 0;
+  const fetcher = new UrlFetcher({
+    fetchImpl: async () => {
+      calls += 1;
+      return mockResponse({ headers: { "content-type": "text/plain" }, body: "must not fetch" });
+    },
+  });
 
-  assert.equal(result.ok, false);
-  assert.equal(result.sourceType, "url");
-  assert.ok(result.error.includes("SSRF"));
+  for (const url of [
+    "http://127.0.0.1/secret",
+    "http://[::1]/secret",
+    "http://[::ffff:127.0.0.1]/secret",
+    "http://[::ffff:7f00:1]/secret",
+    "http://[fe80::1]/secret",
+  ]) {
+    const result = await fetcher.fetch(url);
+    assert.equal(result.ok, false, `${url} 必须被拒绝`);
+    assert.ok(result.error.includes("SSRF"), `${url} 应返回 SSRF 错误`);
+  }
+  assert.equal(calls, 0, "受限 IP 字面量不得进入 fetch");
+});
+
+test("UrlFetcher rejects cross-scheme default ports", async () => {
+  const fetcher = new UrlFetcher();
+  for (const url of ["http://example.com:443/", "https://example.com:80/"]) {
+    const result = await fetcher.fetch(url);
+    assert.equal(result.ok, false, `${url} 必须被拒绝`);
+    assert.ok(result.error.includes("端口"));
+  }
 });
 
 test("UrlFetcher uses secure lookup and rejects resolved private IP", async () => {
@@ -128,6 +163,33 @@ test("UrlFetcher rejects redirect chain exceeding limit", async () => {
 
   assert.equal(result.ok, false);
   assert.ok(result.error.includes("重定向"));
+});
+
+test("UrlFetcher enforces one timeout budget across the whole redirect chain", async () => {
+  let calls = 0;
+  const fetcher = new UrlFetcher({
+    timeoutMs: 50,
+    maxRedirects: 3,
+    fetchImpl: async (_input, init) => {
+      calls += 1;
+      return delayedResponse(
+        35,
+        calls < 4
+          ? mockResponse({ status: 302, headers: { location: "/next" } })
+          : mockResponse({ headers: { "content-type": "text/plain" }, body: "too late" }),
+        init?.signal
+      );
+    },
+  });
+
+  const startedAt = Date.now();
+  const result = await fetcher.fetch("http://example.com/start");
+  const elapsedMs = Date.now() - startedAt;
+
+  assert.equal(result.ok, false);
+  assert.match(result.error, /超时|aborted/i);
+  assert.ok(elapsedMs < 150, `总超时不得随重定向累加，实际 ${elapsedMs}ms`);
+  assert.ok(calls <= 2, `总超时应在早期中止，实际发起 ${calls} 次请求`);
 });
 
 test("UrlFetcher rejects response exceeding size limit", async () => {

@@ -147,17 +147,21 @@ router.post(
 );
 
 // ── POST /api/dev/converter/url ─────────────────────────────
-function mapUrlErrorToHttpStatus(result: ConverterResult): number {
-  if (!result.error) return 200;
-  if (result.error.includes("SSRF")) return 403;
-  if (result.error.includes("超时") || result.error.includes("aborted") || result.error.includes("timeout")) {
-    return 504;
+function mapUrlError(result: ConverterResult): { status: number; code: string } {
+  const message = result.error ?? "URL 抓取失败";
+  if (message.includes("SSRF")) return { status: 403, code: "URL_SSRF_BLOCKED" };
+  if (message.includes("超时") || message.includes("aborted") || message.includes("timeout")) {
+    return { status: 504, code: "URL_TIMEOUT" };
   }
-  if (result.error.includes("上游响应")) return 502;
-  if (result.error.includes("URL 解析失败") || result.error.includes("不能为空")) return 400;
-  if (result.error.includes("Content-Type")) return 415;
-  if (result.error.includes("体积") || result.error.includes("大小")) return 413;
-  return 502;
+  if (message.includes("URL 解析失败") || message.includes("不能为空")) {
+    return { status: 400, code: "URL_INVALID" };
+  }
+  if (message.includes("Content-Type")) return { status: 415, code: "URL_UNSUPPORTED_CONTENT_TYPE" };
+  if (message.includes("体积") || message.includes("大小")) {
+    return { status: 413, code: "URL_RESPONSE_TOO_LARGE" };
+  }
+  if (message.includes("上游响应")) return { status: 502, code: "URL_UPSTREAM_ERROR" };
+  return { status: 502, code: "URL_FETCH_FAILED" };
 }
 
 router.post(
@@ -170,8 +174,11 @@ router.post(
       }
 
       const result = await urlFetcher.fetch(url.trim());
-      const status = result.ok ? 200 : mapUrlErrorToHttpStatus(result);
-      return res.status(status).json(okResponse(result));
+      if (!result.ok) {
+        const { status, code } = mapUrlError(result);
+        return res.status(status).json(errorResponse(code, result.error ?? "URL 抓取失败"));
+      }
+      return res.json(okResponse(result));
     } catch (error) {
       return res
         .status(500)

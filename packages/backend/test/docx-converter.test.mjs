@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import test from "node:test";
 import JSZip from "jszip";
 
@@ -162,4 +164,17 @@ test("DocxConverter rejects document.xml exceeding the read size limit", async (
 
   assert.equal(result.ok, false);
   assert.ok(result.error.includes("document.xml") || result.error.includes("大小"), "应返回 document.xml 大小超限错误");
+});
+
+test("DocxConverter treats string input as a local file path", async (t) => {
+  const tempDir = await mkdtemp(path.join(tmpdir(), "studybuddy-docx-path-"));
+  t.after(() => rm(tempDir, { recursive: true, force: true }));
+  const filePath = path.join(tempDir, "sample.docx");
+  const documentXml = makeDocumentXml(makeParagraph("路径 DOCX"));
+  await writeFile(filePath, await buildDocxBuffer(documentXml));
+
+  const result = await new DocxConverter().convert(filePath);
+
+  assert.equal(result.ok, true);
+  assert.ok(result.text.includes("路径 DOCX"));
 });

@@ -100,10 +100,11 @@ function isBlockedIp(ip: string): boolean {
 
 // 校验 URL 中的 IP 字面量（应用层第一道防线）
 function validateUrlIpLiteral(host: string): void {
-  const family = net.isIP(host);
+  const normalizedHost = host.replace(/^\[|\]$/g, "");
+  const family = net.isIP(normalizedHost);
   if (family === 0) return; // 不是 IP 字面量，交给 DNS lookup 校验
-  if (isBlockedIp(host)) {
-    throw new Error(`SSRF blocked: 地址 ${host} 不在允许范围内`);
+  if (isBlockedIp(normalizedHost)) {
+    throw new Error(`SSRF blocked: 地址 ${normalizedHost} 不在允许范围内`);
   }
 }
 
@@ -155,8 +156,9 @@ function validateUrl(url: URL): void {
     throw new Error("SSRF blocked: URL 中不允许包含用户信息");
   }
 
-  if (url.port && url.port !== "80" && url.port !== "443") {
-    throw new Error(`SSRF blocked: 不允许的端口 ${url.port}，仅支持 80/443`);
+  const allowedPort = url.protocol === "http:" ? "80" : "443";
+  if (url.port && url.port !== allowedPort) {
+    throw new Error(`SSRF blocked: 不允许的端口 ${url.port}，${url.protocol} 仅支持 ${allowedPort}`);
   }
 
   validateUrlIpLiteral(url.hostname);
@@ -298,7 +300,14 @@ export class UrlFetcher {
     });
 
     try {
-      return await this.fetchWithRedirects(parsedUrl, agent, 0);
+      const controller = new AbortController();
+      const deadline = Date.now() + this.timeoutMs;
+      const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+      try {
+        return await this.fetchWithRedirects(parsedUrl, agent, 0, controller, deadline);
+      } finally {
+        clearTimeout(timeoutId);
+      }
     } catch (error) {
       const errWithCause = error instanceof Error ? (error as Error & { cause?: unknown }) : undefined;
       const rootError =
@@ -318,30 +327,26 @@ export class UrlFetcher {
   private async fetchWithRedirects(
     url: URL,
     agent: Agent,
-    redirectCount: number
+    redirectCount: number,
+    controller: AbortController,
+    deadline: number
   ): Promise<ConverterResult> {
     if (redirectCount > this.maxRedirects) {
       throw new Error(`重定向次数超过上限 ${this.maxRedirects}`);
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, this.timeoutMs);
-
-    let response: UndiciResponse;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        dispatcher: agent,
-        redirect: "manual",
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "AIStudyBuddyBot/0.8 (+https://ai-studybuddy.local/bot)",
-        },
-      });
-    } finally {
-      clearTimeout(timeoutId);
+    if (controller.signal.aborted || Date.now() >= deadline) {
+      throw new Error("URL 抓取超时");
     }
+
+    const response = await this.fetchImpl(url.toString(), {
+      dispatcher: agent,
+      redirect: "manual",
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "AIStudyBuddyBot/0.8 (+https://ai-studybuddy.local/bot)",
+      },
+    });
 
     // 处理重定向
     if (response.status >= 300 && response.status < 400) {
@@ -352,7 +357,7 @@ export class UrlFetcher {
       }
       const nextUrl = new URL(location, url.toString());
       validateUrl(nextUrl);
-      return this.fetchWithRedirects(nextUrl, agent, redirectCount + 1);
+      return this.fetchWithRedirects(nextUrl, agent, redirectCount + 1, controller, deadline);
     }
 
     if (!response.ok) {

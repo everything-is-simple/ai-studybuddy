@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import test from "node:test";
 import JSZip from "jszip";
 
@@ -197,4 +199,16 @@ test("PptxConverter rejects oversized slide XML", async () => {
 
   assert.equal(result.ok, false);
   assert.ok(result.error.includes("slide") || result.error.includes("大小"));
+});
+
+test("PptxConverter treats string input as a local file path", async (t) => {
+  const tempDir = await mkdtemp(path.join(tmpdir(), "studybuddy-pptx-path-"));
+  t.after(() => rm(tempDir, { recursive: true, force: true }));
+  const filePath = path.join(tempDir, "sample.pptx");
+  await writeFile(filePath, await buildPptxBuffer([{ num: 1, text: "路径 PPTX" }]));
+
+  const result = await new PptxConverter().convert(filePath);
+
+  assert.equal(result.ok, true);
+  assert.ok(result.text.includes("路径 PPTX"));
 });

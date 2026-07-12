@@ -4,6 +4,7 @@
 // ============================================================
 
 import type { ConverterResult } from "@ai-studybuddy/shared";
+import fs from "fs";
 import JSZip from "jszip";
 
 // ── 安全限制 ────────────────────────────────────────────────
@@ -135,7 +136,7 @@ async function loadPptxZip(buffer: Buffer): Promise<JSZip> {
 
 export class PptxConverter {
   async convert(input: Buffer | string): Promise<ConverterResult> {
-    const buffer = typeof input === "string" ? Buffer.from(input) : input;
+    const buffer = typeof input === "string" ? fs.readFileSync(input) : input;
 
     if (!buffer || buffer.length === 0) {
       return {
