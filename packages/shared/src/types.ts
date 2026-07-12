@@ -114,16 +114,36 @@ export interface MindMap {
 // Adapter 类型约定
 // ============================================================
 
+export interface DocxMetadata {
+  embeddedVisualCount?: number;
+}
+
+export interface PptxMetadata {
+  slideCount?: number;
+  textSlideCount?: number;
+  imageSlideCount?: number;
+}
+
+export interface UrlMetadata {
+  title?: string;
+  byline?: string;
+  finalUrl?: string;
+  redirectCount?: number;
+  byteCount?: number;
+}
+
+export type ConverterSourceType = "pdf" | "image" | "text" | "docx" | "url" | "html" | "pptx";
+
 export interface ConverterResult {
   ok: boolean;
-  sourceType: "pdf" | "image" | "text";
+  sourceType: ConverterSourceType;
   text?: string;
   metadata?: {
     pageCount?: number;
     charCount?: number;
     hasFormula?: boolean;
     hasTable?: boolean;
-  };
+  } & DocxMetadata & PptxMetadata & UrlMetadata;
   warnings?: string[];
   error?: string;
 }

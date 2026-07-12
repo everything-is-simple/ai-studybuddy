@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import JSZip from "jszip";
 
 const backendDir = path.resolve(import.meta.dirname, "..");
 
@@ -55,4 +56,92 @@ test("dev converter returns a JSON 413 when an upload exceeds the file limit", a
   const json = await response.json();
   assert.equal(json.success, false);
   assert.equal(json.error.code, "FILE_TOO_LARGE");
+});
+
+// ── 最小 DOCX / PPTX 生成辅助 ─────────────────────────────────
+
+async function buildMinimalDocx() {
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  zip.folder("_rels").file(".rels", `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.folder("word").file("document.xml", `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>API DOCX 测试</w:t></w:r></w:p></w:body></w:document>`);
+  return zip.generateAsync({ type: "nodebuffer" });
+}
+
+async function buildMinimalPptx() {
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/></Types>`);
+  zip.folder("_rels").file(".rels", `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>`);
+  zip.folder("ppt").file("presentation.xml", "<ppt/>");
+  zip.folder("ppt").folder("slides").file("slide1.xml", `<?xml version="1.0"?><p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><a:p><a:r><a:t>API PPTX 测试</a:t></a:r></a:p></p:spTree></p:cSld></p:sld>`);
+  return zip.generateAsync({ type: "nodebuffer" });
+}
+
+// ── 新端点 smoke test ────────────────────────────────────────
+
+test("dev converter /docx returns extracted text", async (t) => {
+  const backend = await startBackend(t);
+  const buffer = await buildMinimalDocx();
+  const form = new FormData();
+  form.append("file", new Blob([buffer]), "api-test.docx");
+
+  const response = await fetch(`http://127.0.0.1:${backend.port}/api/dev/converter/docx`, {
+    method: "POST",
+    body: form,
+  });
+
+  assert.equal(response.status, 200);
+  const json = await response.json();
+  assert.equal(json.success, true);
+  assert.equal(json.data.sourceType, "docx");
+  assert.ok(json.data.text.includes("API DOCX 测试"));
+});
+
+test("dev converter /pptx returns extracted text", async (t) => {
+  const backend = await startBackend(t);
+  const buffer = await buildMinimalPptx();
+  const form = new FormData();
+  form.append("file", new Blob([buffer]), "api-test.pptx");
+
+  const response = await fetch(`http://127.0.0.1:${backend.port}/api/dev/converter/pptx`, {
+    method: "POST",
+    body: form,
+  });
+
+  assert.equal(response.status, 200);
+  const json = await response.json();
+  assert.equal(json.success, true);
+  assert.equal(json.data.sourceType, "pptx");
+  assert.ok(json.data.text.includes("API PPTX 测试"));
+});
+
+test("dev converter /url rejects SSRF with 403", async (t) => {
+  const backend = await startBackend(t);
+
+  const response = await fetch(`http://127.0.0.1:${backend.port}/api/dev/converter/url`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ url: "http://127.0.0.1/secret" }),
+  });
+
+  const json = await response.json();
+  assert.equal(response.status, 403);
+  assert.equal(json.success, true);
+  assert.equal(json.data.ok, false);
+  assert.ok(json.data.error.includes("SSRF"));
+});
+
+test("dev converter /url rejects missing url with 400", async (t) => {
+  const backend = await startBackend(t);
+
+  const response = await fetch(`http://127.0.0.1:${backend.port}/api/dev/converter/url`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({}),
+  });
+
+  assert.equal(response.status, 400);
+  const json = await response.json();
+  assert.equal(json.success, false);
+  assert.equal(json.error.code, "URL_REQUIRED");
 });

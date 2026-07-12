@@ -338,14 +338,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **前置条件**：0.8-T04A 全部完成（能力卡已填，smoke test 通过）—— 已满足。
 
-- [ ] 新增 `DocxConverter` 封装 mammoth，统一实现 `convert(input: Buffer | string): Promise<ConverterResult>`
-- [ ] 新增 `UrlFetcher` 封装 fetch + Readability，统一接口 `fetch(url: string): Promise<ConverterResult>`
-- [ ] 新增 `PptxConverter` 封装 jszip + XML 提取，统一接口与上一致
-- [ ] `TextConverter` 扩展支持 `.html`/`.htm` 文件（复用 Readability）
-- [ ] 在 `dev-converter.ts` 补充对应 `/api/dev/converter/docx`、`/url`、`/pptx` 端点，供 smoke test 验证
-- [ ] 更新文件类型路由：上传接口按扩展名/MIME 分派到对应 Converter，`.doc`/`.ppt`/`.xls` 返回友好提示而非静默失败
-- [ ] `pnpm type-check`、`pnpm build`、`pnpm test` 全部通过
-- [ ] 运行 `scripts/check-docs-governance.ps1`，无报错后提交
+- [x] 新增 `DocxConverter` 封装 mammoth，统一实现 `convert(input: Buffer | string): Promise<ConverterResult>`
+- [x] 新增 `UrlFetcher` 封装 fetch + Readability，统一接口 `fetch(url: string): Promise<ConverterResult>`
+- [x] 新增 `PptxConverter` 封装 jszip + XML 提取，统一接口与上一致
+- [x] `TextConverter` 扩展支持 `.html`/`.htm` 文件（复用 Readability）
+- [x] 在 `dev-converter.ts` 补充对应 `/api/dev/converter/docx`、`/url`、`/pptx` 端点，供 smoke test 验证
+- [x] 更新文件类型路由：上传接口按扩展名/MIME 分派到对应 Converter，`.doc`/`.ppt`/`.xls` 返回友好提示而非静默失败
+- [x] `pnpm type-check`、`pnpm build`、`pnpm test` 全部通过
+- [x] 运行 `scripts/check-docs-governance.ps1`，无报错后提交
 
 ### 0.8-T05：共同底座——AI Provider Router
 

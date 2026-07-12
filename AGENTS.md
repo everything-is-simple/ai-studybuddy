@@ -86,3 +86,37 @@ AI 每次处理仓库任务前，必须先读 `docs/00-文档索引-Index.md`。
 7. 提交前必须运行 `scripts/check-docs-governance.ps1`。
 
 不要凭记忆新建文档，不要从旧 zip 直接恢复旧稿到 `docs/`，不要硬编码 `G:\...` 路径到未来业务代码中。
+
+## AI StudyBuddy 任务执行标准工作流
+
+这个流程已经在 phase0.8 T03 t04 t04A 完整走通，作为后续任务的默认执行方式：
+
+1. **读文档、定范围**
+   - 先读 `docs/00-文档索引-Index.md` 和相关设计文档（04 任务清单、08 架构、10 后端规范等）
+   - 确认触发条件、现有代码状态和边界
+
+2. **出行动计划**
+   - 每一个任务实现前，必须创建该任务的行动计划，并统一存放到 `.plans/` 目录（例如 `.plans/phase0.8-task04B-plan.md`）
+   - 用 CreatePlan 输出详细计划：目标、文件路径、接口设计、测试策略、治理步骤
+   - 提交给 Claude 审查，根据反馈修订（如路径 normalize、multer 限制、文件状态等）
+   - 用户批准后进入实现
+
+3. **执行实现**
+   - 用 TodoWrite 拆分任务并逐项完成
+   - 编码遵循项目规范：路径走 `paths.ts`、环境变量走 `env.ts`、Adapter 输出格式、API 信封、中文优先
+
+4. **验证**
+   - `pnpm type-check`
+   - `pnpm build`
+   - `pnpm test`
+   - 必要时做手动 smoke test
+
+5. **审查与修复**
+   - GPT 代码审查
+   - 修复边界问题并新增回归测试
+   - 重新跑验证
+
+6. **收尾**
+   - 更新 `docs/04-开发任务清单-Todo-List.md`
+   - 运行 `scripts/check-docs-governance.ps1` 和 `git diff --check`
+   - 提交并推送

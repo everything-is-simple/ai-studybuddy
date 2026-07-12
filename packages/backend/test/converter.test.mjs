@@ -6,7 +6,7 @@ import test from "node:test";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const { PdfConverter, OcrConverter, TextConverter } = await import(
+const { PdfConverter, OcrConverter, TextConverter, dispatchConverter } = await import(
   pathToFileURL(path.join(__dirname, "../dist/adapters/converter.js")).href
 );
 
@@ -78,6 +78,38 @@ test("TextConverter returns ok=false for invalid UTF-8 bytes", async () => {
   assert.ok(result.error, "应返回错误信息");
 });
 
+test("TextConverter extracts text from HTML buffer", async () => {
+  const converter = new TextConverter();
+  const html = `<!DOCTYPE html>
+<html><head><title>HTML 测试</title></head>
+<body>
+  <nav>导航</nav>
+  <article><p>这是 HTML 正文。</p></article>
+  <script>alert('x')</script>
+</body></html>`;
+  const buffer = Buffer.from(html, "utf-8");
+
+  const result = await converter.convert(buffer);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.sourceType, "html");
+  assert.ok(result.text.includes("这是 HTML 正文"));
+  assert.ok(!result.text.includes("alert"), "script 内容应被剥离");
+  assert.equal(result.metadata.title, "HTML 测试");
+});
+
+test("TextConverter treats explicit html sourceType as HTML", async () => {
+  const converter = new TextConverter();
+  const html = "<div>无 doctype 的 HTML 片段</div>";
+  const buffer = Buffer.from(html, "utf-8");
+
+  const result = await converter.convert(buffer, "html");
+
+  assert.equal(result.ok, true);
+  assert.equal(result.sourceType, "html");
+  assert.ok(result.text.includes("无 doctype 的 HTML 片段"));
+});
+
 test("OcrConverter recognizes image when rapidocr-onnxruntime is available", async () => {
   // 仅在图片样本存在时运行
   let imageBuffer;
@@ -119,4 +151,67 @@ test("OcrConverter returns ok=false when image file does not exist", async () =>
   assert.equal(result.ok, false);
   assert.equal(result.sourceType, "image");
   assert.ok(result.error, "应返回错误信息");
+});
+
+// ── dispatchConverter 路由 ───────────────────────────────────
+
+test("dispatchConverter routes .txt to TextConverter", async () => {
+  const text = "dispatch 文本测试";
+  const result = await dispatchConverter({
+    buffer: Buffer.from(text, "utf-8"),
+    filename: "note.txt",
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.sourceType, "text");
+  assert.equal(result.text, text);
+});
+
+test("dispatchConverter routes .html to HTML TextConverter", async () => {
+  const html = `<!DOCTYPE html><html><head><title>T</title></head><body><article>正文</article></body></html>`;
+  const result = await dispatchConverter({
+    buffer: Buffer.from(html, "utf-8"),
+    filename: "page.html",
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.sourceType, "html");
+  assert.ok(result.text.includes("正文"));
+});
+
+test("dispatchConverter rejects old .doc format", async () => {
+  const result = await dispatchConverter({
+    buffer: Buffer.from("fake doc", "utf-8"),
+    filename: "report.doc",
+  });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes("DOCX") || result.error.includes("PDF"));
+});
+
+test("dispatchConverter rejects .xlsx format", async () => {
+  const result = await dispatchConverter({
+    buffer: Buffer.from("fake xlsx", "utf-8"),
+    filename: "sheet.xlsx",
+  });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes("Excel") || result.error.includes("PDF"));
+});
+
+test("dispatchConverter rejects .zip archive", async () => {
+  const result = await dispatchConverter({
+    buffer: Buffer.from("fake zip", "utf-8"),
+    filename: "archive.zip",
+  });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes("解压"));
+});
+
+test("dispatchConverter requires buffer or url", async () => {
+  const result = await dispatchConverter({ filename: "only-filename.txt" });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes("buffer") || result.error.includes("url"));
 });
