@@ -73,6 +73,7 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
     setSuccessMessage(null);
     try {
       await createExam({
+        semesterId,
         courseInstanceId,
         name: examForm.name.trim(),
         attemptType: 'normal',

@@ -24,14 +24,13 @@ export function getExams(
   courseInstanceId: string,
   signal?: AbortSignal
 ): Promise<AssessmentAttemptDto[]> {
-  return request<AssessmentAttemptDto[]>(
-    `/courses/${encodeURIComponent(courseInstanceId)}/exams?semesterId=${encodeURIComponent(semesterId)}`,
-    { signal }
-  );
+  const params = new URLSearchParams({ semesterId, courseInstanceId });
+  return request<AssessmentAttemptDto[]>(`/exams?${params.toString()}`, { signal });
 }
 
 export function createExam(
   data: {
+    semesterId: string;
     courseInstanceId: string;
     name: string;
     attemptType: string;
@@ -40,7 +39,7 @@ export function createExam(
   },
   signal?: AbortSignal
 ): Promise<AssessmentAttemptDto> {
-  return request<AssessmentAttemptDto>(`/courses/${encodeURIComponent(data.courseInstanceId)}/exams`, {
+  return request<AssessmentAttemptDto>('/exams', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(data),
@@ -53,10 +52,8 @@ export function getStudyTasks(
   courseInstanceId: string,
   signal?: AbortSignal
 ): Promise<StudyTaskDto[]> {
-  return request<StudyTaskDto[]>(
-    `/courses/${encodeURIComponent(courseInstanceId)}/study-tasks?semesterId=${encodeURIComponent(semesterId)}`,
-    { signal }
-  );
+  const params = new URLSearchParams({ semesterId, courseInstanceId });
+  return request<StudyTaskDto[]>(`/study-tasks?${params.toString()}`, { signal });
 }
 
 export function getTimeline(

@@ -353,6 +353,36 @@ test('only confirmed examAt drives task priority', async (t) => {
   assert.equal(confirmedTask.json.data.priorityBucket, 1);
 });
 
+test('lists study tasks for the requested course in deadline order', async (t) => {
+  const backend = await startBackend(t);
+  const semesterId = await initializeReadySemester(backend.port);
+  const course = await createCourse(backend.port, semesterId, '数据结构');
+  const anotherCourse = await createCourse(backend.port, semesterId, '操作系统');
+
+  await createTask(backend.port, semesterId, course.json.data.id, { title: '无截止任务' });
+  await createTask(backend.port, semesterId, course.json.data.id, {
+    title: '较晚截止任务',
+    deadlineAt: '2026-05-20T08:00:00.000Z',
+  });
+  await createTask(backend.port, semesterId, course.json.data.id, {
+    title: '较早截止任务',
+    deadlineAt: '2026-05-10T08:00:00.000Z',
+  });
+  await createTask(backend.port, semesterId, anotherCourse.json.data.id, { title: '其他课程任务' });
+
+  const listed = await requestJson(
+    backend.port,
+    'GET',
+    `/api/study-tasks?semesterId=${semesterId}&courseInstanceId=${course.json.data.id}`
+  );
+  assert.equal(listed.status, 200);
+  assert.equal(listed.json.success, true);
+  assert.deepEqual(
+    listed.json.data.map((task) => task.title),
+    ['较早截止任务', '较晚截止任务', '无截止任务']
+  );
+  assert.equal(listed.json.data[0].courseInstanceId, course.json.data.id);
+});
 // ── 事件与时间线 ──────────────────────────────────────────────
 
 test('study-events reject cross-semester course or task references', async (t) => {

@@ -414,7 +414,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 页面 3：笔记展示（react-markdown + KaTeX + Markmap 渲染）+ 知识模块与对应学习任务
 - [x] 不要求样式完美，要求功能可用
 
-> **T08 收尾证据（2026-07-13）**：新建 `packages/frontend/` 包（React 18 + Vite + TypeScript + react-router-dom），含 `api-client.ts`、`study-rhythm-api.ts`、`note-builder-api.ts`、`use-api-request.ts`、`use-material-polling.ts`、三页 MVP 页面、App Shell、全局样式与 `test/api-client.test.ts`；后端补丁统一 `listMaterials`/`getMaterial` 汇总 SQL 并返回 `noteId`，`MaterialDto` 增加 `noteId` 字段，新增 `noteId` 回归断言。验证：`pnpm type-check` 零错误、`pnpm -r --filter frontend run build` 成功、前端测试 6/6 通过、后端测试 96/96 通过、`scripts/check-docs-governance.ps1` 通过、`git diff --check` 无尾部空白。
+> **T08 收尾证据（2026-07-14）**：新建 `packages/frontend/` 包（React 18 + Vite + TypeScript + react-router-dom），含 `api-client.ts`、`study-rhythm-api.ts`、`note-builder-api.ts`、`use-api-request.ts`、`use-material-polling.ts`、三页 MVP 页面、App Shell、全局样式与 API 客户端回归测试；后端补丁统一 `listMaterials`/`getMaterial` 汇总 SQL 并返回 `noteId`，`MaterialDto` 增加 `noteId` 字段，新增 `noteId` 回归断言。2026-07-14 修复前端 S1 API 契约：考试改用 `/api/exams` 并传递 `semesterId`，新增 `GET /api/study-tasks` 供笔记页读取关联任务。验证：`pnpm type-check` 零错误、前后端构建和测试通过、浏览器验收创建课程/考试目标与资料上传成功、`scripts/check-docs-governance.ps1` 通过、`git diff --check` 无尾部空白。
 
 ### 0.8-T09：端到端验证
 

@@ -67,6 +67,15 @@ router.get('/exams', (req: Request, res: Response) => {
   }
 });
 
+// ── GET /api/study-tasks ────────────────────────────────────
+router.get('/study-tasks', (req: Request, res: Response) => {
+  try {
+    const tasks = service.listTasks(req.query.semesterId, req.query.courseInstanceId);
+    return res.json(okResponse(tasks));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
 // ── POST /api/study-tasks ───────────────────────────────────
 router.post('/study-tasks', (req: Request, res: Response) => {
   try {

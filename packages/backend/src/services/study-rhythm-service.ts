@@ -442,6 +442,39 @@ export class StudyRhythmService {
     }
   }
 
+  listTasks(semesterId: unknown, courseInstanceId?: unknown): StudyTaskDto[] {
+    if (!isUuid(semesterId)) {
+      throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    }
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      if (courseInstanceId !== undefined) {
+        this.requireCourse(db, semesterId, String(courseInstanceId));
+      }
+      let rows: Record<string, unknown>[];
+      if (courseInstanceId !== undefined) {
+        rows = db
+          .prepare(
+            `SELECT * FROM study_tasks
+             WHERE course_instance_id = ?
+             ORDER BY CASE WHEN deadline_at IS NULL THEN 1 ELSE 0 END, deadline_at ASC, created_at DESC, id DESC`
+          )
+          .all(courseInstanceId) as Record<string, unknown>[];
+      } else {
+        rows = db
+          .prepare(
+            `SELECT t.* FROM study_tasks t
+             JOIN course_instances c ON t.course_instance_id = c.id
+             WHERE c.semester_id = ?
+             ORDER BY CASE WHEN t.deadline_at IS NULL THEN 1 ELSE 0 END, t.deadline_at ASC, t.created_at DESC, t.id DESC`
+          )
+          .all(semesterId) as Record<string, unknown>[];
+      }
+      return rows.map((row) => this.toTaskDto(db, row));
+    } finally {
+      db.close();
+    }
+  }
   createTask(input: {
     semesterId: unknown;
     courseInstanceId: unknown;
