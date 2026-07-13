@@ -115,7 +115,8 @@ export class NoteBuilderService {
     const semesterId = requiredUuid(input.semesterId, "MISSING_REQUIRED_FIELD", "semesterId 不能为空");
     const courseInstanceId = requiredUuid(input.courseInstanceId, "MISSING_REQUIRED_FIELD", "courseInstanceId 不能为空");
     if (!input.file) throw new NoteBuilderError("MISSING_REQUIRED_FIELD", 400, "file 不能为空");
-    if (input.file.size <= 0 || input.file.size > 10 * 1024 * 1024) throw new NoteBuilderError("FILE_TOO_LARGE", 413, "文件大小超过 10MB 限制");
+    if (input.file.size <= 0) throw new NoteBuilderError("INVALID_FILE", 400, "文件为空或大小无效");
+    if (input.file.size > 10 * 1024 * 1024) throw new NoteBuilderError("FILE_TOO_LARGE", 413, "文件大小超过 10MB 限制");
     const materialFileType = fileType(input.file.originalname, input.file.mimetype);
     const title = string(input.title);
     if (title.length > 200) throw new NoteBuilderError("INVALID_TITLE", 400, "title 不能超过 200 字符");
@@ -183,7 +184,11 @@ export class NoteBuilderService {
       const attempts = Number((db.prepare("SELECT COALESCE(sum(attempts), 0) AS total FROM jobs WHERE material_id = ? AND job_type = ?").get(materialId, type) as { total: number }).total);
       if (attempts >= 3) throw new NoteBuilderError("MAX_RETRIES_EXCEEDED", 409, "已达到最大重试次数");
       try { db.prepare(`INSERT INTO jobs (id, job_type, status, payload_json, attempts, max_attempts, available_at, created_at, material_id) VALUES (?, ?, 'pending', ?, 0, 3, ?, ?, ?)`).run(id(), type, JSON.stringify({ semesterId }), now(), now(), materialId); }
-      catch { throw new NoteBuilderError("JOB_ALREADY_PENDING", 409, "已有待执行或运行中的任务"); }
+      catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("UNIQUE constraint")) throw new NoteBuilderError("JOB_ALREADY_PENDING", 409, "已有待执行或运行中的任务");
+        throw err;
+      }
       return { id: materialId, status: material.status, attempts, jobStatus: "pending" };
     } finally { db.close(); }
   }
@@ -252,7 +257,8 @@ export class NoteBuilderService {
       const learnStatus = input.learnStatus === undefined ? String(module.learn_status) : string(input.learnStatus); const importance = input.importance === undefined ? String(module.importance) : string(input.importance); const difficulty = input.difficulty === undefined ? String(module.difficulty) : string(input.difficulty);
       if (!["not_started", "learning", "mastered"].includes(learnStatus) || !["low", "medium", "high", "critical"].includes(importance) || !["easy", "medium", "hard"].includes(difficulty)) throw new NoteBuilderError("INVALID_ENUM_VALUE", 400, "知识模块枚举值非法");
       const updatedAt = now(); db.transaction(() => { db.prepare("UPDATE knowledge_modules SET learn_status = ?, importance = ?, difficulty = ?, exam_relevance = ?, last_reviewed_at = ?, updated_at = ? WHERE id = ?").run(learnStatus, importance, difficulty, input.examRelevance === undefined ? module.exam_relevance : string(input.examRelevance), learnStatus !== module.learn_status ? updatedAt : module.last_reviewed_at, updatedAt, moduleId); if (learnStatus !== module.learn_status) db.prepare("INSERT INTO study_events (id, course_instance_id, task_id, source_system, event_type, title, workload_minutes, evidence_ref, source_confidence, quality_gate, parent_visible, occurred_at, created_at) VALUES (?, ?, NULL, 'S2', 'knowledge_module_status_changed', ?, NULL, ?, 1, 'passed', 1, ?, ?)").run(id(), module.course_instance_id, `知识模块状态更新：${module.title}`, `km:${moduleId}`, updatedAt, updatedAt); })();
-      return this.listKnowledgeModules(semesterId, module.course_instance_id, {}).items.find((item) => item.id === moduleId);
+      const updated = db.prepare("SELECT * FROM knowledge_modules WHERE id = ?").get(moduleId) as Record<string, unknown> | undefined;
+      return updated ? this.toKnowledgeModule(updated) : undefined;
     } finally { db.close(); }
   }
 }

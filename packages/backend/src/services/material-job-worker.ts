@@ -2,6 +2,8 @@ import crypto from "crypto";
 import fs from "fs";
 import { Readable } from "stream";
 import type { DatabaseType } from "../db/connection";
+import { openExistingDbAtPath } from "../db/connection";
+import { getGlobalDbPath } from "../db/paths";
 import { StorageAdapter, dispatchConverter, AiProviderRouter } from "../adapters";
 import type { AiProvider } from "../adapters";
 import { NoteBuilderService } from "./note-builder-service";
@@ -36,8 +38,6 @@ export class MaterialJobWorker {
   stopPolling(timer: NodeJS.Timeout): void { clearInterval(timer); }
 
   private listReadySemesterIds(): string[] {
-    const { openExistingDbAtPath } = require("../db/connection") as typeof import("../db/connection");
-    const { getGlobalDbPath } = require("../db/paths") as typeof import("../db/paths");
     const globalDbPath = getGlobalDbPath();
     if (!fs.existsSync(globalDbPath)) return [];
     const global = openExistingDbAtPath(globalDbPath);
@@ -130,7 +130,7 @@ export class MaterialJobWorker {
       db.transaction(() => {
         db.prepare("INSERT INTO structured_notes (id, material_id, knowledge_module_id, markdown, highlights_json, model, prompt_version, token_count, generation_duration_ms, created_at, updated_at) VALUES (?, ?, NULL, ?, ?, ?, 's2-note-v1.0', ?, ?, ?, ?)").run(noteId, job.material_id, parsed.markdown, JSON.stringify(parsed.highlights), response.model, response.tokenUsed, response.latencyMs, timestamp, timestamp);
         db.prepare("INSERT INTO mind_maps (id, note_id, format, data, created_at) VALUES (?, ?, 'markmap', ?, ?)").run(id(), noteId, mindMapData, timestamp);
-        const insertModule = db.prepare("INSERT INTO knowledge_modules (id, course_instance_id, material_id, title, importance, difficulty, exam_content, source_evidence, learn_status, content_summary, exam_relevance, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, 'not_started', ?, ?, ?, ?)");
+        const insertModule = db.prepare("INSERT INTO knowledge_modules (id, course_instance_id, material_id, title, importance, difficulty, source_evidence, learn_status, content_summary, exam_relevance, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'not_started', ?, ?, ?, ?)");
         for (const item of parsed.knowledgeModules) insertModule.run(id(), material.course_instance_id, job.material_id, item.title, item.importance, item.difficulty, item.sourceEvidence, item.contentSummary ?? null, item.examRelevance ?? null, timestamp, timestamp);
         db.prepare("UPDATE materials SET status = 'completed', ai_generation_error_message = NULL, updated_at = ? WHERE id = ?").run(timestamp, job.material_id);
         db.prepare("INSERT INTO study_events (id, course_instance_id, task_id, source_system, event_type, title, workload_minutes, evidence_ref, source_confidence, quality_gate, parent_visible, occurred_at, created_at) VALUES (?, ?, NULL, 'S2', 'material_note_completed', '资料笔记已生成', NULL, ?, 1, 'passed', 1, ?, ?)").run(id(), material.course_instance_id, `material:${job.material_id}`, timestamp, timestamp);
