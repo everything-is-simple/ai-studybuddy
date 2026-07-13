@@ -697,11 +697,21 @@ export class StudyRhythmService {
         "状态值不合法"
       );
     }
+    if (
+      input.occurredAt !== undefined &&
+      !isIsoDatetime(input.occurredAt)
+    ) {
+      throw new StudyRhythmError(
+        "TASK_STATUS_INVALID",
+        409,
+        "occurredAt 必须是有效的 ISO 日期时间"
+      );
+    }
     const newStatus = String(input.status) as StudyTaskStatus;
     const occurredAt =
-      input.occurredAt !== undefined && isIsoDatetime(input.occurredAt)
-        ? String(input.occurredAt)
-        : new Date().toISOString();
+      input.occurredAt === undefined
+        ? new Date().toISOString()
+        : String(input.occurredAt);
 
     const db = this.openReadySemesterDb(input.semesterId);
     try {

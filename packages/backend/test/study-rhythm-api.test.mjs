@@ -256,6 +256,34 @@ test("PATCH todo to done writes exactly one study_task_completed event", async (
   assert.equal(completedEvents[0].sourceSystem, "S1");
 });
 
+
+test("rejects malformed occurredAt when completing a task", async (t) => {
+  const backend = await startBackend(t);
+  const semesterId = await initializeReadySemester(backend.port);
+  const course = await createCourse(backend.port, semesterId, "地理");
+  const task = await createTask(backend.port, semesterId, course.json.data.id, { title: "地理作业" });
+
+  const invalidTime = await requestJson(
+    backend.port,
+    "PATCH",
+    `/api/study-tasks/${task.json.data.id}/status`,
+    {
+      semesterId,
+      status: "done",
+      occurredAt: "not-a-timestamp",
+    }
+  );
+
+  assert.equal(invalidTime.status, 409);
+  assert.equal(invalidTime.json.error.code, "TASK_STATUS_INVALID");
+
+  const timeline = await requestJson(backend.port, "GET", `/api/timeline?semesterId=${semesterId}`);
+  assert.equal(timeline.status, 200);
+  assert.equal(
+    timeline.json.data.filter((event) => event.eventType === "study_task_completed").length,
+    0
+  );
+});
 test("rejects illegal status transitions and missing tasks", async (t) => {
   const backend = await startBackend(t);
   const semesterId = await initializeReadySemester(backend.port);

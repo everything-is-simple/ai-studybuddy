@@ -10,10 +10,10 @@
 
 **实施前门禁：**
 
-- [ ] 保持 `.claude/settings.local.json` 为本地 Claude 配置，不读取、不提交；实现前确认 `.gitignore` 增加 `.claude/` 规则或用户明确将其作为仓库配置管理。
+- [x] 保持 `.claude/settings.local.json` 为本地 Claude 配置，不读取、不提交；实现前确认 `.gitignore` 增加 `.claude/` 规则或用户明确将其作为仓库配置管理。
 - [x] Claude 已审查：确认 API 边界、现有 schema、`/api/dev/init-semester` ready 行为和测试基础设施；识别了逾期状态与 T02 migration 前置项两项必须修订的问题。
 - [x] 已按审查反馈修订：逾期仅作 T06 派生展示状态；将课程表、考试确认状态和考试日期变更历史纳入 semester migration v2。
-- [ ] 用户明确批准修订计划后才开始下面的实现任务。
+- [x] 用户明确批准修订计划后才开始下面的实现任务。
 
 ---
 
@@ -71,7 +71,7 @@
 - Modify: `.gitignore`
 - Modify: `.plans/phase0.8-task06-plan.md`
 
-- [ ] **Step 1：确认本地配置不进入提交范围**
+- [x] **Step 1：确认本地配置不进入提交范围**
 
 运行：
 
@@ -82,7 +82,7 @@ Get-Content .claude\settings.local.json | ConvertFrom-Json | Select-Object -Expa
 
 预期：仅确认其为本机权限/工具配置；不在终端、计划、测试或 Git 历史输出任何具体 secret、token、命令白名单或私有路径。
 
-- [ ] **Step 2：写失败前置检查**
+- [x] **Step 2：写失败前置检查**
 
 运行：
 
@@ -92,7 +92,7 @@ git check-ignore -v .claude/settings.local.json
 
 预期：当前失败，证明该本地文件存在误提交风险。
 
-- [ ] **Step 3：最小实现仓库忽略规则**
+- [x] **Step 3：最小实现仓库忽略规则**
 
 在 `.gitignore` 的 IDE 区域追加：
 
@@ -101,7 +101,7 @@ git check-ignore -v .claude/settings.local.json
 .claude/
 ```
 
-- [ ] **Step 4：验证忽略规则**
+- [x] **Step 4：验证忽略规则**
 
 运行：
 
@@ -112,7 +112,7 @@ git status --short
 
 预期：第一条显示 `.gitignore` 匹配；第二条不再显示 `.claude/`。
 
-- [ ] **Step 5：提交检查点**
+- [x] **Step 5：提交检查点**
 
 ```powershell
 git add .gitignore .plans/phase0.8-task06-plan.md
@@ -130,7 +130,7 @@ git commit -m "chore: ignore local Claude settings"
 - Modify: `packages/backend/src/db/migrations.ts`
 - Modify: `packages/backend/test/semester-initialization.test.mjs`
 
-- [ ] **Step 1：为 migration v2 编写失败测试**
+- [x] **Step 1：为 migration v2 编写失败测试**
 
 在 `semester-initialization.test.mjs` 新增两条测试：第一条以全新临时 `semester.db` 调用 `initSemesterDbAtPath()`，断言连续 v1 → v2 初始化；第二条手工构造只到 v1 的学期库并插入既有 `assessment_attempts` 行，再通过 `applyMigrations()` 升级到 v2，断言旧数据保留且新增列默认值正确。
 
@@ -160,7 +160,7 @@ assert.deepEqual(existing, {
 assert.equal(getAppliedVersion(db, "semester"), 2);
 ```
 
-- [ ] **Step 2：运行 migration 测试并确认红灯**
+- [x] **Step 2：运行 migration 测试并确认红灯**
 
 ```powershell
 pnpm --filter @ai-studybuddy/backend run build
@@ -169,7 +169,7 @@ node --test --test-name-pattern="semester migration v2" packages/backend/test/se
 
 预期：当前最高 semester migration 为 v1，测试失败。
 
-- [ ] **Step 3：实现 v2 SQL**
+- [x] **Step 3：实现 v2 SQL**
 
 在 `migration-semester-v2.ts` 定义单个 SQL 常量：
 
@@ -202,11 +202,11 @@ CREATE TABLE assessment_date_changes (
 
 约束：`weekday` 后续写入时仅允许 `0..6`；考试确认状态只由 service 允许的四个枚举写入；v2 不回填或修改既有 v1 SQL。两条 `ALTER TABLE` 与两个 `CREATE TABLE` 必须放在同一个 `SEMESTER_V2_SQL` 常量中，依赖现有 migration runner 对单个版本 SQL 与 `schema_migrations` 记录的同一 SQLite transaction 提交，确保 v2 不会半应用。
 
-- [ ] **Step 4：注册并验证 migration v2**
+- [x] **Step 4：注册并验证 migration v2**
 
 在 `SEMESTER_MIGRATIONS` 追加 `{ version: 2, sql: SEMESTER_V2_SQL }`。运行 Task 2 Step 2 的测试，预期通过；再运行既有 migration gap 测试，确保连续版本规则不变。
 
-- [ ] **Step 5：提交前置检查点**
+- [x] **Step 5：提交前置检查点**
 
 ```powershell
 git add packages/backend/src/db/sql/migration-semester-v2.ts packages/backend/src/db/migrations.ts packages/backend/test/semester-initialization.test.mjs
@@ -222,7 +222,7 @@ git commit -m "feat(backend): add S1 semester migration v2"
 - Reference: `packages/backend/test/semester-initialization.test.mjs`
 - Reference: `packages/backend/test/dev-storage-api.test.mjs`
 
-- [ ] **Step 1：实现隔离后端启动 helper**
+- [x] **Step 1：实现隔离后端启动 helper**
 
 直接复制 `packages/backend/test/dev-storage-api.test.mjs` 的已验证启动/清理模式：`spawn(process.execPath, ["dist/server.js"])`、`t.after()` 清理、100 次 × 100ms 健康检查。仅将端口范围设为 `48000 + Math.floor(Math.random() * 3000)`；它与 semester `40000-42999`、storage `45000-47999`、converter `51000-51999` 不重叠。
 
@@ -240,7 +240,7 @@ for (let attempt = 0; attempt < 100; attempt += 1) {
 throw new Error("built backend did not become healthy");
 ```
 
-- [ ] **Step 2：写入 API 先决条件 helper 与首个失败测试**
+- [x] **Step 2：写入 API 先决条件 helper 与首个失败测试**
 
 通过现有 `/api/dev/init-semester` 为每个测试创建 ready 学期；然后写：
 
@@ -257,7 +257,7 @@ test("creates and lists courses within one ready semester", async (t) => {
 });
 ```
 
-- [ ] **Step 3：补齐失败测试矩阵**
+- [x] **Step 3：补齐失败测试矩阵**
 
 至少定义以下独立用例，先运行并确认当前均因路由/服务不存在而失败：
 
@@ -276,7 +276,7 @@ test("creates and lists courses within one ready semester", async (t) => {
 // 12. 只有 confirmationStatus=confirmed 的 examAt 参与优先级；pending/rejected/superseded 不参与。
 ```
 
-- [ ] **Step 4：运行目标测试，确认红灯**
+- [x] **Step 4：运行目标测试，确认红灯**
 
 ```powershell
 pnpm --filter @ai-studybuddy/backend run build
@@ -285,7 +285,7 @@ node --test --test-reporter=spec packages/backend/test/study-rhythm-api.test.mjs
 
 预期：测试因缺少 `/api/courses` 等路由而失败；不得先修改实现让它绿。
 
-- [ ] **Step 5：提交测试检查点**
+- [x] **Step 5：提交测试检查点**
 
 ```powershell
 git add packages/backend/test/study-rhythm-api.test.mjs
@@ -301,7 +301,7 @@ git commit -m "test(backend): define S1 study rhythm API contracts"
 - Create: `packages/backend/src/services/study-rhythm-service.ts`
 - Test: `packages/backend/test/study-rhythm-api.test.mjs`
 
-- [ ] **Step 1：定义最小共享 API DTO**
+- [x] **Step 1：定义最小共享 API DTO**
 
 在 `packages/shared/src/types.ts` 中新增或调整为与学期库一致的只读 DTO（字段采用 API camelCase，数据库列在 service 中显式映射）：
 
@@ -363,7 +363,7 @@ export interface StudyEventDto {
 
 保留现有旧共享类型只在仍被使用时；若与新 DTO 重叠，先通过 `rg` 找所有 import，再一次性替换调用点，不留下两个含义不同的 `Course` 写模型。
 
-- [ ] **Step 2：创建 service 的依赖与错误边界**
+- [x] **Step 2：创建 service 的依赖与错误边界**
 
 在 `study-rhythm-service.ts` 中只导出一个 service 类和受控错误：
 
@@ -383,7 +383,7 @@ export class StudyRhythmService {
 
 service 在进入学期库前查询 global `semesters`：必须存在、`ready = 1`，并使用该 semester id 的标准 `semester.db` 路径；禁止接受客户端传来的数据库路径。
 
-- [ ] **Step 3：实现通用关联校验与 column-to-DTO 映射**
+- [x] **Step 3：实现通用关联校验与 column-to-DTO 映射**
 
 实现私有 helper：`openReadySemesterDb(semesterId)`、`requireCourse(db, courseInstanceId)`、`requireExamForCourse(db, assessmentAttemptId, courseInstanceId)`、`requireTask(db, taskId)`、`toCourseDto(row)`、`toExamDto(row)`、`toTaskDto(row)`、`toEventDto(row)`。
 
@@ -395,7 +395,7 @@ const row = db.prepare(
 ).get(courseInstanceId);
 ```
 
-- [ ] **Step 4：目标测试变为局部通过**
+- [x] **Step 4：目标测试变为局部通过**
 
 ```powershell
 pnpm --filter @ai-studybuddy/backend run type-check
@@ -414,7 +414,7 @@ node --test --test-name-pattern="courses" packages/backend/test/study-rhythm-api
 - Modify: `packages/backend/src/server.ts`
 - Test: `packages/backend/test/study-rhythm-api.test.mjs`
 
-- [ ] **Step 1：实现 service 写入事务**
+- [x] **Step 1：实现 service 写入事务**
 
 `createCourse` 只校验 optional `retakeOfCourseInstanceId` 的 UUID 格式后原样插入；不得查询当前或其他学期库验证其存在性，因为重修引用按定义可跨学期。`createExam` 验证课程实例后插入 assessment attempt。时间字段由服务生成 ISO 字符串，ID 使用 `crypto.randomUUID()`：
 
@@ -429,7 +429,7 @@ db.transaction(() => {
 
 `createExam` 严格校验 `examAt` 是有效 ISO datetime；`sourceConfidence` 存在时限制在 `0..1`；`attemptType` 只接受 `normal | makeup | other`；`confirmationStatus` 只接受 `pending | confirmed | rejected | superseded`。INSERT 必须省略 `child_confirmed`，依赖 v1 默认值 `0`；创建 confirmed 考试时写入 `confirmation_status = 'confirmed'` 与 `confirmed_at = now`，创建其他状态时写入对应状态与 `confirmed_at = null`。
 
-- [ ] **Step 2：实现 Router 的 JSON 校验与响应映射**
+- [x] **Step 2：实现 Router 的 JSON 校验与响应映射**
 
 `study-rhythm.ts` 处理：
 
@@ -446,7 +446,7 @@ router.post("/courses", async (req, res) => {
 
 同样实现 `GET /courses`、`POST /exams`、`GET /exams`。请求缺失必填字段返回 400；service 业务错误保留其 code/status；未知错误返回 `S1_REQUEST_FAILED`，不得把堆栈返回客户端。
 
-- [ ] **Step 3：挂载 Router**
+- [x] **Step 3：挂载 Router**
 
 在 `packages/backend/src/server.ts` 中：
 
@@ -457,7 +457,7 @@ app.use("/api", studyRhythmRouter);
 
 不要把正式 S1 API 放在 `/api/dev`。
 
-- [ ] **Step 4：运行课程/考试测试**
+- [x] **Step 4：运行课程/考试测试**
 
 ```powershell
 pnpm --filter @ai-studybuddy/backend run build
@@ -466,7 +466,7 @@ node --test --test-name-pattern="courses|assessment|exam" packages/backend/test/
 
 预期：课程创建/读取、多考试目标、跨学期 course/exam/task 业务关联拒绝、合法跨学期重修 UUID 原样保存与输入校验通过。
 
-- [ ] **Step 5：提交检查点**
+- [x] **Step 5：提交检查点**
 
 ```powershell
 git add packages/shared/src/types.ts packages/backend/src/services/study-rhythm-service.ts packages/backend/src/api/study-rhythm.ts packages/backend/src/server.ts packages/backend/test/study-rhythm-api.test.mjs
@@ -482,11 +482,11 @@ git commit -m "feat(backend): add S1 courses and exams API"
 - Modify: `packages/backend/src/api/study-rhythm.ts`
 - Modify: `packages/backend/test/study-rhythm-api.test.mjs`
 
-- [ ] **Step 1：实现任务创建与关联校验**
+- [x] **Step 1：实现任务创建与关联校验**
 
 `createTask` 必须确认 course instance 存在；若 `assessmentAttemptId` 存在，必须属于该 course；若 `knowledgeModuleId` 非空，仅作为 UUID 文本保存，不查询未实现的 S2 表。校验 `estimatedMinutes` 为正整数，`deadlineAt` 为有效 ISO datetime。
 
-- [ ] **Step 2：实现状态机**
+- [x] **Step 2：实现状态机**
 
 只允许以下转换：
 
@@ -502,7 +502,7 @@ const allowedTransitions: Record<StudyTaskStatus, readonly StudyTaskStatus[]> = 
 
 `done` 与 `skipped` 是终态；非法转换返回 `TASK_STATUS_INVALID`。任务更新、`completed_at` 更新与首次完成事件插入必须放在同一个 SQLite transaction。
 
-- [ ] **Step 3：首次完成事件去重**
+- [x] **Step 3：首次完成事件去重**
 
 当且仅当旧状态不是 `done`、新状态为 `done` 时插入：
 
@@ -515,7 +515,7 @@ INSERT INTO study_events (
 
 重复 PATCH `done` 不写第二条事件；事件标题使用任务标题，不写 AI 文本或学习正文。
 
-- [ ] **Step 4：实现确定性 priority 派生**
+- [x] **Step 4：实现确定性 priority 派生**
 
 在 list/query helper 内计算而不存库：
 
@@ -525,7 +525,7 @@ priorityBucket = derivedOverdue ? 0 : confirmedExamAt ? 1 : deadlineAt ? 2 : 3;
 
 排序键依次为 `priorityBucket`、对应时间、`createdAt`、`id`；只使用 `confirmation_status = 'confirmed'` 的考试日期。`derivedOverdue` 不写回 status；该逻辑只供创建响应/后续读取使用，不提前实现逾期扫描 Job 或 AI 排程。
 
-- [ ] **Step 5：运行任务/状态测试**
+- [x] **Step 5：运行任务/状态测试**
 
 ```powershell
 node --test --test-name-pattern="task|derived overdue|priority|done" packages/backend/test/study-rhythm-api.test.mjs
@@ -533,7 +533,7 @@ node --test --test-name-pattern="task|derived overdue|priority|done" packages/ba
 
 预期：关联校验、状态机、一次性事件与确定性排序全部通过。
 
-- [ ] **Step 6：提交检查点**
+- [x] **Step 6：提交检查点**
 
 ```powershell
 git add packages/backend/src/services/study-rhythm-service.ts packages/backend/src/api/study-rhythm.ts packages/backend/test/study-rhythm-api.test.mjs
@@ -549,11 +549,11 @@ git commit -m "feat(backend): add S1 study task workflow"
 - Modify: `packages/backend/src/api/study-rhythm.ts`
 - Modify: `packages/backend/test/study-rhythm-api.test.mjs`
 
-- [ ] **Step 1：实现 `createEvent`**
+- [x] **Step 1：实现 `createEvent`**
 
 允许 `sourceSystem` 仅为当前已知的 `S1`、`S2`、`S3`、`S4`、`S5`、`S7`；`courseInstanceId`、`taskId` 可选，但存在时必须在同一 semester 且 task 的 course 与 supplied course 一致。`occurredAt` 默认当前时间，`workloadMinutes` 为非负整数，`parentVisible` 为 boolean。
 
-- [ ] **Step 2：实现 `getTimeline`**
+- [x] **Step 2：实现 `getTimeline`**
 
 查询指定 `semester.db` 的 `study_events`，可选 `courseInstanceId`，`limit` 默认 50、范围 `1..200`，排序：
 
@@ -563,7 +563,7 @@ ORDER BY occurred_at DESC, created_at DESC, id DESC
 
 返回 DTO，不返回 DB 文件路径、内部 SQL、输入/输出正文或其他学期数据。
 
-- [ ] **Step 3：实现 API 路由并验证标准信封**
+- [x] **Step 3：实现 API 路由并验证标准信封**
 
 ```ts
 router.post("/study-events", ...);
@@ -572,7 +572,7 @@ router.get("/timeline", ...);
 
 所有客户端可预期错误为 JSON `ApiError`；不存在的 course/task、跨学期引用、非法 limit 分别有稳定 code。
 
-- [ ] **Step 4：运行时间线测试**
+- [x] **Step 4：运行时间线测试**
 
 ```powershell
 node --test --test-name-pattern="event|timeline|semester isolation" packages/backend/test/study-rhythm-api.test.mjs
@@ -580,7 +580,7 @@ node --test --test-name-pattern="event|timeline|semester isolation" packages/bac
 
 预期：其他子系统来源写入、课程过滤、倒序、limit、跨学期隔离和错误信封通过。
 
-- [ ] **Step 5：提交检查点**
+- [x] **Step 5：提交检查点**
 
 ```powershell
 git add packages/backend/src/services/study-rhythm-service.ts packages/backend/src/api/study-rhythm.ts packages/backend/test/study-rhythm-api.test.mjs
@@ -598,7 +598,7 @@ git commit -m "feat(backend): add S1 study event timeline"
 - Modify if contract changes: `docs/10-后端开发规范-Backend-Guidelines.md`
 - Test: `packages/backend/test/study-rhythm-api.test.mjs`
 
-- [ ] **Step 1：执行目标与全量验证**
+- [x] **Step 1：执行目标与全量验证**
 
 ```powershell
 pnpm --filter @ai-studybuddy/backend run build
@@ -612,7 +612,7 @@ git diff --check
 
 预期：新 S1 测试和全量测试全部通过；文档治理与 diff 检查无错误。
 
-- [ ] **Step 2：进行 GPT 代码审查**
+- [x] **Step 2：进行 GPT 代码审查**
 
 审查清单：
 
@@ -628,15 +628,15 @@ git diff --check
 - .claude 是否未进入暂存范围？
 ```
 
-- [ ] **Step 3：修复审查问题并新增回归测试**
+- [x] **Step 3：修复审查问题并新增回归测试**
 
 每一个可复现问题先添加到 `study-rhythm-api.test.mjs`，确认红灯，再做最小修复；完成后重跑本任务 Step 1 的全套命令。
 
-- [ ] **Step 4：回填任务清单与必要 SoT**
+- [x] **Step 4：回填任务清单与必要 SoT**
 
 在 `docs/04-开发任务清单-Todo-List.md` 中只勾选真正完成的 T06 子项，并记录实际测试命令与总数。若 API 合同、状态机或数据库边界与 `08/09/10` 当前 SoT 不一致，在同一变更中做定点回填；不创建 S2 文档。
 
-- [ ] **Step 5：最终提交与推送**
+- [x] **Step 5：最终提交与推送**
 
 ```powershell
 git status --short
