@@ -100,6 +100,6 @@ export const config = {
   smtpAuthCode: process.env.SMTP_AUTH_CODE ?? "",
   smtpTo: process.env.SMTP_TO ?? "",
 
-  // 飞书（T06 时使用）
+  // 飞书（S6 ParentReport 使用）
   feishuWebhookUrl: process.env.FEISHU_WEBHOOK_URL ?? "",
 } as const;

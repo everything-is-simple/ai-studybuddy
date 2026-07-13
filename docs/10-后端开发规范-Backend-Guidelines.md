@@ -1,7 +1,7 @@
 # AI StudyBuddy 后端开发规范 Backend Guidelines
 
-**版本**：v1.0
-**日期**：2026-07-11
+**版本**：v1.1
+**日期**：2026-07-13
 **状态**：有效
 **用途**：Phase 0.8 正式后端开发的目录结构、SQLite 约定、Adapter 输出、日志、环境变量和验证规则。写第一个后端服务 / Adapter / API / Worker 前必须读本文件。
 
@@ -203,13 +203,15 @@ AI Router 日志额外只允许记录 `taskType`、Provider 名称、model、tok
 | `AI_BASE_URL` | legacy 单 Provider 的 OpenAI-compatible Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否 |
 | `AI_API_KEY` | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用 | 否 |
 | `AI_MODEL` | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `SMTP_HOST` | QQ SMTP 主机 | T06 时填 |
-| `SMTP_PORT` | QQ SMTP 端口 | T06 时填 |
-| `SMTP_SECURE` | 是否 SSL | T06 时填 |
-| `SMTP_USER` | QQ 邮箱地址 | T06 时填 |
-| `SMTP_AUTH_CODE` | QQ SMTP 授权码 | T06 时填 |
-| `SMTP_TO` | 家长收件邮箱 | T06 时填 |
-| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL | T06 时填 |
+| `SMTP_HOST` | QQ SMTP 主机；`.env.example` 已给出 `smtp.qq.com` 示例 | 否；S6 正式发送报告时必填 |
+| `SMTP_PORT` | QQ SMTP 端口；`.env.example` 已给出 `465` 示例 | 否；S6 正式发送报告时必填 |
+| `SMTP_SECURE` | 是否 SSL；`.env.example` 已给出 `true` 示例 | 否；S6 正式发送报告时必填 |
+| `SMTP_USER` | QQ 邮箱地址；只填入 `.env.local` | 否；S6 正式发送报告时必填 |
+| `SMTP_AUTH_CODE` | QQ SMTP 授权码；只填入 `.env.local`，不得进入日志或提交 | 否；S6 正式发送报告时必填 |
+| `SMTP_TO` | 家长收件邮箱；只填入 `.env.local` | 否；S6 正式发送报告时必填 |
+| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL；只填入 `.env.local`，不得进入日志或提交 | 否；S6 正式发送报告时必填 |
+
+> Phase 0.7 已验证 QQ SMTP 与飞书 Webhook 的真实送达；Phase 0.8 T06 只实现 S1 学习节奏核心 API，不消费这些报告发送变量。正式业务发送留到 S6 ParentReport。
 
 ---
 

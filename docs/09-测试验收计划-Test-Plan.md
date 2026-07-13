@@ -111,7 +111,7 @@ Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**�
 - `packages/backend/test/ai-router.test.mjs` 覆盖单 Provider 成功、首 Provider 失败后的 fallback、全部 Provider 失败、超时后的 fallback、未配置与 OpenAI-compatible 响应解析。
 - timeout mock 必须监听 `fetch` 第二参数中的 `AbortSignal`；忽略 abort 会让 SDK timeout 测试永久等待，不能作为有效的 fallback 验收。
 - 已复跑 `pnpm type-check`、`pnpm build`、`pnpm test`：全量 77/77 通过；文档治理与 `git diff --check` 同步通过。
-- 后端 API 测试以互不重叠的随机端口区间启动子进程，健康检查预算为 10 秒；用于避免并行测试时的 `EADDRINUSE` 与 CPU 竞争导致的偶发健康检查失败。
+- 后端 API 测试以互不重叠的随机端口区间启动子进程，健康检查预算为 10 秒；`packages/backend` 的 `pnpm test` 固定 `node --test --test-concurrency=1`，避免多个 Express 子进程并行启动时由 CPU/端口竞争导致的偶发健康检查失败。
 
 ## 九、文档治理检查
 
