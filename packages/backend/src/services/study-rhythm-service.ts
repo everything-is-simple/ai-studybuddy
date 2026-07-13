@@ -334,6 +334,18 @@ export class StudyRhythmService {
         row.workload_minutes === null || row.workload_minutes === undefined
           ? undefined
           : Number(row.workload_minutes),
+      evidenceRef:
+        row.evidence_ref === null || row.evidence_ref === undefined
+          ? undefined
+          : String(row.evidence_ref),
+      sourceConfidence:
+        row.source_confidence === null || row.source_confidence === undefined
+          ? undefined
+          : Number(row.source_confidence),
+      qualityGate:
+        row.quality_gate === null || row.quality_gate === undefined
+          ? undefined
+          : (String(row.quality_gate) as StudyEventDto["qualityGate"]),
       parentVisible: row.parent_visible === 1,
       occurredAt: String(row.occurred_at),
       createdAt: String(row.created_at),

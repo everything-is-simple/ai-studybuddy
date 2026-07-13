@@ -71,6 +71,9 @@ export interface StudyEventDto {
   eventType: string;
   title: string;
   workloadMinutes?: number;
+  evidenceRef?: string;
+  sourceConfidence?: number;
+  qualityGate?: "passed" | "pending" | "failed";
   parentVisible: boolean;
   occurredAt: string;
   createdAt: string;
@@ -198,3 +201,60 @@ export interface ApiError {
 }
 
 export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
+
+// ============================================================
+// S2 NoteBuilder DTO
+// ============================================================
+
+export type MaterialStatus =
+  | "pending"
+  | "converting"
+  | "converted"
+  | "note_generating"
+  | "completed"
+  | "conversion_failed"
+  | "pending_quality_check";
+
+export type MaterialFileType = "pdf" | "image" | "text" | "docx" | "pptx";
+export type KnowledgeImportance = "low" | "medium" | "high" | "critical";
+export type KnowledgeDifficulty = "easy" | "medium" | "hard";
+export type KnowledgeLearnStatus = "not_started" | "learning" | "mastered";
+
+export interface HighlightDto {
+  content: string;
+  importance: "low" | "medium" | "high";
+  position: string;
+}
+
+export interface MaterialDto {
+  id: string;
+  courseInstanceId: string;
+  fileType: MaterialFileType;
+  status: MaterialStatus;
+  title?: string;
+  originalFilename?: string;
+  fileSizeBytes?: number;
+  storageKey?: string;
+  hasNote?: boolean;
+  knowledgeModuleCount?: number;
+  conversionRetryCount?: number;
+  aiRetryCount?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface KnowledgeModuleDto {
+  id: string;
+  courseInstanceId: string;
+  materialId?: string;
+  title: string;
+  contentSummary?: string;
+  importance: KnowledgeImportance;
+  difficulty: KnowledgeDifficulty;
+  examRelevance?: string;
+  sourceEvidence?: string;
+  learnStatus: KnowledgeLearnStatus;
+  lastReviewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}

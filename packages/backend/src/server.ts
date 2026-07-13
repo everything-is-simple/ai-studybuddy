@@ -7,8 +7,12 @@ import storageDevRouter from "./api/dev-storage";
 import converterDevRouter from "./api/dev-converter";
 import aiDevRouter from "./api/dev-ai";
 import studyRhythmRouter from "./api/study-rhythm";
+import noteBuilderRouter from "./api/note-builder";
+import { MaterialJobWorker } from "./services/material-job-worker";
 
 const app = express();
+const materialJobWorker = new MaterialJobWorker();
+let workerTimer: NodeJS.Timeout | undefined;
 const PORT = config.backendPort;
 const HOST = config.backendHost;
 
@@ -36,10 +40,20 @@ app.use("/api/dev/ai", aiDevRouter);
 
 // ── S1 学习节奏业务路由 ───────────────────────────────────
 app.use("/api", studyRhythmRouter);
+app.use("/api", noteBuilderRouter);
 
 // ── 启动 ──────────────────────────────────────────────────
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
+  workerTimer = materialJobWorker.startPolling(2000);
   console.log(`✅ Backend running on http://${HOST}:${PORT}`);
   console.log(`   - Health: http://${HOST}:${PORT}/api/health`);
   console.log(`   - Dev:    http://${HOST}:${PORT}/api/dev/db-health`);
 });
+
+
+function shutdown(): void {
+  if (workerTimer) materialJobWorker.stopPolling(workerTimer);
+  server.close(() => process.exit(0));
+}
+process.once("SIGINT", shutdown);
+process.once("SIGTERM", shutdown);

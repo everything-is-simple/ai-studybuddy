@@ -381,12 +381,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 0.8-T07：S2 资料笔记——核心 API
 
-- [ ] 开工前按索引触发并创建 `docs/subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`
-- [ ] 实现 `POST /materials/upload`（上传 PDF / 图片 / 文本）
-- [ ] 接入格式转换层，由 SQLite Job Worker 异步处理
-- [ ] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据；从资料/笔记形成带来源证据的知识模块
-- [ ] 实现 `GET /knowledge-modules`（按课程/考试范围读取）与模块状态更新；不开始练习/错题表实现
-- [ ] 实现 `GET /notes/:id`（获取笔记详情）
+- [x] 开工前按索引触发并创建 `docs/subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md`
+- [x] 实现 `POST /materials/upload`（上传 PDF / 图片 / 文本 / DOCX / PPTX，URL 延后）
+- [x] 接入格式转换层，由 SQLite Job Worker 异步处理；转换失败保留原始文件并支持重试/手动粘贴
+- [x] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据；AI 不可用时保留 normalized_text 并进入 `pending_quality_check`
+- [x] 实现 `GET /knowledge-modules`（按课程读取）与模块状态更新；不开始练习/错题表实现
+- [x] 实现 `GET /notes/:id`（获取笔记详情）
+> **T07 收尾证据（2026-07-13）**：新增 `packages/backend/src/api/note-builder.ts`、`packages/backend/src/services/note-builder-service.ts`、`packages/backend/src/services/material-job-worker.ts`、`packages/backend/src/db/sql/migration-semester-v3.ts`、`packages/backend/test/note-builder-api.test.mjs`；更新 `packages/backend/src/db/migrations.ts`、`packages/backend/src/server.ts`、`packages/shared/src/types.ts`、`packages/backend/test/semester-initialization.test.mjs`。S2 集成测试覆盖文本上传、Worker 转换、AI 未配置降级、资料详情、非法重试、mock AI 成功生成笔记/思维导图/知识模块、materials 列表元数据、knowledge_modules 分页响应、MIME 不匹配拒绝和 StudyEvent 证据字段；全量后端测试 96/96 通过。
 
 ### 0.8-T08：前端——最小可用页面
 

@@ -248,7 +248,7 @@ test("versioned migration applies each version once and rejects a gap", async (t
   }
 });
 
-test("semester migration v2 applies schedule_entries, confirmation columns and date changes table", async (t) => {
+test("semester migrations apply v2 and v3 schema changes", async (t) => {
   const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-v2-fresh-"));
   t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 
@@ -256,7 +256,7 @@ test("semester migration v2 applies schedule_entries, confirmation columns and d
   const { getAppliedVersion } = await import("../dist/db/migrations.js");
   const db = initSemesterDbAtPath(path.join(dataRoot, "semester.db"));
   try {
-    assert.equal(getAppliedVersion(db, "semester"), 2);
+    assert.equal(getAppliedVersion(db, "semester"), 3);
     assert.ok(
       db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schedule_entries'").get()
     );
@@ -266,12 +266,21 @@ test("semester migration v2 applies schedule_entries, confirmation columns and d
     const columns = db.prepare("PRAGMA table_info(assessment_attempts)").all().map((row) => row.name);
     assert.ok(columns.includes("confirmation_status"));
     assert.ok(columns.includes("confirmed_at"));
+    const materialColumns = db.prepare("PRAGMA table_info(materials)").all().map((row) => row.name);
+    assert.ok(materialColumns.includes("original_filename"));
+    assert.ok(materialColumns.includes("truncated"));
+    const jobColumns = db.prepare("PRAGMA table_info(jobs)").all().map((row) => row.name);
+    assert.ok(jobColumns.includes("material_id"));
+    const eventColumns = db.prepare("PRAGMA table_info(study_events)").all().map((row) => row.name);
+    assert.ok(eventColumns.includes("evidence_ref"));
+    assert.ok(eventColumns.includes("source_confidence"));
+    assert.ok(eventColumns.includes("quality_gate"));
   } finally {
     db.close();
   }
 });
 
-test("semester migration v2 upgrades an existing v1 database with defaults", async (t) => {
+test("semester migrations upgrade an existing v1 database through v3", async (t) => {
   const dataRoot = await mkdtemp(path.join(tmpdir(), "studybuddy-t02-v2-upgrade-"));
   t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 
@@ -310,7 +319,7 @@ test("semester migration v2 upgrades an existing v1 database with defaults", asy
       confirmation_status: "pending",
       confirmed_at: null,
     });
-    assert.equal(getAppliedVersion(db, "semester"), 2);
+    assert.equal(getAppliedVersion(db, "semester"), 3);
   } finally {
     db.close();
   }

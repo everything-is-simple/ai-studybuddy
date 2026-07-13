@@ -14,6 +14,7 @@
 | 01 | [总PRD-产品需求-Product-Requirements.md](01-总PRD-产品需求-Product-Requirements.md) | ✅ 有效 | 产品目标、考试驱动学习闭环、七子系统总表、MVP 边界、AI 使用边界 |
 | 02 | [七子系统地图-Scenario-Systems.md](02-七子系统地图-Scenario-Systems.md) | ✅ 有效 | 七个场景子系统边界、共同业务对象、依赖关系、开发顺序 |
 | 03 | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md) | ✅ 有效 | S1 轻量 PRD，第一个子系统设计 |
+| 03b | [subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md](subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md) | ✅ 有效 | S2 轻量 PRD，资料上传/格式转换/AI 笔记/知识模块 |
 | 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | Phase 0.5 历史结论、Phase 0.7 Windows 原生验证、考试/知识模块闭环的 Phase 0.8/1 任务拆解 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
 | 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `I:\ai-studybuddy-*` 七目录职责、外部试炼场与单机数据边界 |
@@ -38,7 +39,7 @@
 | 子系统 | PRD 文档 | 是否已创建 | 触发条件 |
 |---|---|---|---|
 | S1 学习节奏 | `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md` | ✅ 已创建 | Phase 0.8 必需 |
-| S2 资料笔记 | `subsystems/S2-资料笔记子系统PRD-NoteBuilder.md` | 📅 未创建 | Phase 0.8 开始开发 S2 前触发 |
+| S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | ✅ 已创建 | Phase 0.8 开始开发 S2 前触发 |
 | S3 限时练习 | `subsystems/S3-限时练习子系统PRD-PracticeRunner.md` | 📅 未创建 | S2 MVP 完成后触发 |
 | S4 错题改错 | `subsystems/S4-错题改错子系统PRD-ErrorFixer.md` | 📅 未创建 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/S5-期末冲刺子系统PRD-ExamCrammer.md` | 📅 未创建 | Phase 2 触发 |
@@ -105,7 +106,7 @@ NN-中文标题-English-Title.md
 
 子系统文档放在 `subsystems/` 目录下，命名规范：
 - `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md`
-- `subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`
+- `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md`
 
 ### 5.3 提交前验证
 
@@ -138,7 +139,7 @@ git diff --check
 ### 6.3 准备开发 S2 资料笔记
 
 1. 重读 [08-共同底座架构](08-共同底座架构-Architecture.md)；
-2. 创建 `subsystems/S2-资料笔记子系统PRD-NoteBuilder.md`；
+2. 创建 `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md`；
 3. 在外部 `I:\ai-studybuddy-composer` 先调通 pdf-parse/RapidOCR/Markmap；
 4. 开工。
 
