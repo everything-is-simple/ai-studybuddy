@@ -10,16 +10,16 @@
 
 ## 阶段总览
 
-| 阶段 | 目标 | 状态 |
-|---|---|---|
-| Phase 0 | 文档重建、旧草稿归档、七子系统命名 | ✅ 已完成 |
-| Phase 0.5 | 成熟开源组件在 composer 独立调通 | ✅ 已完成（MVP 主路径 smoke test 全部通过） |
-| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证 | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
-| Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | 🔄 进行中 |
-| Phase 1 | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始 |
-| Phase 1.5 | 课堂录音 ASR（S7） | ⏳ 待开始 |
-| Phase 2 | 期末真题冲刺（S5） | ⏳ 待开始 |
-| Phase 3 | 打磨家长端、预警、安全 | ⏳ 待开始 |
+| 阶段      | 目标                                    | 状态                                                               |
+| --------- | --------------------------------------- | ------------------------------------------------------------------ |
+| Phase 0   | 文档重建、旧草稿归档、七子系统命名      | ✅ 已完成                                                          |
+| Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
+| Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
+| Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | 🔄 进行中                                                          |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始                                                          |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
+| Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
+| Phase 3   | 打磨家长端、预警、安全                  | ⏳ 待开始                                                          |
 
 ---
 
@@ -167,6 +167,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 门槛调整说明：原"HP 16GB 实机"硬性门槛已改为"开发机验收完成后即可进入 Phase 0.8；HP 实机（Windows 11、Node 22 LTS、16GB）作为可选兼容复测，在设备可用后执行，不阻塞主系统开发"。调整原因：开发机已完成所有功能性验证，HP 实机复测目的仅为兼容性确认，不应阻塞产品进展。
 
 ### 0.7-T01：Windows 原生环境基线
+
 - [x] 在外部试炼场建立独立样例，不加入主系统 pnpm workspace（开发机 Node 25.4.0 兼容通过）
 - [x] 记录开发机 Windows、Node、Python、内存与 Docker/WSL2 未运行状态
 - [x] 创建 `.env.example`，不写真实 SMTP 授权码、Webhook 或 API Key
@@ -174,46 +175,55 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 在孩子 HP 上用 Node.js 22 LTS 复测独立安装和环境基线（暂缓：设备不在身边）
 
 ### 0.7-T02：SQLite 基础与备份
+
 - [x] 安装并验证 `better-sqlite3` 的 Windows x64 预编译模块（开发机 Node 25.4.0 兼容通过；Node 22 LTS/HP 暂缓复测）
 - [x] 验证 WAL、CRUD、唯一约束、事务提交/回滚、关闭后备份与恢复（开发机离线通过）
 - [x] 建立 `courses`、`study_tasks`、`study_events`、`jobs`、`report_deliveries` 最小 schema（开发机离线通过）
 
 ### 0.7-T03：本地文件存储
+
 - [x] 验证 `materials/<course-id>/<yyyy-mm-dd>/`、`tmp/<job-id>/`、`exports/<yyyy-mm>/` 目录（开发机离线通过）
 - [x] 验证写入、读取、删除、临时文件清理和路径越界拒绝（开发机离线通过）
 - [x] 只保存逻辑 `storage_key`，不把绝对路径写入业务数据（开发机离线通过）
 
 ### 0.7-T04：SQLite Job Worker
+
 - [x] 验证单进程串行领取 `pending` Job（开发机离线通过）
 - [x] 验证首次失败后重试成功、达到上限后失败、过期 `running` Job 恢复（开发机离线通过）
 - [x] 验证进程重启后待处理 Job 不丢失（开发机离线通过）
 
 ### 0.7-T05：RapidOCR 子进程
+
 - [x] Node 用 `child_process` 调 Python RapidOCR，stdout 只返回 JSON（开发机离线通过）
 - [x] 验证成功、文件不存在、非零退出、超时终止（开发机离线通过；HP 峰值暂缓复测）
 - [ ] 记录 OCR 运行峰值内存，确认 Python 进程完成后退出（**⏳ 非阻塞技术债**：尚未在当前开发机补充记录）
 
 ### 0.7-T06：规则报告与 AI 失败兜底
+
 - [x] 用 SQLite 统计课程、任务、完成/逾期、学习时长、日周月趋势和考前提醒（开发机离线通过）
 - [x] 验证 AI 润色成功时附加总结，失败时仍发送规则报告（开发机离线通过）
 - [x] 验证报告不含资料原文、笔记正文、答案或聊天内容（开发机离线通过）
 
 ### 0.7-T07：QQ SMTP 邮件
+
 - [x] 用 `nodemailer` 验证 QQ SMTP HTML 中文报告和可选附件（真实通过）
 - [x] 验证错误授权码/网络失败写入诊断但不泄露授权码
 - [x] 用真实父母收件邮箱完成一次手工验证（163 测试邮箱已收到）
 
 ### 0.7-T08：飞书 Webhook
+
 - [x] 验证完整日报卡片、周报/月报合并区块、考前提醒区块（真实通过）
 - [x] 验证 Webhook 失败不阻止邮件渠道
 - [x] 用父母飞书群真实收到卡片完成手工验证
 
 ### 0.7-T09：Windows 任务计划
+
 - [x] 使用临时 `AIStudyBuddy-Phase07-Smoke` 任务验证 `report.js`、日志、退出码和删除清理（管理员 PowerShell 真实通过）
 - [x] 验证 `StartWhenAvailable=true` 和固定周期发送记录去重：`report:2026-05-31`
 - [x] 记录正式 22:30 日报、周日/月末合并报告、考前 7/3/1 天提醒的规则
 
 ### 0.7-T10：整合链路与 HP 实机验收
+
 - [x] 开发机跑通离线整合：课程/任务 → 本地资料 → OCR → SQLite/文件 → 规则报告 → 渠道去重；QQ SMTP、飞书与 Windows 任务计划另行真实通过（HP 实机暂缓）
 - [x] 用固定 `2026-05-31 22:30 Asia/Shanghai` 验证日报、周报、月报、考前提醒合并（开发机离线通过）
 - [ ] 在孩子 HP Pavilion Aero（Windows 11、Ryzen 5 5625U、16GB）复测（**⏳ 兼容性验证，非阻塞**）
@@ -276,18 +286,18 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 统一输出格式：`ConverterResult { ok, sourceType, text, metadata, warnings, error }`
 
 > 2026-07-11 T04 收尾证据：`pnpm type-check`、`pnpm build`、`pnpm test` 均通过；新增 `PdfConverter`/`OcrConverter`/`TextConverter`、`ocr-worker.py`、`/api/dev/converter/*` 与回归测试；`pdf-parse` 固定版本 2.4.5，OCR Python 脚本通过 build 脚本复制到 `dist/scripts`。
-**资料格式边界（T04 基线）**：
+> **资料格式边界（T04 基线）**：
 
-| 输入 | 当前策略 | 目标阶段 |
-|---|---|---|
-| PDF | `PdfConverter` 提取文本；扫描版转 OCR 路径 | T04 已支持 |
-| JPG/JPEG/PNG 等图片 | `OcrConverter` 调 RapidOCR | T04 已支持 |
-| TXT/MD/CSV/JSON | UTF-8 文本直接读取；不承诺结构化语义 | T04 已支持 |
-| DOCX | `mammoth` 提取正文 | T04A 验证，T04B 装配 |
-| PPTX | `jszip` + XML 提取文字层；图片文字转 OCR | T04A 验证，T04B 装配 |
-| HTML/HTM、网页 URL | DOM 解析 + Readability 提取正文 | T04A 验证，T04B 装配 |
-| 音频 | 暂不处理，后续 ASR 任务 | 后续阶段 |
-| 视频 | 仅预留，不进入当前上传支持 | 后续阶段 |
+| 输入                | 当前策略                                   | 目标阶段             |
+| ------------------- | ------------------------------------------ | -------------------- |
+| PDF                 | `PdfConverter` 提取文本；扫描版转 OCR 路径 | T04 已支持           |
+| JPG/JPEG/PNG 等图片 | `OcrConverter` 调 RapidOCR                 | T04 已支持           |
+| TXT/MD/CSV/JSON     | UTF-8 文本直接读取；不承诺结构化语义       | T04 已支持           |
+| DOCX                | `mammoth` 提取正文                         | T04A 验证，T04B 装配 |
+| PPTX                | `jszip` + XML 提取文字层；图片文字转 OCR   | T04A 验证，T04B 装配 |
+| HTML/HTM、网页 URL  | DOM 解析 + Readability 提取正文            | T04A 验证，T04B 装配 |
+| 音频                | 暂不处理，后续 ASR 任务                    | 后续阶段             |
+| 视频                | 仅预留，不进入当前上传支持                 | 后续阶段             |
 
 **明确不支持**：`.doc`、`.xls/.xlsx`、`.ppt`、`.odt/.ods/.odp`、`.rtf`、`.epub`、`.zip/.rar/7z`、`.eml/.msg` 及其他 Office/容器格式。上传这些格式必须返回明确的“请另存为 PDF、DOCX、PPTX 或文本/图片”提示；不得静默按二进制文本读取。
 
@@ -327,6 +337,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
   - 完成标准：正文提取正确，`<script>`/`<style>` 剥除，中文无乱码；Readability 失败时 fallback 到 body 并给出 warning
 
 > **T04A 收尾证据（2026-07-11）**：
+>
 > - DOCX：`npm test` 4/4 通过；`samples/chinese-with-image-and-chart.docx` 中文正文完整、`embeddedVisualCount=3`；`samples/empty.docx` 受控失败；版本 mammoth 1.12.0 / jszip 3.10.1 / jsdom 26.1.0。
 > - URL/HTML：初始 `npm test` 22/22 通过；审查修复后 25/25 通过，新增 dispatcher 传入、连接层回环 DNS 拒绝、错误响应 body 取消与 Agent `finally` 关闭回归；本地 HTML 中文正文提取成功；真实 URL `https://zh.wikipedia.org/wiki/%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD` 首次抓取成功（`ok: true`，`charCount=124722`，`byteCount=2375227`，`durationMs=5467`），重复访问触发 429 反爬后受控返回人工出口；版本 undici 7.28.0 / jsdom 26.1.0 / @mozilla/readability 0.6.0。
 > - PPTX：`npm test` 5/5 通过；三页按数字序、含图页 OCR 提示、纯图片页 `ok: true`；审查修复将原恒真断言替换为命名/十进制/十六进制 XML entity 实测解码；版本 jszip 3.10.1。
@@ -346,7 +357,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 更新文件类型路由：上传接口按扩展名/MIME 分派到对应 Converter，`.doc`/`.ppt`/`.xls` 返回友好提示而非静默失败
 - [x] `pnpm type-check`、`pnpm build`、`pnpm test` 全部通过
 - [x] 运行 `scripts/check-docs-governance.ps1`，无报错后提交
+
 > **T04B 审查修复证据（2026-07-12）**：
+>
 > - 修复 URL 重定向链共享 10 秒总 timeout、IPv6/IPv4-mapped IPv6 SSRF 字面量拦截，以及 HTTP/HTTPS 跨协议端口拒绝；DNS `connect.lookup` 复验保留。
 > - URL Dev API 失败现返回标准 `ApiError` 信封和稳定错误码；DOCX/PPTX 的 `string` 输入统一解释为本地文件路径。
 > - 验证：`pnpm type-check`、`pnpm build`、`pnpm test`（71/71）、`scripts/check-docs-governance.ps1` 与 `git diff --check` 全部通过。
@@ -362,6 +375,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 暴露 Dev API `POST /api/dev/ai/generate`，返回标准 `ApiSuccess<AiResponse>`/`ApiError`；未配置返回 `AI_NOT_CONFIGURED`（503），全部失败返回 `AI_ALL_PROVIDERS_FAILED`（502）
 - [x] 单元测试覆盖：单 Provider 成功、fallback 到第二 Provider、全部失败、超时 fallback、未配置、OpenAI 响应解析
 - [x] `pnpm type-check`、`pnpm build`、`pnpm test`（77/77 通过）、`scripts/check-docs-governance.ps1`、`git diff --check` 全部通过
+
 > **T05 收尾证据（2026-07-12）**：`ai-router.test.mjs` 6 个测试通过；mock fetch 监听 `init.signal` abort 以验证 timeout fallback；Router 通过构造函数注入 `providers`/`fetch` 实现无真实网络依赖的测试。
 
 ### 0.8-T06：S1 学习节奏——核心 API
@@ -377,6 +391,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 任务首次进入 `done` 时写入唯一 `study_task_completed` 事件；重复 PATCH `done` 为幂等 no-op，不重复写事件
 - [x] 新增 `StudyRhythmService` 集中业务逻辑，新增 `packages/backend/src/api/study-rhythm.ts` 作为正式 `/api` 路由，不放入 `/api/dev`
 - [x] `pnpm type-check`、`pnpm build`、`pnpm test`（94/94 通过）、`scripts/check-docs-governance.ps1`、`git diff --check` 全部通过
+
 > **T06 收尾证据（2026-07-13）**：新增 `packages/backend/src/services/study-rhythm-service.ts`、`packages/backend/src/api/study-rhythm.ts`、`packages/backend/src/db/sql/migration-semester-v2.ts`、`packages/backend/test/study-rhythm-api.test.mjs`；更新 `packages/shared/src/types.ts`、`packages/backend/src/db/migrations.ts`、`packages/backend/src/server.ts`、`packages/backend/test/semester-initialization.test.mjs`。S1 API 集成测试 15/15 通过；全量测试 94/94 通过。2026-07-13 审查收尾修复：`PATCH /api/study-tasks/:id/status` 对显式传入的非法 `occurredAt` 返回 `TASK_STATUS_INVALID`，不再静默使用当前时间，也不会写入完成事件。`derivedOverdue` 与 `priorityBucket` 均不在数据库持久化；未确认考试不参与优先级；跨学期 `retakeOfCourseInstanceId` 合法 UUID 原样保存；API 始终返回标准 `ApiSuccess<T>` / `ApiError` 信封。
 
 ### 0.8-T07：S2 资料笔记——核心 API
@@ -387,14 +402,19 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 接入 AI Provider Router，生成结构化笔记 + 重点 + 思维导图数据；AI 不可用时保留 normalized_text 并进入 `pending_quality_check`
 - [x] 实现 `GET /knowledge-modules`（按课程读取）与模块状态更新；不开始练习/错题表实现
 - [x] 实现 `GET /notes/:id`（获取笔记详情）
+
 > **T07 收尾证据（2026-07-13）**：新增 `packages/backend/src/api/note-builder.ts`、`packages/backend/src/services/note-builder-service.ts`、`packages/backend/src/services/material-job-worker.ts`、`packages/backend/src/db/sql/migration-semester-v3.ts`、`packages/backend/test/note-builder-api.test.mjs`；更新 `packages/backend/src/db/migrations.ts`、`packages/backend/src/server.ts`、`packages/shared/src/types.ts`、`packages/backend/test/semester-initialization.test.mjs`。S2 集成测试覆盖文本上传、Worker 转换、AI 未配置降级、资料详情、非法重试、mock AI 成功生成笔记/思维导图/知识模块、materials 列表元数据、knowledge_modules 分页响应、MIME 不匹配拒绝和 StudyEvent 证据字段；全量后端测试 96/96 通过。
 
 ### 0.8-T08：前端——最小可用页面
 
-- [ ] 页面 1：课程列表 + 创建课程/考试目标
-- [ ] 页面 2：资料上传（拖拽或选择文件）
-- [ ] 页面 3：笔记展示（react-markdown + KaTeX + Markmap 渲染）+ 知识模块与对应学习任务
-- [ ] 不要求样式完美，要求功能可用
+**状态**：✅ 已完成（2026-07-13）。
+
+- [x] 页面 1：课程列表 + 创建课程/考试目标
+- [x] 页面 2：资料上传（拖拽或选择文件）
+- [x] 页面 3：笔记展示（react-markdown + KaTeX + Markmap 渲染）+ 知识模块与对应学习任务
+- [x] 不要求样式完美，要求功能可用
+
+> **T08 收尾证据（2026-07-13）**：新建 `packages/frontend/` 包（React 18 + Vite + TypeScript + react-router-dom），含 `api-client.ts`、`study-rhythm-api.ts`、`note-builder-api.ts`、`use-api-request.ts`、`use-material-polling.ts`、三页 MVP 页面、App Shell、全局样式与 `test/api-client.test.ts`；后端补丁统一 `listMaterials`/`getMaterial` 汇总 SQL 并返回 `noteId`，`MaterialDto` 增加 `noteId` 字段，新增 `noteId` 回归断言。验证：`pnpm type-check` 零错误、`pnpm -r --filter frontend run build` 成功、前端测试 6/6 通过、后端测试 96/96 通过、`scripts/check-docs-governance.ps1` 通过、`git diff --check` 无尾部空白。
 
 ### 0.8-T09：端到端验证
 
@@ -438,14 +458,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ## 任务状态说明
 
-| 符号 | 含义 |
-|---|---|
-| ✅ | 已完成并验证 |
-| 🔄 | 进行中 |
-| ⏳ | 待开始 |
-| ❌ | 已跳过或放弃（需注明原因） |
-| - [ ] | 待完成的具体任务 |
-| - [x] | 已完成的具体任务 |
+| 符号  | 含义                       |
+| ----- | -------------------------- |
+| ✅    | 已完成并验证               |
+| 🔄    | 进行中                     |
+| ⏳    | 待开始                     |
+| ❌    | 已跳过或放弃（需注明原因） |
+| - [ ] | 待完成的具体任务           |
+| - [x] | 已完成的具体任务           |
 
 ---
 
@@ -462,13 +482,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > 开发动作触发文档，而不是提前创建空文档。
 
-| 即将开始的动作 | 必须先存在/创建的文档 | 说明 |
-|---|---|---|
-| 设计共同数据模型、队列、对象存储、AI Provider、Adapter | `08-共同底座架构-Architecture.md` | 没有共同底座设计，不开始跨子系统实现 |
-| 调通第一个开源组件 smoke test | `09-测试验收计划-Test-Plan.md` | 先定义怎么验收，再调组件 |
-| 写第一个后端服务 / Adapter / API / Worker | `10-后端开发规范-Backend-Guidelines.md` | 先统一路径、日志、Adapter 输出约定 |
-| 写第一个正式前端页面 | `11-前端开发规范-Frontend-Guidelines.md` | 先统一页面、组件、状态和渲染规范 |
-| 多 AI / 多分支 / 多人协作 | `12-开发规范-Dev-Rules.md` | 先统一协作、提交、归档、备份规则 |
+| 即将开始的动作                                         | 必须先存在/创建的文档                    | 说明                                 |
+| ------------------------------------------------------ | ---------------------------------------- | ------------------------------------ |
+| 设计共同数据模型、队列、对象存储、AI Provider、Adapter | `08-共同底座架构-Architecture.md`        | 没有共同底座设计，不开始跨子系统实现 |
+| 调通第一个开源组件 smoke test                          | `09-测试验收计划-Test-Plan.md`           | 先定义怎么验收，再调组件             |
+| 写第一个后端服务 / Adapter / API / Worker              | `10-后端开发规范-Backend-Guidelines.md`  | 先统一路径、日志、Adapter 输出约定   |
+| 写第一个正式前端页面                                   | `11-前端开发规范-Frontend-Guidelines.md` | 先统一页面、组件、状态和渲染规范     |
+| 多 AI / 多分支 / 多人协作                              | `12-开发规范-Dev-Rules.md`               | 先统一协作、提交、归档、备份规则     |
 
 门禁流程：
 

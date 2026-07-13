@@ -3,9 +3,9 @@
 // 使用 jszip 解压 PPTX，按数字序提取各页文本并标注图片页。
 // ============================================================
 
-import type { ConverterResult } from "@ai-studybuddy/shared";
-import fs from "fs";
-import JSZip from "jszip";
+import type { ConverterResult } from '@ai-studybuddy/shared';
+import fs from 'fs';
+import JSZip from 'jszip';
 
 // ── 安全限制 ────────────────────────────────────────────────
 
@@ -23,9 +23,9 @@ function getZipLimits() {
 // 解码常见 XML 实体与数值实体
 function decodeXmlEntities(text: string): string {
   return text
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
@@ -71,15 +71,15 @@ function countPicturesInSlide(xmlText: string, relsMap: Map<string, string>): nu
 function looksLikeMedia(target: string): boolean {
   const lower = target.toLowerCase();
   return (
-    lower.endsWith(".png") ||
-    lower.endsWith(".jpg") ||
-    lower.endsWith(".jpeg") ||
-    lower.endsWith(".gif") ||
-    lower.endsWith(".bmp") ||
-    lower.endsWith(".svg") ||
-    lower.endsWith(".wmf") ||
-    lower.endsWith(".emf") ||
-    lower.includes("media/")
+    lower.endsWith('.png') ||
+    lower.endsWith('.jpg') ||
+    lower.endsWith('.jpeg') ||
+    lower.endsWith('.gif') ||
+    lower.endsWith('.bmp') ||
+    lower.endsWith('.svg') ||
+    lower.endsWith('.wmf') ||
+    lower.endsWith('.emf') ||
+    lower.includes('media/')
   );
 }
 
@@ -101,9 +101,7 @@ async function loadPptxZip(buffer: Buffer): Promise<JSZip> {
 
   const entries = Object.keys(zip.files);
   if (entries.length > limits.maxEntries) {
-    throw new Error(
-      `ZIP 条目数 ${entries.length} 超过安全上限 ${limits.maxEntries}，疑似压缩炸弹`
-    );
+    throw new Error(`ZIP 条目数 ${entries.length} 超过安全上限 ${limits.maxEntries}，疑似压缩炸弹`);
   }
 
   let totalSize = 0;
@@ -112,21 +110,16 @@ async function loadPptxZip(buffer: Buffer): Promise<JSZip> {
     if (!entry || entry.dir) continue;
 
     const uncompressedSize =
-      (entry as unknown as { _data?: { uncompressedSize?: number } })._data
-        ?.uncompressedSize ?? 0;
+      (entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
 
     if (uncompressedSize > limits.maxEntrySizeBytes) {
-      throw new Error(
-        `ZIP 条目 ${name} 解压后大小 ${uncompressedSize} 超过安全上限 ${limits.maxEntrySizeBytes} 字节`
-      );
+      throw new Error(`ZIP 条目 ${name} 解压后大小 ${uncompressedSize} 超过安全上限 ${limits.maxEntrySizeBytes} 字节`);
     }
     totalSize += uncompressedSize;
   }
 
   if (totalSize > limits.maxTotalSizeBytes) {
-    throw new Error(
-      `ZIP 累计解压大小 ${totalSize} 超过安全上限 ${limits.maxTotalSizeBytes} 字节`
-    );
+    throw new Error(`ZIP 累计解压大小 ${totalSize} 超过安全上限 ${limits.maxTotalSizeBytes} 字节`);
   }
 
   return zip;
@@ -136,13 +129,13 @@ async function loadPptxZip(buffer: Buffer): Promise<JSZip> {
 
 export class PptxConverter {
   async convert(input: Buffer | string): Promise<ConverterResult> {
-    const buffer = typeof input === "string" ? fs.readFileSync(input) : input;
+    const buffer = typeof input === 'string' ? fs.readFileSync(input) : input;
 
     if (!buffer || buffer.length === 0) {
       return {
         ok: false,
-        sourceType: "pptx",
-        error: "PPTX 文件内容为空",
+        sourceType: 'pptx',
+        error: 'PPTX 文件内容为空',
       };
     }
 
@@ -164,8 +157,8 @@ export class PptxConverter {
       if (slideFiles.length === 0) {
         return {
           ok: false,
-          sourceType: "pptx",
-          error: "未能找到幻灯片内容，文件可能不是有效 PPTX",
+          sourceType: 'pptx',
+          error: '未能找到幻灯片内容，文件可能不是有效 PPTX',
         };
       }
 
@@ -177,25 +170,21 @@ export class PptxConverter {
         const slideFile = zip.file(slidePath);
         if (!slideFile) continue;
 
-        const size =
-          (slideFile as unknown as { _data?: { uncompressedSize?: number } })._data
-            ?.uncompressedSize ?? 0;
+        const size = (slideFile as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
         if (size > getZipLimits().maxSlideXmlSizeBytes) {
           throw new Error(
             `幻灯片 XML ${slidePath} 大小 ${size} 超过安全上限 ${getZipLimits().maxSlideXmlSizeBytes} 字节`
           );
         }
 
-        const slideXml = await slideFile.async("text");
+        const slideXml = await slideFile.async('text');
         const texts = extractTextNodes(slideXml);
-        const slideText = texts.join("\n").trim();
+        const slideText = texts.join('\n').trim();
 
         // 读取对应 rels 文件
-        const relsPath = `ppt/slides/_rels/${slidePath.split("/").pop()}.rels`;
+        const relsPath = `ppt/slides/_rels/${slidePath.split('/').pop()}.rels`;
         const relsFile = zip.file(relsPath);
-        const relsMap = relsFile
-          ? parseRelsXml(await relsFile.async("text"))
-          : new Map<string, string>();
+        const relsMap = relsFile ? parseRelsXml(await relsFile.async('text')) : new Map<string, string>();
         const pictureCount = countPicturesInSlide(slideXml, relsMap);
         const hasPicture = pictureCount > 0;
 
@@ -221,24 +210,24 @@ export class PptxConverter {
           }
         }
 
-        slideTexts.push(parts.join("\n"));
+        slideTexts.push(parts.join('\n'));
       }
 
-      const fullText = slideTexts.join("\n\n").trim();
+      const fullText = slideTexts.join('\n\n').trim();
       const slideCount = slideFiles.length;
 
       if (fullText.length === 0) {
         return {
           ok: false,
-          sourceType: "pptx",
+          sourceType: 'pptx',
           metadata: { slideCount, textSlideCount, imageSlideCount },
-          error: "未能从 PPTX 中提取到文本，所有页面均为空或纯图片",
+          error: '未能从 PPTX 中提取到文本，所有页面均为空或纯图片',
         };
       }
 
       return {
         ok: true,
-        sourceType: "pptx",
+        sourceType: 'pptx',
         text: fullText,
         metadata: {
           slideCount,
@@ -250,7 +239,7 @@ export class PptxConverter {
     } catch (error) {
       return {
         ok: false,
-        sourceType: "pptx",
+        sourceType: 'pptx',
         error: error instanceof Error ? error.message : String(error),
       };
     }

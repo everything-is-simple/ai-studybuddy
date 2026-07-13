@@ -3,8 +3,8 @@
 // 业务代码不自行拼接路径，统一从此模块获取。
 // ============================================================
 
-import path from "path";
-import { config } from "../config/env";
+import path from 'path';
+import { config } from '../config/env';
 
 const APP_DATA_ROOT = config.appDataRoot;
 
@@ -17,7 +17,7 @@ function resolveAppDataPath(relativePath: string): string {
 
   // 拒绝包含 .. 的路径段
   const segments = normalized.split(/[\\/]/);
-  if (segments.some((s) => s === "..")) {
+  if (segments.some((s) => s === '..')) {
     throw new Error(`[PATH] ESCAPE_DETECTED relativePath="${relativePath}"`);
   }
 
@@ -33,62 +33,49 @@ function resolveAppDataPath(relativePath: string): string {
 
 // ── 全局库 ──────────────────────────────────────────────────
 export function getGlobalDbPath(): string {
-  return resolveAppDataPath("studybuddy.db");
+  return resolveAppDataPath('studybuddy.db');
 }
 
 // ── 学期库 ──────────────────────────────────────────────────
 export function getSemesterDir(semesterId: string): string {
-  return resolveAppDataPath(path.join("semesters", semesterId));
+  return resolveAppDataPath(path.join('semesters', semesterId));
 }
 
 export function getSemesterDbPath(semesterId: string): string {
-  return resolveAppDataPath(path.join("semesters", semesterId, "semester.db"));
+  return resolveAppDataPath(path.join('semesters', semesterId, 'semester.db'));
 }
 
 export function getSemesterFilesDir(semesterId: string): string {
-  return resolveAppDataPath(
-    path.join("semesters", semesterId, "files")
-  );
+  return resolveAppDataPath(path.join('semesters', semesterId, 'files'));
 }
 
 export function getSemesterTmpDir(semesterId: string): string {
-  return resolveAppDataPath(
-    path.join("semesters", semesterId, "tmp")
-  );
+  return resolveAppDataPath(path.join('semesters', semesterId, 'tmp'));
 }
 
 // ── 学期文件目录 ────────────────────────────────────────────
-export function getSemesterCourseFilesDir(
-  semesterId: string,
-  courseId: string
-): string {
-  return resolveAppDataPath(
-    path.join("semesters", semesterId, "files", courseId)
-  );
+export function getSemesterCourseFilesDir(semesterId: string, courseId: string): string {
+  return resolveAppDataPath(path.join('semesters', semesterId, 'files', courseId));
 }
 
 export function getSemesterCommonFilesDir(semesterId: string): string {
-  return resolveAppDataPath(
-    path.join("semesters", semesterId, "files", "common")
-  );
+  return resolveAppDataPath(path.join('semesters', semesterId, 'files', 'common'));
 }
 
 // ── storage_key 解析 ────────────────────────────────────────
 export function resolveStorageKeyToPath(storageKey: string): string {
-  const normalizedKey = storageKey.replace(/\\/g, "/");
-  const segments = normalizedKey.split("/");
+  const normalizedKey = storageKey.replace(/\\/g, '/');
+  const segments = normalizedKey.split('/');
 
   if (
     segments.length !== 5 ||
-    segments[0] !== "semesters" ||
+    segments[0] !== 'semesters' ||
     !segments[1] ||
-    segments[2] !== "files" ||
+    segments[2] !== 'files' ||
     !segments[3] ||
     !segments[4] ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\.[^\\/]+)?$/i.test(
-      segments[4]
-    ) ||
-    segments.some((segment) => segment === "." || segment === "..")
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\.[^\\/]+)?$/i.test(segments[4]) ||
+    segments.some((segment) => segment === '.' || segment === '..')
   ) {
     throw new Error(`[PATH] INVALID_STORAGE_KEY storageKey="${storageKey}"`);
   }
@@ -98,11 +85,11 @@ export function resolveStorageKeyToPath(storageKey: string): string {
 
 // ── 公共目录 ────────────────────────────────────────────────
 export function getTmpDir(): string {
-  return resolveAppDataPath("tmp");
+  return resolveAppDataPath('tmp');
 }
 
 export function getBackupsDir(): string {
-  return resolveAppDataPath("backups");
+  return resolveAppDataPath('backups');
 }
 
 // ── 供测试或诊断使用 ────────────────────────────────────────

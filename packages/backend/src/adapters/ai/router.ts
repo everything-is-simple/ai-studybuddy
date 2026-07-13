@@ -1,8 +1,8 @@
-import type { AiRequest, AiResponse } from "@ai-studybuddy/shared";
-import { config, type ProviderConfig } from "../../config/env";
-import { aiLogger } from "../../utils/ai-logger";
-import { OpenAiProvider } from "./openai-provider";
-import type { AiProvider } from "./provider";
+import type { AiRequest, AiResponse } from '@ai-studybuddy/shared';
+import { config, type ProviderConfig } from '../../config/env';
+import { aiLogger } from '../../utils/ai-logger';
+import { OpenAiProvider } from './openai-provider';
+import type { AiProvider } from './provider';
 
 export class AiProviderError extends Error {
   readonly code: string;
@@ -16,10 +16,8 @@ export class AllProvidersFailedError extends AiProviderError {
   readonly failures: Array<{ provider: string; error: string }>;
   constructor(failures: Array<{ provider: string; error: string }>) {
     super(
-      "AI_ALL_PROVIDERS_FAILED",
-      `所有 AI Provider 均调用失败：${failures
-        .map((f) => `${f.provider}(${f.error})`)
-        .join("、")}`
+      'AI_ALL_PROVIDERS_FAILED',
+      `所有 AI Provider 均调用失败：${failures.map((f) => `${f.provider}(${f.error})`).join('、')}`
     );
     this.failures = failures;
   }
@@ -50,7 +48,7 @@ function buildProvidersFromConfig(fetchImpl?: typeof fetch): AiProvider[] {
   } else if (config.aiApiKey) {
     providers.push(
       new OpenAiProvider({
-        name: "legacy",
+        name: 'legacy',
         baseURL: config.aiBaseUrl,
         apiKey: config.aiApiKey,
         defaultModel: config.aiModel,
@@ -64,7 +62,7 @@ function buildProvidersFromConfig(fetchImpl?: typeof fetch): AiProvider[] {
 }
 
 export class AiProviderRouter implements AiProvider {
-  readonly name = "router";
+  readonly name = 'router';
   private providers: AiProvider[];
 
   constructor(options?: AiProviderRouterOptions) {
@@ -74,8 +72,8 @@ export class AiProviderRouter implements AiProvider {
   async generate(request: AiRequest): Promise<AiResponse> {
     if (this.providers.length === 0) {
       throw new AiProviderError(
-        "AI_NOT_CONFIGURED",
-        "AI Provider 未配置，请在 .env.local 中设置 AI_PROVIDERS 或 AI_API_KEY"
+        'AI_NOT_CONFIGURED',
+        'AI Provider 未配置，请在 .env.local 中设置 AI_PROVIDERS 或 AI_API_KEY'
       );
     }
 

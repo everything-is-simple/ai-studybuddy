@@ -9,11 +9,11 @@
 
 ## 一、测试分层与边界
 
-| 层级 | 位置 | 目的 | 是否等于产品接入 |
-|---|---|---|---|
-| Phase 0.5 历史 smoke test | `I:\ai-studybuddy-composer` 历史目录 | 保留 PDF/OCR/渲染/AI/重组件能力事实 | 否 |
-| Phase 0.7 独立 smoke test | `I:\ai-studybuddy-composer\windows-native` | 验证 Windows 原生轻量底座 | 否 |
-| Phase 0.8 正式测试 | `I:\ai-studybuddy\packages` | 验证正式 Adapter、API 与页面 | 是 |
+| 层级                      | 位置                                       | 目的                                | 是否等于产品接入 |
+| ------------------------- | ------------------------------------------ | ----------------------------------- | ---------------- |
+| Phase 0.5 历史 smoke test | `I:\ai-studybuddy-composer` 历史目录       | 保留 PDF/OCR/渲染/AI/重组件能力事实 | 否               |
+| Phase 0.7 独立 smoke test | `I:\ai-studybuddy-composer\windows-native` | 验证 Windows 原生轻量底座           | 否               |
+| Phase 0.8 正式测试        | `I:\ai-studybuddy\packages`                | 验证正式 Adapter、API 与页面        | 是               |
 
 Phase 0.7 的 `.env.local`、`.venv`、`node_modules`、output、真实凭据、真实资料均不进入主仓库。缺少外部凭据或实机时只能写 `BLOCKED_EXTERNAL` / `待实机验收`，不得写“通过”。
 
@@ -23,19 +23,19 @@ PDF、RapidOCR、Markmap、Markdown/KaTeX、BullMQ/Redis、MinIO、PostgreSQL/pg
 
 ## 三、Phase 0.7 验收矩阵
 
-| 编号 | 验收对象 | 通过标准 | 当前证据与状态 |
-|---|---|---|---|
-| 0.7-T01 | 环境基线 | Node 22 LTS、Windows、Python、内存、Docker/WSL2 状态均留档 | ⚠️ 开发机已留档：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB；Node 22 LTS 与 HP 暂缓复测（设备不在身边） |
-| 0.7-T02 | SQLite | `better-sqlite3`、WAL、CRUD、唯一约束、事务、关闭后备份恢复 | ✅ 开发机离线通过 |
-| 0.7-T03 | 本地文件 | 逻辑 `storage_key`、写读删、路径逃逸拒绝、tmp 清理保护 materials | ✅ 开发机离线通过 |
-| 0.7-T04 | SQLite Job Worker | 单进程串行、有限重试、上限失败、stale running 恢复、重启不丢 Job | ✅ 开发机离线通过 |
-| 0.7-T05 | RapidOCR 子进程 | JSON stdout、成功/缺文件/非零退出/超时、Python 退出 | ✅ 开发机离线通过；HP 峰值与退出复测暂缓 |
-| 0.7-T06 | 报告核心 | 规则统计、AI 失败降级、脱敏、合并与渠道去重 | ✅ 开发机离线通过；固定 `2026-05-31 22:30 Asia/Shanghai` 覆盖日报、周报、月报和考前 7 天 |
-| 0.7-T07 | QQ SMTP | UTF-8 中文 HTML、可选附件、日志不泄露授权码、父母邮箱实收 | ✅ 真实通过：QQ SMTP accepted，163 父母测试邮箱已收到 |
-| 0.8-T05 | AI Provider Router | 单 Provider 成功、priority fallback、全部失败、超时 fallback、未配置、OpenAI 响应解析；Dev API 返回标准信封 | ✅ 主仓库自动化通过：`ai-router.test.mjs` 6/6；全量 `pnpm test` 77/77 |
-| 0.7-T08 | 飞书 Webhook | 完整合并报告卡片、失败不阻断邮件、Webhook 不泄露、父母飞书群实收 | ✅ 真实通过：飞书 Webhook accepted，父母飞书群已收到 |
-| 0.7-T09 | Windows Task Scheduler | 临时 `AIStudyBuddy-Phase07-Smoke`：XML `StartWhenAvailable`、创建、手动触发、日志、退出码、清理、补发 | ✅ 管理员 PowerShell 真实通过：XML 单测通过；临时任务创建/触发/清理；`report-runner.js` 写入 `report:2026-05-31` SQLite 发送记录 |
-| 0.7-T10 | 整合与 HP 实机 | 课程/任务→本地文件→OCR→AI→SQLite→报告→双渠道去重；16GB 门槛 | ⏳ 开发机离线整合、合并、去重、QQ SMTP、飞书和 Windows 调度均通过；HP 实机因设备不在身边暂缓 |
+| 编号    | 验收对象               | 通过标准                                                                                                    | 当前证据与状态                                                                                                                   |
+| ------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 0.7-T01 | 环境基线               | Node 22 LTS、Windows、Python、内存、Docker/WSL2 状态均留档                                                  | ⚠️ 开发机已留档：Windows 10 19045、Node 25.4.0、Python 3.10.19、约 28.92GB；Node 22 LTS 与 HP 暂缓复测（设备不在身边）           |
+| 0.7-T02 | SQLite                 | `better-sqlite3`、WAL、CRUD、唯一约束、事务、关闭后备份恢复                                                 | ✅ 开发机离线通过                                                                                                                |
+| 0.7-T03 | 本地文件               | 逻辑 `storage_key`、写读删、路径逃逸拒绝、tmp 清理保护 materials                                            | ✅ 开发机离线通过                                                                                                                |
+| 0.7-T04 | SQLite Job Worker      | 单进程串行、有限重试、上限失败、stale running 恢复、重启不丢 Job                                            | ✅ 开发机离线通过                                                                                                                |
+| 0.7-T05 | RapidOCR 子进程        | JSON stdout、成功/缺文件/非零退出/超时、Python 退出                                                         | ✅ 开发机离线通过；HP 峰值与退出复测暂缓                                                                                         |
+| 0.7-T06 | 报告核心               | 规则统计、AI 失败降级、脱敏、合并与渠道去重                                                                 | ✅ 开发机离线通过；固定 `2026-05-31 22:30 Asia/Shanghai` 覆盖日报、周报、月报和考前 7 天                                         |
+| 0.7-T07 | QQ SMTP                | UTF-8 中文 HTML、可选附件、日志不泄露授权码、父母邮箱实收                                                   | ✅ 真实通过：QQ SMTP accepted，163 父母测试邮箱已收到                                                                            |
+| 0.8-T05 | AI Provider Router     | 单 Provider 成功、priority fallback、全部失败、超时 fallback、未配置、OpenAI 响应解析；Dev API 返回标准信封 | ✅ 主仓库自动化通过：`ai-router.test.mjs` 6/6；全量 `pnpm test` 77/77                                                            |
+| 0.7-T08 | 飞书 Webhook           | 完整合并报告卡片、失败不阻断邮件、Webhook 不泄露、父母飞书群实收                                            | ✅ 真实通过：飞书 Webhook accepted，父母飞书群已收到                                                                             |
+| 0.7-T09 | Windows Task Scheduler | 临时 `AIStudyBuddy-Phase07-Smoke`：XML `StartWhenAvailable`、创建、手动触发、日志、退出码、清理、补发       | ✅ 管理员 PowerShell 真实通过：XML 单测通过；临时任务创建/触发/清理；`report-runner.js` 写入 `report:2026-05-31` SQLite 发送记录 |
+| 0.7-T10 | 整合与 HP 实机         | 课程/任务→本地文件→OCR→AI→SQLite→报告→双渠道去重；16GB 门槛                                                 | ⏳ 开发机离线整合、合并、去重、QQ SMTP、飞书和 Windows 调度均通过；HP 实机因设备不在身边暂缓                                     |
 
 ## 四、报告隐私、合并与重试
 
@@ -62,14 +62,15 @@ npm run measure:memory
 
 在 `I:\ai-studybuddy-composer\converter\` 完成 DOCX、URL、本地 HTML、PPTX 的独立调通，形成能力卡与可重复 smoke test。T04A 不属于主系统正式验收，但为 T04B 在 `I:\ai-studybuddy\packages` 重新装配 Adapter 提供接口、安全、错误与验收证据。
 
-| 格式 | 位置 | 关键证据 | 状态 |
-|---|---|---|---|
-| DOCX | `converter\docx-test` | mammoth 1.12.0；中文正文、视觉占位、空文档错误；`npm test` 4/4 通过 | ✅ |
-| URL | `converter\url-fetch-test` | undici 7.28.0；SSRF 全阻断、连接层回环 DNS 拒绝、5 MB/3 跳/10 秒限制、错误 body 取消与 Agent 关闭；真实 URL 首次成功；`npm test` 25/25 | ✅ |
-| HTML | `converter\url-fetch-test` | jsdom + Readability；script/style 剥除、中文正文、fallback 路径 | ✅ |
-| PPTX | `converter\pptx-test` | jszip 3.10.1；数字页序、图片 OCR 提示、纯图片成功、损坏容器失败、命名/十进制/十六进制 XML entity 解码 | ✅ |
+| 格式 | 位置                       | 关键证据                                                                                                                               | 状态 |
+| ---- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| DOCX | `converter\docx-test`      | mammoth 1.12.0；中文正文、视觉占位、空文档错误；`npm test` 4/4 通过                                                                    | ✅   |
+| URL  | `converter\url-fetch-test` | undici 7.28.0；SSRF 全阻断、连接层回环 DNS 拒绝、5 MB/3 跳/10 秒限制、错误 body 取消与 Agent 关闭；真实 URL 首次成功；`npm test` 25/25 | ✅   |
+| HTML | `converter\url-fetch-test` | jsdom + Readability；script/style 剥除、中文正文、fallback 路径                                                                        | ✅   |
+| PPTX | `converter\pptx-test`      | jszip 3.10.1；数字页序、图片 OCR 提示、纯图片成功、损坏容器失败、命名/十进制/十六进制 XML entity 解码                                  | ✅   |
 
 T04A 硬门槛：
+
 - DOCX 中文正文、空文档错误、图片/图表占位均通过。
 - URL 所有安全测试通过：协议/SSRF 拒绝、连接层回环 DNS 拒绝、5 MB/3 跳/10 秒限制、错误 body 取消和 Agent 关闭；至少一条真实 URL 成功（`zh.wikipedia.org` 首次抓取成功，重复访问触发 429 后返回人工出口）。
 - HTML 中文正文可取，`script/style` 剥除。
@@ -93,18 +94,18 @@ Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**�
 
 ## 八、Phase 0.8 设计回填验收矩阵
 
-| 编号 | 场景 | 必须证明的行为 | 通过证据 |
-|---|---|---|---|
-| 0.8-E01 | 学期初始化原子性 | “日期 → 课程表 → 预览 → 确认”成功时同时产生学期索引、`semester.db`、课程实例、课表和目录；任一步失败时不留下可见半成品 | 自动化集成测试覆盖成功与每个故障点；文件树、全局索引与业务库断言一致 |
-| 0.8-E02 | 分学期隔离与恢复 | 不同学期使用不同业务库/目录/缓存；单个学期库的损坏、校验和恢复不影响其他学期 | 创建两个学期的测试、故意损坏一个副本、`integrity_check` 和最近备份恢复记录 |
-| 0.8-E03 | 学期生命周期 | `active → teaching_ended → follow_up → archived` 合法；归档默认只读，受控更正有审计；当前学期与旧 follow_up 的待办可聚合 | 状态迁移测试、首页聚合截图或 E2E 断言、审计事件断言 |
-| 0.8-E04 | 补考与重修 | 补考只新增原课程实例下的考试尝试；重修在新学期建新课程实例并链接原实例；临时补考课表仅在明确存在固定补课时写入 | API/数据库断言：补考不增加课程实例；重修关联正确；历史资料复用为显式选择 |
-| 0.8-E05 | 考试日期确认门 | 来源、识别置信度、孩子确认和变更历史均保存；未确认或变更待重确认日期不得驱动倒计时与 7/3/1 提醒 | pending/confirmed/superseded 状态的集成测试和报告预览断言 |
-| 0.8-E06 | 每日证据闭环 | 首页呈现明日准备、到期、待质检、错题复习和下一步；孩子可完成、修正或继续处理，不必接受 AI 排程 | 前端 E2E：任务/质量/事件状态迁移；StudyEvent 含证据引用 |
-| 0.8-E07 | AI 质量门与覆盖 | `required_fix`、`suggestion`、`uncertain`、`pending_quality_check`、`overridden` 的展示与规则正确；覆盖保留原结论、证据、原因和时间 | 单元/集成测试、审计记录断言；开放题不能被 AI 单方面判死 |
-| 0.8-E08 | AI/OCR/报告 fallback | PDF/OCR/AI/报告分别按文档规定降级；Provider 故障不锁死学习；双渠道失败保留本地 HTML | 注入失败的自动化测试、Job 重试/待质检记录、离线 HTML 与渠道错误摘要 |
-| 0.8-E09 | 异常与报告尺度 | AI 仅生成异常候选及证据；孩子确认的合理特例不进入负面趋势；日报 INFO 非评价，周报 SIGNAL 只报重复模式，月报 TREND 需足够样本 | 固定时间窗测试数据、报告快照、基线/特例/置信度断言 |
-| 0.8-E10 | 隐私与报告发送 | 报告和日志不含资料正文、笔记正文、答案、API Key、SMTP 授权码或完整 Webhook；渠道按 `report_key + channel` 去重/单独重试 | 邮件/飞书 payload 快照、日志扫描、渠道失败重试测试 |
+| 编号    | 场景                 | 必须证明的行为                                                                                                                      | 通过证据                                                                   |
+| ------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 0.8-E01 | 学期初始化原子性     | “日期 → 课程表 → 预览 → 确认”成功时同时产生学期索引、`semester.db`、课程实例、课表和目录；任一步失败时不留下可见半成品              | 自动化集成测试覆盖成功与每个故障点；文件树、全局索引与业务库断言一致       |
+| 0.8-E02 | 分学期隔离与恢复     | 不同学期使用不同业务库/目录/缓存；单个学期库的损坏、校验和恢复不影响其他学期                                                        | 创建两个学期的测试、故意损坏一个副本、`integrity_check` 和最近备份恢复记录 |
+| 0.8-E03 | 学期生命周期         | `active → teaching_ended → follow_up → archived` 合法；归档默认只读，受控更正有审计；当前学期与旧 follow_up 的待办可聚合            | 状态迁移测试、首页聚合截图或 E2E 断言、审计事件断言                        |
+| 0.8-E04 | 补考与重修           | 补考只新增原课程实例下的考试尝试；重修在新学期建新课程实例并链接原实例；临时补考课表仅在明确存在固定补课时写入                      | API/数据库断言：补考不增加课程实例；重修关联正确；历史资料复用为显式选择   |
+| 0.8-E05 | 考试日期确认门       | 来源、识别置信度、孩子确认和变更历史均保存；未确认或变更待重确认日期不得驱动倒计时与 7/3/1 提醒                                     | pending/confirmed/superseded 状态的集成测试和报告预览断言                  |
+| 0.8-E06 | 每日证据闭环         | 首页呈现明日准备、到期、待质检、错题复习和下一步；孩子可完成、修正或继续处理，不必接受 AI 排程                                      | 前端 E2E：任务/质量/事件状态迁移；StudyEvent 含证据引用                    |
+| 0.8-E07 | AI 质量门与覆盖      | `required_fix`、`suggestion`、`uncertain`、`pending_quality_check`、`overridden` 的展示与规则正确；覆盖保留原结论、证据、原因和时间 | 单元/集成测试、审计记录断言；开放题不能被 AI 单方面判死                    |
+| 0.8-E08 | AI/OCR/报告 fallback | PDF/OCR/AI/报告分别按文档规定降级；Provider 故障不锁死学习；双渠道失败保留本地 HTML                                                 | 注入失败的自动化测试、Job 重试/待质检记录、离线 HTML 与渠道错误摘要        |
+| 0.8-E09 | 异常与报告尺度       | AI 仅生成异常候选及证据；孩子确认的合理特例不进入负面趋势；日报 INFO 非评价，周报 SIGNAL 只报重复模式，月报 TREND 需足够样本        | 固定时间窗测试数据、报告快照、基线/特例/置信度断言                         |
+| 0.8-E10 | 隐私与报告发送       | 报告和日志不含资料正文、笔记正文、答案、API Key、SMTP 授权码或完整 Webhook；渠道按 `report_key + channel` 去重/单独重试             | 邮件/飞书 payload 快照、日志扫描、渠道失败重试测试                         |
 
 ### 8.1 已完成的 T05 Router 验收证据
 

@@ -29,16 +29,16 @@
 
 所有响应使用 `{ success: true, data }` 或 `{ success: false, error: { code, message } }`。
 
-| 方法与路径 | 请求要点 | 成功响应要点 | 失败语义 |
-|---|---|---|---|
-| `POST /api/courses` | `semesterId`、`name`、可选 `retakeOfCourseInstanceId` | 创建的 course instance；重修引用原样返回 | `SEMESTER_NOT_FOUND`、`SEMESTER_NOT_READY`、`COURSE_INPUT_INVALID` |
-| `GET /api/courses?semesterId=` | `semesterId` | 指定学期的课程列表 | `SEMESTER_NOT_FOUND`、`SEMESTER_NOT_READY` |
-| `POST /api/exams` | `semesterId`、`courseInstanceId`、`name`、`examAt`、可选 `attemptType`、goal/scope/source/sourceConfidence、`confirmationStatus` | 创建的 assessment attempt | `COURSE_NOT_FOUND`、`EXAM_INPUT_INVALID` |
-| `GET /api/exams?semesterId=&courseInstanceId?` | `semesterId`，可选课程过滤 | 考试列表，按 `exam_at` 升序 | `SEMESTER_NOT_FOUND`、`COURSE_NOT_FOUND` |
-| `POST /api/study-tasks` | `semesterId`、`courseInstanceId`、`type`、`title`、可选 exam/module/deadline/estimated minutes | 创建的任务与确定性 priority 元数据 | `TASK_INPUT_INVALID`、`COURSE_NOT_FOUND`、`EXAM_NOT_FOUND` |
-| `PATCH /api/study-tasks/:id/status` | `semesterId`、`status`，可选发生时间 | 更新后的任务；从非 done 到 done 时写入唯一完成事件 | `TASK_NOT_FOUND`、`TASK_STATUS_INVALID` |
-| `POST /api/study-events` | `semesterId`、`sourceSystem`、`eventType`、`title`、可选 course/task/evidence/workload/可见性/发生时间 | 创建的事件 | `EVENT_INPUT_INVALID`、`COURSE_NOT_FOUND`、`TASK_NOT_FOUND` |
-| `GET /api/timeline?semesterId=&courseInstanceId?&limit?` | `semesterId`，可选课程与 limit | 倒序时间线 | `SEMESTER_NOT_FOUND`、`TIMELINE_QUERY_INVALID` |
+| 方法与路径                                               | 请求要点                                                                                                                         | 成功响应要点                                       | 失败语义                                                           |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| `POST /api/courses`                                      | `semesterId`、`name`、可选 `retakeOfCourseInstanceId`                                                                            | 创建的 course instance；重修引用原样返回           | `SEMESTER_NOT_FOUND`、`SEMESTER_NOT_READY`、`COURSE_INPUT_INVALID` |
+| `GET /api/courses?semesterId=`                           | `semesterId`                                                                                                                     | 指定学期的课程列表                                 | `SEMESTER_NOT_FOUND`、`SEMESTER_NOT_READY`                         |
+| `POST /api/exams`                                        | `semesterId`、`courseInstanceId`、`name`、`examAt`、可选 `attemptType`、goal/scope/source/sourceConfidence、`confirmationStatus` | 创建的 assessment attempt                          | `COURSE_NOT_FOUND`、`EXAM_INPUT_INVALID`                           |
+| `GET /api/exams?semesterId=&courseInstanceId?`           | `semesterId`，可选课程过滤                                                                                                       | 考试列表，按 `exam_at` 升序                        | `SEMESTER_NOT_FOUND`、`COURSE_NOT_FOUND`                           |
+| `POST /api/study-tasks`                                  | `semesterId`、`courseInstanceId`、`type`、`title`、可选 exam/module/deadline/estimated minutes                                   | 创建的任务与确定性 priority 元数据                 | `TASK_INPUT_INVALID`、`COURSE_NOT_FOUND`、`EXAM_NOT_FOUND`         |
+| `PATCH /api/study-tasks/:id/status`                      | `semesterId`、`status`，可选发生时间                                                                                             | 更新后的任务；从非 done 到 done 时写入唯一完成事件 | `TASK_NOT_FOUND`、`TASK_STATUS_INVALID`                            |
+| `POST /api/study-events`                                 | `semesterId`、`sourceSystem`、`eventType`、`title`、可选 course/task/evidence/workload/可见性/发生时间                           | 创建的事件                                         | `EVENT_INPUT_INVALID`、`COURSE_NOT_FOUND`、`TASK_NOT_FOUND`        |
+| `GET /api/timeline?semesterId=&courseInstanceId?&limit?` | `semesterId`，可选课程与 limit                                                                                                   | 倒序时间线                                         | `SEMESTER_NOT_FOUND`、`TIMELINE_QUERY_INVALID`                     |
 
 `priority` 是读取/响应层的确定性派生值，不写入 `study_tasks`：先比较派生逾期，其次按已确认考试日期接近程度，再按 deadline，最后用创建时间稳定排序。派生逾期定义为 `deadlineAt < now` 且持久化 status 不为 `done` / `skipped`；T06 不通过 API 写入 `overdue`，未来逾期扫描 Job 如需持久化该状态必须另行设计迁移与转换规则。只有 `confirmationStatus = confirmed` 的考试日期可驱动正式考试优先级；`pending` / `rejected` / `superseded` 仅作信息展示。
 
@@ -50,24 +50,25 @@
 
 ## 文件结构
 
-| 文件 | 责任 |
-|---|---|
-| `packages/shared/src/types.ts` | 将现有共享 `Course`/`Exam`/`StudyTask`/`StudyEvent` 与 T06 的 semester/course-instance API DTO、枚举和派生逾期字段对齐；不引入 S2/S3/S4 领域类型。 |
-| `packages/backend/src/db/sql/migration-semester-v2.ts` | T06 前置 migration：`schedule_entries`、`assessment_attempts` 考试确认字段、`assessment_date_changes`；不实现 OCR/提醒业务。 |
-| `packages/backend/src/db/migrations.ts` | 将 semester migration v2 加入严格递增 runner。 |
-| `packages/backend/src/services/study-rhythm-service.ts` | S1 业务服务：学期可用性、关联校验、写入事务、任务状态转换、完成事件、确定性排序与 timeline 查询。 |
-| `packages/backend/src/api/study-rhythm.ts` | HTTP Router：请求 JSON 校验、状态码和标准信封；不直接写 SQL。 |
-| `packages/backend/src/server.ts` | 挂载 `/api` 下 S1 Router。 |
-| `packages/backend/test/study-rhythm-api.test.mjs` | 以隔离 `APP_DATA_ROOT` 和独立端口运行 build 后端，测试 API 合同、学期隔离、错误与回归。 |
-| `docs/04-开发任务清单-Todo-List.md` | T06 完成时勾选真实已交付项与验证证据。 |
-| `docs/08-*`、`docs/09-*`、`docs/10-*` | 仅在实现与现有 SoT 的 API/数据/验收约定不一致时定点回填。 |
-| `.gitignore` | 仅在用户没有要求版本管理 Claude 配置时增加 `.claude/`，防止本地 settings 混入提交。 |
+| 文件                                                    | 责任                                                                                                                                               |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/shared/src/types.ts`                          | 将现有共享 `Course`/`Exam`/`StudyTask`/`StudyEvent` 与 T06 的 semester/course-instance API DTO、枚举和派生逾期字段对齐；不引入 S2/S3/S4 领域类型。 |
+| `packages/backend/src/db/sql/migration-semester-v2.ts`  | T06 前置 migration：`schedule_entries`、`assessment_attempts` 考试确认字段、`assessment_date_changes`；不实现 OCR/提醒业务。                       |
+| `packages/backend/src/db/migrations.ts`                 | 将 semester migration v2 加入严格递增 runner。                                                                                                     |
+| `packages/backend/src/services/study-rhythm-service.ts` | S1 业务服务：学期可用性、关联校验、写入事务、任务状态转换、完成事件、确定性排序与 timeline 查询。                                                  |
+| `packages/backend/src/api/study-rhythm.ts`              | HTTP Router：请求 JSON 校验、状态码和标准信封；不直接写 SQL。                                                                                      |
+| `packages/backend/src/server.ts`                        | 挂载 `/api` 下 S1 Router。                                                                                                                         |
+| `packages/backend/test/study-rhythm-api.test.mjs`       | 以隔离 `APP_DATA_ROOT` 和独立端口运行 build 后端，测试 API 合同、学期隔离、错误与回归。                                                            |
+| `docs/04-开发任务清单-Todo-List.md`                     | T06 完成时勾选真实已交付项与验证证据。                                                                                                             |
+| `docs/08-*`、`docs/09-*`、`docs/10-*`                   | 仅在实现与现有 SoT 的 API/数据/验收约定不一致时定点回填。                                                                                          |
+| `.gitignore`                                            | 仅在用户没有要求版本管理 Claude 配置时增加 `.claude/`，防止本地 settings 混入提交。                                                                |
 
 ---
 
 ### Task 1：处理本地 `.claude` 配置并固定 T06 范围
 
 **Files:**
+
 - Modify: `.gitignore`
 - Modify: `.plans/phase0.8-task06-plan.md`
 
@@ -126,6 +127,7 @@ git commit -m "chore: ignore local Claude settings"
 ### Task 2：先完成 T02 遗留的 S1 migration v2 前置项
 
 **Files:**
+
 - Create: `packages/backend/src/db/sql/migration-semester-v2.ts`
 - Modify: `packages/backend/src/db/migrations.ts`
 - Modify: `packages/backend/test/semester-initialization.test.mjs`
@@ -137,27 +139,30 @@ git commit -m "chore: ignore local Claude settings"
 新库路径断言：
 
 ```js
-assert.equal(getAppliedVersion(db, "semester"), 2);
+assert.equal(getAppliedVersion(db, 'semester'), 2);
 assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schedule_entries'").get());
 assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assessment_date_changes'").get());
-const columns = db.prepare("PRAGMA table_info(assessment_attempts)").all().map((row) => row.name);
-assert.ok(columns.includes("confirmation_status"));
-assert.ok(columns.includes("confirmed_at"));
+const columns = db
+  .prepare('PRAGMA table_info(assessment_attempts)')
+  .all()
+  .map((row) => row.name);
+assert.ok(columns.includes('confirmation_status'));
+assert.ok(columns.includes('confirmed_at'));
 ```
 
 既有 v1 升级路径最小断言：
 
 ```js
-const existing = db.prepare(
-  "SELECT id, name, confirmation_status, confirmed_at FROM assessment_attempts WHERE id = ?"
-).get(existingAttemptId);
+const existing = db
+  .prepare('SELECT id, name, confirmation_status, confirmed_at FROM assessment_attempts WHERE id = ?')
+  .get(existingAttemptId);
 assert.deepEqual(existing, {
   id: existingAttemptId,
-  name: "期中考试",
-  confirmation_status: "pending",
+  name: '期中考试',
+  confirmation_status: 'pending',
   confirmed_at: null,
 });
-assert.equal(getAppliedVersion(db, "semester"), 2);
+assert.equal(getAppliedVersion(db, 'semester'), 2);
 ```
 
 - [x] **Step 2：运行 migration 测试并确认红灯**
@@ -218,6 +223,7 @@ git commit -m "feat(backend): add S1 semester migration v2"
 ### Task 3：先写 S1 API 的失败集成测试
 
 **Files:**
+
 - Create: `packages/backend/test/study-rhythm-api.test.mjs`
 - Reference: `packages/backend/test/semester-initialization.test.mjs`
 - Reference: `packages/backend/test/dev-storage-api.test.mjs`
@@ -237,7 +243,7 @@ for (let attempt = 0; attempt < 100; attempt += 1) {
   } catch {}
   await new Promise((resolve) => setTimeout(resolve, 100));
 }
-throw new Error("built backend did not become healthy");
+throw new Error('built backend did not become healthy');
 ```
 
 - [x] **Step 2：写入 API 先决条件 helper 与首个失败测试**
@@ -245,15 +251,18 @@ throw new Error("built backend did not become healthy");
 通过现有 `/api/dev/init-semester` 为每个测试创建 ready 学期；然后写：
 
 ```js
-test("creates and lists courses within one ready semester", async (t) => {
+test('creates and lists courses within one ready semester', async (t) => {
   const backend = await startBackend(t);
   const semesterId = await initializeReadySemester(backend.port);
-  const created = await postJson(backend.port, "/api/courses", { semesterId, name: "数学分析" });
+  const created = await postJson(backend.port, '/api/courses', { semesterId, name: '数学分析' });
   assert.equal(created.status, 201);
   assert.equal(created.json.success, true);
   const listed = await fetchJson(backend.port, `/api/courses?semesterId=${semesterId}`);
   assert.equal(listed.status, 200);
-  assert.deepEqual(listed.json.data.map((course) => course.name), ["数学分析"]);
+  assert.deepEqual(
+    listed.json.data.map((course) => course.name),
+    ['数学分析']
+  );
 });
 ```
 
@@ -297,6 +306,7 @@ git commit -m "test(backend): define S1 study rhythm API contracts"
 ### Task 4：对齐共享 DTO 与 S1 service 边界
 
 **Files:**
+
 - Modify: `packages/shared/src/types.ts`
 - Create: `packages/backend/src/services/study-rhythm-service.ts`
 - Test: `packages/backend/test/study-rhythm-api.test.mjs`
@@ -319,16 +329,16 @@ export interface AssessmentAttemptDto {
   id: string;
   courseInstanceId: string;
   name: string;
-  attemptType: "normal" | "makeup" | "other";
+  attemptType: 'normal' | 'makeup' | 'other';
   examAt: string;
-  confirmationStatus: "pending" | "confirmed" | "rejected" | "superseded";
+  confirmationStatus: 'pending' | 'confirmed' | 'rejected' | 'superseded';
   confirmedAt?: string;
   source?: string;
   sourceConfidence?: number;
 }
 
-export type StudyTaskType = "material_note" | "practice" | "error_review" | "exam_cram" | "custom";
-export type StudyTaskStatus = "todo" | "doing" | "pending_quality_check" | "done" | "skipped";
+export type StudyTaskType = 'material_note' | 'practice' | 'error_review' | 'exam_cram' | 'custom';
+export type StudyTaskStatus = 'todo' | 'doing' | 'pending_quality_check' | 'done' | 'skipped';
 
 export interface StudyTaskDto {
   id: string;
@@ -351,7 +361,7 @@ export interface StudyEventDto {
   id: string;
   courseInstanceId?: string;
   taskId?: string;
-  sourceSystem: "S1" | "S2" | "S3" | "S4" | "S5" | "S7";
+  sourceSystem: 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S7';
   eventType: string;
   title: string;
   workloadMinutes?: number;
@@ -369,7 +379,11 @@ export interface StudyEventDto {
 
 ```ts
 export class StudyRhythmError extends Error {
-  constructor(public readonly code: string, public readonly status: number, message: string) {
+  constructor(
+    public readonly code: string,
+    public readonly status: number,
+    message: string
+  ) {
     super(message);
   }
 }
@@ -390,9 +404,11 @@ service 在进入学期库前查询 global `semesters`：必须存在、`ready =
 所有 SQL 必须使用参数绑定：
 
 ```ts
-const row = db.prepare(
-  "SELECT id, semester_id, name, retake_of_course_instance_id, created_at, updated_at FROM course_instances WHERE id = ?"
-).get(courseInstanceId);
+const row = db
+  .prepare(
+    'SELECT id, semester_id, name, retake_of_course_instance_id, created_at, updated_at FROM course_instances WHERE id = ?'
+  )
+  .get(courseInstanceId);
 ```
 
 - [x] **Step 4：目标测试变为局部通过**
@@ -409,6 +425,7 @@ node --test --test-name-pattern="courses" packages/backend/test/study-rhythm-api
 ### Task 5：实现课程与考试目标 API
 
 **Files:**
+
 - Modify: `packages/backend/src/services/study-rhythm-service.ts`
 - Create: `packages/backend/src/api/study-rhythm.ts`
 - Modify: `packages/backend/src/server.ts`
@@ -420,10 +437,11 @@ node --test --test-name-pattern="courses" packages/backend/test/study-rhythm-api
 
 ```ts
 db.transaction(() => {
-  db.prepare(`INSERT INTO course_instances (
+  db.prepare(
+    `INSERT INTO course_instances (
     id, semester_id, name, retake_of_course_instance_id, created_at, updated_at
-  ) VALUES (?, ?, ?, ?, ?, ?)`)
-    .run(id, semesterId, name, retakeOfCourseInstanceId ?? null, now, now);
+  ) VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(id, semesterId, name, retakeOfCourseInstanceId ?? null, now, now);
 })();
 ```
 
@@ -434,7 +452,7 @@ db.transaction(() => {
 `study-rhythm.ts` 处理：
 
 ```ts
-router.post("/courses", async (req, res) => {
+router.post('/courses', async (req, res) => {
   try {
     const course = service.createCourse(req.body);
     return res.status(201).json({ success: true, data: course });
@@ -451,8 +469,8 @@ router.post("/courses", async (req, res) => {
 在 `packages/backend/src/server.ts` 中：
 
 ```ts
-import studyRhythmRouter from "./api/study-rhythm";
-app.use("/api", studyRhythmRouter);
+import studyRhythmRouter from './api/study-rhythm';
+app.use('/api', studyRhythmRouter);
 ```
 
 不要把正式 S1 API 放在 `/api/dev`。
@@ -478,6 +496,7 @@ git commit -m "feat(backend): add S1 courses and exams API"
 ### Task 6：实现学习任务、确定性优先级与状态事件
 
 **Files:**
+
 - Modify: `packages/backend/src/services/study-rhythm-service.ts`
 - Modify: `packages/backend/src/api/study-rhythm.ts`
 - Modify: `packages/backend/test/study-rhythm-api.test.mjs`
@@ -492,9 +511,9 @@ git commit -m "feat(backend): add S1 courses and exams API"
 
 ```ts
 const allowedTransitions: Record<StudyTaskStatus, readonly StudyTaskStatus[]> = {
-  todo: ["doing", "pending_quality_check", "done", "skipped"],
-  doing: ["todo", "pending_quality_check", "done", "skipped"],
-  pending_quality_check: ["doing", "done", "skipped"],
+  todo: ['doing', 'pending_quality_check', 'done', 'skipped'],
+  doing: ['todo', 'pending_quality_check', 'done', 'skipped'],
+  pending_quality_check: ['doing', 'done', 'skipped'],
   done: [],
   skipped: [],
 };
@@ -545,6 +564,7 @@ git commit -m "feat(backend): add S1 study task workflow"
 ### Task 7：实现外部事件写入与学生时间线
 
 **Files:**
+
 - Modify: `packages/backend/src/services/study-rhythm-service.ts`
 - Modify: `packages/backend/src/api/study-rhythm.ts`
 - Modify: `packages/backend/test/study-rhythm-api.test.mjs`
@@ -592,6 +612,7 @@ git commit -m "feat(backend): add S1 study event timeline"
 ### Task 8：完整回归、审查、文档与交付
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify if evidence requires: `docs/08-共同底座架构-Architecture.md`
 - Modify if evidence requires: `docs/09-测试验收计划-Test-Plan.md`

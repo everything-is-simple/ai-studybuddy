@@ -3,10 +3,10 @@
 // 只负责 HTTP 路由、JSON 校验与标准信封映射；业务逻辑在 service 中。
 // ============================================================
 
-import { Router } from "express";
-import type { Request, Response } from "express";
-import type { ApiError, ApiSuccess } from "@ai-studybuddy/shared";
-import { StudyRhythmError, StudyRhythmService } from "../services/study-rhythm-service";
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import type { ApiError, ApiSuccess } from '@ai-studybuddy/shared';
+import { StudyRhythmError, StudyRhythmService } from '../services/study-rhythm-service';
 
 const router: Router = Router();
 const service = new StudyRhythmService();
@@ -24,13 +24,11 @@ function handleError(error: unknown, res: Response): void {
     res.status(error.status).json(errorResponse(error.code, error.message));
     return;
   }
-  res
-    .status(500)
-    .json(errorResponse("S1_REQUEST_FAILED", "请求处理失败，请稍后重试"));
+  res.status(500).json(errorResponse('S1_REQUEST_FAILED', '请求处理失败，请稍后重试'));
 }
 
 // ── POST /api/courses ───────────────────────────────────────
-router.post("/courses", (req: Request, res: Response) => {
+router.post('/courses', (req: Request, res: Response) => {
   try {
     const course = service.createCourse(req.body);
     return res.status(201).json(okResponse(course));
@@ -40,7 +38,7 @@ router.post("/courses", (req: Request, res: Response) => {
 });
 
 // ── GET /api/courses ────────────────────────────────────────
-router.get("/courses", (req: Request, res: Response) => {
+router.get('/courses', (req: Request, res: Response) => {
   try {
     const courses = service.listCourses(req.query.semesterId);
     return res.json(okResponse(courses));
@@ -50,7 +48,7 @@ router.get("/courses", (req: Request, res: Response) => {
 });
 
 // ── POST /api/exams ─────────────────────────────────────────
-router.post("/exams", (req: Request, res: Response) => {
+router.post('/exams', (req: Request, res: Response) => {
   try {
     const exam = service.createExam(req.body);
     return res.status(201).json(okResponse(exam));
@@ -60,12 +58,9 @@ router.post("/exams", (req: Request, res: Response) => {
 });
 
 // ── GET /api/exams ──────────────────────────────────────────
-router.get("/exams", (req: Request, res: Response) => {
+router.get('/exams', (req: Request, res: Response) => {
   try {
-    const exams = service.listExams(
-      req.query.semesterId,
-      req.query.courseInstanceId
-    );
+    const exams = service.listExams(req.query.semesterId, req.query.courseInstanceId);
     return res.json(okResponse(exams));
   } catch (error) {
     return handleError(error, res);
@@ -73,7 +68,7 @@ router.get("/exams", (req: Request, res: Response) => {
 });
 
 // ── POST /api/study-tasks ───────────────────────────────────
-router.post("/study-tasks", (req: Request, res: Response) => {
+router.post('/study-tasks', (req: Request, res: Response) => {
   try {
     const task = service.createTask(req.body);
     return res.status(201).json(okResponse(task));
@@ -83,7 +78,7 @@ router.post("/study-tasks", (req: Request, res: Response) => {
 });
 
 // ── PATCH /api/study-tasks/:id/status ───────────────────────
-router.patch("/study-tasks/:id/status", (req: Request, res: Response) => {
+router.patch('/study-tasks/:id/status', (req: Request, res: Response) => {
   try {
     const task = service.updateTaskStatus({
       semesterId: req.body.semesterId,
@@ -98,7 +93,7 @@ router.patch("/study-tasks/:id/status", (req: Request, res: Response) => {
 });
 
 // ── POST /api/study-events ──────────────────────────────────
-router.post("/study-events", (req: Request, res: Response) => {
+router.post('/study-events', (req: Request, res: Response) => {
   try {
     const event = service.createEvent(req.body);
     return res.status(201).json(okResponse(event));
@@ -108,13 +103,9 @@ router.post("/study-events", (req: Request, res: Response) => {
 });
 
 // ── GET /api/timeline ───────────────────────────────────────
-router.get("/timeline", (req: Request, res: Response) => {
+router.get('/timeline', (req: Request, res: Response) => {
   try {
-    const events = service.getTimeline(
-      req.query.semesterId,
-      req.query.courseInstanceId,
-      req.query.limit
-    );
+    const events = service.getTimeline(req.query.semesterId, req.query.courseInstanceId, req.query.limit);
     return res.json(okResponse(events));
   } catch (error) {
     return handleError(error, res);

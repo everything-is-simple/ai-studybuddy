@@ -18,15 +18,16 @@ StudyRhythm 从学期初始化开始，提供课程表确认、课程与考试�
 
 ### Success Criteria
 
-| 指标 | 验收标准 |
-|---|---|
+| 指标       | 验收标准                                                                |
+| ---------- | ----------------------------------------------------------------------- |
 | 学期初始化 | 孩子可先选学期日期、上传课程表、确认识别预览；未确认 OCR 不写入正式数据 |
-| 日常可用 | 每日首页只呈现少量待闭合事项；孩子能在 30 秒内创建或确认一个学习任务 |
-| 时间约束 | 每个任务必须有截止时间或计划完成日期；只有确认考试日期进入正式倒计时 |
-| 证据闭合 | 任务完成、质量检查、孩子覆盖或待质检状态均能形成可追溯事件 |
-| 工作量累计 | 系统能按课程实例统计资料整理、练习、错题复习、备考任务次数 |
-| 逾期识别 | 逾期任务能自动标记并进入时间线，但合理特例不计入负面趋势 |
-| 家长摘要 | ParentReport 只能读取脱敏统计，并区分日 INFO、周 SIGNAL、月 TREND |
+| 日常可用   | 每日首页只呈现少量待闭合事项；孩子能在 30 秒内创建或确认一个学习任务    |
+| 时间约束   | 每个任务必须有截止时间或计划完成日期；只有确认考试日期进入正式倒计时    |
+| 证据闭合   | 任务完成、质量检查、孩子覆盖或待质检状态均能形成可追溯事件              |
+| 工作量累计 | 系统能按课程实例统计资料整理、练习、错题复习、备考任务次数              |
+| 逾期识别   | 逾期任务能自动标记并进入时间线，但合理特例不计入负面趋势                |
+| 家长摘要   | ParentReport 只能读取脱敏统计，并区分日 INFO、周 SIGNAL、月 TREND       |
+
 ---
 
 ## 2. User Experience & Functionality
@@ -38,13 +39,13 @@ StudyRhythm 从学期初始化开始，提供课程表确认、课程与考试�
 
 ### User Stories
 
-| 故事 | 验收标准 |
-|---|---|
+| 故事                                                                                                                           | 验收标准                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
 | As a student, I want to start a semester from a date range and timetable image so that I do not manually recreate every class. | 日历选择 → 图片识别预览 → 一次确认；正式写入是原子化体验，失败不留下半个学期 |
-| As a student, I want to update exam dates as notices arrive so that countdowns are trustworthy. | 每次日期保留来源、置信度、确认和变更历史；未确认日期只显示待核对 |
-| As a student, I want the home page to show the next evidence-backed closure so that I do not maintain a complex plan. | 显示明日准备、到期、待质检、错题复习与下一步；不强迫接受 AI 排程 |
-| As a student, I want to record a reasonable exception so that a one-off disruption is not treated as a persistent problem. | AI 只提出异常候选和证据；孩子确认的特例保留事实但不计入负面趋势 |
-| As a parent, I want only a progress summary so that I can care without monitoring details. | 家长只接收 INFO/SIGNAL/TREND 和考前提醒，不看资料原文/答案，也不登录系统 |
+| As a student, I want to update exam dates as notices arrive so that countdowns are trustworthy.                                | 每次日期保留来源、置信度、确认和变更历史；未确认日期只显示待核对             |
+| As a student, I want the home page to show the next evidence-backed closure so that I do not maintain a complex plan.          | 显示明日准备、到期、待质检、错题复习与下一步；不强迫接受 AI 排程             |
+| As a student, I want to record a reasonable exception so that a one-off disruption is not treated as a persistent problem.     | AI 只提出异常候选和证据；孩子确认的特例保留事实但不计入负面趋势              |
+| As a parent, I want only a progress summary so that I can care without monitoring details.                                     | 家长只接收 INFO/SIGNAL/TREND 和考前提醒，不看资料原文/答案，也不登录系统     |
 
 ### Non-Goals
 
@@ -106,12 +107,12 @@ flowchart TD
 
 ## 5. Open-source Components
 
-| 能力 | 组件 | 说明 |
-|---|---|---|
-| 异步任务/逾期扫描 | SQLite Job Worker | 定时扫描任务状态、失败重试；Phase 0.7 先独立验证 |
-| 数据存储 | SQLite | 课程、任务、时间线、统计；Phase 0.8 正式接入 |
-| 时间处理 | date-fns / dayjs（二选一） | 日期计算，避免手写时间逻辑 |
-| 前端列表/日历展示 | 先用基础组件，后续可接日历库 | MVP 不先做复杂日历 |
+| 能力              | 组件                         | 说明                                             |
+| ----------------- | ---------------------------- | ------------------------------------------------ |
+| 异步任务/逾期扫描 | SQLite Job Worker            | 定时扫描任务状态、失败重试；Phase 0.7 先独立验证 |
+| 数据存储          | SQLite                       | 课程、任务、时间线、统计；Phase 0.8 正式接入     |
+| 时间处理          | date-fns / dayjs（二选一）   | 日期计算，避免手写时间逻辑                       |
+| 前端列表/日历展示 | 先用基础组件，后续可接日历库 | MVP 不先做复杂日历                               |
 
 ---
 
@@ -121,11 +122,11 @@ S1 默认不需要 LLM。
 
 可选 AI 功能放后：
 
-| 功能 | 是否 MVP | 模型 |
-|---|---|---|
-| 根据学习记录生成周总结 | 否 | Kimi/Qwen |
-| 根据逾期情况给复习建议 | 否 | Kimi/Qwen |
-| 复杂学习计划优化 | 否 | GPT 兜底 |
+| 功能                   | 是否 MVP | 模型      |
+| ---------------------- | -------- | --------- |
+| 根据学习记录生成周总结 | 否       | Kimi/Qwen |
+| 根据逾期情况给复习建议 | 否       | Kimi/Qwen |
+| 复杂学习计划优化       | 否       | GPT 兜底  |
 
 ---
 
@@ -189,29 +190,29 @@ StudyEvent
 
 ### Pages
 
-| 页面 | 说明 |
-|---|---|
-| 学期开始向导 | 学期日期日历、课程表图片上传、识别置信度预览、一次确认 |
+| 页面         | 说明                                                              |
+| ------------ | ----------------------------------------------------------------- |
+| 学期开始向导 | 学期日期日历、课程表图片上传、识别置信度预览、一次确认            |
 | 每日学习首页 | 少量证据驱动的待闭合事项、质量待办、下一步和当前/后续处理学期聚合 |
-| 课程与课表 | 当前学期课程实例、课表、重修关联和临时补考课表（仅实际需要时） |
-| 考试目标 | 待公布/待确认/已确认考试日期、来源、置信度、变更历史与倒计时 |
-| 学习时间线 | 按天展示完成、待质检、覆盖和合理特例事件 |
-| 学期归档 | 教学结束、后续事项、只读归档、受控更正和恢复记录 |
+| 课程与课表   | 当前学期课程实例、课表、重修关联和临时补考课表（仅实际需要时）    |
+| 考试目标     | 待公布/待确认/已确认考试日期、来源、置信度、变更历史与倒计时      |
+| 学习时间线   | 按天展示完成、待质检、覆盖和合理特例事件                          |
+| 学期归档     | 教学结束、后续事项、只读归档、受控更正和恢复记录                  |
 
 ### API
 
-| API | 说明 |
-|---|---|
-| `POST /semesters/onboarding-preview` | 上传课程表并返回识别预览与置信度；不写正式业务数据 |
-| `POST /semesters/onboarding-confirm` | 确认后原子化创建学期、课程实例、课表和目录 |
-| `GET /semesters` / `PATCH /semesters/:id` | 获取学期与更新教学结束/归档状态；归档更正留痕 |
-| `POST /course-instances` | 创建课程实例；重修必须提供原实例关联 |
-| `POST /assessment-attempts` | 新增或更新考试尝试；未经确认不触发正式提醒 |
-| `POST /study-tasks` / `PATCH /study-tasks/:id/status` | 创建任务与更新闭合、待质检、完成状态 |
-| `POST /study-events` | 子系统写入带证据、确认与质量状态的时间线事件 |
-| `POST /exceptions/:eventId/confirm` | 孩子确认合理特例或保留未解释状态 |
-| `GET /daily-closure` / `GET /timeline` | 获取每日闭环与学生时间线 |
-| 内部 `ReportDataQuery` | 仅供报告生成器读取脱敏聚合；不暴露家长远程 API |
+| API                                                   | 说明                                               |
+| ----------------------------------------------------- | -------------------------------------------------- |
+| `POST /semesters/onboarding-preview`                  | 上传课程表并返回识别预览与置信度；不写正式业务数据 |
+| `POST /semesters/onboarding-confirm`                  | 确认后原子化创建学期、课程实例、课表和目录         |
+| `GET /semesters` / `PATCH /semesters/:id`             | 获取学期与更新教学结束/归档状态；归档更正留痕      |
+| `POST /course-instances`                              | 创建课程实例；重修必须提供原实例关联               |
+| `POST /assessment-attempts`                           | 新增或更新考试尝试；未经确认不触发正式提醒         |
+| `POST /study-tasks` / `PATCH /study-tasks/:id/status` | 创建任务与更新闭合、待质检、完成状态               |
+| `POST /study-events`                                  | 子系统写入带证据、确认与质量状态的时间线事件       |
+| `POST /exceptions/:eventId/confirm`                   | 孩子确认合理特例或保留未解释状态                   |
+| `GET /daily-closure` / `GET /timeline`                | 获取每日闭环与学生时间线                           |
+| 内部 `ReportDataQuery`                                | 仅供报告生成器读取脱敏聚合；不暴露家长远程 API     |
 
 ---
 
@@ -233,12 +234,13 @@ S1 只提供脱敏的课程、任务状态、学习时长、确认考试节点�
 - [ ] 完成任务后生成带来源和状态的 StudyEvent；其他子系统可通过统一接口写入；
 - [ ] 家长摘要不包含原始学习资料、题目答案、隐私全文；合理特例不计入负面趋势；
 - [ ] 清空 `APP_DATA_ROOT\tmp` 不影响长期数据；日志不记录学生隐私全文和 API Key。
+
 ---
 
 ## 10. Roadmap
 
-| 阶段 | 内容 |
-|---|---|
-| S1-MVP | 课程、任务、时间线、逾期扫描、家长摘要数据 |
-| S1-v1.1 | 每周统计、连续未学习提醒、课程工作量趋势 |
-| S1-v1.2 | AI 周总结、学生自定义学习目标 |
+| 阶段    | 内容                                       |
+| ------- | ------------------------------------------ |
+| S1-MVP  | 课程、任务、时间线、逾期扫描、家长摘要数据 |
+| S1-v1.1 | 每周统计、连续未学习提醒、课程工作量趋势   |
+| S1-v1.2 | AI 周总结、学生自定义学习目标              |

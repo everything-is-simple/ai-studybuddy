@@ -2,7 +2,7 @@
 
 **版本**：v0.05（契约收敛修订版）  
 **日期**：2026-07-13  
-**状态**：实现修复中，按 PRD 契约补齐 P1/P2 遗漏  
+**状态**：实现修复中，按 PRD 契约补齐 P1/P2 遗漏
 
 ---
 
@@ -83,17 +83,17 @@
 
 ## 6. 文件变更清单
 
-| 操作 | 文件 |
-|---|---|
-| 新建 | `packages/backend/src/db/sql/migration-semester-v3.ts` |
-| 修改 | `packages/backend/src/db/migrations.ts` |
-| 修改 | `packages/shared/src/types.ts` |
+| 操作 | 文件                                                    |
+| ---- | ------------------------------------------------------- |
+| 新建 | `packages/backend/src/db/sql/migration-semester-v3.ts`  |
+| 修改 | `packages/backend/src/db/migrations.ts`                 |
+| 修改 | `packages/shared/src/types.ts`                          |
 | 新建 | `packages/backend/src/services/note-builder-service.ts` |
-| 新建 | `packages/backend/src/services/material-job-worker.ts` |
-| 新建 | `packages/backend/src/api/note-builder.ts` |
-| 修改 | `packages/backend/src/server.ts` |
-| 新建 | `packages/backend/test/note-builder-api.test.mjs` |
-| 修改 | `docs/04-开发任务清单-Todo-List.md` |
+| 新建 | `packages/backend/src/services/material-job-worker.ts`  |
+| 新建 | `packages/backend/src/api/note-builder.ts`              |
+| 修改 | `packages/backend/src/server.ts`                        |
+| 新建 | `packages/backend/test/note-builder-api.test.mjs`       |
+| 修改 | `docs/04-开发任务清单-Todo-List.md`                     |
 
 ---
 
@@ -111,6 +111,7 @@ ALTER TABLE materials ADD COLUMN truncated INTEGER NOT NULL DEFAULT 0;
 ```
 
 数据库约束与重试事实来源：
+
 - `materials`、`normalized_texts` 是 v1 已发布表，v3 不重建表；`migration-semester-v3.ts` 为 `materials` 新增 INSERT/UPDATE 触发器，拒绝非法 `status`、非正 `file_size_bytes` 和含 `..`、`:\`、`:/` 的 `storage_key`；为 `normalized_texts` 新增触发器，拒绝空文本和超过 1,048,576 字符的 `text`。
 - `status` 枚举：`pending | converting | converted | note_generating | completed | conversion_failed | pending_quality_check`。
 - `storage_key` 只保存相对路径，应用层仍先经 `resolveStorageKeyToPath()` 校验。
@@ -132,6 +133,7 @@ CREATE UNIQUE INDEX idx_jobs_material_type_active
 - 现有非 S2 Job 的 `material_id` 保持 `NULL`，不受该部分唯一索引影响；创建 S2 Job 时若命中唯一索引，API 映射为 409 `JOB_ALREADY_PENDING`。
 
 ---
+
 ### 7.2 normalized_texts 表补充字段
 
 ```sql
@@ -150,6 +152,7 @@ ALTER TABLE structured_notes ADD COLUMN generation_duration_ms INTEGER;
 ```
 
 说明：
+
 - 原表已有 `highlights_json TEXT`，旧行可能为 NULL；查询时使用 `COALESCE(highlights_json, '[]')`；
 - SQLite `ALTER TABLE ADD COLUMN` 不支持 `NOT NULL` 对已有行生效，因此新列只用 `DEFAULT`，`NOT NULL` 约束由应用层 INSERT 时保证；
 - `model`、`prompt_version` 在 INSERT 时显式写入，不依赖数据库 DEFAULT。
@@ -163,6 +166,7 @@ ALTER TABLE knowledge_modules ADD COLUMN last_reviewed_at TEXT;
 ```
 
 应用层约束：
+
 - `importance`: `low | medium | high | critical`；
 - `difficulty`: `easy | medium | hard`；
 - `learn_status`: `not_started | learning | mastered`；
@@ -174,17 +178,17 @@ ALTER TABLE knowledge_modules ADD COLUMN last_reviewed_at TEXT;
 
 ### 8.1 API 端点
 
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| POST | `/api/materials/upload` | multipart/form-data 上传资料 |
-| GET | `/api/materials` | 按课程实例列出资料 |
-| GET | `/api/materials/:id` | 资料详情（含转换状态、纯文本摘要） |
-| POST | `/api/materials/:id/retry-conversion` | 转换失败重试 |
-| POST | `/api/materials/:id/retry-ai-generation` | AI 生成失败重试 |
-| POST | `/api/materials/:id/replace-text` | 手动粘贴纯文本，跳过转换 |
-| GET | `/api/notes/:id` | 笔记详情 |
-| GET | `/api/knowledge-modules` | 按课程列出知识模块 |
-| PATCH | `/api/knowledge-modules/:id` | 更新学习状态/重要性/难度 |
+| 方法  | 路径                                     | 说明                               |
+| ----- | ---------------------------------------- | ---------------------------------- |
+| POST  | `/api/materials/upload`                  | multipart/form-data 上传资料       |
+| GET   | `/api/materials`                         | 按课程实例列出资料                 |
+| GET   | `/api/materials/:id`                     | 资料详情（含转换状态、纯文本摘要） |
+| POST  | `/api/materials/:id/retry-conversion`    | 转换失败重试                       |
+| POST  | `/api/materials/:id/retry-ai-generation` | AI 生成失败重试                    |
+| POST  | `/api/materials/:id/replace-text`        | 手动粘贴纯文本，跳过转换           |
+| GET   | `/api/notes/:id`                         | 笔记详情                           |
+| GET   | `/api/knowledge-modules`                 | 按课程列出知识模块                 |
+| PATCH | `/api/knowledge-modules/:id`             | 更新学习状态/重要性/难度           |
 
 ### 8.2 请求/响应关键约束
 
@@ -216,7 +220,16 @@ ALTER TABLE knowledge_modules ADD COLUMN last_reviewed_at TEXT;
       "markdown": "string (结构化 Markdown 笔记)",
       "highlights": [{ "content": "重点句子", "importance": "high|medium|low", "position": "第X页第Y段" }],
       "mindMap": { "title": "string", "children": [{ "title": "string", "children": [] }] },
-      "knowledgeModules": [{ "title": "string", "contentSummary": "string", "importance": "low|medium|high|critical", "difficulty": "easy|medium|hard", "sourceEvidence": "string", "examRelevance": "string" }]
+      "knowledgeModules": [
+        {
+          "title": "string",
+          "contentSummary": "string",
+          "importance": "low|medium|high|critical",
+          "difficulty": "easy|medium|hard",
+          "sourceEvidence": "string",
+          "examRelevance": "string"
+        }
+      ]
     }
     ```
 
@@ -237,9 +250,15 @@ MaterialJobWorker 导出以下入口：
 
 ```typescript
 // packages/backend/src/services/material-job-worker.ts
-export async function runOnce(): Promise<boolean> { /* 取一个 pending job 执行；有执行返回 true */ }
-export function startPolling(intervalMs = 2000): NodeJS.Timeout { return setInterval(runOnce, intervalMs); }
-export function stopPolling(timer: NodeJS.Timeout): void { clearInterval(timer); }
+export async function runOnce(): Promise<boolean> {
+  /* 取一个 pending job 执行；有执行返回 true */
+}
+export function startPolling(intervalMs = 2000): NodeJS.Timeout {
+  return setInterval(runOnce, intervalMs);
+}
+export function stopPolling(timer: NodeJS.Timeout): void {
+  clearInterval(timer);
+}
 ```
 
 - **生产模式**：`server.ts` 启动时调用 `startPolling(2000)`，单进程串行执行，不存在并发竞争；
@@ -315,6 +334,7 @@ MaterialJobWorker.pollAndRun
 ### 11.2 覆盖场景
 
 **正常路径**
+
 - 上传 `.txt` 文件 → 返回 material，status=pending；
 - Worker 执行转换 → status 变为 converted；
 - Worker 执行 AI 生成（mock 成功）→ status 变为 completed，能查到 note 和 knowledge modules；
@@ -323,6 +343,7 @@ MaterialJobWorker.pollAndRun
 - PATCH /api/knowledge-modules/:id 更新 learnStatus，并写入 StudyEvent。
 
 **参数边界**
+
 - 缺少必填字段；
 - 无效 `courseInstanceId`；
 - 不支持的文件类型（.exe、.zip）；
@@ -331,6 +352,7 @@ MaterialJobWorker.pollAndRun
 - 无效 `learnStatus` / `importance` / `difficulty`。
 
 **失败路径**
+
 - 转换失败 → status=conversion_failed，error_message 非空；
 - 重试转换成功；
 - 自动/手动重试累计达到 3 次后拒绝；重复 retry 请求返回 `JOB_ALREADY_PENDING`，不创建重复 Job；
@@ -339,6 +361,7 @@ MaterialJobWorker.pollAndRun
 - AI 重试成功/超限。
 
 **安全与隔离**
+
 - 查询 A 课程的资料不返回 B 课程；
 - 跨学期 courseInstanceId 返回 404；
 - storage_key 不泄露绝对路径；MIME 与扩展名不一致、非法 status 与超 1MB normalized_text 均被拒绝。
@@ -377,32 +400,25 @@ MaterialJobWorker.pollAndRun
 
 ## 14. 风险与回滚
 
-| 风险 | 应对 |
-|---|---|
-| schema migration v3 与旧测试数据不兼容 | 测试使用独立临时 `APP_DATA_ROOT`，每次启动新库 |
-| AI 调用在测试中不可控 | 优先使用 mock Provider 注入；次选利用未配置降级路径 |
-| Worker 异步轮询导致测试不稳定 | 提供同步触发入口或合理等待；避免真实 sleep 循环 |
-| 文件过大导致 multer 内存溢出 | Multer 与 Service 层均限制 10MB，并将 `LIMIT_FILE_SIZE` 统一映射为 413 + `FILE_TOO_LARGE` |
-| 多格式转换器失败 | 转换错误写入 material，不阻塞其他资料处理 |
+| 风险                                   | 应对                                                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| schema migration v3 与旧测试数据不兼容 | 测试使用独立临时 `APP_DATA_ROOT`，每次启动新库                                            |
+| AI 调用在测试中不可控                  | 优先使用 mock Provider 注入；次选利用未配置降级路径                                       |
+| Worker 异步轮询导致测试不稳定          | 提供同步触发入口或合理等待；避免真实 sleep 循环                                           |
+| 文件过大导致 multer 内存溢出           | Multer 与 Service 层均限制 10MB，并将 `LIMIT_FILE_SIZE` 统一映射为 413 + `FILE_TOO_LARGE` |
+| 多格式转换器失败                       | 转换错误写入 material，不阻塞其他资料处理                                                 |
 
 ---
 
 ## 15. 已决策事项（原待澄清问题）
 
-| # | 问题 | 决策 |
-|---|---|---|
-| 1 | Worker 启动方式 | 后端启动时 `startPolling(2000)` 自动轮询，测试用 `runOnce()` 同步触发。见第 9.0 节。 |
-| 2 | AI 输出解析失败 | 标记 `pending_quality_check`，保留纯文本，解析错误前 500 字符记入 `ai_generation_error_message`。 |
-| 3 | 长文本分段 | T07 不实现分段；完整原文保存，超过 8,000 字时仅截断单次 AI 输入并记录 `truncated: true`。分段与合并放后续迭代。 |
-| 4 | URL 导入 | T07 不做；延后到 S2-v1.1。 |
+| #   | 问题            | 决策                                                                                                            |
+| --- | --------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | Worker 启动方式 | 后端启动时 `startPolling(2000)` 自动轮询，测试用 `runOnce()` 同步触发。见第 9.0 节。                            |
+| 2   | AI 输出解析失败 | 标记 `pending_quality_check`，保留纯文本，解析错误前 500 字符记入 `ai_generation_error_message`。               |
+| 3   | 长文本分段      | T07 不实现分段；完整原文保存，超过 8,000 字时仅截断单次 AI 输入并记录 `truncated: true`。分段与合并放后续迭代。 |
+| 4   | URL 导入        | T07 不做；延后到 S2-v1.1。                                                                                      |
 
 ---
 
 **下一步**：本计划经用户批准后，进入实现阶段。
-
-
-
-
-
-
-

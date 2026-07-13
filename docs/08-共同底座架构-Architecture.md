@@ -24,18 +24,18 @@
 
 ## 二、最小组件与目录边界
 
-| 能力 | 当前默认组件 | 必须遵守的边界 |
-|---|---|---|
-| 本地 Web | Express | 只监听 `127.0.0.1`；孩子从本机浏览器使用 |
-| 数据库 | `GlobalCatalogDatabase` + `SemesterDatabase`（均为 SQLite + `better-sqlite3`） | 全局库只存索引与配置；每学期一库，WAL、单 Node 写进程、关闭后备份 |
-| 文件 | Node `fs` + `StorageAdapter` | 业务数据只存 `storage_key`，按学期/课程实例隔离，拒绝路径逃逸 |
-| 持久化任务 | SQLite `jobs` + 单进程 Worker | 串行领取、有限重试、过期 running 恢复；任务归属到学期库 |
-| OCR | RapidOCR Python 子进程 | stdin/参数只传文件路径；stdout 仅 JSON；用完退出；失败可转入分级 fallback |
-| AI | `AiProviderRouter` + `OpenAiProvider` + 后续 `QualityGateService` | T05 已接入 OpenAI-compatible Provider；按 priority 首个成功返回，故障不阻断学习，只产生待质检 |
-| 报告 | `ReportService` | 基于确定性证据聚合 INFO/SIGNAL/TREND；不读取资料正文、答案或聊天内容 |
-| 邮件 | `nodemailer` + QQ SMTP | HTML 正式报告；密钥仅在 `.env.local` |
-| 飞书 | 自定义机器人 Webhook | 完整脱敏报告卡片；不暴露完整 URL |
-| 调度 | Windows Task Scheduler | 独立 `report.js`；不启动 OCR 或学习 Web 服务 |
+| 能力       | 当前默认组件                                                                   | 必须遵守的边界                                                                                |
+| ---------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| 本地 Web   | Express                                                                        | 只监听 `127.0.0.1`；孩子从本机浏览器使用                                                      |
+| 数据库     | `GlobalCatalogDatabase` + `SemesterDatabase`（均为 SQLite + `better-sqlite3`） | 全局库只存索引与配置；每学期一库，WAL、单 Node 写进程、关闭后备份                             |
+| 文件       | Node `fs` + `StorageAdapter`                                                   | 业务数据只存 `storage_key`，按学期/课程实例隔离，拒绝路径逃逸                                 |
+| 持久化任务 | SQLite `jobs` + 单进程 Worker                                                  | 串行领取、有限重试、过期 running 恢复；任务归属到学期库                                       |
+| OCR        | RapidOCR Python 子进程                                                         | stdin/参数只传文件路径；stdout 仅 JSON；用完退出；失败可转入分级 fallback                     |
+| AI         | `AiProviderRouter` + `OpenAiProvider` + 后续 `QualityGateService`              | T05 已接入 OpenAI-compatible Provider；按 priority 首个成功返回，故障不阻断学习，只产生待质检 |
+| 报告       | `ReportService`                                                                | 基于确定性证据聚合 INFO/SIGNAL/TREND；不读取资料正文、答案或聊天内容                          |
+| 邮件       | `nodemailer` + QQ SMTP                                                         | HTML 正式报告；密钥仅在 `.env.local`                                                          |
+| 飞书       | 自定义机器人 Webhook                                                           | 完整脱敏报告卡片；不暴露完整 URL                                                              |
+| 调度       | Windows Task Scheduler                                                         | 独立 `report.js`；不启动 OCR 或学习 Web 服务                                                  |
 
 主系统位于 `I:\ai-studybuddy`；最小验证位于外部 `I:\ai-studybuddy-composer\windows-native`。后者不加入 workspace，不能被 `packages/` import。数据根目录通过 `APP_DATA_ROOT` 配置，开发机建议 `I:\ai-studybuddy-data`，成品可使用 `%LOCALAPPDATA%\AIStudyBuddy`。
 
@@ -62,19 +62,19 @@ APP_DATA_ROOT/
   backups/...                           # 关闭或归档前后的可恢复备份
 ```
 
-| 位置 / 对象 | 用途 | 关键规则 |
-|---|---|---|
-| `studybuddy.db` | 全局设置、孩子档案、报告目标、学期目录、数据库版本、备份/恢复记录、少量跨学期摘要 | 小而稳定；不写入资料、笔记或单学期高频事件 |
-| `semesters`（全局索引） | 学期名称、教学开始/结束日期、状态、业务库相对路径 | 状态：`active / teaching_ended / follow_up / archived`；允许一个 active 与若干 follow_up 同时存在 |
-| `semester.db` | 本学期课程实例、课表、考试尝试、任务、资料索引、知识模块、事件、jobs、报告证据 | 课程通过 `course_instance_id` 隔离；不同学期不共享事务或文件空间 |
-| `course_instances` | 某学期的一次具体修读 | 重修新建实例，`retake_of_course_instance_id` 指向原实例；补考不新建课程 |
-| `assessment_attempts` | 正常考试、补考或其他一次考试尝试 | 保存日期、来源、识别置信度、孩子确认状态和变更历史；只有 `confirmed` 能触发倒计时/提醒 |
-| `knowledge_modules` | 可考知识模块 | 必须回链资料和来源证据；连接任务、练习、错题后续能力 |
-| `study_tasks` | 学习任务 | 可关联考试尝试/知识模块；有截止、预计/实际时长及闭合状态 |
-| `study_events` | 时间线和报告证据 | 记录事件摘要、来源、证据引用、确认、质量门和特例元数据；不存隐私全文 |
-| `materials` | 文件索引 | 只保存 `storage_key`，不保存绝对路径，不把附件作为 SQLite BLOB |
-| `jobs` | 持久化后台任务 | `pending/running/completed/failed` 和重试；可建立 `pending_quality_check` 业务状态 |
-| `report_deliveries` | 报告渠道去重 | 唯一键 `report_key + channel`，按渠道独立重试 |
+| 位置 / 对象             | 用途                                                                              | 关键规则                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `studybuddy.db`         | 全局设置、孩子档案、报告目标、学期目录、数据库版本、备份/恢复记录、少量跨学期摘要 | 小而稳定；不写入资料、笔记或单学期高频事件                                                        |
+| `semesters`（全局索引） | 学期名称、教学开始/结束日期、状态、业务库相对路径                                 | 状态：`active / teaching_ended / follow_up / archived`；允许一个 active 与若干 follow_up 同时存在 |
+| `semester.db`           | 本学期课程实例、课表、考试尝试、任务、资料索引、知识模块、事件、jobs、报告证据    | 课程通过 `course_instance_id` 隔离；不同学期不共享事务或文件空间                                  |
+| `course_instances`      | 某学期的一次具体修读                                                              | 重修新建实例，`retake_of_course_instance_id` 指向原实例；补考不新建课程                           |
+| `assessment_attempts`   | 正常考试、补考或其他一次考试尝试                                                  | 保存日期、来源、识别置信度、孩子确认状态和变更历史；只有 `confirmed` 能触发倒计时/提醒            |
+| `knowledge_modules`     | 可考知识模块                                                                      | 必须回链资料和来源证据；连接任务、练习、错题后续能力                                              |
+| `study_tasks`           | 学习任务                                                                          | 可关联考试尝试/知识模块；有截止、预计/实际时长及闭合状态                                          |
+| `study_events`          | 时间线和报告证据                                                                  | 记录事件摘要、来源、证据引用、确认、质量门和特例元数据；不存隐私全文                              |
+| `materials`             | 文件索引                                                                          | 只保存 `storage_key`，不保存绝对路径，不把附件作为 SQLite BLOB                                    |
+| `jobs`                  | 持久化后台任务                                                                    | `pending/running/completed/failed` 和重试；可建立 `pending_quality_check` 业务状态                |
+| `report_deliveries`     | 报告渠道去重                                                                      | 唯一键 `report_key + channel`，按渠道独立重试                                                     |
 
 Phase 0.8 只按当前 S1/S2 闭环创建必要共同对象。`questions`、`practice_sessions`、`practice_answers`、`mistakes`、`weak_points`、`mock_attempts` 等 S3–S7 详细业务表仍要等各子系统触发并完成轻量 PRD 后才创建。
 

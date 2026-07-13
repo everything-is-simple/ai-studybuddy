@@ -3,24 +3,24 @@
 // 逻辑 storage_key 唯一标识文件，业务数据不保存绝对路径。
 // ============================================================
 
-import crypto from "crypto";
-import fs from "fs";
-import path from "path";
-import type { Readable } from "stream";
-import { pipeline } from "stream/promises";
-import { resolveStorageKeyToPath } from "../db/paths";
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import type { Readable } from 'stream';
+import { pipeline } from 'stream/promises';
+import { resolveStorageKeyToPath } from '../db/paths';
 
 export class StoragePathEscapeError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "StoragePathEscapeError";
+    this.name = 'StoragePathEscapeError';
   }
 }
 
 export class StorageKeyNotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "StorageKeyNotFoundError";
+    this.name = 'StorageKeyNotFoundError';
   }
 }
 
@@ -44,7 +44,7 @@ export interface GetFileResult {
 
 export class StorageAdapter {
   async put(input: PutFileInput): Promise<PutFileResult> {
-    const ext = path.extname(input.originalName).toLowerCase() || "";
+    const ext = path.extname(input.originalName).toLowerCase() || '';
     const fileName = `${crypto.randomUUID()}${ext}`;
 
     const storageKey = input.courseId
@@ -106,9 +106,7 @@ export class StorageAdapter {
       return resolveStorageKeyToPath(storageKey);
     } catch (error) {
       throw new StoragePathEscapeError(
-        `STORAGE_PATH_ESCAPE ${storageKey}: ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        `STORAGE_PATH_ESCAPE ${storageKey}: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }

@@ -31,24 +31,24 @@ packages/backend/src/
 
 ### 2.1 双库模型
 
-| 库 | 文件名 | 职责 | 写入频率 |
-|---|---|---|---|
-| 全局库 | `studybuddy.db` | 系统配置、孩子档案、学期索引、备份记录 | 低频，小而稳定 |
-| 学期库 | `semester.db` | 课程实例、考试尝试、任务、事件、资料索引、知识模块、jobs、报告证据 | 随学习活动写入 |
+| 库     | 文件名          | 职责                                                               | 写入频率       |
+| ------ | --------------- | ------------------------------------------------------------------ | -------------- |
+| 全局库 | `studybuddy.db` | 系统配置、孩子档案、学期索引、备份记录                             | 低频，小而稳定 |
+| 学期库 | `semester.db`   | 课程实例、考试尝试、任务、事件、资料索引、知识模块、jobs、报告证据 | 随学习活动写入 |
 
 全局库不写学期业务明细；学期库之间互不共享事务或文件空间。
 
 ### 2.2 打开时必做
 
 ```typescript
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 ```
 
 ### 2.3 关闭或归档前必做
 
 ```typescript
-db.pragma("wal_checkpoint(TRUNCATE)");
+db.pragma('wal_checkpoint(TRUNCATE)');
 // 然后执行 PRAGMA integrity_check 确认结果为 ok
 db.close();
 ```
@@ -93,6 +93,7 @@ APP_DATA_ROOT/
 - 构建脚本清理 `dist/` 时必须同步清理 `tsconfig.tsbuildinfo`，再执行 project build；测试必须覆盖干净构建后的 `dist` 运行态。
 
 ---
+
 ## 五、Adapter 统一输出格式
 
 ### 5.1 Converter 输出
@@ -102,7 +103,7 @@ APP_DATA_ROOT/
 ```typescript
 interface ConverterResult {
   ok: boolean;
-  sourceType: "pdf" | "image" | "text";
+  sourceType: 'pdf' | 'image' | 'text';
   text?: string;
   metadata?: { pageCount?: number; charCount?: number; hasFormula?: boolean; hasTable?: boolean };
   warnings?: string[];
@@ -116,7 +117,7 @@ interface ConverterResult {
 
 ```typescript
 interface ReportSendResult {
-  channel: "email" | "feishu";
+  channel: 'email' | 'feishu';
   success: boolean;
   errorSummary?: string;
 }
@@ -193,23 +194,23 @@ AI Router 日志额外只允许记录 `taskType`、Provider 名称、model、tok
 
 ### 8.3 变量清单
 
-| 变量名 | 用途 | 必填 |
-|---|---|---|
-| `APP_DATA_ROOT` | 运行数据根目录 | 是 |
-| `BACKEND_PORT` | 后端端口（默认 3000） | 否 |
-| `BACKEND_HOST` | 后端监听地址（默认 127.0.0.1） | 否 |
-| `AI_PROVIDERS` | 多 Provider JSON 数组；按 `priority` 升序 fallback | 否；推荐配置 |
-| `AI_TIMEOUT_MS` | 单次 AI 请求超时毫秒数（默认 60000） | 否 |
-| `AI_BASE_URL` | legacy 单 Provider 的 OpenAI-compatible Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `AI_API_KEY` | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `AI_MODEL` | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `SMTP_HOST` | QQ SMTP 主机；`.env.example` 已给出 `smtp.qq.com` 示例 | 否；S6 正式发送报告时必填 |
-| `SMTP_PORT` | QQ SMTP 端口；`.env.example` 已给出 `465` 示例 | 否；S6 正式发送报告时必填 |
-| `SMTP_SECURE` | 是否 SSL；`.env.example` 已给出 `true` 示例 | 否；S6 正式发送报告时必填 |
-| `SMTP_USER` | QQ 邮箱地址；只填入 `.env.local` | 否；S6 正式发送报告时必填 |
-| `SMTP_AUTH_CODE` | QQ SMTP 授权码；只填入 `.env.local`，不得进入日志或提交 | 否；S6 正式发送报告时必填 |
-| `SMTP_TO` | 家长收件邮箱；只填入 `.env.local` | 否；S6 正式发送报告时必填 |
-| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL；只填入 `.env.local`，不得进入日志或提交 | 否；S6 正式发送报告时必填 |
+| 变量名               | 用途                                                                           | 必填                      |
+| -------------------- | ------------------------------------------------------------------------------ | ------------------------- |
+| `APP_DATA_ROOT`      | 运行数据根目录                                                                 | 是                        |
+| `BACKEND_PORT`       | 后端端口（默认 3000）                                                          | 否                        |
+| `BACKEND_HOST`       | 后端监听地址（默认 127.0.0.1）                                                 | 否                        |
+| `AI_PROVIDERS`       | 多 Provider JSON 数组；按 `priority` 升序 fallback                             | 否；推荐配置              |
+| `AI_TIMEOUT_MS`      | 单次 AI 请求超时毫秒数（默认 60000）                                           | 否                        |
+| `AI_BASE_URL`        | legacy 单 Provider 的 OpenAI-compatible Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否                        |
+| `AI_API_KEY`         | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用                       | 否                        |
+| `AI_MODEL`           | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用                        | 否                        |
+| `SMTP_HOST`          | QQ SMTP 主机；`.env.example` 已给出 `smtp.qq.com` 示例                         | 否；S6 正式发送报告时必填 |
+| `SMTP_PORT`          | QQ SMTP 端口；`.env.example` 已给出 `465` 示例                                 | 否；S6 正式发送报告时必填 |
+| `SMTP_SECURE`        | 是否 SSL；`.env.example` 已给出 `true` 示例                                    | 否；S6 正式发送报告时必填 |
+| `SMTP_USER`          | QQ 邮箱地址；只填入 `.env.local`                                               | 否；S6 正式发送报告时必填 |
+| `SMTP_AUTH_CODE`     | QQ SMTP 授权码；只填入 `.env.local`，不得进入日志或提交                        | 否；S6 正式发送报告时必填 |
+| `SMTP_TO`            | 家长收件邮箱；只填入 `.env.local`                                              | 否；S6 正式发送报告时必填 |
+| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL；只填入 `.env.local`，不得进入日志或提交                      | 否；S6 正式发送报告时必填 |
 
 > Phase 0.7 已验证 QQ SMTP 与飞书 Webhook 的真实送达；Phase 0.8 T06 只实现 S1 学习节奏核心 API，不消费这些报告发送变量。正式业务发送留到 S6 ParentReport。
 

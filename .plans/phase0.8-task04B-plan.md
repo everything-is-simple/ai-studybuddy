@@ -23,16 +23,16 @@
 
 ## 关键文件路径
 
-| 类型 | 路径 |
-|---|---|
-| 共享类型 | `packages/shared/src/types.ts` |
-| 后端依赖 | `packages/backend/package.json` |
-| Converter 统一入口 | `packages/backend/src/adapters/converter.ts` |
-| DOCX 实现与测试 | `packages/backend/src/adapters/docx-converter.ts`<br>`packages/backend/test/docx-converter.test.mjs` |
-| URL/HTML 实现与测试 | `packages/backend/src/adapters/url-fetcher.ts`<br>`packages/backend/test/url-fetcher.test.mjs` |
-| PPTX 实现与测试 | `packages/backend/src/adapters/pptx-converter.ts`<br>`packages/backend/test/pptx-converter.test.mjs` |
-| Dev 路由 | `packages/backend/src/api/dev-converter.ts` |
-| 任务清单 | `docs/04-开发任务清单-Todo-List.md` |
+| 类型                | 路径                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| 共享类型            | `packages/shared/src/types.ts`                                                                       |
+| 后端依赖            | `packages/backend/package.json`                                                                      |
+| Converter 统一入口  | `packages/backend/src/adapters/converter.ts`                                                         |
+| DOCX 实现与测试     | `packages/backend/src/adapters/docx-converter.ts`<br>`packages/backend/test/docx-converter.test.mjs` |
+| URL/HTML 实现与测试 | `packages/backend/src/adapters/url-fetcher.ts`<br>`packages/backend/test/url-fetcher.test.mjs`       |
+| PPTX 实现与测试     | `packages/backend/src/adapters/pptx-converter.ts`<br>`packages/backend/test/pptx-converter.test.mjs` |
+| Dev 路由            | `packages/backend/src/api/dev-converter.ts`                                                          |
+| 任务清单            | `docs/04-开发任务清单-Todo-List.md`                                                                  |
 
 ---
 
@@ -41,31 +41,46 @@
 ### Task 1: 扩展共享类型与安装依赖
 
 **Files:**
+
 - Modify: `packages/shared/src/types.ts`
 - Modify: `packages/backend/package.json`
 - Modify: `pnpm-lock.yaml`
 
 - [ ] **Step 1: 扩展 `ConverterResult` 类型**
-  在 `types.ts` 中，将 `sourceType` 的联合类型扩展为 `"pdf" | "image" | "text" | "docx" | "url" | "html" | "pptx"`。
-  为避免 `metadata` 字段膨胀，定义强类型 sub-interface，并在 `ConverterResult.metadata` 中进行交叉或组合引用：
+      在 `types.ts` 中，将 `sourceType` 的联合类型扩展为 `"pdf" | "image" | "text" | "docx" | "url" | "html" | "pptx"`。
+      为避免 `metadata` 字段膨胀，定义强类型 sub-interface，并在 `ConverterResult.metadata` 中进行交叉或组合引用：
+
   ```typescript
-  export interface DocxMetadata { embeddedVisualCount?: number; } 
-  export interface PptxMetadata { slideCount?: number; textSlideCount?: number; imageSlideCount?: number; } 
-  export interface UrlMetadata  { title?: string; byline?: string; finalUrl?: string; redirectCount?: number; byteCount?: number; }
+  export interface DocxMetadata {
+    embeddedVisualCount?: number;
+  }
+  export interface PptxMetadata {
+    slideCount?: number;
+    textSlideCount?: number;
+    imageSlideCount?: number;
+  }
+  export interface UrlMetadata {
+    title?: string;
+    byline?: string;
+    finalUrl?: string;
+    redirectCount?: number;
+    byteCount?: number;
+  }
   // 在 ConverterResult 中扩展：metadata?: { pageCount?: number; charCount?: number; hasFormula?: boolean; hasTable?: boolean; } & DocxMetadata & PptxMetadata & UrlMetadata;
   ```
 
 - [ ] **Step 2: 安装必要的后端依赖**
-  在 `packages/backend` 目录下执行：
-  `pnpm add mammoth jszip @mozilla/readability jsdom undici`
-  `pnpm add -D @types/jsdom`
-  确保 `package.json` 依赖已更新。
+      在 `packages/backend` 目录下执行：
+      `pnpm add mammoth jszip @mozilla/readability jsdom undici`
+      `pnpm add -D @types/jsdom`
+      确保 `package.json` 依赖已更新。
 
 ---
 
 ### Task 2: 装配 DocxConverter
 
 **Files:**
+
 - Create: `packages/backend/src/adapters/docx-converter.ts`
 - Create: `packages/backend/test/docx-converter.test.mjs`
 - Modify: `packages/backend/src/adapters/converter.ts` (导出该类)
@@ -88,6 +103,7 @@
 ### Task 3: 装配 UrlFetcher 与 TextConverter 的 HTML 支持
 
 **Files:**
+
 - Create: `packages/backend/src/adapters/url-fetcher.ts`
 - Create: `packages/backend/test/url-fetcher.test.mjs`
 - Modify: `packages/backend/src/adapters/converter.ts` (修改原 TextConverter，并增加路由分发)
@@ -114,6 +130,7 @@
 ### Task 4: 装配 PptxConverter
 
 **Files:**
+
 - Create: `packages/backend/src/adapters/pptx-converter.ts`
 - Create: `packages/backend/test/pptx-converter.test.mjs`
 
@@ -135,6 +152,7 @@
 ### Task 5: 文件组织调整、暴露 Dev API 与拦截老旧格式
 
 **Files:**
+
 - Modify: `packages/backend/src/adapters/converter.ts`
 - Modify: `packages/backend/src/api/dev-converter.ts`
 
@@ -148,7 +166,7 @@
       filename?: string;
       declaredMimeType?: string;
     }
-    export async function dispatchConverter(input: DispatchConverterInput): Promise<ConverterResult>
+    export async function dispatchConverter(input: DispatchConverterInput): Promise<ConverterResult>;
     ```
     - 扩展名是路由核心依据，MIME 仅作辅助/告警，不信任客户端 MIME。
     - 该函数既提供给未来 `POST /materials/upload` 统一使用，本阶段也在 dev API 中作为统一入口（可选）或被具体路由调用。
@@ -173,6 +191,7 @@
 ### Task 6: 复跑、文档治理和提交
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Do not modify: `docs/00-文档索引-Index.md` (不满足触发条件)
 

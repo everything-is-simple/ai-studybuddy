@@ -3,34 +3,28 @@
 // 仅用于验证数据库共同底座；正式业务 API 在对应子系统开始时建立。
 // ============================================================
 
-import { Router } from "express";
-import type { Request, Response } from "express";
-import fs from "fs";
-import type { ApiError, ApiSuccess } from "@ai-studybuddy/shared";
-import {
-  isForeignKeysOn,
-  isWalEnabled,
-  openExistingDbAtPath,
-  runIntegrityCheck,
-} from "../db/connection";
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import fs from 'fs';
+import type { ApiError, ApiSuccess } from '@ai-studybuddy/shared';
+import { isForeignKeysOn, isWalEnabled, openExistingDbAtPath, runIntegrityCheck } from '../db/connection';
 import {
   initializeSemester,
   SemesterInitializationError,
   type SemesterInitializationInput,
-} from "../db/semester-initializer";
-import { getGlobalDbPath, getSemesterDbPath } from "../db/paths";
-import { config } from "../config/env";
+} from '../db/semester-initializer';
+import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
+import { config } from '../config/env';
 
 const router: Router = Router();
 
 // ── POST /api/dev/init-semester ────────────────────────────
 // 输入校验、staging 迁移与失败补偿全部由 semester-initializer 统一负责。
-router.post("/init-semester", (req: Request, res: Response) => {
+router.post('/init-semester', (req: Request, res: Response) => {
   try {
-    const initialized = initializeSemester(
-      req.body as SemesterInitializationInput,
-      { appDataRoot: config.appDataRoot }
-    );
+    const initialized = initializeSemester(req.body as SemesterInitializationInput, {
+      appDataRoot: config.appDataRoot,
+    });
 
     const response: ApiSuccess = {
       success: true,
@@ -46,7 +40,7 @@ router.post("/init-semester", (req: Request, res: Response) => {
       error instanceof SemesterInitializationError
         ? error
         : new SemesterInitializationError(
-            "SEMESTER_INIT_FAILED",
+            'SEMESTER_INIT_FAILED',
             500,
             error instanceof Error ? error.message : String(error),
             error
@@ -61,7 +55,7 @@ router.post("/init-semester", (req: Request, res: Response) => {
 
 // ── GET /api/dev/db-health ──────────────────────────────────
 // 检查全局库和所有 ready 学期库的健康状态。
-router.get("/db-health", (_req: Request, res: Response) => {
+router.get('/db-health', (_req: Request, res: Response) => {
   try {
     const globalDbPath = getGlobalDbPath();
     const globalDbExists = fs.existsSync(globalDbPath);
@@ -78,7 +72,7 @@ router.get("/db-health", (_req: Request, res: Response) => {
         exists: false,
         wal: false,
         foreignKeys: false,
-        integrity: "not_initialized",
+        integrity: 'not_initialized',
       };
     } else {
       const db = openExistingDbAtPath(globalDbPath);
@@ -99,16 +93,16 @@ router.get("/db-health", (_req: Request, res: Response) => {
 
     if (globalDbExists) {
       const db = openExistingDbAtPath(globalDbPath);
-      const rows = db
-        .prepare(
-          "SELECT id, semester_code, status FROM semesters WHERE ready = 1"
-        )
-        .all() as Array<{ id: string; semester_code: string; status: string }>;
+      const rows = db.prepare('SELECT id, semester_code, status FROM semesters WHERE ready = 1').all() as Array<{
+        id: string;
+        semester_code: string;
+        status: string;
+      }>;
 
       for (const row of rows) {
         const semesterDbPath = getSemesterDbPath(row.id);
         const dbExists = fs.existsSync(semesterDbPath);
-        let integrity = "not_initialized";
+        let integrity = 'not_initialized';
         if (dbExists) {
           const semesterDb = openExistingDbAtPath(semesterDbPath);
           integrity = runIntegrityCheck(semesterDb);
@@ -135,7 +129,7 @@ router.get("/db-health", (_req: Request, res: Response) => {
     const response: ApiError = {
       success: false,
       error: {
-        code: "DB_HEALTH_CHECK_FAILED",
+        code: 'DB_HEALTH_CHECK_FAILED',
         message: error instanceof Error ? error.message : String(error),
       },
     };

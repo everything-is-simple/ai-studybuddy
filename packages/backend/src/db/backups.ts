@@ -4,20 +4,14 @@
 // 并删除旧 WAL/SHM，避免损坏副本的旁路日志污染恢复结果。
 // ============================================================
 
-import crypto from "crypto";
-import fs from "fs";
-import path from "path";
-import {
-  backupDb,
-  checkpointAndClose,
-  openDbAtPath,
-  openExistingDbAtPath,
-  runIntegrityCheck,
-} from "./connection";
-import { initGlobalDbAtPath } from "./migrations";
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { backupDb, checkpointAndClose, openDbAtPath, openExistingDbAtPath, runIntegrityCheck } from './connection';
+import { initGlobalDbAtPath } from './migrations';
 
 export interface CreateDatabaseBackupInput {
-  scope: "global" | "semester";
+  scope: 'global' | 'semester';
   databasePath: string;
   globalDbPath: string;
   backupsDir: string;
@@ -60,11 +54,8 @@ export function createDatabaseBackup(input: CreateDatabaseBackupInput): Database
 
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
-  const safeTimestamp = createdAt.replace(/[:.]/g, "-");
-  const backupPath = path.join(
-    path.resolve(input.backupsDir),
-    `${input.scope}-${safeTimestamp}-${id}.db`
-  );
+  const safeTimestamp = createdAt.replace(/[:.]/g, '-');
+  const backupPath = path.join(path.resolve(input.backupsDir), `${input.scope}-${safeTimestamp}-${id}.db`);
 
   const sourceDb = openDbAtPath(input.databasePath);
   try {
@@ -73,7 +64,7 @@ export function createDatabaseBackup(input: CreateDatabaseBackupInput): Database
     sourceDb.close();
   }
 
-  if (checkDatabaseIntegrityAtPath(backupPath) !== "ok") {
+  if (checkDatabaseIntegrityAtPath(backupPath) !== 'ok') {
     fs.rmSync(backupPath, { force: true });
     throw new Error(`[BACKUP] integrity check failed after copy: ${backupPath}`);
   }
@@ -81,9 +72,7 @@ export function createDatabaseBackup(input: CreateDatabaseBackupInput): Database
   const globalDb = initGlobalDbAtPath(input.globalDbPath);
   try {
     globalDb
-      .prepare(
-        "INSERT INTO backup_records (id, scope, backup_path, created_at, note) VALUES (?, ?, ?, ?, ?)"
-      )
+      .prepare('INSERT INTO backup_records (id, scope, backup_path, created_at, note) VALUES (?, ?, ?, ?, ?)')
       .run(id, input.scope, backupPath, createdAt, input.note ?? null);
   } finally {
     checkpointAndClose(globalDb);
@@ -100,7 +89,7 @@ export function restoreDatabaseFromBackup(input: RestoreDatabaseInput): void {
   if (!fs.existsSync(input.backupPath)) {
     throw new Error(`[RESTORE] backup does not exist: ${input.backupPath}`);
   }
-  if (checkDatabaseIntegrityAtPath(input.backupPath) !== "ok") {
+  if (checkDatabaseIntegrityAtPath(input.backupPath) !== 'ok') {
     throw new Error(`[RESTORE] backup integrity check failed: ${input.backupPath}`);
   }
 
@@ -111,7 +100,7 @@ export function restoreDatabaseFromBackup(input: RestoreDatabaseInput): void {
   fs.copyFileSync(input.backupPath, input.destinationPath);
 
   const integrity = checkDatabaseIntegrityAtPath(input.destinationPath);
-  if (integrity !== "ok") {
+  if (integrity !== 'ok') {
     throw new Error(`[RESTORE] restored database integrity check failed: ${integrity}`);
   }
 }

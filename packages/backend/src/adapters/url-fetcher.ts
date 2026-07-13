@@ -3,17 +3,12 @@
 // 安全抓取网页 URL，使用 undici + 自定义 lookup 做 SSRF 防护。
 // ============================================================
 
-import type { ConverterResult, UrlMetadata } from "@ai-studybuddy/shared";
-import dns from "dns";
-import net from "net";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
-import {
-  fetch as undiciFetch,
-  Agent,
-  RequestInit as UndiciRequestInit,
-  Response as UndiciResponse,
-} from "undici";
+import type { ConverterResult, UrlMetadata } from '@ai-studybuddy/shared';
+import dns from 'dns';
+import net from 'net';
+import { JSDOM } from 'jsdom';
+import { Readability } from '@mozilla/readability';
+import { fetch as undiciFetch, Agent, RequestInit as UndiciRequestInit, Response as UndiciResponse } from 'undici';
 
 // ── 默认限制 ────────────────────────────────────────────────
 
@@ -21,12 +16,8 @@ const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_MAX_REDIRECTS = 3;
 const DEFAULT_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
-const ALLOWED_SCHEMES = new Set(["http:", "https:"]);
-const ALLOWED_CONTENT_TYPES = new Set([
-  "text/html",
-  "application/xhtml+xml",
-  "text/plain",
-]);
+const ALLOWED_SCHEMES = new Set(['http:', 'https:']);
+const ALLOWED_CONTENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'text/plain']);
 
 // ── 类型 ────────────────────────────────────────────────────
 
@@ -53,54 +44,43 @@ export interface UrlFetcherOptions {
 // ── IP 地址校验 ─────────────────────────────────────────────
 
 function isLoopbackIp(ip: string): boolean {
-  return (
-    ip === "127.0.0.1" ||
-    ip.startsWith("127.") ||
-    ip === "::1" ||
-    ip === "0:0:0:0:0:0:0:1"
-  );
+  return ip === '127.0.0.1' || ip.startsWith('127.') || ip === '::1' || ip === '0:0:0:0:0:0:0:1';
 }
 
 function isPrivateIp(ip: string): boolean {
-  if (ip.startsWith("10.") || ip.startsWith("192.168.")) return true;
-  if (ip.startsWith("172.")) {
-    const second = Number(ip.split(".")[1]);
+  if (ip.startsWith('10.') || ip.startsWith('192.168.')) return true;
+  if (ip.startsWith('172.')) {
+    const second = Number(ip.split('.')[1]);
     if (second >= 16 && second <= 31) return true;
   }
   // IPv6 unique local (fc00::/7)
-  if (ip.toLowerCase().startsWith("fc") || ip.toLowerCase().startsWith("fd")) {
+  if (ip.toLowerCase().startsWith('fc') || ip.toLowerCase().startsWith('fd')) {
     return true;
   }
   return false;
 }
 
 function isLinkLocalIp(ip: string): boolean {
-  if (ip.startsWith("169.254.")) return true;
-  if (ip.toLowerCase().startsWith("fe80:")) return true;
+  if (ip.startsWith('169.254.')) return true;
+  if (ip.toLowerCase().startsWith('fe80:')) return true;
   return false;
 }
 
 function isUnspecifiedIp(ip: string): boolean {
-  return ip === "0.0.0.0" || ip === "::" || ip === "0:0:0:0:0:0:0:0";
+  return ip === '0.0.0.0' || ip === '::' || ip === '0:0:0:0:0:0:0:0';
 }
 
 function isIPv4MappedIPv6(ip: string): boolean {
-  return ip.toLowerCase().startsWith("::ffff:");
+  return ip.toLowerCase().startsWith('::ffff:');
 }
 
 function isBlockedIp(ip: string): boolean {
-  return (
-    isLoopbackIp(ip) ||
-    isPrivateIp(ip) ||
-    isLinkLocalIp(ip) ||
-    isUnspecifiedIp(ip) ||
-    isIPv4MappedIPv6(ip)
-  );
+  return isLoopbackIp(ip) || isPrivateIp(ip) || isLinkLocalIp(ip) || isUnspecifiedIp(ip) || isIPv4MappedIPv6(ip);
 }
 
 // 校验 URL 中的 IP 字面量（应用层第一道防线）
 function validateUrlIpLiteral(host: string): void {
-  const normalizedHost = host.replace(/^\[|\]$/g, "");
+  const normalizedHost = host.replace(/^\[|\]$/g, '');
   const family = net.isIP(normalizedHost);
   if (family === 0) return; // 不是 IP 字面量，交给 DNS lookup 校验
   if (isBlockedIp(normalizedHost)) {
@@ -123,9 +103,9 @@ function createSecureLookup(resolver: LookupResolver): LookupResolver {
         for (const addr of addresses) {
           list.push({ address: addr.address, family: addr.family });
         }
-      } else if (typeof addresses === "string") {
+      } else if (typeof addresses === 'string') {
         list.push({ address: addresses, family: family ?? 4 });
-      } else if (addresses && typeof addresses === "object") {
+      } else if (addresses && typeof addresses === 'object') {
         list.push({ address: addresses.address, family: addresses.family });
       }
 
@@ -133,7 +113,7 @@ function createSecureLookup(resolver: LookupResolver): LookupResolver {
         if (isBlockedIp(item.address)) {
           callback(
             new Error(`SSRF blocked: 域名解析到不允许的地址 ${item.address}`) as NodeJS.ErrnoException,
-            "",
+            '',
             item.family
           );
           return;
@@ -153,10 +133,10 @@ function validateUrl(url: URL): void {
   }
 
   if (url.username || url.password) {
-    throw new Error("SSRF blocked: URL 中不允许包含用户信息");
+    throw new Error('SSRF blocked: URL 中不允许包含用户信息');
   }
 
-  const allowedPort = url.protocol === "http:" ? "80" : "443";
+  const allowedPort = url.protocol === 'http:' ? '80' : '443';
   if (url.port && url.port !== allowedPort) {
     throw new Error(`SSRF blocked: 不允许的端口 ${url.port}，${url.protocol} 仅支持 ${allowedPort}`);
   }
@@ -166,10 +146,7 @@ function validateUrl(url: URL): void {
 
 // ── 响应读取与大小限制 ─────────────────────────────────────
 
-async function readBodyWithSizeLimit(
-  response: UndiciResponse,
-  maxBytes: number
-): Promise<Buffer> {
+async function readBodyWithSizeLimit(response: UndiciResponse, maxBytes: number): Promise<Buffer> {
   if (!response.body) {
     return Buffer.alloc(0);
   }
@@ -184,7 +161,7 @@ async function readBodyWithSizeLimit(
 
     total += value.length;
     if (total > maxBytes) {
-      await reader.cancel("response too large");
+      await reader.cancel('response too large');
       throw new Error(`响应体积超过 ${maxBytes} 字节上限`);
     }
     chunks.push(value);
@@ -197,13 +174,16 @@ async function readBodyWithSizeLimit(
 
 function isAllowedContentType(contentType: string | null): boolean {
   if (!contentType) return false;
-  const parsed = contentType.split(";")[0].trim().toLowerCase();
+  const parsed = contentType.split(';')[0].trim().toLowerCase();
   return ALLOWED_CONTENT_TYPES.has(parsed);
 }
 
 // ── HTML 正文提取 ───────────────────────────────────────────
 
-function extractArticleFromHtml(html: string, finalUrl: string): {
+function extractArticleFromHtml(
+  html: string,
+  finalUrl: string
+): {
   text: string;
   title?: string;
   byline?: string;
@@ -213,7 +193,7 @@ function extractArticleFromHtml(html: string, finalUrl: string): {
   const document = dom.window.document;
 
   // 剥离 script/style/noscript/iframe
-  for (const selector of ["script", "style", "noscript", "iframe"]) {
+  for (const selector of ['script', 'style', 'noscript', 'iframe']) {
     for (const el of Array.from(document.querySelectorAll(selector))) {
       el.remove();
     }
@@ -233,9 +213,9 @@ function extractArticleFromHtml(html: string, finalUrl: string): {
   }
 
   // fallback: body textContent
-  const bodyText = document.body ? document.body.textContent || "" : "";
+  const bodyText = document.body ? document.body.textContent || '' : '';
   if (bodyText.trim().length > 0) {
-    warnings.push("Readability 提取正文失败，已 fallback 到 body 文本");
+    warnings.push('Readability 提取正文失败，已 fallback 到 body 文本');
     return {
       text: bodyText.trim(),
       title: document.title || undefined,
@@ -243,7 +223,7 @@ function extractArticleFromHtml(html: string, finalUrl: string): {
     };
   }
 
-  return { text: "", warnings: ["未能从 HTML 中提取到正文"] };
+  return { text: '', warnings: ['未能从 HTML 中提取到正文'] };
 }
 
 // ── UrlFetcher ──────────────────────────────────────────────
@@ -264,11 +244,11 @@ export class UrlFetcher {
   }
 
   async fetch(url: string): Promise<ConverterResult> {
-    if (typeof url !== "string" || url.trim().length === 0) {
+    if (typeof url !== 'string' || url.trim().length === 0) {
       return {
         ok: false,
-        sourceType: "url",
-        error: "URL 不能为空",
+        sourceType: 'url',
+        error: 'URL 不能为空',
       };
     }
 
@@ -278,7 +258,7 @@ export class UrlFetcher {
     } catch {
       return {
         ok: false,
-        sourceType: "url",
+        sourceType: 'url',
         error: `URL 解析失败: ${url}`,
       };
     }
@@ -288,7 +268,7 @@ export class UrlFetcher {
     } catch (error) {
       return {
         ok: false,
-        sourceType: "url",
+        sourceType: 'url',
         error: error instanceof Error ? error.message : String(error),
       };
     }
@@ -310,13 +290,10 @@ export class UrlFetcher {
       }
     } catch (error) {
       const errWithCause = error instanceof Error ? (error as Error & { cause?: unknown }) : undefined;
-      const rootError =
-        errWithCause && errWithCause.cause instanceof Error
-          ? errWithCause.cause
-          : error;
+      const rootError = errWithCause && errWithCause.cause instanceof Error ? errWithCause.cause : error;
       return {
         ok: false,
-        sourceType: "url",
+        sourceType: 'url',
         error: rootError instanceof Error ? rootError.message : String(rootError),
       };
     } finally {
@@ -336,21 +313,21 @@ export class UrlFetcher {
     }
 
     if (controller.signal.aborted || Date.now() >= deadline) {
-      throw new Error("URL 抓取超时");
+      throw new Error('URL 抓取超时');
     }
 
     const response = await this.fetchImpl(url.toString(), {
       dispatcher: agent,
-      redirect: "manual",
+      redirect: 'manual',
       signal: controller.signal,
       headers: {
-        "User-Agent": "AIStudyBuddyBot/0.8 (+https://ai-studybuddy.local/bot)",
+        'User-Agent': 'AIStudyBuddyBot/0.8 (+https://ai-studybuddy.local/bot)',
       },
     });
 
     // 处理重定向
     if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
+      const location = response.headers.get('location');
       await this.consumeBody(response);
       if (!location) {
         throw new Error(`收到 ${response.status} 重定向响应但缺少 Location 头`);
@@ -365,20 +342,17 @@ export class UrlFetcher {
       throw new Error(`上游响应 ${response.status} ${response.statusText}`);
     }
 
-    const contentType = response.headers.get("content-type");
+    const contentType = response.headers.get('content-type');
     if (!isAllowedContentType(contentType)) {
       await this.consumeBody(response);
-      throw new Error(`不支持的 Content-Type: ${contentType || "空"}`);
+      throw new Error(`不支持的 Content-Type: ${contentType || '空'}`);
     }
 
     const body = await readBodyWithSizeLimit(response, this.maxSizeBytes);
     const byteCount = body.length;
-    const html = body.toString("utf-8");
+    const html = body.toString('utf-8');
 
-    const { text, title, byline, warnings } = extractArticleFromHtml(
-      html,
-      url.toString()
-    );
+    const { text, title, byline, warnings } = extractArticleFromHtml(html, url.toString());
 
     const metadata: UrlMetadata = {
       finalUrl: url.toString(),
@@ -391,16 +365,16 @@ export class UrlFetcher {
     if (!text || text.length === 0) {
       return {
         ok: false,
-        sourceType: "url",
+        sourceType: 'url',
         metadata,
         warnings: warnings.length > 0 ? warnings : undefined,
-        error: "未能从网页中提取到正文",
+        error: '未能从网页中提取到正文',
       };
     }
 
     return {
       ok: true,
-      sourceType: "url",
+      sourceType: 'url',
       text,
       metadata: { ...metadata, charCount: text.length },
       warnings: warnings.length > 0 ? warnings : undefined,

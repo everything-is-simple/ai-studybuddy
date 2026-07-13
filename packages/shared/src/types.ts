@@ -2,7 +2,7 @@
 // 共享类型定义 — Phase 0.8 最小集
 // ============================================================
 
-export type UserRole = "developer" | "student" | "parent";
+export type UserRole = 'developer' | 'student' | 'parent';
 
 export interface User {
   id: string;
@@ -25,8 +25,8 @@ export interface CourseInstanceDto {
   updatedAt: string;
 }
 
-export type AttemptType = "normal" | "makeup" | "other";
-export type ConfirmationStatus = "pending" | "confirmed" | "rejected" | "superseded";
+export type AttemptType = 'normal' | 'makeup' | 'other';
+export type ConfirmationStatus = 'pending' | 'confirmed' | 'rejected' | 'superseded';
 
 export interface AssessmentAttemptDto {
   id: string;
@@ -43,8 +43,8 @@ export interface AssessmentAttemptDto {
   sourceConfidence?: number;
 }
 
-export type StudyTaskType = "material_note" | "practice" | "error_review" | "exam_cram" | "custom";
-export type StudyTaskStatus = "todo" | "doing" | "pending_quality_check" | "done" | "skipped";
+export type StudyTaskType = 'material_note' | 'practice' | 'error_review' | 'exam_cram' | 'custom';
+export type StudyTaskStatus = 'todo' | 'doing' | 'pending_quality_check' | 'done' | 'skipped';
 
 export interface StudyTaskDto {
   id: string;
@@ -67,13 +67,13 @@ export interface StudyEventDto {
   id: string;
   courseInstanceId?: string;
   taskId?: string;
-  sourceSystem: "S1" | "S2" | "S3" | "S4" | "S5" | "S7";
+  sourceSystem: 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S7';
   eventType: string;
   title: string;
   workloadMinutes?: number;
   evidenceRef?: string;
   sourceConfidence?: number;
-  qualityGate?: "passed" | "pending" | "failed";
+  qualityGate?: 'passed' | 'pending' | 'failed';
   parentVisible: boolean;
   occurredAt: string;
   createdAt: string;
@@ -81,10 +81,10 @@ export interface StudyEventDto {
 
 export interface Material {
   id: string;
-  course_id: string;           // 资料归属课程，不是任务
-  file_type: "pdf" | "image" | "text";
-  storage_key: string;         // 逻辑 key，不保存绝对路径
-  status: "pending" | "processing" | "done" | "error";
+  course_id: string; // 资料归属课程，不是任务
+  file_type: 'pdf' | 'image' | 'text';
+  storage_key: string; // 逻辑 key，不保存绝对路径
+  status: 'pending' | 'processing' | 'done' | 'error';
   created_at: Date;
   updated_at: Date;
 }
@@ -94,20 +94,20 @@ export interface Material {
 export interface KnowledgeModule {
   id: string;
   course_id: string;
-  material_id: string | null;  // 来源资料
+  material_id: string | null; // 来源资料
   title: string;
-  importance: "high" | "medium" | "low";
-  difficulty: "hard" | "medium" | "easy";
+  importance: 'high' | 'medium' | 'low';
+  difficulty: 'hard' | 'medium' | 'easy';
   exam_content: string | null; // 考察内容描述
   source_evidence: string | null; // 来源证据（资料页码、段落等）
-  learn_status: "not_started" | "in_progress" | "mastered";
+  learn_status: 'not_started' | 'in_progress' | 'mastered';
   created_at: Date;
   updated_at: Date;
 }
 
 export interface StructuredNote {
   id: string;
-  material_id: string;         // 笔记从资料生成，关联 material_id
+  material_id: string; // 笔记从资料生成，关联 material_id
   knowledge_module_id: string | null;
   markdown: string;
   highlights: string[];
@@ -119,7 +119,7 @@ export interface StructuredNote {
 export interface MindMap {
   id: string;
   note_id: string;
-  format: "markmap";
+  format: 'markmap';
   data: string;
   created_at: Date;
 }
@@ -146,7 +146,7 @@ export interface UrlMetadata {
   byteCount?: number;
 }
 
-export type ConverterSourceType = "pdf" | "image" | "text" | "docx" | "url" | "html" | "pptx";
+export type ConverterSourceType = 'pdf' | 'image' | 'text' | 'docx' | 'url' | 'html' | 'pptx';
 
 export interface ConverterResult {
   ok: boolean;
@@ -157,15 +157,17 @@ export interface ConverterResult {
     charCount?: number;
     hasFormula?: boolean;
     hasTable?: boolean;
-  } & DocxMetadata & PptxMetadata & UrlMetadata;
+  } & DocxMetadata &
+    PptxMetadata &
+    UrlMetadata;
   warnings?: string[];
   error?: string;
 }
 
 export interface AiRequest {
-  taskType: "note_generation" | "practice_grading" | "error_analysis" | "question_generation";
+  taskType: 'note_generation' | 'practice_grading' | 'error_analysis' | 'question_generation';
   inputText: string;
-  language?: "zh" | "en";
+  language?: 'zh' | 'en';
   options?: Record<string, unknown>;
 }
 
@@ -207,22 +209,22 @@ export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
 // ============================================================
 
 export type MaterialStatus =
-  | "pending"
-  | "converting"
-  | "converted"
-  | "note_generating"
-  | "completed"
-  | "conversion_failed"
-  | "pending_quality_check";
+  | 'pending'
+  | 'converting'
+  | 'converted'
+  | 'note_generating'
+  | 'completed'
+  | 'conversion_failed'
+  | 'pending_quality_check';
 
-export type MaterialFileType = "pdf" | "image" | "text" | "docx" | "pptx";
-export type KnowledgeImportance = "low" | "medium" | "high" | "critical";
-export type KnowledgeDifficulty = "easy" | "medium" | "hard";
-export type KnowledgeLearnStatus = "not_started" | "learning" | "mastered";
+export type MaterialFileType = 'pdf' | 'image' | 'text' | 'docx' | 'pptx';
+export type KnowledgeImportance = 'low' | 'medium' | 'high' | 'critical';
+export type KnowledgeDifficulty = 'easy' | 'medium' | 'hard';
+export type KnowledgeLearnStatus = 'not_started' | 'learning' | 'mastered';
 
 export interface HighlightDto {
   content: string;
-  importance: "low" | "medium" | "high";
+  importance: 'low' | 'medium' | 'high';
   position: string;
 }
 
@@ -236,6 +238,7 @@ export interface MaterialDto {
   fileSizeBytes?: number;
   storageKey?: string;
   hasNote?: boolean;
+  noteId?: string; // 存在已生成结构化笔记时有值
   knowledgeModuleCount?: number;
   conversionRetryCount?: number;
   aiRetryCount?: number;

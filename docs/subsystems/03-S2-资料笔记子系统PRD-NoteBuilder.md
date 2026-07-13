@@ -18,16 +18,16 @@ NoteBuilder 接收多格式资料（PDF / 图片 / 文本 / DOCX / PPTX），通
 
 ### Success Criteria
 
-| 指标 | 验收标准 |
-|---|---|
+| 指标     | 验收标准                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------- |
 | 资料上传 | T07 支持 PDF、图片（JPG/PNG/WebP）、纯文本、DOCX、PPTX 五类本地输入；URL 导入延后到 S2-v1.1 |
-| 格式转换 | 转换结果保存为 `normalized_texts`；转换失败给出明确提示，不丢失原始文件 |
-| AI 笔记 | 纯文本成功提取后，AI 生成 Markdown 笔记 + highlights JSON + Markmap 数据 |
-| 知识模块 | 每份笔记至少提取 1 个知识模块；模块必须回链 material_id 和 source_evidence |
-| 异步处理 | 转换和 AI 生成均通过 SQLite Job Worker 异步执行，不阻塞上传响应 |
-| AI 降级 | AI 不可用时保留纯文本和 pending_quality_check 状态，不阻塞学生查看原文 |
-| 学期隔离 | 资料归属到 course_instance；不同学期文件和数据互不混用 |
-| 成本控制 | 笔记生成使用中转 GPT-5.4/5.5 级别模型，不用最贵的模型 |
+| 格式转换 | 转换结果保存为 `normalized_texts`；转换失败给出明确提示，不丢失原始文件                     |
+| AI 笔记  | 纯文本成功提取后，AI 生成 Markdown 笔记 + highlights JSON + Markmap 数据                    |
+| 知识模块 | 每份笔记至少提取 1 个知识模块；模块必须回链 material_id 和 source_evidence                  |
+| 异步处理 | 转换和 AI 生成均通过 SQLite Job Worker 异步执行，不阻塞上传响应                             |
+| AI 降级  | AI 不可用时保留纯文本和 pending_quality_check 状态，不阻塞学生查看原文                      |
+| 学期隔离 | 资料归属到 course_instance；不同学期文件和数据互不混用                                      |
+| 成本控制 | 笔记生成使用中转 GPT-5.4/5.5 级别模型，不用最贵的模型                                       |
 
 ---
 
@@ -40,13 +40,13 @@ NoteBuilder 接收多格式资料（PDF / 图片 / 文本 / DOCX / PPTX），通
 
 ### User Stories
 
-| 故事 | 验收标准 |
-|---|---|
-| As a student, I want to upload a PDF and get structured notes so that I don't spend hours manually summarizing. | 上传 → 转换 → AI 笔记 → 可查看 Markdown + 重点 + 导图；全流程异步，上传秒返回 |
-| As a student, I want to upload a photo of handwritten notes and get digital text so that I can search and review later. | 图片 → OCR → 纯文本 → AI 笔记；OCR 失败时提示"识别失败，请手工粘贴" |
-| As a student, I want to see which knowledge modules came from which material so that I can trace back to the source. | 每个知识模块展示 source_evidence 和对应 material 链接 |
-| As a student, I want to track my learning progress per knowledge module so that I know what to review next. | 模块状态可更新为 not_started / learning / mastered；状态变更写入 StudyEvent |
-| As a student, I want notes to work even when AI is down so that I can still study from raw text. | AI 不可用时，normalized_text 可查看；笔记标记 pending_quality_check |
+| 故事                                                                                                                    | 验收标准                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| As a student, I want to upload a PDF and get structured notes so that I don't spend hours manually summarizing.         | 上传 → 转换 → AI 笔记 → 可查看 Markdown + 重点 + 导图；全流程异步，上传秒返回 |
+| As a student, I want to upload a photo of handwritten notes and get digital text so that I can search and review later. | 图片 → OCR → 纯文本 → AI 笔记；OCR 失败时提示"识别失败，请手工粘贴"           |
+| As a student, I want to see which knowledge modules came from which material so that I can trace back to the source.    | 每个知识模块展示 source_evidence 和对应 material 链接                         |
+| As a student, I want to track my learning progress per knowledge module so that I know what to review next.             | 模块状态可更新为 not_started / learning / mastered；状态变更写入 StudyEvent   |
+| As a student, I want notes to work even when AI is down so that I can still study from raw text.                        | AI 不可用时，normalized_text 可查看；笔记标记 pending_quality_check           |
 
 ### Non-Goals
 
@@ -160,17 +160,17 @@ sequenceDiagram
 
 ## 5. Open-source Components
 
-| 能力 | 组件 | 说明 |
-|---|---|---|
-| PDF 文本提取 | pdf-parse | 已集成；扫描版 PDF 走 OCR fallback |
-| OCR | RapidOCR Python 子进程 | 已集成；按需启动，用完退出 |
-| DOCX 转换 | mammoth（via DocxConverter） | 已集成 |
-| PPTX 转换 | PptxConverter | 已集成 |
-| URL 正文提取 | Readability + JSDOM | 已集成但 T07 不接入；URL 导入延后到 S2-v1.1 |
-| 异步任务 | SQLite Job Worker | 已集成；串行执行，有限重试 |
-| AI 路由 | AiProviderRouter | 已集成；多 Provider fallback |
-| 前端 Markdown | react-markdown + KaTeX | T08 前端集成 |
-| 思维导图渲染 | Markmap | T08 前端集成 |
+| 能力          | 组件                         | 说明                                        |
+| ------------- | ---------------------------- | ------------------------------------------- |
+| PDF 文本提取  | pdf-parse                    | 已集成；扫描版 PDF 走 OCR fallback          |
+| OCR           | RapidOCR Python 子进程       | 已集成；按需启动，用完退出                  |
+| DOCX 转换     | mammoth（via DocxConverter） | 已集成                                      |
+| PPTX 转换     | PptxConverter                | 已集成                                      |
+| URL 正文提取  | Readability + JSDOM          | 已集成但 T07 不接入；URL 导入延后到 S2-v1.1 |
+| 异步任务      | SQLite Job Worker            | 已集成；串行执行，有限重试                  |
+| AI 路由       | AiProviderRouter             | 已集成；多 Provider fallback                |
+| 前端 Markdown | react-markdown + KaTeX       | T08 前端集成                                |
+| 思维导图渲染  | Markmap                      | T08 前端集成                                |
 
 ### 组件约束与治理
 
@@ -179,14 +179,14 @@ sequenceDiagram
 - **并发模式**：串行执行（单 worker 线程）
 - **任务优先级**：按 created_at 升序处理
 - **重试策略**：
-  * 转换任务：失败后立即重试 1 次，仍失败则标记 conversion_failed
-  * AI 生成任务：失败后延迟 5s 重试 1 次，仍失败则标记 pending_quality_check
-  * 重试事实来源：`jobs.attempts`。同一 material + job_type 的自动与手动执行次数聚合最多 3 次；不得在 material 表复制 retry counter。
+  - 转换任务：失败后立即重试 1 次，仍失败则标记 conversion_failed
+  - AI 生成任务：失败后延迟 5s 重试 1 次，仍失败则标记 pending_quality_check
+  - 重试事实来源：`jobs.attempts`。同一 material + job_type 的自动与手动执行次数聚合最多 3 次；不得在 material 表复制 retry counter。
 - **超时配置**：
-  * PDF 转换：30s
-  * OCR：60s
-  * DOCX/PPTX 转换：30s
-  * AI 生成：第一次 30s，重试 45s
+  - PDF 转换：30s
+  - OCR：60s
+  - DOCX/PPTX 转换：30s
+  - AI 生成：第一次 30s，重试 45s
 - **错误隔离**：单个任务失败不影响其他任务；失败任务写入错误日志，Job Worker 继续处理下一个任务
 
 #### AI Provider Router 配置
@@ -198,8 +198,8 @@ sequenceDiagram
 - **健康检查**：每个 Provider 连续失败 5 次后，暂停使用 10 分钟，直接尝试下一个 Provider
 - **成本统计**：记录每次请求的 token_count 和 generation_duration_ms，供成本分析使用
 - **日志规范**：
-  * 记录：material_id, model, token_count, duration_ms, success/failure
-  * 不记录：normalized_text 全文、AI 响应全文、API Key
+  - 记录：material_id, model, token_count, duration_ms, success/failure
+  - 不记录：normalized_text 全文、AI 响应全文、API Key
 
 ---
 
@@ -209,13 +209,13 @@ S2 是 AI StudyBuddy 中第一个正式使用 LLM 的业务子系统。
 
 ### AI 使用点
 
-| 功能 | 模型级别 | 是否 MVP | 说明 |
-|---|---|---|---|
-| 纯文本 → 结构化笔记 | 中转 GPT-5.4/5.5 | ✅ 是 | 按章节结构化，输出 Markdown |
-| 纯文本 → 重点提炼 | 同上 | ✅ 是 | 输出 JSON 数组，每项含内容和重要性 |
-| 纯文本 → 思维导图 | 同上 | ✅ 是 | 输出 Markmap 兼容的 Markdown 层级 |
-| 纯文本 → 知识模块提取 | 同上 | ✅ 是 | 输出结构化知识点列表，含难度和来源引用 |
-| 笔记质量检查 | Kimi/Qwen 备选 | 否 | 后续可用于检查笔记遗漏 |
+| 功能                  | 模型级别         | 是否 MVP | 说明                                   |
+| --------------------- | ---------------- | -------- | -------------------------------------- |
+| 纯文本 → 结构化笔记   | 中转 GPT-5.4/5.5 | ✅ 是    | 按章节结构化，输出 Markdown            |
+| 纯文本 → 重点提炼     | 同上             | ✅ 是    | 输出 JSON 数组，每项含内容和重要性     |
+| 纯文本 → 思维导图     | 同上             | ✅ 是    | 输出 Markmap 兼容的 Markdown 层级      |
+| 纯文本 → 知识模块提取 | 同上             | ✅ 是    | 输出结构化知识点列表，含难度和来源引用 |
+| 笔记质量检查          | Kimi/Qwen 备选   | 否       | 后续可用于检查笔记遗漏                 |
 
 ### AI 输出原则
 
@@ -363,7 +363,7 @@ NormalizedText
   * 提取时统计，前端展示"约 X 字"
   * 约束：CHECK(char_count > 0)
 - metadata_json: JSONB NOT NULL DEFAULT '{}'
-  * 示例：{ "pageCount": 42, "title": "第三章", "warnings": ["page 5 OCR low confidence"], 
+  * 示例：{ "pageCount": 42, "title": "第三章", "warnings": ["page 5 OCR low confidence"],
            "converter": "pdf-parse", "converterVersion": "1.2.3", "ocrConfidence": 0.85 }
 - created_at: TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
@@ -457,28 +457,30 @@ pending → converting → converted → note_generating → completed
 
 详细转换条件：
 
-| 当前状态 | 触发事件 | 目标状态 | 副作用 |
-|---|---|---|---|
-| pending | Job Worker 领取转换任务 | converting | 无 |
-| converting | 转换成功 | converted | 创建 NormalizedText 记录 |
-| converting | 转换失败且聚合 jobs.attempts < 3 | pending | 写入转换错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒 |
-| converting | 转换失败且聚合 jobs.attempts 已达 3 | conversion_failed | 写入 conversion_error_message |
-| conversion_failed | 手动重试，聚合 jobs.attempts < 3 且无 pending/running 同类 Job | conversion_failed | 创建一个 pending material_convert Job；Worker 领取后转为 converting |
-| conversion_failed | 聚合 attempts >= 3 或同类 Job 已存在 | conversion_failed | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING |
-| converted | Job Worker 领取 AI 生成任务 | note_generating | 无 |
-| note_generating | AI 生成成功 | completed | 创建 StructuredNote、MindMap、KnowledgeModule 记录；写入 StudyEvent |
-| note_generating | AI 请求失败或超时且聚合 jobs.attempts < 3 | converted | 写入 AI 错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒 |
-| note_generating | AI 请求失败或超时且聚合 jobs.attempts 已达 3 | pending_quality_check | 写入 ai_generation_error_message |
+| 当前状态              | 触发事件                                                               | 目标状态              | 副作用                                                                |
+| --------------------- | ---------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
+| pending               | Job Worker 领取转换任务                                                | converting            | 无                                                                    |
+| converting            | 转换成功                                                               | converted             | 创建 NormalizedText 记录                                              |
+| converting            | 转换失败且聚合 jobs.attempts < 3                                       | pending               | 写入转换错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
+| converting            | 转换失败且聚合 jobs.attempts 已达 3                                    | conversion_failed     | 写入 conversion_error_message                                         |
+| conversion_failed     | 手动重试，聚合 jobs.attempts < 3 且无 pending/running 同类 Job         | conversion_failed     | 创建一个 pending material_convert Job；Worker 领取后转为 converting   |
+| conversion_failed     | 聚合 attempts >= 3 或同类 Job 已存在                                   | conversion_failed     | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
+| converted             | Job Worker 领取 AI 生成任务                                            | note_generating       | 无                                                                    |
+| note_generating       | AI 生成成功                                                            | completed             | 创建 StructuredNote、MindMap、KnowledgeModule 记录；写入 StudyEvent   |
+| note_generating       | AI 请求失败或超时且聚合 jobs.attempts < 3                              | converted             | 写入 AI 错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
+| note_generating       | AI 请求失败或超时且聚合 jobs.attempts 已达 3                           | pending_quality_check | 写入 ai_generation_error_message                                      |
 | pending_quality_check | 手动触发 AI 补全，聚合 jobs.attempts < 3 且无 pending/running 同类 Job | pending_quality_check | 创建一个 pending note_generate Job；Worker 领取后转为 note_generating |
-| pending_quality_check | 聚合 attempts >= 3 或同类 Job 已存在 | pending_quality_check | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING |
+| pending_quality_check | 聚合 attempts >= 3 或同类 Job 已存在                                   | pending_quality_check | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
 
 **转换失败恢复策略**：
+
 - 转换失败后，原始文件保留在 storage_key；
 - 允许手动触发重试（API `POST /materials/:id/retry-conversion`）；
 - 重试次数限制：最多 3 次；第 3 次失败后不再自动重试；
 - 学生可通过 API `POST /materials/:id/replace-text` 手动粘贴纯文本，跳过转换直接进入 converted 状态。
 
 **AI 生成失败恢复策略**：
+
 - AI 请求失败时，normalized_text 保留可查看；
 - 允许手动触发 AI 补全（API `POST /materials/:id/retry-ai-generation`）；
 - 重试次数限制：最多 3 次；第 3 次失败后提示"AI 暂不可用"；
@@ -487,19 +489,19 @@ pending → converting → converted → note_generating → completed
 ### 与 S1 的交互
 
 - 笔记完成后写入 `StudyEvent`：
-  * source_system: `S2`
-  * event_type: `material_note_completed`
-  * workload_minutes: 估算值（根据纯文本字数，约 1000 字 = 5 分钟）
-  * evidence_ref: `material:{material_id}`
-  * source_confidence: `1.0`（AI 成功）或低置信度数值（pending_quality_check）
-  * quality_gate: `passed`（AI 成功）或 `pending`（pending_quality_check）
+  - source_system: `S2`
+  - event_type: `material_note_completed`
+  - workload_minutes: 估算值（根据纯文本字数，约 1000 字 = 5 分钟）
+  - evidence_ref: `material:{material_id}`
+  - source_confidence: `1.0`（AI 成功）或低置信度数值（pending_quality_check）
+  - quality_gate: `passed`（AI 成功）或 `pending`（pending_quality_check）
 - `StudyTask` 可通过 `knowledge_module_id` 关联知识模块，实现"整理完资料 → 安排复习任务"闭环；
 - 知识模块状态变更（not_started → learning → mastered）也写入 StudyEvent：
-  * event_type: `knowledge_module_status_changed`
-  * evidence_ref: `km:{knowledge_module_id}`
+  - event_type: `knowledge_module_status_changed`
+  - evidence_ref: `km:{knowledge_module_id}`
 - Material 转换失败或 AI 生成失败时：
-  * quality_gate 设为 `suggestion`（建议人工介入）或 `required_fix`（必须修复才能继续）
-  * S1 在每日首页展示"待质检"或"转换失败"提示
+  - quality_gate 设为 `suggestion`（建议人工介入）或 `required_fix`（必须修复才能继续）
+  - S1 在每日首页展示"待质检"或"转换失败"提示
 
 ---
 
@@ -507,17 +509,17 @@ pending → converting → converted → note_generating → completed
 
 ### API 契约
 
-| API | 方法 | 说明 |
-|---|---|---|
-| `/api/materials/upload` | POST | 上传资料文件；multipart/form-data；返回 material_id 和初始状态 |
-| `/api/materials` | GET | 按课程实例列出资料列表；支持 status 过滤 |
-| `/api/materials/:id` | GET | 获取单个资料详情（含转换状态、纯文本摘要） |
-| `/api/materials/:id/retry-conversion` | POST | 手动触发转换重试（conversion_failed 状态） |
-| `/api/materials/:id/retry-ai-generation` | POST | 手动触发 AI 笔记补全（pending_quality_check 状态） |
-| `/api/materials/:id/replace-text` | POST | 手动粘贴纯文本，跳过转换 |
-| `/api/notes/:id` | GET | 获取笔记详情：Markdown + highlights + mindmap |
-| `/api/knowledge-modules` | GET | 按课程实例或考试范围读取知识模块列表 |
-| `/api/knowledge-modules/:id` | PATCH | 更新知识模块学习状态 / 重要性 / 难度 |
+| API                                      | 方法  | 说明                                                           |
+| ---------------------------------------- | ----- | -------------------------------------------------------------- |
+| `/api/materials/upload`                  | POST  | 上传资料文件；multipart/form-data；返回 material_id 和初始状态 |
+| `/api/materials`                         | GET   | 按课程实例列出资料列表；支持 status 过滤                       |
+| `/api/materials/:id`                     | GET   | 获取单个资料详情（含转换状态、纯文本摘要）                     |
+| `/api/materials/:id/retry-conversion`    | POST  | 手动触发转换重试（conversion_failed 状态）                     |
+| `/api/materials/:id/retry-ai-generation` | POST  | 手动触发 AI 笔记补全（pending_quality_check 状态）             |
+| `/api/materials/:id/replace-text`        | POST  | 手动粘贴纯文本，跳过转换                                       |
+| `/api/notes/:id`                         | GET   | 获取笔记详情：Markdown + highlights + mindmap                  |
+| `/api/knowledge-modules`                 | GET   | 按课程实例或考试范围读取知识模块列表                           |
+| `/api/knowledge-modules/:id`             | PATCH | 更新知识模块学习状态 / 重要性 / 难度                           |
 
 ### 详细请求/响应规范
 
@@ -525,13 +527,14 @@ pending → converting → converted → note_generating → completed
 
 **请求**：`multipart/form-data`
 
-| 字段 | 类型 | 必填 | 约束 | 说明 |
-|---|---|---|---|---|
-| file | File | 是 | 10MB 以内；支持 pdf/jpg/png/webp/txt/docx/pptx | 上传文件 |
-| courseInstanceId | UUID | 是 | 必须是当前 ACTIVE 学期的课程实例 | 归属课程实例 ID |
-| title | String | 否 | 200 字符以内 | 可选标题 |
+| 字段             | 类型   | 必填 | 约束                                           | 说明            |
+| ---------------- | ------ | ---- | ---------------------------------------------- | --------------- |
+| file             | File   | 是   | 10MB 以内；支持 pdf/jpg/png/webp/txt/docx/pptx | 上传文件        |
+| courseInstanceId | UUID   | 是   | 必须是当前 ACTIVE 学期的课程实例               | 归属课程实例 ID |
+| title            | String | 否   | 200 字符以内                                   | 可选标题        |
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -549,27 +552,28 @@ pending → converting → converted → note_generating → completed
 
 **错误响应**：
 
-| 状态码 | error.code | error.message | 说明 |
-|---|---|---|---|
-| 400 | MISSING_REQUIRED_FIELD | "courseInstanceId is required" | 缺少必填字段 |
-| 400 | INVALID_FILE_TYPE | "File type .exe is not supported" | 不支持的文件类型 |
-| 413 | FILE_TOO_LARGE | "File size exceeds 10MB limit" | 文件超过大小限制 |
-| 404 | COURSE_INSTANCE_NOT_FOUND | "Course instance {id} not found" | 课程实例不存在 |
-| 409 | SEMESTER_NOT_ACTIVE | "Cannot upload to archived semester" | 学期已归档 |
-| 500 | STORAGE_ERROR | "Failed to save file" | 文件存储失败 |
+| 状态码 | error.code                | error.message                        | 说明             |
+| ------ | ------------------------- | ------------------------------------ | ---------------- |
+| 400    | MISSING_REQUIRED_FIELD    | "courseInstanceId is required"       | 缺少必填字段     |
+| 400    | INVALID_FILE_TYPE         | "File type .exe is not supported"    | 不支持的文件类型 |
+| 413    | FILE_TOO_LARGE            | "File size exceeds 10MB limit"       | 文件超过大小限制 |
+| 404    | COURSE_INSTANCE_NOT_FOUND | "Course instance {id} not found"     | 课程实例不存在   |
+| 409    | SEMESTER_NOT_ACTIVE       | "Cannot upload to archived semester" | 学期已归档       |
+| 500    | STORAGE_ERROR             | "Failed to save file"                | 文件存储失败     |
 
 #### **GET /api/materials?courseInstanceId={id}&status={status}**
 
 **查询参数**：
 
-| 参数 | 类型 | 必填 | 约束 | 说明 |
-|---|---|---|---|---|
-| courseInstanceId | UUID | 是 | 必须是有效的课程实例 ID | 课程实例 ID |
-| status | String | 否 | pending/converting/converted/note_generating/completed/conversion_failed/pending_quality_check | 状态过滤 |
-| page | Integer | 否 | >= 1，默认 1 | 分页页码 |
-| pageSize | Integer | 否 | 1-100，默认 20 | 每页数量 |
+| 参数             | 类型    | 必填 | 约束                                                                                           | 说明        |
+| ---------------- | ------- | ---- | ---------------------------------------------------------------------------------------------- | ----------- |
+| courseInstanceId | UUID    | 是   | 必须是有效的课程实例 ID                                                                        | 课程实例 ID |
+| status           | String  | 否   | pending/converting/converted/note_generating/completed/conversion_failed/pending_quality_check | 状态过滤    |
+| page             | Integer | 否   | >= 1，默认 1                                                                                   | 分页页码    |
+| pageSize         | Integer | 否   | 1-100，默认 20                                                                                 | 每页数量    |
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -600,6 +604,7 @@ pending → converting → converted → note_generating → completed
 #### **GET /api/materials/:id**
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -632,15 +637,16 @@ pending → converting → converted → note_generating → completed
 
 **错误响应**：
 
-| 状态码 | error.code | error.message |
-|---|---|---|
-| 404 | MATERIAL_NOT_FOUND | "Material {id} not found" |
+| 状态码 | error.code         | error.message             |
+| ------ | ------------------ | ------------------------- |
+| 404    | MATERIAL_NOT_FOUND | "Material {id} not found" |
 
 #### **POST /api/materials/:id/retry-conversion**
 
 **前置条件**：material.status = `conversion_failed`、同一 material + `material_convert` 聚合 `jobs.attempts < 3`，且不存在 pending/running 同类 Job
 
 **成功响应（200）**：接口仅创建 pending Job，material 保持真实状态，直到 Worker 领取任务。
+
 ```json
 {
   "success": true,
@@ -655,15 +661,16 @@ pending → converting → converted → note_generating → completed
 
 **错误响应**：
 
-| 状态码 | error.code | error.message |
-|---|---|---|
-| 400 | INVALID_STATUS | "Material status must be conversion_failed" |
-| 409 | MAX_RETRIES_EXCEEDED | "Maximum retry count (3) exceeded" |
-| 409 | JOB_ALREADY_PENDING | "A conversion job is already pending or running" |
+| 状态码 | error.code           | error.message                                    |
+| ------ | -------------------- | ------------------------------------------------ |
+| 400    | INVALID_STATUS       | "Material status must be conversion_failed"      |
+| 409    | MAX_RETRIES_EXCEEDED | "Maximum retry count (3) exceeded"               |
+| 409    | JOB_ALREADY_PENDING  | "A conversion job is already pending or running" |
 
 #### **POST /api/materials/:id/replace-text**
 
 **请求体**：
+
 ```json
 {
   "text": "第三章 线性代数\n\n3.1 向量空间..."
@@ -671,10 +678,12 @@ pending → converting → converted → note_generating → completed
 ```
 
 **约束**：
+
 - text 必填，长度 1-1048576 字符
 - 仅 conversion_failed 或 pending 状态允许
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -689,6 +698,7 @@ pending → converting → converted → note_generating → completed
 #### **GET /api/notes/:id**
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -734,24 +744,25 @@ pending → converting → converted → note_generating → completed
 
 **错误响应**：
 
-| 状态码 | error.code | error.message |
-|---|---|---|
-| 404 | NOTE_NOT_FOUND | "Note {id} not found" |
-| 404 | MATERIAL_NOT_COMPLETED | "Material has not completed note generation" |
+| 状态码 | error.code             | error.message                                |
+| ------ | ---------------------- | -------------------------------------------- |
+| 404    | NOTE_NOT_FOUND         | "Note {id} not found"                        |
+| 404    | MATERIAL_NOT_COMPLETED | "Material has not completed note generation" |
 
 #### **GET /api/knowledge-modules?courseInstanceId={id}**
 
 **查询参数**：
 
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| courseInstanceId | UUID | 是 | 课程实例 ID |
-| learnStatus | String | 否 | not_started/learning/mastered |
-| importance | String | 否 | low/medium/high/critical |
-| page | Integer | 否 | 分页页码 |
-| pageSize | Integer | 否 | 每页数量 |
+| 参数             | 类型    | 必填 | 说明                          |
+| ---------------- | ------- | ---- | ----------------------------- |
+| courseInstanceId | UUID    | 是   | 课程实例 ID                   |
+| learnStatus      | String  | 否   | not_started/learning/mastered |
+| importance       | String  | 否   | low/medium/high/critical      |
+| page             | Integer | 否   | 分页页码                      |
+| pageSize         | Integer | 否   | 每页数量                      |
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -785,6 +796,7 @@ pending → converting → converted → note_generating → completed
 #### **PATCH /api/knowledge-modules/:id**
 
 **请求体**：
+
 ```json
 {
   "learnStatus": "mastered",
@@ -795,10 +807,12 @@ pending → converting → converted → note_generating → completed
 ```
 
 **约束**：
+
 - 所有字段可选
 - learnStatus 变更会写入 StudyEvent 和更新 last_reviewed_at
 
 **成功响应（200）**：
+
 ```json
 {
   "success": true,
@@ -816,19 +830,19 @@ pending → converting → converted → note_generating → completed
 
 **错误响应**：
 
-| 状态码 | error.code | error.message |
-|---|---|---|
-| 404 | KNOWLEDGE_MODULE_NOT_FOUND | "Knowledge module {id} not found" |
-| 400 | INVALID_ENUM_VALUE | "learnStatus must be one of: not_started, learning, mastered" |
+| 状态码 | error.code                 | error.message                                                 |
+| ------ | -------------------------- | ------------------------------------------------------------- |
+| 404    | KNOWLEDGE_MODULE_NOT_FOUND | "Knowledge module {id} not found"                             |
+| 400    | INVALID_ENUM_VALUE         | "learnStatus must be one of: not_started, learning, mastered" |
 
 ### Pages（T08 负责实现）
 
-| 页面 | 说明 |
-|---|---|
-| 资料上传 | 拖拽或选择文件，选择课程归属，展示上传和处理进度 |
-| 笔记展示 | react-markdown 渲染笔记 + KaTeX 数学公式 + 重点高亮 |
-| 思维导图 | Markmap 渲染，支持缩放和导航 |
-| 知识模块列表 | 按课程展示知识模块，状态可切换，可跳转到来源笔记 |
+| 页面         | 说明                                                |
+| ------------ | --------------------------------------------------- |
+| 资料上传     | 拖拽或选择文件，选择课程归属，展示上传和处理进度    |
+| 笔记展示     | react-markdown 渲染笔记 + KaTeX 数学公式 + 重点高亮 |
+| 思维导图     | Markmap 渲染，支持缩放和导航                        |
+| 知识模块列表 | 按课程展示知识模块，状态可切换，可跳转到来源笔记    |
 
 ---
 
@@ -904,16 +918,9 @@ pending → converting → converted → note_generating → completed
 
 ## 10. Roadmap
 
-| 阶段 | 内容 |
-|---|---|
+| 阶段                    | 内容                                                    |
+| ----------------------- | ------------------------------------------------------- |
 | S2-MVP（Phase 0.8 T07） | 资料上传 + 格式转换 + AI 笔记 + 知识模块提取 + 基础 API |
-| S2-v1.1 | 笔记重新生成、手动触发 AI 补全、URL 批量导入 |
-| S2-v1.2 | 知识模块与考试范围关联、模块覆盖率统计 |
-| S2-v2.0 | 多资料交叉知识图谱、知识模块自动合并去重 |
-
-
-
-
-
-
-
+| S2-v1.1                 | 笔记重新生成、手动触发 AI 补全、URL 批量导入            |
+| S2-v1.2                 | 知识模块与考试范围关联、模块覆盖率统计                  |
+| S2-v2.0                 | 多资料交叉知识图谱、知识模块自动合并去重                |

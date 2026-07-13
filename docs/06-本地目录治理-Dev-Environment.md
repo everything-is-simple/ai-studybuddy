@@ -15,15 +15,15 @@
 
 ## 二、七个本机目录
 
-| 路径 | 唯一职责 | 可以放 | 禁止放 |
-|---|---|---|---|
-| `I:\ai-studybuddy` | 主系统 Git 仓库 | `docs/`、`packages/`、脚本、正式测试、正式 Adapter | `.env.local`、真实学习资料、长期日志、试炼场依赖 |
-| `I:\ai-studybuddy-composer` | 外部组件试炼场 | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码、真实学习资料、主仓库 workspace 配置 |
-| `I:\ai-studybuddy-data` | 运行数据根目录建议值 | SQLite、`materials/`、`exports/`、受控备份 | 源码、Git 元数据、密钥明文 |
-| `I:\ai-studybuddy-day-study` | 人工学习工作区 | 用户自己创建或整理的资料副本 | 系统唯一数据源、应用数据库 |
-| `I:\ai-studybuddy-logs` | 运行日志汇总 | 脱敏诊断、任务状态、错误摘要 | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
-| `I:\ai-studybuddy-tmp` | 可再生临时空间 | OCR 切片、导出中间件、临时测试结果 | SQLite 正式库、`materials/`、唯一备份 |
-| `I:\ai-studybuddy-backup` | 只读历史备份 | 阶段 ZIP、旧稿归档、恢复说明 | 当前 SoT 文档的直接编辑副本 |
+| 路径                         | 唯一职责             | 可以放                                                | 禁止放                                                 |
+| ---------------------------- | -------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
+| `I:\ai-studybuddy`           | 主系统 Git 仓库      | `docs/`、`packages/`、脚本、正式测试、正式 Adapter    | `.env.local`、真实学习资料、长期日志、试炼场依赖       |
+| `I:\ai-studybuddy-composer`  | 外部组件试炼场       | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码、真实学习资料、主仓库 workspace 配置      |
+| `I:\ai-studybuddy-data`      | 运行数据根目录建议值 | SQLite、`materials/`、`exports/`、受控备份            | 源码、Git 元数据、密钥明文                             |
+| `I:\ai-studybuddy-day-study` | 人工学习工作区       | 用户自己创建或整理的资料副本                          | 系统唯一数据源、应用数据库                             |
+| `I:\ai-studybuddy-logs`      | 运行日志汇总         | 脱敏诊断、任务状态、错误摘要                          | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
+| `I:\ai-studybuddy-tmp`       | 可再生临时空间       | OCR 切片、导出中间件、临时测试结果                    | SQLite 正式库、`materials/`、唯一备份                  |
+| `I:\ai-studybuddy-backup`    | 只读历史备份         | 阶段 ZIP、旧稿归档、恢复说明                          | 当前 SoT 文档的直接编辑副本                            |
 
 正式产品通过 `APP_DATA_ROOT` 指定运行数据根目录。当前开发机建议 `APP_DATA_ROOT=I:\ai-studybuddy-data`；成品安装时可改为 `%LOCALAPPDATA%\AIStudyBuddy`。业务代码不得写死盘符。
 

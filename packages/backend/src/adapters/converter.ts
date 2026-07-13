@@ -4,18 +4,18 @@
 // 统一返回 @ai-studybuddy/shared 的 ConverterResult
 // ============================================================
 
-import { spawn } from "child_process";
-import crypto from "crypto";
-import fs from "fs";
-import path from "path";
-import { TextDecoder } from "util";
-import type { ConverterResult } from "@ai-studybuddy/shared";
-import { PDFParse } from "pdf-parse";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
-import { DocxConverter } from "./docx-converter";
-import { PptxConverter } from "./pptx-converter";
-import { UrlFetcher } from "./url-fetcher";
+import { spawn } from 'child_process';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { TextDecoder } from 'util';
+import type { ConverterResult } from '@ai-studybuddy/shared';
+import { PDFParse } from 'pdf-parse';
+import { JSDOM } from 'jsdom';
+import { Readability } from '@mozilla/readability';
+import { DocxConverter } from './docx-converter';
+import { PptxConverter } from './pptx-converter';
+import { UrlFetcher } from './url-fetcher';
 
 // ── 公共工具 ────────────────────────────────────────────────
 
@@ -36,34 +36,34 @@ function isTextNotEmpty(text: string): boolean {
 
 export class PdfConverter {
   async convert(input: Buffer | string): Promise<ConverterResult> {
-    const buffer = typeof input === "string" ? readFileToBuffer(input) : input;
+    const buffer = typeof input === 'string' ? readFileToBuffer(input) : input;
 
     try {
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
-      const text = typeof result.text === "string" ? result.text : "";
-      const pageCount = typeof result.total === "number" ? result.total : 0;
+      const text = typeof result.text === 'string' ? result.text : '';
+      const pageCount = typeof result.total === 'number' ? result.total : 0;
       const charCount = text.length;
 
       const warnings: string[] = [];
       if (!isTextNotEmpty(text)) {
         return {
           ok: false,
-          sourceType: "pdf",
+          sourceType: 'pdf',
           text,
           metadata: { pageCount, charCount },
-          error: "未能提取到文本，可能是扫描版 PDF，建议走 OCR 路径",
+          error: '未能提取到文本，可能是扫描版 PDF，建议走 OCR 路径',
         };
       }
 
       const chineseCount = countChineseChars(text);
       if (chineseCount === 0) {
-        warnings.push("未检测到中文字符，请确认内容语言或来源");
+        warnings.push('未检测到中文字符，请确认内容语言或来源');
       }
 
       return {
         ok: true,
-        sourceType: "pdf",
+        sourceType: 'pdf',
         text,
         metadata: { pageCount, charCount },
         warnings: warnings.length > 0 ? warnings : undefined,
@@ -71,7 +71,7 @@ export class PdfConverter {
     } catch (error) {
       return {
         ok: false,
-        sourceType: "pdf",
+        sourceType: 'pdf',
         error: error instanceof Error ? error.message : String(error),
       };
     }
@@ -90,7 +90,7 @@ export class OcrConverter {
   private timeoutMs: number;
 
   constructor(options: OcrConverterOptions = {}) {
-    this.pythonPath = options.pythonPath ?? "python";
+    this.pythonPath = options.pythonPath ?? 'python';
     this.timeoutMs = options.timeoutMs ?? 60000;
   }
 
@@ -100,41 +100,38 @@ export class OcrConverter {
 
     try {
       if (Buffer.isBuffer(input)) {
-        tempPath = path.join(
-          require("os").tmpdir(),
-          `studybuddy-ocr-${crypto.randomUUID()}.tmp`
-        );
+        tempPath = path.join(require('os').tmpdir(), `studybuddy-ocr-${crypto.randomUUID()}.tmp`);
         fs.writeFileSync(tempPath, input);
         imagePath = tempPath;
       } else {
         imagePath = input;
       }
 
-      const workerPath = path.resolve(__dirname, "../scripts/ocr-worker.py");
+      const workerPath = path.resolve(__dirname, '../scripts/ocr-worker.py');
 
       const result = await this.runWorker(workerPath, imagePath);
 
       if (!result.ok) {
         return {
           ok: false,
-          sourceType: "image",
-          error: result.error ?? "OCR 处理失败",
+          sourceType: 'image',
+          error: result.error ?? 'OCR 处理失败',
         };
       }
 
-      const text = typeof result.text === "string" ? result.text : "";
-      const charCount = typeof result.charCount === "number" ? result.charCount : text.length;
+      const text = typeof result.text === 'string' ? result.text : '';
+      const charCount = typeof result.charCount === 'number' ? result.charCount : text.length;
 
       return {
         ok: true,
-        sourceType: "image",
+        sourceType: 'image',
         text,
         metadata: { charCount },
       };
     } catch (error) {
       return {
         ok: false,
-        sourceType: "image",
+        sourceType: 'image',
         error: error instanceof Error ? error.message : String(error),
       };
     } finally {
@@ -157,24 +154,24 @@ export class OcrConverter {
         timeout: this.timeoutMs,
       });
 
-      let stdout = "";
-      let stderr = "";
+      let stdout = '';
+      let stderr = '';
 
-      process.stdout.on("data", (chunk: Buffer) => {
-        stdout += chunk.toString("utf8");
+      process.stdout.on('data', (chunk: Buffer) => {
+        stdout += chunk.toString('utf8');
       });
 
-      process.stderr.on("data", (chunk: Buffer) => {
-        stderr += chunk.toString("utf8");
+      process.stderr.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString('utf8');
       });
 
-      process.on("error", (error) => {
+      process.on('error', (error) => {
         reject(error);
       });
 
-      process.on("close", (code) => {
+      process.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`OCR 子进程退出码 ${code}：${stderr || "unknown error"}`));
+          reject(new Error(`OCR 子进程退出码 ${code}：${stderr || 'unknown error'}`));
           return;
         }
 
@@ -201,7 +198,7 @@ export function extractTextFromHtml(html: string): HtmlExtractResult {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
-  for (const selector of ["script", "style", "noscript", "iframe"]) {
+  for (const selector of ['script', 'style', 'noscript', 'iframe']) {
     for (const el of Array.from(document.querySelectorAll(selector))) {
       el.remove();
     }
@@ -219,9 +216,9 @@ export function extractTextFromHtml(html: string): HtmlExtractResult {
     };
   }
 
-  const bodyText = document.body ? document.body.textContent || "" : "";
+  const bodyText = document.body ? document.body.textContent || '' : '';
   if (bodyText.trim().length > 0) {
-    warnings.push("Readability 提取正文失败，已 fallback 到 body 文本");
+    warnings.push('Readability 提取正文失败，已 fallback 到 body 文本');
     return {
       text: bodyText.trim(),
       title: document.title || undefined,
@@ -229,7 +226,7 @@ export function extractTextFromHtml(html: string): HtmlExtractResult {
     };
   }
 
-  return { text: "", warnings: ["未能从 HTML 中提取到正文"] };
+  return { text: '', warnings: ['未能从 HTML 中提取到正文'] };
 }
 
 // ── TextConverter ─────────────────────────────────────────
@@ -237,54 +234,54 @@ export function extractTextFromHtml(html: string): HtmlExtractResult {
 export class TextConverter {
   private detectHtml(buffer: Buffer): boolean {
     // 取前 4KB 做简单判断，避免大文件性能问题
-    const sample = buffer.slice(0, 4096).toString("utf-8").trim().toLowerCase();
-    return sample.startsWith("<!doctype html") || sample.startsWith("<html");
+    const sample = buffer.slice(0, 4096).toString('utf-8').trim().toLowerCase();
+    return sample.startsWith('<!doctype html') || sample.startsWith('<html');
   }
 
-  async convert(input: Buffer | string, declaredSourceType?: "text" | "html"): Promise<ConverterResult> {
+  async convert(input: Buffer | string, declaredSourceType?: 'text' | 'html'): Promise<ConverterResult> {
     try {
-      const buffer = typeof input === "string" ? readFileToBuffer(input) : input;
-      const isHtml = declaredSourceType === "html" || this.detectHtml(buffer);
+      const buffer = typeof input === 'string' ? readFileToBuffer(input) : input;
+      const isHtml = declaredSourceType === 'html' || this.detectHtml(buffer);
 
       if (isHtml) {
-        const html = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+        const html = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
         const { text, title, warnings } = extractTextFromHtml(html);
 
         if (!text || text.length === 0) {
           return {
             ok: false,
-            sourceType: "html",
+            sourceType: 'html',
             metadata: { charCount: 0 },
             warnings: warnings.length > 0 ? warnings : undefined,
-            error: "未能从 HTML 中提取到正文",
+            error: '未能从 HTML 中提取到正文',
           };
         }
 
-        const metadata: ConverterResult["metadata"] = { charCount: text.length };
+        const metadata: ConverterResult['metadata'] = { charCount: text.length };
         if (title) metadata.title = title;
 
         return {
           ok: true,
-          sourceType: "html",
+          sourceType: 'html',
           text,
           metadata,
           warnings: warnings.length > 0 ? warnings : undefined,
         };
       }
 
-      const text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
       const charCount = text.length;
 
       return {
         ok: true,
-        sourceType: "text",
+        sourceType: 'text',
         text,
         metadata: { charCount },
       };
     } catch (error) {
       return {
         ok: false,
-        sourceType: declaredSourceType === "html" ? "html" : "text",
+        sourceType: declaredSourceType === 'html' ? 'html' : 'text',
         error: error instanceof Error ? error.message : String(error),
       };
     }
@@ -294,7 +291,7 @@ export class TextConverter {
 // ── 新格式转换器 re-export ─────────────────────────────────
 
 export { DocxConverter, PptxConverter, UrlFetcher };
-export type { UrlFetcherOptions } from "./url-fetcher";
+export type { UrlFetcherOptions } from './url-fetcher';
 
 // ── 统一路由分派 ────────────────────────────────────────────
 
@@ -306,91 +303,89 @@ export interface DispatchConverterInput {
 }
 
 export type RejectedExtensionReason =
-  | "doc 为旧版 Word 格式，请另存为 DOCX 或 PDF 后重新上传"
-  | "ppt 为旧版 PowerPoint 格式，请另存为 PPTX 或 PDF 后重新上传"
-  | "Excel 表格暂不支持，请另存为 PDF 或 CSV 后重新上传"
-  | "OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传"
-  | "RTF 格式暂不支持，请转换为 DOCX 或 PDF 后重新上传"
-  | "EPUB 格式暂不支持，请转换为 PDF 后重新上传"
-  | "压缩包格式暂不支持，请解压后上传内部文件"
-  | "邮件格式暂不支持，请导出正文为 PDF 或文本后上传";
+  | 'doc 为旧版 Word 格式，请另存为 DOCX 或 PDF 后重新上传'
+  | 'ppt 为旧版 PowerPoint 格式，请另存为 PPTX 或 PDF 后重新上传'
+  | 'Excel 表格暂不支持，请另存为 PDF 或 CSV 后重新上传'
+  | 'OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传'
+  | 'RTF 格式暂不支持，请转换为 DOCX 或 PDF 后重新上传'
+  | 'EPUB 格式暂不支持，请转换为 PDF 后重新上传'
+  | '压缩包格式暂不支持，请解压后上传内部文件'
+  | '邮件格式暂不支持，请导出正文为 PDF 或文本后上传';
 
 const REJECTED_EXTENSIONS = new Map<string, RejectedExtensionReason>([
-  [".doc", "doc 为旧版 Word 格式，请另存为 DOCX 或 PDF 后重新上传"],
-  [".ppt", "ppt 为旧版 PowerPoint 格式，请另存为 PPTX 或 PDF 后重新上传"],
-  [".xls", "Excel 表格暂不支持，请另存为 PDF 或 CSV 后重新上传"],
-  [".xlsx", "Excel 表格暂不支持，请另存为 PDF 或 CSV 后重新上传"],
-  [".odt", "OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传"],
-  [".ods", "OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传"],
-  [".odp", "OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传"],
-  [".rtf", "RTF 格式暂不支持，请转换为 DOCX 或 PDF 后重新上传"],
-  [".epub", "EPUB 格式暂不支持，请转换为 PDF 后重新上传"],
-  [".zip", "压缩包格式暂不支持，请解压后上传内部文件"],
-  [".rar", "压缩包格式暂不支持，请解压后上传内部文件"],
-  [".7z", "压缩包格式暂不支持，请解压后上传内部文件"],
-  [".tar", "压缩包格式暂不支持，请解压后上传内部文件"],
-  [".gz", "压缩包格式暂不支持，请解压后上传内部文件"],
-  [".eml", "邮件格式暂不支持，请导出正文为 PDF 或文本后上传"],
-  [".msg", "邮件格式暂不支持，请导出正文为 PDF 或文本后上传"],
+  ['.doc', 'doc 为旧版 Word 格式，请另存为 DOCX 或 PDF 后重新上传'],
+  ['.ppt', 'ppt 为旧版 PowerPoint 格式，请另存为 PPTX 或 PDF 后重新上传'],
+  ['.xls', 'Excel 表格暂不支持，请另存为 PDF 或 CSV 后重新上传'],
+  ['.xlsx', 'Excel 表格暂不支持，请另存为 PDF 或 CSV 后重新上传'],
+  ['.odt', 'OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传'],
+  ['.ods', 'OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传'],
+  ['.odp', 'OpenDocument 格式暂不支持，请另存为 DOCX/PPTX/PDF 后重新上传'],
+  ['.rtf', 'RTF 格式暂不支持，请转换为 DOCX 或 PDF 后重新上传'],
+  ['.epub', 'EPUB 格式暂不支持，请转换为 PDF 后重新上传'],
+  ['.zip', '压缩包格式暂不支持，请解压后上传内部文件'],
+  ['.rar', '压缩包格式暂不支持，请解压后上传内部文件'],
+  ['.7z', '压缩包格式暂不支持，请解压后上传内部文件'],
+  ['.tar', '压缩包格式暂不支持，请解压后上传内部文件'],
+  ['.gz', '压缩包格式暂不支持，请解压后上传内部文件'],
+  ['.eml', '邮件格式暂不支持，请导出正文为 PDF 或文本后上传'],
+  ['.msg', '邮件格式暂不支持，请导出正文为 PDF 或文本后上传'],
 ]);
 
 function getFileExtension(filename: string): string {
   const base = path.basename(filename).toLowerCase();
   // 处理 .tar.gz 这类双扩展名
-  if (base.endsWith(".tar.gz")) return ".tar.gz";
+  if (base.endsWith('.tar.gz')) return '.tar.gz';
   return path.extname(base).toLowerCase();
 }
 
 function inferSourceType(
   filename: string,
   declaredMimeType?: string
-): { sourceType: ConverterResult["sourceType"]; reason?: RejectedExtensionReason } | null {
+): { sourceType: ConverterResult['sourceType']; reason?: RejectedExtensionReason } | null {
   const ext = getFileExtension(filename);
 
   if (REJECTED_EXTENSIONS.has(ext)) {
-    return { sourceType: "text", reason: REJECTED_EXTENSIONS.get(ext) };
+    return { sourceType: 'text', reason: REJECTED_EXTENSIONS.get(ext) };
   }
 
   switch (ext) {
-    case ".pdf":
-      return { sourceType: "pdf" };
-    case ".jpg":
-    case ".jpeg":
-    case ".png":
-    case ".gif":
-    case ".webp":
-    case ".bmp":
-      return { sourceType: "image" };
-    case ".txt":
-    case ".md":
-    case ".csv":
-    case ".json":
-      return { sourceType: "text" };
-    case ".html":
-    case ".htm":
-      return { sourceType: "html" };
-    case ".docx":
-      return { sourceType: "docx" };
-    case ".pptx":
-      return { sourceType: "pptx" };
+    case '.pdf':
+      return { sourceType: 'pdf' };
+    case '.jpg':
+    case '.jpeg':
+    case '.png':
+    case '.gif':
+    case '.webp':
+    case '.bmp':
+      return { sourceType: 'image' };
+    case '.txt':
+    case '.md':
+    case '.csv':
+    case '.json':
+      return { sourceType: 'text' };
+    case '.html':
+    case '.htm':
+      return { sourceType: 'html' };
+    case '.docx':
+      return { sourceType: 'docx' };
+    case '.pptx':
+      return { sourceType: 'pptx' };
     default:
       // MIME 仅作辅助，不信任客户端
       if (declaredMimeType) {
-        const mime = declaredMimeType.split(";")[0].trim().toLowerCase();
-        if (mime === "text/html" || mime === "application/xhtml+xml") {
-          return { sourceType: "html" };
+        const mime = declaredMimeType.split(';')[0].trim().toLowerCase();
+        if (mime === 'text/html' || mime === 'application/xhtml+xml') {
+          return { sourceType: 'html' };
         }
-        if (mime === "text/plain") {
-          return { sourceType: "text" };
+        if (mime === 'text/plain') {
+          return { sourceType: 'text' };
         }
       }
       return null;
   }
 }
 
-export async function dispatchConverter(
-  input: DispatchConverterInput
-): Promise<ConverterResult> {
+export async function dispatchConverter(input: DispatchConverterInput): Promise<ConverterResult> {
   const { buffer, url, filename, declaredMimeType } = input;
 
   if (url !== undefined && url.length > 0) {
@@ -401,16 +396,16 @@ export async function dispatchConverter(
   if (!buffer) {
     return {
       ok: false,
-      sourceType: "text",
-      error: "必须提供 buffer 或 url",
+      sourceType: 'text',
+      error: '必须提供 buffer 或 url',
     };
   }
 
   if (!filename) {
     return {
       ok: false,
-      sourceType: "text",
-      error: "缺少 filename，无法判断文件格式",
+      sourceType: 'text',
+      error: '缺少 filename，无法判断文件格式',
     };
   }
 
@@ -418,8 +413,8 @@ export async function dispatchConverter(
   if (!inferred) {
     return {
       ok: false,
-      sourceType: "text",
-      error: `不支持的文件格式：${path.extname(filename).toLowerCase() || "无扩展名"}，请上传 PDF、DOCX、PPTX、HTML、图片或文本文件`,
+      sourceType: 'text',
+      error: `不支持的文件格式：${path.extname(filename).toLowerCase() || '无扩展名'}，请上传 PDF、DOCX、PPTX、HTML、图片或文本文件`,
     };
   }
 
@@ -432,17 +427,17 @@ export async function dispatchConverter(
   }
 
   switch (inferred.sourceType) {
-    case "pdf":
+    case 'pdf':
       return new PdfConverter().convert(buffer);
-    case "image":
+    case 'image':
       return new OcrConverter().convert(buffer);
-    case "text":
-      return new TextConverter().convert(buffer, "text");
-    case "html":
-      return new TextConverter().convert(buffer, "html");
-    case "docx":
+    case 'text':
+      return new TextConverter().convert(buffer, 'text');
+    case 'html':
+      return new TextConverter().convert(buffer, 'html');
+    case 'docx':
       return new DocxConverter().convert(buffer);
-    case "pptx":
+    case 'pptx':
       return new PptxConverter().convert(buffer);
     default:
       return {

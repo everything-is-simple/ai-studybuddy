@@ -5,27 +5,21 @@
 // - 正式路径与 staging 路径调用同一套 migration。
 // ============================================================
 
-import fs from "fs";
-import type { DatabaseType } from "./connection";
-import { openDbAtPath, openGlobalDb, openSemesterDb } from "./connection";
-import {
-  getSemesterDbPath,
-  getSemesterFilesDir,
-  getSemesterTmpDir,
-} from "./paths";
-import { SCHEMA_GLOBAL_SQL } from "./sql/schema-global";
-import { SCHEMA_SEMESTER_SQL } from "./sql/schema-semester";
-import { SEMESTER_V2_SQL } from "./sql/migration-semester-v2";
-import { SEMESTER_V3_SQL } from "./sql/migration-semester-v3";
+import fs from 'fs';
+import type { DatabaseType } from './connection';
+import { openDbAtPath, openGlobalDb, openSemesterDb } from './connection';
+import { getSemesterDbPath, getSemesterFilesDir, getSemesterTmpDir } from './paths';
+import { SCHEMA_GLOBAL_SQL } from './sql/schema-global';
+import { SCHEMA_SEMESTER_SQL } from './sql/schema-semester';
+import { SEMESTER_V2_SQL } from './sql/migration-semester-v2';
+import { SEMESTER_V3_SQL } from './sql/migration-semester-v3';
 
 export interface Migration {
   version: number;
   sql: string;
 }
 
-const GLOBAL_MIGRATIONS: readonly Migration[] = [
-  { version: 1, sql: SCHEMA_GLOBAL_SQL },
-];
+const GLOBAL_MIGRATIONS: readonly Migration[] = [{ version: 1, sql: SCHEMA_GLOBAL_SQL }];
 
 const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 1, sql: SCHEMA_SEMESTER_SQL },
@@ -46,9 +40,8 @@ function ensureMigrationTable(db: DatabaseType): void {
 
 /** 查询已执行的最高 migration version。 */
 export function getAppliedVersion(db: DatabaseType, scope: string): number {
-  const row = db
-    .prepare("SELECT MAX(version) as v FROM schema_migrations WHERE scope = ?")
-    .get(scope) as { v: number | null } | undefined;
+  const row = db.prepare('SELECT MAX(version) as v FROM schema_migrations WHERE scope = ?').get(scope) as
+    { v: number | null } | undefined;
   return row?.v ?? 0;
 }
 
@@ -58,7 +51,7 @@ export function getAppliedVersion(db: DatabaseType, scope: string): number {
  */
 export function applyMigrations(
   db: DatabaseType,
-  scope: "global" | "semester",
+  scope: 'global' | 'semester',
   migrations: readonly Migration[]
 ): void {
   ensureMigrationTable(db);
@@ -68,25 +61,23 @@ export function applyMigrations(
   const latest = ordered.at(-1)?.version ?? 0;
 
   if (current > latest) {
-    throw new Error(
-      `[MIGRATION] ${scope} database version ${current} is newer than application version ${latest}`
-    );
+    throw new Error(`[MIGRATION] ${scope} database version ${current} is newer than application version ${latest}`);
   }
 
   let expectedVersion = current + 1;
   for (const migration of ordered) {
     if (migration.version <= current) continue;
     if (migration.version !== expectedVersion) {
-      throw new Error(
-        `[MIGRATION] ${scope} migration gap: expected ${expectedVersion}, got ${migration.version}`
-      );
+      throw new Error(`[MIGRATION] ${scope} migration gap: expected ${expectedVersion}, got ${migration.version}`);
     }
 
     db.transaction(() => {
       db.exec(migration.sql);
-      db.prepare(
-        "INSERT INTO schema_migrations (scope, version, applied_at) VALUES (?, ?, ?)"
-      ).run(scope, migration.version, new Date().toISOString());
+      db.prepare('INSERT INTO schema_migrations (scope, version, applied_at) VALUES (?, ?, ?)').run(
+        scope,
+        migration.version,
+        new Date().toISOString()
+      );
     })();
 
     expectedVersion += 1;
@@ -94,11 +85,11 @@ export function applyMigrations(
 }
 
 export function migrateGlobalDb(db: DatabaseType): void {
-  applyMigrations(db, "global", GLOBAL_MIGRATIONS);
+  applyMigrations(db, 'global', GLOBAL_MIGRATIONS);
 }
 
 export function migrateSemesterDb(db: DatabaseType): void {
-  applyMigrations(db, "semester", SEMESTER_MIGRATIONS);
+  applyMigrations(db, 'semester', SEMESTER_MIGRATIONS);
 }
 
 /** 初始化任意绝对路径上的全局库，供正式运行与集成测试复用。 */
@@ -139,7 +130,7 @@ export function isSemesterDbInitialized(semesterId: string): boolean {
 
   try {
     const db = openSemesterDb(semesterId);
-    const version = getAppliedVersion(db, "semester");
+    const version = getAppliedVersion(db, 'semester');
     db.close();
     return version > 0;
   } catch {
