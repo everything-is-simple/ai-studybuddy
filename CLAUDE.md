@@ -88,3 +88,54 @@ pnpm -r --filter backend run dev
 ## 提交与 PR 规范
 
 提交信息沿用现有的 `docs: ...` 风格（例如 `docs: add document creation governance`）。PR/变更说明应写明改了哪些文档、为什么改、做了哪些验证。
+
+## 任务执行标准工作流（16 步，不可省略）
+
+每个任务必须完整走完以下流程，顺序不可颠倒。
+
+### 第一阶段：准备
+
+**Step 1 — 读文档、定边界**
+先读 `docs/00-文档索引-Index.md`，再读相关设计文档（04 任务清单、子系统 PRD、08 架构、10 后端规范等）。确认任务触发条件已满足、现有代码状态、子系统归属和 API/Schema 边界。
+
+**Step 2 — 检查文档门禁**
+确认本任务是否需要新建设计文档。需要则检查触发条件；满足才创建，并同步更新 `docs/00-文档索引-Index.md`。不需要则记录"文档无需变更"继续。
+
+**Step 3 — 编写 `.plans/` 计划**
+在 `.plans/` 创建本任务计划文件（如 `.plans/phase0.8-t07-s2-core-api-plan.md`）。计划必须包含：目标、涉及文件路径、接口/类型设计、测试策略、治理步骤。写完后提交给用户审查。
+
+**Step 4 — Claude 审查计划**
+针对计划中的设计决策逐条提出问题或风险（路径处理、事务边界、状态机兜底等），给出具体修改建议。
+
+**Step 5 — 修订并获用户批准**
+根据审查反馈修订计划。用户明确批准后，方可进入实现阶段。
+
+### 第二阶段：实现
+
+**Step 6 — 拆分任务、逐项实现**
+用 TaskCreate/TaskUpdate 把计划拆成子任务，每完成一项立即标记完成。编码遵循规范：路径走 `paths.ts`、环境变量走 `env.ts`、统一 API 信封 `{ success, data, error }`、中文优先。
+
+**Step 7 — 编写测试**
+对每个新增接口/功能编写集成测试（不 mock DB）。测试文件命名：`packages/backend/test/<feature>-api.test.mjs`。
+
+### 第三阶段：验证
+
+**Step 8 — type-check**：`pnpm type-check`，零错误才继续。
+
+**Step 9 — build**：`pnpm -r --filter backend run build`，零错误才继续。
+
+**Step 10 — test**：`pnpm test`，全部通过才继续。
+
+**Step 11 — smoke test**：启动 `pnpm -r --filter backend run dev`，用 curl 手动验证核心路径，记录结果。
+
+### 第四阶段：审查与收尾
+
+**Step 12 — GPT 代码审查 → 修复 → 回归**：把核心变更贴给 GPT 独立审查，修复边界问题并补回归测试，重新跑 Step 8–11。
+
+**Step 13 — 更新任务清单和文档**：在 `docs/04-开发任务清单-Todo-List.md` 标记本任务完成，确认索引已更新。
+
+**Step 14 — 文档治理检查**：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`，通过才能提交。
+
+**Step 15 — git diff 检查**：`git diff --check`，无尾部空白才能提交。
+
+**Step 16 — 提交并交付说明**：按 `type(scope): 中文描述` 格式提交，在对话中给出交付说明（改了哪些文件、做了哪些验证、遗留问题）。
