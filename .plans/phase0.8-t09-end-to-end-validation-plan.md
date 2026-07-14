@@ -212,3 +212,12 @@ wall_clock_generation_ms,result_status,error_code
 - 无 Provider run 的 `note_generate` 在约 14 秒内按 3 次有限重试进入 `pending_quality_check`；资料页显示“需要人工补文”，刷新不白屏。`replace-text` 在该终态返回 `INVALID_STATUS`，符合当前后端只允许 `conversion_failed` 补文的规则；缺口是页面没有可用补文入口，恢复 UX 与状态提示尚未统一。
 - 浏览器可创建课程，但考试表单的初始受控输入不能保留必填值，无法提交考试。priorityBucket 的 API 对照为：过期任务 0、同一未来 deadline 的 confirmed 考试关联任务 1、pending 考试关联任务 2；只证明后端读取时派生逻辑，不证明浏览器闭环或列表排序。无 Provider run 本次未观察到 Worker 重入，三次尝试时间符合约 5 秒退避；但独立审查确认 `setInterval` 不等待 `runOnce()`，因此不能称 Worker 已证明串行。审查还记录：前端轮询在页面隐藏时不会停止且状态变化不重置退避；OCR 使用系统临时目录，尚无 `APP_DATA_ROOT/tmp` 清理实现或清理后读回证据。
 - 未修改业务代码，未创建 S3/S4/S6 PRD 或 `docs/12-*`、`docs/13-*`、`docs/14-*`。下一步先以最小脱敏复现修复真实 Provider 响应的 JSON 解析契约，再重跑成功 run；在没有完成笔记前，不执行 tmp 删除或提前立项 T10/T11。
+
+## 12. 修复后隔离复验记录（2026-07-15）
+
+- 修复基线为 `4f595c6`，独立审查补丁为 `20a67c6`；复验前已完成 `pnpm type-check`、后端 build、两次全量 `pnpm test`。首次全量测试出现一次后端健康检查波动，单文件复跑与第二次全量均通过：后端 102/102、前端 13/13。
+- 真实 Provider run 使用同一类合成文本 PDF 与隔离数据根，`material_convert` 1 次完成，`note_generate` 1 次完成并落盘：normalized text 258 字符、Markdown 430 字符、highlights 4、knowledge modules 4、4/4 模块有关联资料和 `sourceEvidence`，`material_note_completed` 事件 1 条。记录允许字段：token 1949、AI 耗时 31,987 ms、模型名与 provider 名；未记录 Key、Provider URL、提示词或正文全文。
+- 浏览器证据已补齐：`01-courses-and-pending-exam.png` 由纯浏览器操作创建 pending 考试；`02-note-markdown-katex-markmap.png` 展示笔记正文、KaTeX 渲染文本、Markmap 区域与模块；截图前已遮盖 semesterId 输入框可见值。
+- 无 Provider 降级复验使用独立 run，显式清空 Provider 环境变量。PDF 转换 1 次完成，AI 3 次有限重试后进入 `pending_quality_check`；normalized text 258 字符保留，`hasNote=false`、模块数 0。数据库错误/状态字段的脱敏检查不含 `sk-`、资料正文短语、V8 诊断串或 Provider URL。浏览器截图 `03-degraded-pending-quality-check.png` 与刷新后 `04-degraded-after-refresh.png` 均可读。
+- tmp 清理按 run 白名单只删除 `semesters/<semesterHash>/tmp`；清理记录已脱敏为相对路径。删除后重启后端，API 读回笔记、highlights、Markmap 与 4 个知识模块一致；浏览器截图 `05-after-tmp-cleanup-note-readback.png` 证明清理后页面仍可读。
+- 结论：P0-1 与 P0-2 的功能阻塞已修复，T09 的核心业务闭环已可通过真实 Provider 与浏览器复验。但首次 AI 生成耗时 31,987 ms，超过本计划第 4.B.4 的首次 AI 30 秒预算 1,987 ms。按严格门禁，T09 与第一个里程碑仍不勾选；下一步需由用户决定放宽该性能预算、换时段再次复验，或另立性能优化小任务。

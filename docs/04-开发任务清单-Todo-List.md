@@ -430,6 +430,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > 独立审查补充：当前 Worker 的 `setInterval` 不等待 `runOnce()`，慢 AI 时理论上允许重叠；本次未观察到重入，不能写成“已证明串行”。前端轮询在页面隐藏时也不会停止，状态变化不重置退避。当前 OCR 临时文件使用系统临时目录，尚无 `APP_DATA_ROOT\tmp` 清理实现或“清理后笔记读回”自动化证据。
 >
 > 下一步门控：先以脱敏错误摘要复核并修复真实 Provider 响应的 JSON 解析契约，再重跑成功 run；不应在主路径失败时提前立项 T10/T11 或删除 tmp。隔离 evidence 仅保留仓库外的短哈希、状态、计数、允许的模型/token/耗时字段与截图，不含密钥、Provider URL、正文或完整 UUID。
+>
+> **T09 修复后复验（2026-07-15，功能闭环通过但暂不勾选完成）**：`4f595c6` 修复 AI JSON 解析与考试表单受控值，`20a67c6` 收紧解析失败错误摘要并补敏感哨兵测试。隔离复验中，真实 Provider 主路径已完成 PDF 转换、AI 笔记、Markdown/KaTeX/Markmap、4 个知识模块、来源关联和 `material_note_completed` 事件；浏览器可纯操作创建 pending 考试；无 Provider 降级仍进入 `pending_quality_check` 且刷新不白屏；按 run 白名单删除 `semesters/<semesterHash>/tmp` 后，重启后端仍可通过 API 与浏览器读回笔记和模块。未勾选原因：首次 AI 生成耗时 31,987 ms，超过原计划 30 秒预算 1,987 ms；需由用户决定放宽预算、换时段复验或另立性能优化小任务。
 
 ---
 
