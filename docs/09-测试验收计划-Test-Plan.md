@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.7
-**日期**：2026-07-11
-**状态**：Phase 0.5 历史证据保留；Phase 0.7 开发机验收完成，HP 实机兼容复测待机会执行；已补充 Phase 0.8 T04A composer 试炼场证据与正式 E2E 验收要求
+**版本**：v1.8
+**日期**：2026-07-14
+**状态**：Phase 0.5 历史证据保留；Phase 0.7 开发机验收完成，HP 实机兼容复测待机会执行；已补充 Phase 0.8 T04A composer 试炼场、正式 E2E 验收要求与 T09 未通过的真实验收结论
 **用途**：定义组件验证、真实渠道、Windows 调度、Phase 0.8 业务闭环与 HP 16GB 兼容复测的证据标准。
 
 ---
@@ -91,6 +91,22 @@ Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。以下项目是**�
 ```
 
 验收时还要证明：`APP_DATA_ROOT\tmp` 清理不影响长期资料和笔记；正式 Adapter 不直接依赖试炼场脚本；真实数据和密钥不在 Git 中。
+
+### 7.1 Phase 0.8 T09：隔离真实 E2E（2026-07-14）
+
+| 验收项 | 实际证据 | 结论 |
+| --- | --- | --- |
+| 隔离与隐私 | 两个 run 使用独立 `APP_DATA_ROOT`、合成文本 PDF；仓库外 evidence 仅保存短哈希、状态、计数、耗时与裁剪截图。 | ✅ 通过 |
+| 基线 | 隔离 worktree 中 `pnpm type-check`、后端 build、`pnpm test` 通过；后端 97/97、前端 12/12。 | ✅ 通过（Markmap chunk 大小警告非阻塞） |
+| 文本 PDF 转换 | 两个 run 的 `material_convert` 均 1 次完成，终态前可读 normalized text。 | ✅ 通过 |
+| 真实 Provider 笔记生成 | 已配置 Provider 的 run 中 3 次调用均成功返回（`pixel-k12` / `gpt-5.5`；token 701/784/831；约 15.4/20.0/16.2 秒），但 `JSON.parse(response.content)` 失败，`note_generate` 用尽 3 次且没有落库笔记。错误仅留 `JSON_PARSE` 与短哈希。 | ❌ 未通过；不得用历史 smoke test 替代 |
+| 无 Provider 降级 | 显式无 Provider run 的 `note_generate` 3 次、约 14 秒后进入 `pending_quality_check`；页面显示“需要人工补文”，刷新不白屏。 | ✅ 通过 |
+| 考试与 priorityBucket | 浏览器考试表单未能提交；同一未来 deadline 的 API 对照为 overdue=0、confirmed=1、pending=2。任务列表仍按 deadline 而非 bucket 排序。 | ⚠️ 仅后端派生逻辑通过，不是浏览器闭环或排序验收 |
+| 手动补文 | `pending_quality_check` 下 `replace-text` 返回 `INVALID_STATUS`，符合当前后端仅允许 `conversion_failed` 补文的规则；页面没有可用手动补文入口。 | ❌ T10 候选恢复 UX/状态契约缺口 |
+| 笔记/KaTeX/Markmap/模块/模块任务 | 没有成功笔记，因而无法验证。 | ⏳ 依赖真实 Provider 成功后重跑 |
+| tmp 安全清理读回 | 已核对允许范围；因无完成笔记，未删除任何 tmp，避免形成无效通过结论。OCR 仍使用系统临时目录，尚无 `APP_DATA_ROOT\tmp` 清理实现或读回自动化证据。 | ⏳ 依赖成功笔记与清理实现后重跑 |
+
+无 Provider run 的三次 note Job 尝试跨约 14 秒，符合 5 秒退避；本次运行**未观察到**重入，但当前 `setInterval` 不等待 `runOnce()`，不能将此写成 Worker 已证明串行。前端轮询在页面隐藏时不停止、状态变化不重置退避，亦未作为通过项。T09 不勾选完成；先以最小脱敏复现修复真实 Provider 响应的 JSON 解析契约，再重跑成功路径。仅当成功路径产生笔记后，才可执行 tmp 清理读回，并考虑后续 T10/T11。
 
 ## 八、Phase 0.8 设计回填验收矩阵
 

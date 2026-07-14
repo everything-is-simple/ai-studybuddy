@@ -1,7 +1,7 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.6
-**日期**：2026-07-11
+**版本**：v1.7
+**日期**：2026-07-14
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
 > 当前进度：Phase 0.5 历史组件验证已完成；Phase 0.7 开发机验收已完成，Phase 0.8 可以开始。SQLite、本地文件、SQLite Job Worker、RapidOCR、规则报告、QQ SMTP、飞书和 Windows 任务计划均已在开发机取得证据并通过真实渠道验证。HP 16GB 实机兼容复测待机会执行，不阻塞 Phase 0.8。
@@ -422,6 +422,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 验证：笔记 Markdown 渲染正确、思维导图可展示、每个模块能回链到来源资料、考试目标能影响任务优先级
 - [ ] 记录 AI 调用 token 消耗和响应时间
 - [ ] 临时文件清理不影响笔记数据
+
+> **T09 真实 E2E 结论（2026-07-14，未通过，不勾选完成）**：两次隔离 run 均使用合成文本 PDF，转换均成功并保留 normalized text；无 Provider run 在有限重试后正确进入 `pending_quality_check`，页面显示“需要人工补文”且刷新不白屏。真实 Provider run 的 `note_generate` Job 3 次尝试均收到 Provider 成功响应（token：701/784/831；耗时约：15.4/20.0/16.2 秒），但响应后的严格 JSON 解析失败，未生成结构化笔记、思维导图或知识模块；因此 Markdown/KaTeX/Markmap、模块来源、模块关联任务及 tmp 清理后的笔记读回均**未通过或未执行**，第一个里程碑不能验收为完成。
+>
+> 同次浏览器验收发现：课程可创建，但考试表单初始状态无法保留必填输入，不能从浏览器提交考试；此前 T08 留档中的“浏览器创建考试目标成功”不再作为有效证据。API 仅证明 `priorityBucket` 的读取时派生：过期任务为 0、同一未来 deadline 的 confirmed 考试关联任务为 1、pending 考试关联任务为 2；这不证明浏览器可确认考试、创建任务或按 bucket 排序。`pending_quality_check` 的 `replace-text` 返回 `INVALID_STATUS`，这符合当前后端只允许 `conversion_failed` 补文的规则；实际缺口是资料页未接入可用补文入口，恢复 UX 与页面状态提示尚未统一。
+>
+> 独立审查补充：当前 Worker 的 `setInterval` 不等待 `runOnce()`，慢 AI 时理论上允许重叠；本次未观察到重入，不能写成“已证明串行”。前端轮询在页面隐藏时也不会停止，状态变化不重置退避。当前 OCR 临时文件使用系统临时目录，尚无 `APP_DATA_ROOT\tmp` 清理实现或“清理后笔记读回”自动化证据。
+>
+> 下一步门控：先以脱敏错误摘要复核并修复真实 Provider 响应的 JSON 解析契约，再重跑成功 run；不应在主路径失败时提前立项 T10/T11 或删除 tmp。隔离 evidence 仅保留仓库外的短哈希、状态、计数、允许的模型/token/耗时字段与截图，不含密钥、Provider URL、正文或完整 UUID。
 
 ---
 
