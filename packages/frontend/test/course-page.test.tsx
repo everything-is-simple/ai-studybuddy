@@ -118,4 +118,3 @@ describe('CoursePage 考试表单受控值', () => {
     expect(call.examAt).toMatch(/^2026-05-20T/);
   });
 });
-
