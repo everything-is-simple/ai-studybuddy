@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { CoursePage } from './pages/course-page';
 import { MaterialUploadPage } from './pages/material-upload-page';
-import { NotePage } from './pages/note-page';
+
+const NotePage = lazy(() => import('./pages/note-page'));
 
 const SEMESTER_ID_KEY = 'ai-studybuddy:semesterId';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -89,7 +90,14 @@ export function App() {
             path="/materials"
             element={<MaterialUploadPage semesterId={semesterId} onSemesterError={handleSemesterError} />}
           />
-          <Route path="/notes/:noteId" element={<NotePage semesterId={semesterId} />} />
+          <Route
+            path="/notes/:noteId"
+            element={
+              <Suspense fallback={<div className="page">正在加载笔记…</div>}>
+                <NotePage semesterId={semesterId} />
+              </Suspense>
+            }
+          />
           <Route path="/" element={<Navigate to="/courses" replace />} />
           <Route path="*" element={<Navigate to="/courses" replace />} />
         </Routes>

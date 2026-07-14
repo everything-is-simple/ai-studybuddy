@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
+import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
 import { StorageAdapter } from '../adapters/storage';
 import type {
@@ -106,7 +107,14 @@ export class NoteBuilderService {
     }
     if (!fs.existsSync(getSemesterDbPath(semesterId)))
       throw new NoteBuilderError('SEMESTER_DB_NOT_FOUND', 500, '学期数据库不存在');
-    return openExistingDbAtPath(getSemesterDbPath(semesterId));
+    const semesterDb = openExistingDbAtPath(getSemesterDbPath(semesterId));
+    try {
+      migrateSemesterDb(semesterDb);
+      return semesterDb;
+    } catch (error) {
+      semesterDb.close();
+      throw error;
+    }
   }
 
   private requireCourse(db: DatabaseType, semesterId: string, courseInstanceId: string): void {

@@ -1,118 +1,141 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MaterialDto } from '@ai-studybuddy/shared';
-import { ApiClientError } from '../api/api-client';
+import type { MaterialDto, MaterialStatus } from '@ai-studybuddy/shared';
+
 import { getMaterials } from '../api/note-builder-api';
 
-const TERMINAL_STATUSES = new Set<string>(['completed', 'conversion_failed', 'pending_quality_check']);
+const POLL_DELAYS_MS = [2_000, 4_000, 8_000, 16_000, 30_000];
+const MAX_CONSECUTIVE_ERRORS = 3;
+const TERMINAL_STATUSES = new Set<MaterialStatus>(['completed', 'conversion_failed', 'pending_quality_check']);
 
-const POLL_DELAYS_MS = [2000, 4000, 8000, 16000, 30000];
-
-function isTerminal(material: MaterialDto): boolean {
-  return TERMINAL_STATUSES.has(material.status);
-}
-
-export interface UseMaterialPollingState {
+interface UseMaterialPollingResult {
   materials: MaterialDto[];
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: () => Promise<void>;
+}
+
+function hasPendingMaterials(materials: MaterialDto[]) {
+  return materials.some((material) => !TERMINAL_STATUSES.has(material.status));
 }
 
 export function useMaterialPolling(
   semesterId: string | null,
-  courseInstanceId: string | null,
-  enabled: boolean
-): UseMaterialPollingState {
+  courseInstanceId: string,
+  enabled = true,
+): UseMaterialPollingResult {
   const [materials, setMaterials] = useState<MaterialDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const delayIndexRef = useRef(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refetchCurrent = useRef<() => Promise<void>>(async () => {});
+  const enabledRef = useRef(enabled);
 
-  const fetch = useCallback(async () => {
-    if (!semesterId || !courseInstanceId || !enabled) return;
+  enabledRef.current = enabled;
 
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setLoading(true);
+  useEffect(() => {
+    let disposed = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let controller: AbortController | undefined;
+    let delayIndex = 0;
+    let consecutiveErrors = 0;
+
+    const clearPendingWork = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = undefined;
+      }
+      controller?.abort();
+      controller = undefined;
+    };
+
+    const scheduleNext = (refresh: () => Promise<void>) => {
+      const delay = POLL_DELAYS_MS[Math.min(delayIndex, POLL_DELAYS_MS.length - 1)];
+      delayIndex += 1;
+      timer = setTimeout(() => {
+        void refresh();
+      }, delay);
+    };
+
+    const refresh = async () => {
+      clearPendingWork();
+
+      if (!enabled || !semesterId || !courseInstanceId || disposed) {
+        return;
+      }
+
+      controller = new AbortController();
+      setLoading(true);
+
+      try {
+        const page = await getMaterials(semesterId, courseInstanceId, controller.signal);
+        const nextMaterials = page.items;
+        if (disposed) {
+          return;
+        }
+
+        setMaterials(nextMaterials);
+        setError(null);
+        consecutiveErrors = 0;
+
+        if (hasPendingMaterials(nextMaterials)) {
+          scheduleNext(refresh);
+        }
+      } catch (caughtError) {
+        if (disposed || (caughtError instanceof DOMException && caughtError.name === 'AbortError')) {
+          return;
+        }
+
+        consecutiveErrors += 1;
+        const message = caughtError instanceof Error ? caughtError.message : '资料状态请求失败';
+        setError(
+          consecutiveErrors >= MAX_CONSECUTIVE_ERRORS
+            ? `资料状态请求连续失败，已停止自动刷新，请手动重试。${message ? `（${message}）` : ''}`
+            : message,
+        );
+
+        if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
+          scheduleNext(refresh);
+        }
+      } finally {
+        if (!disposed) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const refetch = async () => {
+      delayIndex = 0;
+      consecutiveErrors = 0;
+      setError(null);
+      await refresh();
+    };
+
+    refetchCurrent.current = refetch;
+    setMaterials([]);
     setError(null);
+    void refetch();
 
-    try {
-      const page = await getMaterials(semesterId, courseInstanceId, controller.signal);
-      if (!controller.signal.aborted) {
-        setMaterials(page.items);
-        const allTerminal = page.items.length === 0 || page.items.every(isTerminal);
-        if (allTerminal) {
-          delayIndexRef.current = 0;
-        } else {
-          delayIndexRef.current = Math.min(delayIndexRef.current + 1, POLL_DELAYS_MS.length - 1);
-        }
-      }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      if (!controller.signal.aborted) {
-        if (err instanceof ApiClientError) {
-          setError(err.message);
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('未知错误');
-        }
-      }
-    } finally {
-      if (!controller.signal.aborted) {
-        setLoading(false);
-      }
-    }
-  }, [semesterId, courseInstanceId, enabled]);
-
-  const schedule = useCallback(() => {
-    if (!semesterId || !courseInstanceId || !enabled) return;
-    const delay = POLL_DELAYS_MS[delayIndexRef.current];
-    timeoutRef.current = setTimeout(() => {
-      fetch().then(() => {
-        const allTerminal = materials.length === 0 || materials.every(isTerminal);
-        if (!allTerminal) {
-          schedule();
-        }
-      });
-    }, delay);
-  }, [semesterId, courseInstanceId, enabled, materials, fetch]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    delayIndexRef.current = 0;
-    fetch();
     return () => {
-      abortRef.current?.abort();
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      disposed = true;
+      clearPendingWork();
     };
-  }, [enabled, semesterId, courseInstanceId, fetch]);
+  }, [courseInstanceId, enabled, semesterId]);
+
+  const refetch = useCallback(async () => {
+    await refetchCurrent.current();
+  }, []);
 
   useEffect(() => {
-    if (!enabled) return;
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    const allTerminal = materials.length === 0 || materials.every(isTerminal);
-    if (!allTerminal) {
-      schedule();
-    }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [enabled, materials, schedule]);
-
-  useEffect(() => {
-    function handleVisibilityChange() {
-      if (!document.hidden && enabled) {
-        delayIndexRef.current = 0;
-        fetch();
+    const handleVisibilityChange = () => {
+      if (!document.hidden && enabledRef.current) {
+        void refetch();
       }
-    }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [enabled, fetch]);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetch]);
 
-  return { materials, loading, error, refetch: fetch };
+  return { materials, loading, error, refetch };
 }

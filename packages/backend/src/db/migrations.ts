@@ -27,6 +27,29 @@ const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 3, sql: SEMESTER_V3_SQL },
 ];
 
+const CURRENT_JOBS_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS jobs (
+    id TEXT PRIMARY KEY,
+    job_type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    payload_json TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 1,
+    available_at TEXT NOT NULL,
+    started_at TEXT,
+    completed_at TEXT,
+    error_summary TEXT,
+    created_at TEXT NOT NULL,
+    material_id TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_jobs_material_type_created
+    ON jobs(material_id, job_type, created_at);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_material_type_active
+    ON jobs(material_id, job_type)
+    WHERE material_id IS NOT NULL AND status IN ('pending', 'running');
+`;
+
 function ensureMigrationTable(db: DatabaseType): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -90,6 +113,30 @@ export function migrateGlobalDb(db: DatabaseType): void {
 
 export function migrateSemesterDb(db: DatabaseType): void {
   applyMigrations(db, 'semester', SEMESTER_MIGRATIONS);
+  ensureCurrentJobsTable(db);
+}
+
+function ensureCurrentJobsTable(db: DatabaseType): void {
+  const jobsExists = db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'jobs'")
+    .get() as { 1: number } | undefined;
+
+  if (!jobsExists) {
+    db.exec(CURRENT_JOBS_TABLE_SQL);
+    return;
+  }
+
+  const columns = db.prepare('PRAGMA table_info(jobs)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'material_id')) {
+    db.exec('ALTER TABLE jobs ADD COLUMN material_id TEXT;');
+  }
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_jobs_material_type_created
+      ON jobs(material_id, job_type, created_at);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_material_type_active
+      ON jobs(material_id, job_type)
+      WHERE material_id IS NOT NULL AND status IN ('pending', 'running');
+  `);
 }
 
 /** 初始化任意绝对路径上的全局库，供正式运行与集成测试复用。 */

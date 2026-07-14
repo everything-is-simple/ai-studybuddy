@@ -161,7 +161,7 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
         <section className="card">
           <h2>资料处理状态</h2>
           {materialsLoading && materials.length === 0 && <FeedbackMessage state="loading" />}
-          {materialsError && materials.length === 0 && (
+          {materialsError && (
             <FeedbackMessage state="error" message={materialsError} onRetry={refetchMaterials} />
           )}
           {sortedMaterials.length === 0 && !materialsLoading && !materialsError && (

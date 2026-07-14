@@ -134,3 +134,5 @@ export function NotePage({ semesterId }: NotePageProps) {
     </div>
   );
 }
+
+export default NotePage;

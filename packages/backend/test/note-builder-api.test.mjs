@@ -242,4 +242,23 @@ test('S2 worker runOnce generates notes, modules, list metadata, and study evide
   } finally {
     dbAfterUpdate.close();
   }
+
+  const legacyDb = service.openReadySemesterDb(semester.semesterId);
+  try {
+    legacyDb.exec('DROP TABLE jobs');
+  } finally {
+    legacyDb.close();
+  }
+
+  const repairedMaterials = service.listMaterials({ semesterId: semester.semesterId, courseInstanceId: course.id });
+  assert.equal(repairedMaterials.items.length, 1);
+  assert.equal(repairedMaterials.items[0].id, uploaded.id);
+
+  const repairedDb = service.openReadySemesterDb(semester.semesterId);
+  try {
+    const jobColumns = repairedDb.prepare('PRAGMA table_info(jobs)').all().map((column) => column.name);
+    assert.ok(jobColumns.includes('material_id'));
+  } finally {
+    repairedDb.close();
+  }
 });

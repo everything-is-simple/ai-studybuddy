@@ -5,6 +5,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '127.0.0.1',
     port: 5173,
     proxy: {
       '/api': {
@@ -21,5 +22,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          katex: ['katex', 'rehype-katex', 'remark-math'],
+          markdown: ['react-markdown', 'remark-gfm'],
+          markmap: ['markmap-lib', 'markmap-view'],
+        },
+      },
+    },
   },
 });
