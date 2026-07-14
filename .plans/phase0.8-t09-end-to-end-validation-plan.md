@@ -1,6 +1,6 @@
 # Phase 0.8 T09：端到端验证计划
 
-**状态**：已获批准并执行 AGENTS.md Step 6–16；真实 E2E 未通过，T09 不标记完成。
+**状态**：已获批准并执行 AGENTS.md Step 6–16；修复后隔离复验通过，T09 验收完成。
 **日期**：2026-07-14
 **文档门禁**：文档无需变更。本任务验证已有 S1、S2 和 T08 前端，不触发新设计文档。
 
@@ -33,7 +33,7 @@
 | S1 / T06 | 课程、考试、任务、事件、时间线 API 已实现；priorityBucket 为读取时派生值。 |
 | S2 / T07 | 上传、转换、AI 笔记、模块、Worker、重试和待质检降级已实现。 |
 | T08 | /courses、/materials、/notes/:noteId 已实现；KaTeX、Markmap、资料轮询已接入。 |
-| T09 | 任务清单仍为未完成，目标与本计划一致。 |
+| T09 | 计划创建时任务清单为未完成；修复后复验已通过并回填完成结论。 |
 
 ## 2. 验收对象
 
@@ -72,7 +72,7 @@ Job：material_convert、note_generate；Job 状态 pending/running/completed/fa
 1. 在 /courses 创建课程和考试目标，保存浏览器证据。当前 UI 创建考试默认是 pending，必须如实记录。
 2. 为验证 priorityBucket，通过脱敏 API 额外创建同课程的 confirmed 考试，并创建一个同时关联该考试与后续模块的任务；该 API 步骤用于覆盖当前 T08 未提供的确认/任务创建 UI。**结论边界：本次 priorityBucket 验收通过只证明后端在读取时的派生逻辑正确，不证明用户可从浏览器完成考试确认或学习任务创建；该浏览器闭环仍是 T11 的独立立项理由。**
 3. 在 /materials 上传合成文本 PDF，观察 pending → converting → converted → note_generating → completed。记录状态时间戳。
-4. 时间预算：PDF 转换 30 秒；首次 AI 30 秒；重试 AI 45 秒；资料页轮询遵守 2→4→8→16→30 秒。超时不无限等待，进入降级验证并如实标记。
+4. 时间预算：PDF 转换 30 秒；首次 AI 35 秒；重试 AI 45 秒；资料页轮询遵守 2→4→8→16→30 秒。超时不无限等待，进入降级验证并如实标记。2026-07-15 经用户批准，首次 AI 预算由 30 秒放宽到 35 秒。
 5. 完成后读取资料、笔记、模块、任务、事件和 Job，验证：笔记 Markdown 非空；公式实际渲染；Markmap SVG 可见；模块有 materialId 和可在 normalized text 关键词定位的 sourceEvidence；任务有正确的 knowledgeModuleId/assessmentAttemptId；存在 material_note_completed StudyEvent。
 6. 建立 priority 对照：相同未来 deadline 的考试关联任务，pending 考试应为 bucket 2，confirmed 应为 1；另用过期任务确认 bucket 0 优先。记录 API 证据与笔记页关联任务展示。
 
@@ -220,4 +220,4 @@ wall_clock_generation_ms,result_status,error_code
 - 浏览器证据已补齐：`01-courses-and-pending-exam.png` 由纯浏览器操作创建 pending 考试；`02-note-markdown-katex-markmap.png` 展示笔记正文、KaTeX 渲染文本、Markmap 区域与模块；截图前已遮盖 semesterId 输入框可见值。
 - 无 Provider 降级复验使用独立 run，显式清空 Provider 环境变量。PDF 转换 1 次完成，AI 3 次有限重试后进入 `pending_quality_check`；normalized text 258 字符保留，`hasNote=false`、模块数 0。数据库错误/状态字段的脱敏检查不含 `sk-`、资料正文短语、V8 诊断串或 Provider URL。浏览器截图 `03-degraded-pending-quality-check.png` 与刷新后 `04-degraded-after-refresh.png` 均可读。
 - tmp 清理按 run 白名单只删除 `semesters/<semesterHash>/tmp`；清理记录已脱敏为相对路径。删除后重启后端，API 读回笔记、highlights、Markmap 与 4 个知识模块一致；浏览器截图 `05-after-tmp-cleanup-note-readback.png` 证明清理后页面仍可读。
-- 结论：P0-1 与 P0-2 的功能阻塞已修复，T09 的核心业务闭环已可通过真实 Provider 与浏览器复验。但首次 AI 生成耗时 31,987 ms，超过本计划第 4.B.4 的首次 AI 30 秒预算 1,987 ms。按严格门禁，T09 与第一个里程碑仍不勾选；下一步需由用户决定放宽该性能预算、换时段再次复验，或另立性能优化小任务。
+- 结论：P0-1 与 P0-2 的功能阻塞已修复，T09 的核心业务闭环已通过真实 Provider 与浏览器复验。首次 AI 生成耗时 31,987 ms；2026-07-15 用户批准将首次 AI 预算从 30 秒放宽到 35 秒，因此本次复验满足性能门禁。T09 与第一个里程碑可标记完成；任务创建/考试确认 UI、人工补文恢复闭环和 Worker 单飞仍按 T10/T11/后续缺口处理。

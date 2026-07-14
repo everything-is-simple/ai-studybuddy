@@ -1,6 +1,6 @@
 # Phase 0.8 T09 修复计划：AI 笔记解析 + 考试表单受控值
 
-**状态**：**已批准（方案 B）、修复已提交、隔离复验功能闭环已通过、性能预算未达**。范围锁定为 P0-1 + P0-2；`response_format` 按用户边界暂缓；T09 与第一个里程碑因首次 AI 耗时超过 30 秒预算仍不勾选。
+**状态**：**已批准（方案 B）、修复已提交、隔离复验已通过、T09 已可勾选完成**。范围锁定为 P0-1 + P0-2；`response_format` 按用户边界暂缓；首次 AI 预算经用户批准由 30 秒放宽到 35 秒。
 **日期**：2026-07-14
 **分支**：`Asteria-malf-pas/t09-e2e-validation`（延续 T09 失败证据的追溯链，不从 master 另开）
 **修复提交**：`4f595c6 fix(t09): 修复 AI 笔记 JSON 解析与考试表单受控值`；后续补丁修正 `JSON.parse` 失败信息为固定字符串并新增敏感哨兵测试（详见 §11 变更日志）。
@@ -164,4 +164,4 @@ packages/frontend/test/course-page.test.tsx  (新增，若可行) # 3.4 前端�
 - **2026-07-14 已批准**：用户回复方案 B、附加边界（不启用 `response_format`、先失败测试再写实现、复验前不勾选任何 milestone）；进入 Step 6–16。
 - **2026-07-14 修复提交**：`4f595c6 fix(t09): 修复 AI 笔记 JSON 解析与考试表单受控值`。改动 6 个文件：openai-provider 严格 JSON schema 提示；material-job-worker 新增 `sanitizeAiJson`、`parseAi` 加 try/catch；course-page 拆分 `activeExamCourseId`/`submittingExamFor`、`value` 直接绑到 `examForm.*`；新增两份回归测试；本计划文件同步入库。回归防护通过「stash 撤回改动 → 测试失败 → apply 恢复 → 测试通过」双向验证。后端 101/101、前端 13/13。
 - **2026-07-14 独立审查补丁**：用户指出 `parseAi` 里 `AI 输出无法解析为 JSON：${cause}` 会把 V8 `SyntaxError.message` 拼入 error_summary（V8 会回显畸形位置附近的字符，如 `Unexpected token 's', "…sk-…" is not valid JSON`），可能泄漏 AI 输出里嵌入的敏感串。修复：把 `${cause}` 去掉，改为固定字符串 `AI 输出无法解析为 JSON`；新增测试用例 `S2 畸形 JSON 含敏感哨兵时，error_summary 不得回显运行时 cause`，用 `sk-DEADBEEF-DO-NOT-LEAK-42` 作为哨兵，同时断言不含 `Unexpected token`、`is not valid JSON`、`position N` 等 V8 诊断字符串。修补后测试从 4 → 5 全过；再次经 stash 双向回归验证。后端 102/102、前端 13/13。
-- **2026-07-15 隔离复验补证**：真实 Provider 主路径已完成资料转换、AI 笔记、Markdown、Markmap、4 个知识模块和 `material_note_completed` 事件落盘；浏览器纯操作创建 pending 考试成功；无 Provider 降级进入 `pending_quality_check` 且刷新不白屏；按 run 白名单删除 `semesters/<semesterHash>/tmp` 后重启后端，API 与浏览器均能读回笔记、模块和思维导图。脱敏证据写在仓库外 evidence/browser-evidence。唯一未达项：首次 AI 生成耗时 31,987 ms，超过原计划 30 秒预算 1,987 ms；因此 T09 与第一个里程碑仍不勾选，等待用户决定放宽预算或再次复验。
+- **2026-07-15 隔离复验补证**：真实 Provider 主路径已完成资料转换、AI 笔记、Markdown、Markmap、4 个知识模块和 `material_note_completed` 事件落盘；浏览器纯操作创建 pending 考试成功；无 Provider 降级进入 `pending_quality_check` 且刷新不白屏；按 run 白名单删除 `semesters/<semesterHash>/tmp` 后重启后端，API 与浏览器均能读回笔记、模块和思维导图。脱敏证据写在仓库外 evidence/browser-evidence。首次 AI 生成耗时 31,987 ms；2026-07-15 用户批准将首次 AI 预算从 30 秒放宽到 35 秒，因此 T09 与第一个里程碑可勾选完成。
