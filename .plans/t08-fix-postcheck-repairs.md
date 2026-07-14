@@ -74,4 +74,4 @@ Fix-3 优先，因为它影响用户使用旧数据；Fix-1 影响体验；Fix-2
 - [x] Fix-3：缺少 `jobs` 表的旧学期库会在打开时自动补表；`listMaterials` 定向回归通过
 - [x] Fix-1：前端轮询连续失败 3 次后停止，错误反馈提供手动重试按钮；切换课程时会清空旧资料
 - [x] Fix-2：`pnpm --filter @ai-studybuddy/frontend run build` 后入口 chunk 为 172.85 kB，笔记依赖按需拆分
-- [ ] 全量 `pnpm test`：前端 10 项通过；后端存在既有 `dev converter /pptx returns extracted text` 失败，和本次变更无关
+- [x] 全量 `pnpm test`：后端 97 项、前端 12 项全部通过

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { request, requestPage, upload, ApiClientError } from '../src/api/api-client';
+import { request, requestPage, upload, ApiClientError, normalizeApiBaseUrl } from '../src/api/api-client';
 
 const baseUrl = 'http://127.0.0.1:3000/api';
 
@@ -20,6 +20,15 @@ describe('api-client', () => {
       json: async () => response.json,
     });
   }
+
+  it('为未带 /api 的环境地址补齐 API 前缀', () => {
+    expect(normalizeApiBaseUrl('http://127.0.0.1:3011')).toBe('http://127.0.0.1:3011/api');
+    expect(normalizeApiBaseUrl('http://127.0.0.1:3011/')).toBe('http://127.0.0.1:3011/api');
+  });
+
+  it('保留已包含 /api 的环境地址', () => {
+    expect(normalizeApiBaseUrl('https://studybuddy.example/api')).toBe('https://studybuddy.example/api');
+  });
 
   it('解包成功信封并返回 data', async () => {
     mockFetch({ json: { success: true, data: { id: '1' } } });

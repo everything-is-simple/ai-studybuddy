@@ -1,6 +1,11 @@
 import type { ApiError, ApiSuccess } from '@ai-studybuddy/shared';
 
-const DEFAULT_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:3000/api';
+export function normalizeApiBaseUrl(configuredBaseUrl?: string): string {
+  const baseUrl = configuredBaseUrl?.trim().replace(/\/+$/, '') || 'http://127.0.0.1:3000/api';
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+}
+
+const DEFAULT_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 export class ApiClientError extends Error {
   constructor(
