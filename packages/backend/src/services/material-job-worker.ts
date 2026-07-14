@@ -229,10 +229,11 @@ export class MaterialJobWorker {
     let parsed: AiNotePayload;
     try {
       parsed = JSON.parse(jsonText) as AiNotePayload;
-    } catch (err) {
-      // 剥离/截取后仍无法解析：只保留 JSON.parse 的错误名与位置，不回放正文片段。
-      const cause = err instanceof Error ? err.message : String(err);
-      throw new Error(`AI 输出无法解析为 JSON：${cause}`);
+    } catch {
+      // 严禁把 JSON.parse 的运行时 message 拼进错误：V8 的 SyntaxError 会回显畸形位置附近的原始字符
+      // （例如 `Unexpected token 's', "…sk-…" is not valid JSON`），可能泄漏 AI 输出中嵌入的敏感串。
+      // 这里改为固定字符串；重试次数、材料 ID、任务时间线足够定位问题。
+      throw new Error('AI 输出无法解析为 JSON');
     }
     if (
       !parsed.markdown?.trim() ||

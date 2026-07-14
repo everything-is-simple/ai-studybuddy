@@ -187,3 +187,42 @@ test('S2 彻底非 JSON 输出：3 次重试后进入 pending_quality_check，er
   }
 });
 
+// 关键场景：AI 返回「以 { 开头、能通过 sanitize gate、但 JSON.parse 失败」的畸形 JSON，
+// 且该畸形 JSON 中嵌入了「疑似 API Key / 敏感哨兵」。修复前 parseAi 里
+// `AI 输出无法解析为 JSON：${cause}` 会把 V8 SyntaxError 的 message 拼进 error_summary，
+// 而 V8 message 常回显畸形位置附近的原文（例如 `Unexpected token 's', "…sk-DEAD… " is not valid JSON`）。
+// 修复后错误消息必须是固定字符串，不含任何来自运行时 cause 的字符。
+test('S2 畸形 JSON 含敏感哨兵时，error_summary 不得回显运行时 cause', async (t) => {
+  const { service, MaterialJobWorker, StorageAdapter, semesterId, materialId } = await setup(t);
+  const SENTINEL = 'sk-DEADBEEF-DO-NOT-LEAK-42';
+  // 以 { 开头、} 结尾——sanitize 会当成疑似 JSON 交给 JSON.parse；未加引号的 sk-... 会触发 SyntaxError。
+  const MALFORMED = `{ "apiKey": ${SENTINEL}, "note": 缺失结束引号 }`;
+  const ai = mockAi(() => MALFORMED);
+  const worker = new MaterialJobWorker(service, new StorageAdapter(), ai.provider);
+  await reachCompleted(worker, service, semesterId, materialId);
+  const detail = service.getMaterial(semesterId, materialId);
+  assert.equal(detail.status, 'pending_quality_check');
+  assert.equal(detail.aiRetryCount, 3);
+
+  const db = service.openReadySemesterDb(semesterId);
+  try {
+    const row = db
+      .prepare('SELECT ai_generation_error_message FROM materials WHERE id = ?')
+      .get(materialId);
+    const errorSummary = String(row?.ai_generation_error_message ?? '');
+    assert.ok(errorSummary.length > 0);
+    // 哨兵及其明显子串都不得出现。
+    assert.ok(!errorSummary.includes(SENTINEL), `error_summary 泄漏了完整哨兵：${errorSummary}`);
+    assert.ok(!errorSummary.includes('sk-DEAD'), `error_summary 泄漏了哨兵前缀：${errorSummary}`);
+    assert.ok(!errorSummary.includes('DEADBEEF'), `error_summary 泄漏了哨兵指纹：${errorSummary}`);
+    // 中文关键片段（未闭合引号旁的原文）也不得回显。
+    assert.ok(!errorSummary.includes('缺失结束引号'), `error_summary 回显了畸形位置附近的原文：${errorSummary}`);
+    // V8 SyntaxError 的常见片段（"Unexpected token" / "is not valid JSON" / 数字位置）都不得回显。
+    assert.ok(!/Unexpected token/i.test(errorSummary), `error_summary 泄漏了 V8 诊断字符串：${errorSummary}`);
+    assert.ok(!/is not valid JSON/i.test(errorSummary), `error_summary 泄漏了 V8 诊断字符串：${errorSummary}`);
+    assert.ok(!/position\s*\d+/i.test(errorSummary), `error_summary 回显了运行时字符位置：${errorSummary}`);
+  } finally {
+    db.close();
+  }
+});
+

@@ -1,8 +1,9 @@
 # Phase 0.8 T09 修复计划：AI 笔记解析 + 考试表单受控值
 
-**状态**：待用户明确批准；当前仅执行 AGENTS.md Step 1–5，不修改业务代码。
+**状态**：**已批准（方案 B）、修复已提交、等待隔离 Provider 复验**。范围锁定为 P0-1 + P0-2；`response_format` 按用户边界暂缓；T09 与第一个里程碑在复验通过前均不勾选。
 **日期**：2026-07-14
 **分支**：`Asteria-malf-pas/t09-e2e-validation`（延续 T09 失败证据的追溯链，不从 master 另开）
+**修复提交**：`4f595c6 fix(t09): 修复 AI 笔记 JSON 解析与考试表单受控值`；后续补丁修正 `JSON.parse` 失败信息为固定字符串并新增敏感哨兵测试（详见 §11 变更日志）。
 **子系统归属**：S2 NoteBuilder（主） + S1 StudyRhythm 考试表单一处（次）。
 **文档门禁**：文档无需变更。本任务是修复 S1/S2 已实现能力的两处缺陷，不触发新设计文档。
 
@@ -130,12 +131,37 @@ packages/frontend/test/course-page.test.tsx  (新增，若可行) # 3.4 前端�
 - 不启用 `response_format`（用户已批准暂缓）。
 - 不合并到 master、不推送分支，直到 T09 复验通过并由用户决定合并目标。
 
-## 8. 待用户批准
+## 8. 批准与后续闸口
 
-请你回复：
+**用户已批准（方案 B）**：修复 P0-1 + P0-2，两者先写失败测试再写实现；`response_format` 不启用；Worker 单飞、补文契约、考试确认/任务创建 UI、页面轮询优化均不纳入；复验前 T09 与第一个里程碑不勾选。
 
-1. **范围**：方案 A（仅 P0-1）还是方案 B（P0-1 + P0-2，推荐）？
-2. 有无补充边界？
+修复实施完毕；下一步是**隔离 Provider 复验**（§9），只有全部通过后才允许更新 `docs/04`、`docs/09`，并由用户决定合并目标。
 
-批准后我进入 Step 6–16。批准前，除本计划文件外不修改任何业务代码或文档。
+## 9. 隔离 Provider 复验清单（下一步待执行）
+
+复验必须从完整 `pnpm test` 起步（不是仅本次 5+1 新增用例）。验收必须证明：
+
+1. **真实 Provider 主路径**：合成文本 PDF → 转换 → AI 生成，笔记 Markdown、Markmap、知识模块、`study_events.material_note_completed` 全部落盘；本地时长 ≤ 上限；token/model/latency 按脱敏白名单记录。
+2. **浏览器可创建考试**：pending 考试通过纯浏览器操作创建成功；截图作为 `01-courses-and-pending-exam.png` 的最终证据，替换 T09 原运行中的 API 绕过版本。
+3. **无 Provider 降级**：文本保留、有限重试、`pending_quality_check` 中文状态、页面刷新不白屏；`ai_generation_error_message` 不含 API Key、正文、V8 诊断字符串。
+4. **tmp 清理与读回**：仅在主路径完成笔记且已从浏览器与 API 读回后，按 run-id 白名单删除 tmp；重启后端后重新加载 `/notes/:noteId`、知识模块、事件、原文件 `storage_key`。
+5. **证据脱敏**：截图与 JSONL/CSV 仅存脱敏字段与短哈希；仓库外 evidence/ 中不得出现 Provider URL、Key、完整 UUID、绝对数据路径或 AI 正文。
+
+全部通过后，才允许：更新 `docs/04-开发任务清单-Todo-List.md` 勾选 T09 与第一个里程碑；在 `docs/09-测试验收计划-Test-Plan.md` 追加复验证据；在本计划 §11 追加复验记录。若任一项失败，保持不勾选并如实记录新的阻塞。
+
+## 10. 不做什么（防范围蔓延，重申）
+
+- 不修 Worker 单飞（P0.5）。SQLite 乐观锁提供实际保护；T09 未真实复现重叠。仅在 T09 复验产生新的重叠证据时另行立项。
+- 不改 `replaceText` 状态契约（P1 T10）。
+- 不新增任务创建 / 考试确认 UI（P1 T11）。
+- 不改前端轮询 `visibilitychange`（P2）。
+- 不启用 `response_format`（用户已批准暂缓）。
+- 不合并到 master、不推送分支，直到 T09 复验通过并由用户决定合并目标。
+
+## 11. 变更日志
+
+- **2026-07-14 初版**：方案 A/B 分列；等待用户批准。
+- **2026-07-14 已批准**：用户回复方案 B、附加边界（不启用 `response_format`、先失败测试再写实现、复验前不勾选任何 milestone）；进入 Step 6–16。
+- **2026-07-14 修复提交**：`4f595c6 fix(t09): 修复 AI 笔记 JSON 解析与考试表单受控值`。改动 6 个文件：openai-provider 严格 JSON schema 提示；material-job-worker 新增 `sanitizeAiJson`、`parseAi` 加 try/catch；course-page 拆分 `activeExamCourseId`/`submittingExamFor`、`value` 直接绑到 `examForm.*`；新增两份回归测试；本计划文件同步入库。回归防护通过「stash 撤回改动 → 测试失败 → apply 恢复 → 测试通过」双向验证。后端 101/101、前端 13/13。
+- **2026-07-14 独立审查补丁**：用户指出 `parseAi` 里 `AI 输出无法解析为 JSON：${cause}` 会把 V8 `SyntaxError.message` 拼入 error_summary（V8 会回显畸形位置附近的字符，如 `Unexpected token 's', "…sk-…" is not valid JSON`），可能泄漏 AI 输出里嵌入的敏感串。修复：把 `${cause}` 去掉，改为固定字符串 `AI 输出无法解析为 JSON`；新增测试用例 `S2 畸形 JSON 含敏感哨兵时，error_summary 不得回显运行时 cause`，用 `sk-DEADBEEF-DO-NOT-LEAK-42` 作为哨兵，同时断言不含 `Unexpected token`、`is not valid JSON`、`position N` 等 V8 诊断字符串。修补后测试从 4 → 5 全过；再次经 stash 双向回归验证。后端 102/102、前端 13/13。
 
