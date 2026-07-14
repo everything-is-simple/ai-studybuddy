@@ -13,7 +13,10 @@ interface CoursePageProps {
 export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
   const [courseName, setCourseName] = useState('');
   const [creatingCourse, setCreatingCourse] = useState(false);
-  const [creatingExamFor, setCreatingExamFor] = useState<string | null>(null);
+  // 拆分「哪个课程的考试表单正在编辑」与「哪个课程的考试表单正在提交」两个语义，
+  // 避免过去用同一个 creatingExamFor 同时表达两者，导致提交前 value 恒回退到 ''。
+  const [activeExamCourseId, setActiveExamCourseId] = useState<string | null>(null);
+  const [submittingExamFor, setSubmittingExamFor] = useState<string | null>(null);
   const [examForm, setExamForm] = useState<{ name: string; examAt: string; goal: string }>({
     name: '',
     examAt: '',
@@ -66,10 +69,19 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
     }
   };
 
+  const handleExamFieldChange = (
+    courseInstanceId: string,
+    patch: Partial<{ name: string; examAt: string; goal: string }>
+  ) => {
+    // 用户开始输入时把「正在编辑」锚定到当前课程；防止多个课程共享 examForm。
+    setActiveExamCourseId((prev) => (prev === null ? courseInstanceId : prev));
+    setExamForm((prev) => ({ ...prev, ...patch }));
+  };
+
   const handleCreateExam = async (event: React.FormEvent, courseInstanceId: string) => {
     event.preventDefault();
     if (!semesterId || !examForm.name.trim() || !examForm.examAt) return;
-    setCreatingExamFor(courseInstanceId);
+    setSubmittingExamFor(courseInstanceId);
     setSuccessMessage(null);
     try {
       await createExam({
@@ -81,14 +93,15 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
         goal: examForm.goal.trim() || undefined,
       });
       setExamForm({ name: '', examAt: '', goal: '' });
-      setCreatingExamFor(null);
+      setActiveExamCourseId(null);
       setSuccessMessage('考试目标已创建');
       await refetch();
     } catch (err) {
       if (err instanceof Error && err.message.includes('学期不存在')) {
         onSemesterError?.();
       }
-      setCreatingExamFor(null);
+    } finally {
+      setSubmittingExamFor(null);
     }
   };
 
@@ -160,33 +173,41 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
                     </ul>
                   )}
 
-                  <form onSubmit={(event) => handleCreateExam(event, course.id)} className="form-inline">
-                    <input
-                      type="text"
-                      placeholder="考试名称"
-                      value={creatingExamFor === course.id ? examForm.name : ''}
-                      onChange={(event) => setExamForm((prev) => ({ ...prev, name: event.target.value }))}
-                      disabled={creatingExamFor !== null && creatingExamFor !== course.id}
-                      required
-                    />
-                    <input
-                      type="datetime-local"
-                      value={creatingExamFor === course.id ? examForm.examAt : ''}
-                      onChange={(event) => setExamForm((prev) => ({ ...prev, examAt: event.target.value }))}
-                      disabled={creatingExamFor !== null && creatingExamFor !== course.id}
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="考试目标（可选）"
-                      value={creatingExamFor === course.id ? examForm.goal : ''}
-                      onChange={(event) => setExamForm((prev) => ({ ...prev, goal: event.target.value }))}
-                      disabled={creatingExamFor !== null && creatingExamFor !== course.id}
-                    />
-                    <button type="submit" disabled={creatingExamFor !== null && creatingExamFor !== course.id}>
-                      {creatingExamFor === course.id ? '保存中…' : '添加考试'}
-                    </button>
-                  </form>
+                  {(() => {
+                    const isActive = activeExamCourseId === null || activeExamCourseId === course.id;
+                    const isSubmitting = submittingExamFor === course.id;
+                    // 其他课程正在编辑或提交时，本表单禁用；本表单提交期间也禁用（避免重复触发）。
+                    const disabled = !isActive || isSubmitting;
+                    return (
+                      <form onSubmit={(event) => handleCreateExam(event, course.id)} className="form-inline">
+                        <input
+                          type="text"
+                          placeholder="考试名称"
+                          value={isActive ? examForm.name : ''}
+                          onChange={(event) => handleExamFieldChange(course.id, { name: event.target.value })}
+                          disabled={disabled}
+                          required
+                        />
+                        <input
+                          type="datetime-local"
+                          value={isActive ? examForm.examAt : ''}
+                          onChange={(event) => handleExamFieldChange(course.id, { examAt: event.target.value })}
+                          disabled={disabled}
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="考试目标（可选）"
+                          value={isActive ? examForm.goal : ''}
+                          onChange={(event) => handleExamFieldChange(course.id, { goal: event.target.value })}
+                          disabled={disabled}
+                        />
+                        <button type="submit" disabled={disabled}>
+                          {isSubmitting ? '保存中…' : '添加考试'}
+                        </button>
+                      </form>
+                    );
+                  })()}
                 </div>
               </li>
             ))}

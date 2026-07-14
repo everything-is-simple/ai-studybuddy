@@ -194,8 +194,46 @@ export class MaterialJobWorker {
     }
   }
 
+  // 提示词已要求模型返回纯 JSON，但中转渠道与不同模型仍可能加围栏 / 前缀解说。
+  // sanitizeAiJson 只负责把「疑似 JSON 字符串」抽出来交给 JSON.parse，字段校验仍由 parseAi 严格执行。
+  // 返回 { text, extracted }：extracted=true 表示确实剥离过围栏或按 { ... } 边界截取；
+  // extracted=false 且 text 不以 { 开头，则说明输入根本不像 JSON，错误消息中不再回放原始正文以免泄漏。
+  private sanitizeAiJson(raw: string): { text: string; extracted: boolean } {
+    let text = raw.trim();
+    let extracted = false;
+    // 1) 剥 ```json … ``` / ```JSON … ``` / ``` … ``` 三种围栏。
+    const fenceMatch = text.match(/^```[a-zA-Z]*\s*\n([\s\S]*?)\n?```$/);
+    if (fenceMatch) {
+      text = fenceMatch[1].trim();
+      extracted = true;
+    }
+    // 2) 兜底：截取第一个 { 到最后一个 } 之间的子串，去掉前后解说 / 尾随文字。
+    //    只在 trim 后不是以 { 开头或不是以 } 结尾时才启用，避免破坏正常 JSON。
+    if (!text.startsWith('{') || !text.endsWith('}')) {
+      const first = text.indexOf('{');
+      const last = text.lastIndexOf('}');
+      if (first !== -1 && last !== -1 && last > first) {
+        text = text.slice(first, last + 1);
+        extracted = true;
+      }
+    }
+    return { text, extracted };
+  }
+
   private parseAi(content: string): AiNotePayload {
-    const parsed = JSON.parse(content) as AiNotePayload;
+    const { text: jsonText, extracted } = this.sanitizeAiJson(content);
+    // 输入完全不像 JSON（没有围栏、也找不到 { … } 边界）时，不把内容回放到错误消息里，避免泄漏原始正文。
+    if (!extracted && !jsonText.startsWith('{')) {
+      throw new Error('AI 输出中未发现 JSON 对象，可能仅返回了自由文本');
+    }
+    let parsed: AiNotePayload;
+    try {
+      parsed = JSON.parse(jsonText) as AiNotePayload;
+    } catch (err) {
+      // 剥离/截取后仍无法解析：只保留 JSON.parse 的错误名与位置，不回放正文片段。
+      const cause = err instanceof Error ? err.message : String(err);
+      throw new Error(`AI 输出无法解析为 JSON：${cause}`);
+    }
     if (
       !parsed.markdown?.trim() ||
       !Array.isArray(parsed.highlights) ||
