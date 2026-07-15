@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.13
+**版本**：v1.14
 **日期**：2026-07-16
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环，以及 T02 Provider 健康熔断。后续任务必须先有独立计划和用户明确批准，再按门禁推进。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环，以及 T02 Provider 健康熔断。T03A 数据库与 Schema 实施计划已创建并自审，等待用户明确批准；S3 Schema/API/业务代码尚未开始。后续任务必须先有独立计划和用户明确批准，再按门禁推进。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11 ✅）                               |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11 ✅；T03A 计划待批）                |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -452,7 +452,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 3 | Phase 1-T11：考试确认与任务创建闭环 | ✅ | 浏览器可确认考试、进入多考试工作台、创建归属任务并更新状态；不含跨考试自动排程 |
 | 4 | Phase 1-T02：Provider 健康熔断 | ✅ | 在现有优先级故障转移基础上完成连续失败 5 次、10 分钟冷却、恢复探测、全冷却错误和脱敏日志；不做每请求轮换 |
 | 5 | Phase 1-T03：S3 PRD 编写 | ✅ | 按门禁创建 S3 轻量 PRD；不写业务代码 |
-| 6 | Phase 1-T03A：S3 数据库与 Schema | ⏳ | 按 S3 PRD 创建 `questions`、`practice_sessions`、`practice_answers` 表；不写 API |
+| 6 | Phase 1-T03A：S3 数据库与 Schema | ⏳ | 实施计划 `.plans/phase1-t03a-s3-database-schema-plan.md` 已创建并自审，待用户批准后再创建 `questions`、`practice_sessions`、`practice_answers` 表；不写 API |
 | 7 | Phase 1-T03B：S3 练习生成 API | ⏳ | AI 根据笔记/知识模块生成选择题/填空题并入库；不含批改 |
 | 8 | Phase 1-T03C：S3 限时作答与规则批改 | ⏳ | 学生限时作答、客观题规则批改、记录逐题结果；不含错题归档 |
 | 9 | Phase 1-T03D：S3 练习前端闭环 | ⏳ | 浏览器可发起练习、作答、查看批改结果；集成进工作台”练习”区 |
@@ -514,11 +514,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 创建 `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md`
 - [x] 更新 docs/00 索引
 
-**T03A Schema**（门禁：S3 PRD 已创建；需先编写独立实现计划并获批）
-- [ ] 创建 `questions` 表（题型、题干、选项、答案、难度、关联知识模块/来源资料）
+**T03A Schema**（门禁：S3 PRD 已创建；独立计划 `.plans/phase1-t03a-s3-database-schema-plan.md` 已创建并自审，等待用户明确批准后实施）
+
+> **T03A 计划状态（2026-07-16）**：计划固定使用学期库 migration v4，新增 `practice_sessions`、`questions`、`practice_answers` 三表；补齐 `questions.question_order`，通过 `knowledge_modules.material_id` 回链来源资料，并用外键、CHECK、唯一索引和 trigger 校验 session/course/module/answer 顺序一致性。计划尚未获批实施，未修改 migration、Schema、测试、shared 类型或任务完成状态。
+
+- [ ] 创建 `questions` 表（题型、题干、选项、答案、题目顺序、难度、关联知识模块/来源资料）
 - [ ] 创建 `practice_sessions` 表（考试关联、限时、开始/结束、得分）
 - [ ] 创建 `practice_answers` 表（逐题作答、正确性、用时）
-- [ ] 迁移脚本与 type-check 验证
+- [ ] migration v4、数据库约束/升级测试与 type-check 验证
 
 **T03B 练习生成**（门禁：T03A 已验收；需独立计划并获批）
 - [ ] `PracticeRunnerService` 按知识模块和难度选题或调 AI 生成
