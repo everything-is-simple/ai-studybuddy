@@ -69,10 +69,14 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
   const { data, loading, error, refetch } = useApiRequest(fetcher, [fetcher]);
 
   useEffect(() => {
-    if (data?.exam.confirmationStatus === 'confirmed' && !deadlineAt) {
-      setDeadlineAt(toLocalDateTimeInput(data.exam.examAt));
-    }
-  }, [data, deadlineAt]);
+    if (!data?.exam) return;
+    setTaskTitle('');
+    setTaskType('custom');
+    setEstimatedMinutes('');
+    setDeadlineAt(data.exam.confirmationStatus === 'confirmed' ? toLocalDateTimeInput(data.exam.examAt) : '');
+    setActionMessage(null);
+    setActionError(null);
+  }, [data?.exam.id, data?.exam.examAt, data?.exam.confirmationStatus]);
 
   const courseById = useMemo(
     () => new Map((data?.courses ?? []).map((course) => [course.id, course])),

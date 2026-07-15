@@ -59,6 +59,12 @@ function localIsoAfterDays(days: number, hour = 9): string {
   return value.toISOString();
 }
 
+function toLocalDateTimeInput(iso: string): string {
+  const value = new Date(iso);
+  const local = new Date(value.getTime() - value.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 let currentExam: any;
 let allExams: any[];
 let allTasks: any[];
@@ -261,6 +267,28 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     const { confirmExam } = await import('../src/api/study-rhythm-api');
     expect(confirmExam).toHaveBeenCalledWith('semester-1', PENDING_EXAM_ID);
     expect(container.querySelector('[data-testid="task-plan"]')).not.toBeNull();
+  });
+  it('切换考试项目时将任务截止时间重置为新考试日期', async () => {
+    await renderWorkbench();
+    const deadline = container.querySelector<HTMLInputElement>('input[name="deadlineAt"]')!;
+    await setInput(deadline, '2026-07-19T20:00');
+    await setInput(container.querySelector<HTMLInputElement>('input[name="taskTitle"]')!, '考试 A 草稿');
+    await setInput(container.querySelector<HTMLSelectElement>('select[name="taskType"]')!, 'practice');
+    await setInput(container.querySelector<HTMLInputElement>('input[name="estimatedMinutes"]')!, '45');
+
+    const otherExam = allExams.find((exam) => exam.id === OTHER_EXAM_ID);
+    currentExam = otherExam;
+    const otherLink = container.querySelector<HTMLAnchorElement>(`a[href="/exams/${OTHER_EXAM_ID}"]`)!;
+    await act(async () => otherLink.click());
+    await flush();
+
+    expect(container.textContent).toContain('英语测验');
+    expect(container.querySelector<HTMLInputElement>('input[name="deadlineAt"]')?.value).toBe(
+      toLocalDateTimeInput(otherExam.examAt)
+    );
+    expect(container.querySelector<HTMLInputElement>('input[name="taskTitle"]')?.value).toBe('');
+    expect(container.querySelector<HTMLSelectElement>('select[name="taskType"]')?.value).toBe('custom');
+    expect(container.querySelector<HTMLInputElement>('input[name="estimatedMinutes"]')?.value).toBe('');
   });
 
   it('创建任务自动绑定当前考试，并支持 todo 到 doing 到 done', async () => {
