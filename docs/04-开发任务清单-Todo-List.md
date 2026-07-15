@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.12
-**日期**：2026-07-15
+**版本**：v1.13
+**日期**：2026-07-16
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD 和 T11 考试确认与任务创建闭环。后续任务必须先有独立计划和用户明确批准，再按门禁推进。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环，以及 T02 Provider 健康熔断。后续任务必须先有独立计划和用户明确批准，再按门禁推进。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T03/T11 ✅）                                   |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11 ✅）                               |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -450,7 +450,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 1 | Phase 1-T00：协作基线与路线图 | ✅ | 更新 `CLAUDE.md`、`AGENTS.md`、`docs/00`、`docs/04`、`docs/07`，新建 `docs/12`；不改业务代码 |
 | 2 | Phase 1-T10：人工补文恢复闭环 | ✅ | 修复 AI 失败或质量待确认后的人工补文 UX、状态提示和恢复路径；不改变 Provider Router 架构 |
 | 3 | Phase 1-T11：考试确认与任务创建闭环 | ✅ | 浏览器可确认考试、进入多考试工作台、创建归属任务并更新状态；不含跨考试自动排程 |
-| 4 | Phase 1-T02：Provider 健康熔断 | 📝 计划待批准 | 已创建 `.plans/phase1-t02-provider-health-circuit-breaker-plan.md`；在现有优先级故障转移基础上补连续失败 5 次、10 分钟冷却和测试，不做每请求轮换 |
+| 4 | Phase 1-T02：Provider 健康熔断 | ✅ | 在现有优先级故障转移基础上完成连续失败 5 次、10 分钟冷却、恢复探测、全冷却错误和脱敏日志；不做每请求轮换 |
 | 5 | Phase 1-T03：S3 PRD 编写 | ✅ | 按门禁创建 S3 轻量 PRD；不写业务代码 |
 | 6 | Phase 1-T03A：S3 数据库与 Schema | ⏳ | 按 S3 PRD 创建 `questions`、`practice_sessions`、`practice_answers` 表；不写 API |
 | 7 | Phase 1-T03B：S3 练习生成 API | ⏳ | AI 根据笔记/知识模块生成选择题/填空题并入库；不含批改 |
@@ -471,7 +471,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T10 收尾证据（2026-07-15）**：后端 `replaceText()` 限定只允许 `conversion_failed` 与 `pending_quality_check` 进入人工完整正文替换，拒绝 `pending`、`converting`、`note_generating`、`completed` 等非恢复态；人工正文作为新的 normalized text 版本写入，记录 `manual` metadata，清空转换/AI 错误并重新创建受限 `note_generate` Job，不改 Provider Router 架构。前端资料卡在失败态内联展示”粘贴完整正文”textarea、空正文禁用、超长提示、提交成功后关闭表单并刷新列表，API 错误显示在当前资料卡附近。新增 API、Worker 与前端测试覆盖手动恢复、竞争 Job 拒绝、AI 失败后重新获得生成机会和原始上传文件保留；验证通过：隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t10-full-test` 下 `pnpm test` 通过；隔离 smoke run 使用 Edge 真实浏览器打开 `/materials`，完成学期 ID 应用、课程选择、`pending_quality_check` 补文入口展示、空正文禁用、输入后提交、成功提示与表单关闭，截图留在 `I:\ai-studybuddy-tmp\runs\phase1-t10-smoke\browser-smoke-success.png`。commit `d053770`，merge `3ec811b`。
 
-> **T11 收尾证据（2026-07-15）**：新增单考试查询与 pending 确认 API，确认事务写入固定 S1 证据事件并立即驱动任务优先级；课程页提供确认入口，confirmed 考试可进入 `/exams/:examId` 工作台。工作台展示日期、倒计时、当前考试任务进度和任务闭环，支持 confirmed 考试切换、近期最多 5 场概览、pending 待确认边界及前后 7 天只读提示；资料导航通过白名单校验的 `courseInstanceId` 保持课程上下文。验证通过：`pnpm type-check`、后端 build、前端 build、隔离全量测试（后端 109/109、前端 32/32）及 Playwright Chromium 1/1；浏览器证据保存在仓库外 `I:\ai-studybuddy-tmp\runs\phase1-t11-20260715-master-final-e2e-retry\playwright`。实现提交 `ff6322e`、`57a94ca`、`78619fa`，已快进合并到 `master`，最终 HEAD 为 `04e6f37`；当前本地 `master` 尚未 push。未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 熔断或 S3 业务代码。
+> **T11 收尾证据（2026-07-15）**：新增单考试查询与 pending 确认 API，确认事务写入固定 S1 证据事件并立即驱动任务优先级；课程页提供确认入口，confirmed 考试可进入 `/exams/:examId` 工作台。工作台展示日期、倒计时、当前考试任务进度和任务闭环，支持 confirmed 考试切换、近期最多 5 场概览、pending 待确认边界及前后 7 天只读提示；资料导航通过白名单校验的 `courseInstanceId` 保持课程上下文。验证通过：`pnpm type-check`、后端 build、前端 build、隔离全量测试（后端 109/109、前端 32/32）及 Playwright Chromium 1/1；浏览器证据保存在仓库外 `I:\ai-studybuddy-tmp\runs\phase1-t11-20260715-master-final-e2e-retry\playwright`。实现提交 `ff6322e`、`57a94ca`、`78619fa`，已快进合并到 `master`，最终 HEAD 为 `04e6f37`；当前本地 `master` 尚未 push。未实现跨考试自动排程、智能任务平衡、模拟考、临考速背或 S3 业务代码。
 
 ### Phase 1 产品组织原则
 
@@ -495,14 +495,17 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] **T11-F 资料导航上下文**：`courseInstanceId` 查询参数白名单验证、预选和手动切换 URL 同步。
 - [x] **T11-G 验收与收尾**：后端集成、前端组件、Playwright Chromium、文档治理与提交证据。
 
-#### T02：Provider 健康熔断
+#### T02：Provider 健康熔断（已完成）
 
-- [ ] 后端：在 `AiProviderRouter` 增加按 Provider 维度的连续失败计数
-- [ ] 后端：连续失败 ≥5 次后该 Provider 进入 10 分钟冷却期，跳过不尝试
-- [ ] 后端：冷却期到后自动解除，首次成功清零计数
-- [ ] 后端：脱敏熔断日志（Provider 名、冷却开始/结束时间，不含 Key/URL）
-- [ ] 测试：单元测试覆盖触发熔断、冷却恢复、多 Provider 交叉场景
-- [ ] 测试：集成测试验证真实请求 fallback 在熔断后仍按优先级走剩余 Provider
+- [x] 后端：在 `AiProviderRouter` 增加按 Provider 实例隔离的连续失败计数
+- [x] 后端：连续失败第 5 次后进入 10 分钟冷却，冷却期间跳过且以 `AI_PROVIDER_COOLDOWN` 记录尝试摘要
+- [x] 后端：冷却到期允许恢复探测；成功清零，失败立即开启新的 10 分钟冷却
+- [x] 后端：全部 Provider 冷却且没有真实调用时抛 `AI_ALL_PROVIDERS_COOLING_DOWN`，只含 Provider 名称和最早恢复时间
+- [x] 后端：记录 `AI_PROVIDER_CIRCUIT_OPENED` / `AI_PROVIDER_CIRCUIT_CLOSED` 脱敏日志，不接收 Error、Key、URL、正文或完整 UUID
+- [x] 测试：覆盖阈值、跳过、恢复、重新熔断、Provider/Router 隔离、全冷却、混合失败与最早恢复时间
+- [x] 测试：两个 `OpenAiProvider` 使用受控 `.invalid` fetch 验证 fallback 和冷却跳过，不访问真实外部 Provider
+
+> **T02 收尾证据（2026-07-16）**：按已批准的 `.plans/phase1-t02-provider-health-circuit-breaker-plan.md` 在隔离 worktree 实施。最终验证使用 `APP_DATA_ROOT=I:\files\run\redacted\run-phase1-t02-final-001`：`pnpm type-check`、后端 build、前端 build 均通过；`ai-router.test.mjs` 17/17、后端全量 120/120、前端全量 32/32 通过。未新增数据库、migration、环境变量、真实外部 Provider 请求、S3 业务代码或 S4–S7 PRD。
 
 #### T03：S3 限时练习（拆为 PRD + 3 个实现子任务 + 前端）
 
@@ -511,25 +514,25 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 创建 `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md`
 - [x] 更新 docs/00 索引
 
-**T03A Schema**（门禁：S3 PRD 已创建；T03A 独立实现计划已批准）
+**T03A Schema**（门禁：S3 PRD 已创建；需先编写独立实现计划并获批）
 - [ ] 创建 `questions` 表（题型、题干、选项、答案、难度、关联知识模块/来源资料）
 - [ ] 创建 `practice_sessions` 表（考试关联、限时、开始/结束、得分）
 - [ ] 创建 `practice_answers` 表（逐题作答、正确性、用时）
 - [ ] 迁移脚本与 type-check 验证
 
-**T03B 练习生成**（门禁：T03A 已验收；T03B 独立实现计划已批准）
+**T03B 练习生成**（门禁：T03A 已验收；需独立计划并获批）
 - [ ] `PracticeRunnerService` 按知识模块和难度选题或调 AI 生成
 - [ ] `POST /api/practice-sessions`（创建练习，AI 生成题目入库）
 - [ ] `GET /api/practice-sessions/:id`（获取练习与题目）
 - [ ] 测试：AI 生成解析、题目入库与关联正确
 
-**T03C 批改**（门禁：T03B 已验收；T03C 独立实现计划已批准）
+**T03C 批改**（门禁：T03B 已验收；需独立计划并获批）
 - [ ] `POST /api/practice-sessions/:id/submit`（提交作答，规则批改客观题）
 - [ ] 批改后写入 `practice_answers`，计算 session 得分
 - [ ] 错题事实标记并写入 `practice_completed` 事件
 - [ ] 测试：选择题/填空题批改逻辑、得分计算、事件写入
 
-**T03D 前端**（门禁：T03C 已验收；T03D 独立实现计划已批准）
+**T03D 前端**（门禁：T03C 已验收；需独立计划并获批）
 - [ ] 前端 API 封装：创建练习、获取题目、提交作答
 - [ ] 练习页面：限时倒计时、逐题作答、提交
 - [ ] 结果页面：逐题批改详情、得分、错题标记

@@ -1,7 +1,7 @@
 # AI StudyBuddy 后端开发规范 Backend Guidelines
 
-**版本**：v1.1
-**日期**：2026-07-13
+**版本**：v1.2
+**日期**：2026-07-16
 **状态**：有效
 **用途**：Phase 0.8 正式后端开发的目录结构、SQLite 约定、Adapter 输出、日志、环境变量和验证规则。写第一个后端服务 / Adapter / API / Worker 前必须读本文件。
 
@@ -131,8 +131,11 @@ interface ReportSendResult {
 ### 5.4 AI Provider Adapter
 
 - OpenAI-compatible 接入统一通过 `OpenAiProvider`；业务 Service、Job 和 API 不得直接实例化 SDK 客户端。
-- `AiProviderRouter` 负责按 priority 轮询、首个成功返回、`fallbackUsed` 标记和失败汇总；未配置抛 `AI_NOT_CONFIGURED`，全部失败抛 `AI_ALL_PROVIDERS_FAILED`。
-- Provider 必须支持构造函数注入 `fetch`，以便单元测试模拟成功、失败和响应 `AbortSignal` 的超时；测试不得使用真实 API Key 或真实模型网络请求。
+- `AiProviderRouter` 负责按 priority 轮询、首个成功返回、`fallbackUsed` 标记和失败汇总；未配置抛 `AI_NOT_CONFIGURED`。
+- Router 健康状态只存在于单个 Router 实例内，并按 Provider 实例隔离。连续失败第 5 次后固定冷却 10 分钟；冷却期间跳过该 Provider，后续 Provider 成功时 `fallbackUsed` 仍为 `true`。
+- 冷却到期允许恢复探测：成功清零，失败立即进入新的 10 分钟冷却。阈值和冷却时间属于当前产品固定规则，不新增环境变量、数据库或跨进程共享。
+- 本次至少真实调用过一个 Provider 但最终全部失败时抛 `AI_ALL_PROVIDERS_FAILED`；全部 Provider 均处于冷却且没有外部调用时抛 `AI_ALL_PROVIDERS_COOLING_DOWN`，错误只包含 Provider 名称和最早恢复时间。
+- Provider 必须支持构造函数注入 `fetch`，Router 必须支持注入 `now` 与 `logger`，以便测试模拟成功、失败、超时、冷却和恢复；测试不得使用真实 API Key 或真实模型网络请求。
 
 ---
 
@@ -164,7 +167,9 @@ interface ReportSendResult {
 - 学生隐私全文（资料正文、笔记正文、完整答案、聊天内容）
 - 完整堆栈跟踪到生产日志（开发环境可输出，生产只记摘要和 error code）
 
-AI Router 日志额外只允许记录 `taskType`、Provider 名称、model、token、耗时、fallback 和失败摘要；不得记录请求输入、模型输出或 Provider 配置中的密钥。
+AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model、token、耗时、fallback 和失败摘要；不得记录请求输入、模型输出或 Provider 配置中的密钥。
+
+熔断日志只允许两个事件：`AI_PROVIDER_CIRCUIT_OPENED` 记录 `provider`、`cooldownStartedAt`、`cooldownEndsAt`，`AI_PROVIDER_CIRCUIT_CLOSED` 记录 `provider`、`cooldownEndedAt`；除日志自身时间外不得接收或记录原始 Error、Key、URL、正文或完整 UUID。
 
 ### 7.2 日志目录
 

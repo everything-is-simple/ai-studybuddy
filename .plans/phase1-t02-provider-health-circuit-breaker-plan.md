@@ -2,9 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:test-driven-development` and `superpowers:executing-plans` to implement this plan task-by-task. 未经用户明确批准不得修改业务代码；默认在当前会话内执行，不自动派发子 Agent。
 
-**状态**：待用户明确批准，尚未开始业务实现
+**状态**：已获用户明确批准；实现与验证已完成，等待提交、推送和合并
 
 **日期**：2026-07-15
+
+**完成记录**：2026-07-16 已完成 RED/GREEN、17/17 Router 专项、120/120 后端全量、32/32 前端全量、type-check 与前后端 build；未访问真实外部 Provider。
 
 **任务归属**：Phase 1 共同底座；扩展现有 `AiProviderRouter`，不重建 Router
 
@@ -112,7 +114,7 @@ export interface AiCircuitClosedPayload {
 - Modify: `packages/backend/test/ai-router.test.mjs`
 - Test: `packages/backend/test/ai-router.test.mjs`
 
-- [ ] **Step 1：增加可控时钟和可观测 Provider 测试工具**
+- [x] **Step 1：增加可控时钟和可观测 Provider 测试工具**
 
 在测试文件中增加：
 
@@ -149,15 +151,15 @@ function createRecordingLogger() {
 }
 ```
 
-- [ ] **Step 2：增加“前 4 次失败不熔断，第 5 次开启冷却”的失败测试**
+- [x] **Step 2：增加“前 4 次失败不熔断，第 5 次开启冷却”的失败测试**
 
 测试使用一个始终失败的 primary 和一个成功的 secondary，连续调用 Router 5 次；断言 primary 共被调用 5 次、每次均 fallback 到 secondary、只产生一次 OPENED，且结束时间比开始时间晚 `600_000` 毫秒。
 
-- [ ] **Step 3：增加“冷却期间跳过 primary”的失败测试**
+- [x] **Step 3：增加“冷却期间跳过 primary”的失败测试**
 
 第 5 次失败后不推进时钟，再调用一次；断言 primary 调用次数仍为 5，secondary 被调用，结果 `fallbackUsed === true`，本次摘要使用 `AI_PROVIDER_COOLDOWN`。
 
-- [ ] **Step 4：运行 Router 测试确认红灯**
+- [x] **Step 4：运行 Router 测试确认红灯**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -172,7 +174,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 - Modify: `packages/backend/src/adapters/ai/router.ts`
 - Modify: `packages/backend/src/utils/ai-logger.ts`
 
-- [ ] **Step 1：扩展日志接口**
+- [x] **Step 1：扩展日志接口**
 
 在 `AiLogger` 中加入：
 
@@ -183,7 +185,7 @@ recordCircuitClosed(payload: AiCircuitClosedPayload): void;
 
 默认实现输出 `AI_PROVIDER_CIRCUIT_OPENED` 与 `AI_PROVIDER_CIRCUIT_CLOSED` JSON 事件，字段严格限定为行为契约列出的名称。
 
-- [ ] **Step 2：向 Router 注入时钟与日志器**
+- [x] **Step 2：向 Router 注入时钟与日志器**
 
 扩展选项：
 
@@ -203,7 +205,7 @@ this.now = options?.now ?? Date.now;
 this.logger = options?.logger ?? aiLogger;
 ```
 
-- [ ] **Step 3：增加进程内 Provider 健康 Map**
+- [x] **Step 3：增加进程内 Provider 健康 Map**
 
 在 Router 内增加固定常量和状态：
 
@@ -216,7 +218,7 @@ private readonly health = new Map<AiProvider, ProviderHealthState>();
 
 提供私有方法惰性初始化状态、检查冷却、记录失败并开启冷却、成功后清零。不得把状态放到模块级全局变量。
 
-- [ ] **Step 4：保持原优先级循环并加入跳过逻辑**
+- [x] **Step 4：保持原优先级循环并加入跳过逻辑**
 
 在调用 `provider.generate()` 前：
 
@@ -226,7 +228,7 @@ private readonly health = new Map<AiProvider, ProviderHealthState>();
 4. 调用成功后清零该 Provider 状态；
 5. `fallbackUsed` 同时考虑真实失败和冷却跳过。
 
-- [ ] **Step 5：运行新增测试确认绿灯**
+- [x] **Step 5：运行新增测试确认绿灯**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -241,19 +243,19 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 - Modify: `packages/backend/test/ai-router.test.mjs`
 - Modify: `packages/backend/src/adapters/ai/router.ts`
 
-- [ ] **Step 1：增加“冷却到期后恢复探测成功”的失败测试**
+- [x] **Step 1：增加“冷却到期后恢复探测成功”的失败测试**
 
 Provider 前 5 次失败、第 6 次成功；开启冷却后推进假时钟 `600_000` 毫秒，再调用 Router。断言 primary 被重新调用并成功、secondary 不再调用、产生一次 CLOSED。
 
-- [ ] **Step 2：增加“成功清零”的失败测试**
+- [x] **Step 2：增加“成功清零”的失败测试**
 
 恢复成功后让 primary 再失败 1 次；断言只 fallback，不立即 OPENED。随后再连续失败至新的第 5 次，才产生下一次 OPENED。
 
-- [ ] **Step 3：增加“恢复探测失败立即重新冷却”的失败测试**
+- [x] **Step 3：增加“恢复探测失败立即重新冷却”的失败测试**
 
 冷却到期后 primary 再次失败；断言当次 fallback 成功，同时产生新的 OPENED，下一请求不会再次调用 primary。
 
-- [ ] **Step 4：补足最小实现并回归 Router 测试**
+- [x] **Step 4：补足最小实现并回归 Router 测试**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -270,11 +272,11 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 - Modify: `packages/backend/src/adapters/index.ts`
 - Modify: `packages/backend/test/ai-router.test.mjs`
 
-- [ ] **Step 1：先写多 Provider 交叉测试**
+- [x] **Step 1：先写多 Provider 交叉测试**
 
 构造 primary、secondary、tertiary：primary 连续失败并熔断，secondary 独立累计但未到阈值，tertiary 成功。断言三个 Provider 的计数互不影响，仍按原数组优先级执行。
 
-- [ ] **Step 2：先写全冷却错误测试**
+- [x] **Step 2：先写全冷却错误测试**
 
 让全部 Provider 分别达到阈值并处于冷却，再发起请求；断言没有 Provider 被调用，并得到：
 
@@ -285,11 +287,11 @@ assert.deepEqual(caught.providers, ['primary', 'secondary']);
 assert.equal(caught.retryAt, '2026-07-15T00:10:00.000Z');
 ```
 
-- [ ] **Step 3：实现并导出稳定错误类型**
+- [x] **Step 3：实现并导出稳定错误类型**
 
 在 Router 定义 `AllProvidersCoolingDownError`，从 `adapters/ai/index.ts` 和 `adapters/index.ts` 导出。仅当本次请求实际调用数为 0 且所有 Provider 被冷却跳过时抛出；混合“真实失败 + 冷却跳过”继续使用 `AllProvidersFailedError`。
 
-- [ ] **Step 4：运行 Router 测试**
+- [x] **Step 4：运行 Router 测试**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -304,11 +306,11 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 - Modify: `packages/backend/test/ai-router.test.mjs`
 - Modify: `packages/backend/src/utils/ai-logger.ts`
 
-- [ ] **Step 1：增加 OpenAiProvider Adapter 集成测试**
+- [x] **Step 1：增加 OpenAiProvider Adapter 集成测试**
 
 使用 `.invalid` 测试 URL、占位测试 Key 和受控 `fetch`：primary 的 fetch 连续返回 500，secondary 返回合法 chat completion。连续 5 次请求后，第 6 次断言 primary fetch 未增加、secondary 仍成功，证明不是只测 MockProvider 的方法调用。
 
-- [ ] **Step 2：增加熔断日志字段白名单测试**
+- [x] **Step 2：增加熔断日志字段白名单测试**
 
 从 recording logger 读取 OPENED/CLOSED payload，断言键集合只包含：
 
@@ -319,7 +321,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 
 把测试输入设置为明显敏感占位文本，并断言序列化日志不包含输入正文、测试 Key、`.invalid` URL 或原始错误消息。
 
-- [ ] **Step 3：运行后端专项测试**
+- [x] **Step 3：运行后端专项测试**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -334,7 +336,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 - Modify after implementation: `docs/04-开发任务清单-Todo-List.md`
 - Modify if needed: `docs/00-文档索引-Index.md`
 
-- [ ] **Step 1：设置唯一隔离运行目录**
+- [x] **Step 1：设置唯一隔离运行目录**
 
 ```powershell
 $env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\phase1-t02-20260715-final'
@@ -342,7 +344,7 @@ $env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\phase1-t02-20260715-final'
 
 实际执行时如目录已存在，必须换一个新的 run id，不得复用正式运行数据。
 
-- [ ] **Step 2：运行类型检查和构建**
+- [x] **Step 2：运行类型检查和构建**
 
 ```powershell
 pnpm type-check
@@ -351,7 +353,7 @@ pnpm -r --filter @ai-studybuddy/backend run build
 
 预期：全部退出码为 0。
 
-- [ ] **Step 3：运行专项和全量测试**
+- [x] **Step 3：运行专项和全量测试**
 
 ```powershell
 pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router.test.mjs
@@ -360,7 +362,7 @@ pnpm test
 
 预期：全部测试通过；测试日志不包含真实 Key、Provider URL、正文或完整 UUID。
 
-- [ ] **Step 4：更新完成态文档**
+- [x] **Step 4：更新完成态文档**
 
 仅在实现和验证全部通过后：
 
@@ -369,7 +371,7 @@ pnpm test
 - 保持 S3 业务代码未开始、S4–S7 未触发；
 - 不创建新的子系统 PRD。
 
-- [ ] **Step 5：运行治理与差异检查**
+- [x] **Step 5：运行治理与差异检查**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
@@ -379,7 +381,7 @@ git status --short --branch
 
 预期：治理和 diff 检查通过；变更范围只包含本计划列出的 Router、日志、导出、测试和完成态文档。
 
-- [ ] **Step 6：隐私与范围审计**
+- [x] **Step 6：隐私与范围审计**
 
 ```powershell
 rg -n "sk-|api[_-]?key|https?://|AI_PROVIDER_CIRCUIT_(OPENED|CLOSED)" packages/backend/src packages/backend/test docs/04-开发任务清单-Todo-List.md
@@ -387,7 +389,7 @@ rg -n "sk-|api[_-]?key|https?://|AI_PROVIDER_CIRCUIT_(OPENED|CLOSED)" packages/b
 
 逐条确认命中只包含环境变量名、`.invalid` 测试值或脱敏事件名；不得提交真实凭据、真实 Provider URL、正文、完整 UUID 或运行数据。
 
-- [ ] **Step 7：提交门禁**
+- [x] **Step 7：提交门禁**
 
 默认不 push。只有在用户确认验收和提交范围后，才按显式路径暂存并提交：
 
@@ -401,15 +403,15 @@ git commit -m "feat(ai): 增加 Provider 健康熔断"
 
 ## 5. 验收标准
 
-- [ ] 同一 Provider 连续失败 4 次不熔断，第 5 次失败后冷却 10 分钟。
-- [ ] 冷却期内不调用该 Provider，仍按既有优先级 fallback 到其他 Provider。
-- [ ] 冷却到期自动允许恢复探测；成功清零，失败立即重新冷却。
-- [ ] Provider 健康状态互相隔离，Router 实例之间也互相隔离。
-- [ ] 全部 Provider 冷却时返回稳定的 `AI_ALL_PROVIDERS_COOLING_DOWN`，不发外部请求。
-- [ ] 熔断 OPENED/CLOSED 日志只含 Provider 名称和冷却时间字段。
-- [ ] 不改变 `AI_NOT_CONFIGURED`、`AI_ALL_PROVIDERS_FAILED` 和既有 priority fallback 行为。
-- [ ] 不新增数据库、环境变量、真实外部调用、S3 代码或未来 PRD。
-- [ ] type-check、backend build、专项测试、`pnpm test`、docs governance、隐私扫描和 `git diff --check` 全部通过。
+- [x] 同一 Provider 连续失败 4 次不熔断，第 5 次失败后冷却 10 分钟。
+- [x] 冷却期内不调用该 Provider，仍按既有优先级 fallback 到其他 Provider。
+- [x] 冷却到期自动允许恢复探测；成功清零，失败立即重新冷却。
+- [x] Provider 健康状态互相隔离，Router 实例之间也互相隔离。
+- [x] 全部 Provider 冷却时返回稳定的 `AI_ALL_PROVIDERS_COOLING_DOWN`，不发外部请求。
+- [x] 熔断 OPENED/CLOSED 日志只含 Provider 名称和冷却时间字段。
+- [x] 不改变 `AI_NOT_CONFIGURED`、`AI_ALL_PROVIDERS_FAILED` 和既有 priority fallback 行为。
+- [x] 不新增数据库、环境变量、真实外部调用、S3 代码或未来 PRD。
+- [x] type-check、backend build、专项测试、`pnpm test`、docs governance、隐私扫描和 `git diff --check` 全部通过。
 
 ## 6. 明确非目标
 
@@ -422,4 +424,4 @@ git commit -m "feat(ai): 增加 Provider 健康熔断"
 
 ## 7. 批准门禁
 
-本文件创建和文档治理通过，只代表 T02 已具备可执行计划，不代表业务实现已获授权。只有用户明确说“批准 Phase 1-T02 计划”或同等清晰表述后，才可按本计划修改 `packages/backend` 业务代码。
+用户已明确批准 Phase 1-T02 计划；实现严格限定在现有 Router、日志、公共导出、测试和完成态文档范围内。提交、推送与合并按用户后续明确授权执行。

@@ -11,5 +11,11 @@ export {
   dispatchConverter,
 } from './converter';
 export type { OcrConverterOptions, DispatchConverterInput, UrlFetcherOptions } from './converter';
-export { AiProviderRouter, AiProviderError, AllProvidersFailedError, OpenAiProvider } from './ai';
+export {
+  AiProviderRouter,
+  AiProviderError,
+  AllProvidersFailedError,
+  AllProvidersCoolingDownError,
+  OpenAiProvider,
+} from './ai';
 export type { AiProvider, AiProviderRouterOptions } from './ai';

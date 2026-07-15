@@ -12,9 +12,22 @@ export interface AiLogFailurePayload {
   error: Error;
 }
 
+export interface AiCircuitOpenedPayload {
+  provider: string;
+  cooldownStartedAt: string;
+  cooldownEndsAt: string;
+}
+
+export interface AiCircuitClosedPayload {
+  provider: string;
+  cooldownEndedAt: string;
+}
+
 export interface AiLogger {
   recordSuccess(payload: AiLogSuccessPayload): void;
   recordFailure(payload: AiLogFailurePayload): void;
+  recordCircuitOpened(payload: AiCircuitOpenedPayload): void;
+  recordCircuitClosed(payload: AiCircuitClosedPayload): void;
 }
 
 function extractErrorCode(error: Error): string {
@@ -46,6 +59,27 @@ export const aiLogger: AiLogger = {
       provider,
       errorCode: extractErrorCode(error),
       errorMessage: error.message,
+      timestamp: new Date().toISOString(),
+    };
+    console.log(JSON.stringify(entry));
+  },
+  recordCircuitOpened({ provider, cooldownStartedAt, cooldownEndsAt }) {
+    const entry = {
+      level: 'WARN',
+      event: 'AI_PROVIDER_CIRCUIT_OPENED',
+      provider,
+      cooldownStartedAt,
+      cooldownEndsAt,
+      timestamp: new Date().toISOString(),
+    };
+    console.log(JSON.stringify(entry));
+  },
+  recordCircuitClosed({ provider, cooldownEndedAt }) {
+    const entry = {
+      level: 'INFO',
+      event: 'AI_PROVIDER_CIRCUIT_CLOSED',
+      provider,
+      cooldownEndedAt,
       timestamp: new Date().toISOString(),
     };
     console.log(JSON.stringify(entry));
