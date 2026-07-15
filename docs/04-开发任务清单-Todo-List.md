@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.10
+**版本**：v1.11
 **日期**：2026-07-15
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复和 T03 S3 PRD；T11 考试确认计划已就绪待批准。后续任务必须先有独立计划和用户明确批准，再按门禁推进。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD 和 T11 考试确认与任务创建闭环。后续任务必须先有独立计划和用户明确批准，再按门禁推进。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T03 ✅，T11 计划待批准）                  |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T03/T11 ✅）                                   |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -449,7 +449,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ---- | ---- | ---- | ---------- |
 | 1 | Phase 1-T00：协作基线与路线图 | ✅ | 更新 `CLAUDE.md`、`AGENTS.md`、`docs/00`、`docs/04`、`docs/07`，新建 `docs/12`；不改业务代码 |
 | 2 | Phase 1-T10：人工补文恢复闭环 | ✅ | 修复 AI 失败或质量待确认后的人工补文 UX、状态提示和恢复路径；不改变 Provider Router 架构 |
-| 3 | Phase 1-T11：考试确认与任务创建闭环 | ⏳ 计划待批准 | 浏览器可创建/确认考试、生成学习任务、更新任务状态；建立”考试项目工作台”外壳 |
+| 3 | Phase 1-T11：考试确认与任务创建闭环 | ✅ | 浏览器可确认考试、进入多考试工作台、创建归属任务并更新状态；不含跨考试自动排程 |
 | 4 | Phase 1-T02：Provider 健康熔断 | ⏳ | 在现有优先级故障转移基础上，实现连续失败 5 次后暂停 10 分钟；不做每请求轮换 |
 | 5 | Phase 1-T03：S3 PRD 编写 | ✅ | 按门禁创建 S3 轻量 PRD；不写业务代码 |
 | 6 | Phase 1-T03A：S3 数据库与 Schema | ⏳ | 按 S3 PRD 创建 `questions`、`practice_sessions`、`practice_answers` 表；不写 API |
@@ -471,6 +471,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T10 收尾证据（2026-07-15）**：后端 `replaceText()` 限定只允许 `conversion_failed` 与 `pending_quality_check` 进入人工完整正文替换，拒绝 `pending`、`converting`、`note_generating`、`completed` 等非恢复态；人工正文作为新的 normalized text 版本写入，记录 `manual` metadata，清空转换/AI 错误并重新创建受限 `note_generate` Job，不改 Provider Router 架构。前端资料卡在失败态内联展示”粘贴完整正文”textarea、空正文禁用、超长提示、提交成功后关闭表单并刷新列表，API 错误显示在当前资料卡附近。新增 API、Worker 与前端测试覆盖手动恢复、竞争 Job 拒绝、AI 失败后重新获得生成机会和原始上传文件保留；验证通过：隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t10-full-test` 下 `pnpm test` 通过；隔离 smoke run 使用 Edge 真实浏览器打开 `/materials`，完成学期 ID 应用、课程选择、`pending_quality_check` 补文入口展示、空正文禁用、输入后提交、成功提示与表单关闭，截图留在 `I:\ai-studybuddy-tmp\runs\phase1-t10-smoke\browser-smoke-success.png`。commit `d053770`，merge `3ec811b`。
 
+> **T11 收尾证据（2026-07-15）**：新增单考试查询与 pending 确认 API，确认事务写入固定 S1 证据事件并立即驱动任务优先级；课程页提供确认入口，confirmed 考试可进入 `/exams/:examId` 工作台。工作台展示日期、倒计时、当前考试任务进度和任务闭环，支持 confirmed 考试切换、近期最多 5 场概览、pending 待确认边界及前后 7 天只读提示；资料导航通过白名单校验的 `courseInstanceId` 保持课程上下文。验证通过：`pnpm type-check`、后端 build、前端 build、隔离全量测试（后端 109/109、前端 32/32）及 Playwright Chromium 1/1；浏览器证据保存在仓库外 `APP_DATA_ROOT/playwright`。实现提交 `ff6322e`、`57a94ca`、`78619fa`。未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 熔断或 S3 业务代码。
+
 ### Phase 1 产品组织原则
 
 - 借鉴 KaoBuddy 的信息架构，但不复制源码、视觉、文案或资产。
@@ -481,17 +483,17 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### Phase 1 各任务详细拆解
 
-#### T11：考试确认与任务创建闭环（计划已就绪，待批准）
+#### T11：考试确认与任务创建闭环（已完成）
 
-> 本任务已有一份覆盖以下子项的完整计划；未收到“批准 Phase 1-T11 计划”前，任何子项都不得开始。
+> 本任务于 2026-07-15 获明确批准后按 `.plans/phase1-t11-exam-confirmation-and-task-closure-plan.md` 完成；以下范围已通过自动化与 Chromium 浏览器验收。
 
-- [ ] **T11-A 考试查询与确认 API**：单考试读取、确认状态矩阵、幂等、学期隔离与确认事件。
-- [ ] **T11-B 课程页确认入口**：pending 的确认动作、confirmed 的工作台入口与操作错误反馈。
-- [ ] **T11-C 单考试工作台壳**：`/exams/:examId`、confirmed 倒计时、当前考试任务进度、空状态和 URL 刷新保持。
-- [ ] **T11-D 当前考试任务闭环**：手工创建绑定当前考试的任务，以及 `todo → doing → done` 状态动作。
-- [ ] **T11-E 多考试视角**：已确认考试切换器、近期最多 5 场概览、pending 的非倒计时展示及前后 7 天只读提示。
-- [ ] **T11-F 资料导航上下文**：`courseInstanceId` 查询参数白名单验证、预选和手动切换 URL 同步。
-- [ ] **T11-G 验收与收尾**：后端集成、前端组件、Playwright Chromium、文档治理与提交证据。
+- [x] **T11-A 考试查询与确认 API**：单考试读取、确认状态矩阵、幂等、学期隔离与确认事件。
+- [x] **T11-B 课程页确认入口**：pending 的确认动作、confirmed 的工作台入口与操作错误反馈。
+- [x] **T11-C 单考试工作台壳**：`/exams/:examId`、confirmed 倒计时、当前考试任务进度、空状态和 URL 刷新保持。
+- [x] **T11-D 当前考试任务闭环**：手工创建绑定当前考试的任务，以及 `todo → doing → done` 状态动作。
+- [x] **T11-E 多考试视角**：已确认考试切换器、近期最多 5 场概览、pending 的非倒计时展示及前后 7 天只读提示。
+- [x] **T11-F 资料导航上下文**：`courseInstanceId` 查询参数白名单验证、预选和手动切换 URL 同步。
+- [x] **T11-G 验收与收尾**：后端集成、前端组件、Playwright Chromium、文档治理与提交证据。
 
 #### T02：Provider 健康熔断
 
