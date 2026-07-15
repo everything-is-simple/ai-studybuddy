@@ -1,6 +1,6 @@
 # Phase 1-T11：考试确认与任务创建浏览器闭环计划
 
-**状态**：待批准（仅完成调研与计划，尚未开始业务实现）
+**状态**：已批准，进入实施
 **日期**：2026-07-15
 **任务归属**：S1 学习节奏（StudyRhythm）；与 S2 资料入口建立最小导航衔接
 
@@ -71,8 +71,10 @@
 - 考试切换器只包含本学期已确认考试，按最早 `examAt` 在前排序；没有第二场已确认考试时不显示不可用的伪切换控件。
 - 近期考试概览最多显示未来最近 5 场 confirmed 考试；每项进度按该考试关联任务中的 `done / 全部` 计算。pending 考试单独显示名称、课程和“待确认”，不显示倒计时、任务进度或冲刺提示。
 - “日期附近”固定为当前考试 `examAt` 前后各 7 个自然日；提示只列其他 confirmed 考试及其关联任务中 `deadlineAt` 落入该窗口的任务标题/截止时间，不计算总工时、不改变优先级、不自动建议改期。
+- 所有日期展示以浏览器本地时区（当前产品默认 `Asia/Shanghai`）解释；倒计时和“前后 7 个自然日”统一按本地日历日计算：今天为 `0 天`，未来显示“还有 N 天”，过去显示“已到期 N 天”，不得直接用毫秒差向下取整导致跨午夜偏差。单元测试固定系统时间，Playwright 使用相对当前日期生成合成考试时间，避免用例随日历过期。
 - 本期“总体进度”定义为当前考试关联任务中 `done` 的数量除以总数；没有任务时显示 `0 / 0`，并给出“先创建第一项任务”的下一步。
 - 任务页面只展示 `assessmentAttemptId === 当前 examId` 的任务，避免同一课程其他考试或日常任务污染项目视图。
+- 工作台手工任务类型只开放 `material_note | practice | error_review | custom` 的中文选项；不得在 T11 UI 暴露 `exam_cram`，也不得因选择 `practice` / `error_review` 而创建 S3/S4 题目、练习、错题或薄弱点数据。
 - 资料入口使用 `/materials?courseInstanceId=<当前课程 UUID>`；参数仅是导航上下文，不是权限或数据来源。资料页加载课程列表后必须验证该 UUID 确属当前学期课程，非法/过期参数回退到未选择状态并显示可恢复提示。
 
 ## 4. 后端 API 与状态设计
@@ -97,6 +99,8 @@
 
 确认操作不得修改 `exam_at`，也不得伪造 `assessment_date_changes` 历史；本期不增加数据表或迁移。
 
+确认事件使用固定、最小且可测试的契约：`source_system = S1`、`event_type = assessment_attempt_confirmed`、`title = 考试日期已确认`、`course_instance_id = 当前考试课程`、`evidence_ref = assessment_attempt:<examId>`、`parent_visible = 1`、`occurred_at = confirmed_at`。事件标题不拼接考试名称或完整 UUID；重复确认不得重复写入事件。
+
 ### 4.3 服务层职责
 
 - 在 `StudyRhythmService` 增加单考试读取和确认方法，所有学期/课程归属检查均在服务层执行。
@@ -120,6 +124,7 @@
    - 每个 pending 考试提供明确的“确认考试日期”按钮，提交期间禁用重复操作，成功后刷新并导航/提供进入工作台；
    - 每个 confirmed 考试提供“进入考试项目”链接；
    - 继续保留无学期、无课程、无考试、请求失败与重试提示；不再把原始枚举值作为唯一状态文案。
+   - 不再用 `.catch(() => [])` 把考试或任务请求失败静默伪装为空列表；失败必须在课程区域显示可恢复提示，并保留重新加载入口。
 
 ### 5.3 新建考试项目工作台
 
@@ -131,6 +136,7 @@
    - 当前考试区给出任务进度、最近/逾期任务与直接下一步；空任务时引导创建第一项任务，空资料时链接到本课程资料页；
    - 资料入口是带 `courseInstanceId` 的链接；计划区提供任务创建表单，标题/类型/截止时间校验，默认截止时间可参考考试时间但由学生确认；
    - 任务卡按后端返回的截止时间顺序展示；根据当前状态显示“开始学习”或“标记完成”，不在前端伪造非法状态迁移；成功后刷新当前项目、近期概览和日期提示，错误在当前操作附近可见且可重试；
+   - 日期计算抽为本页可独立测试的轻量 helper，统一负责本地日历日倒计时、过去日期文案和前后 7 天窗口；不新增只为单页日期差计算服务的大型状态或日历依赖。
    - 处理加载、404/跨学期、未确认、空任务、网络错误及刷新后状态保持；使用语义化 label、button、`aria-live` 反馈和键盘可访问控件。
 7. 更新 `packages/frontend/src/components/app-navigation.tsx` 和 `packages/frontend/src/styles/global.css`：导航命名逐步偏向“考试项目”，但保持简洁；新增紧凑的工作台 header、进度、任务卡和响应式布局。避免大面积浅绿色、过多空白或照搬参考项目 token。
 8. 更新 `packages/frontend/src/pages/material-upload-page.tsx`：用 React Router 查询参数读取/同步 `courseInstanceId`，在课程列表加载后验证并预选；用户手动切换时更新 URL，错误参数不触发资料请求。
@@ -158,10 +164,12 @@
 
 新建仓库级 `playwright.config.ts` 和 `e2e/exam-workbench.spec.ts`：
 
-- 配置两个受 Playwright 管理的本地 web server：后端运行在固定测试端口，前端 Vite 运行在另一固定测试端口并通过 `VITE_API_BASE_URL` 代理到后端；不依赖真实 Provider。
+- 配置两个受 Playwright 管理的本地 web server：后端固定使用 `127.0.0.1:4311`，前端 Vite 固定使用 `127.0.0.1:4173`；前端进程设置 `VITE_API_BASE_URL=http://127.0.0.1:4311`，由现有 `api-client.ts` 归一化为 `/api` 直连后端。E2E 不依赖 Vite proxy，也不得把 `/api` 路径误当成 proxy target；后端已有 CORS 支持。
+- Playwright `use.timezoneId` 固定为 `Asia/Shanghai`，与本期自然日倒计时和日期附近窗口语义一致；单元测试同样固定系统时间后再断言倒计时文案。
 - 测试开始前通过已有 `POST /api/dev/init-semester` 建立合成的 ready 学期；每次执行命令前设置独立 `APP_DATA_ROOT`，并只使用合成课程、考试和任务标题。
-- 在 Chromium 中完成：设置学期 ID → 创建课程 → 创建两场日期不同的 pending 考试与一场待确认考试 → 分别确认前两场 → 进入工作台 → 验证按日期排序的考试切换和 URL 更新、近期概览与 pending 的非倒计时展示 → 为当前考试创建带截止时间任务 → 开始学习 → 标记完成 → 页面刷新 → 验证日期/倒计时、当前项目进度、日期附近提示、状态和课程上下文资料链接。
+- 在 Chromium 中完成：设置学期 ID → 创建课程 → 以当前日期为基准创建三场日期不同的 pending 考试 → 分别确认前两场、保留第三场 pending → 进入工作台 → 验证按日期排序的考试切换和 URL 更新、近期概览与 pending 的非倒计时展示 → 为当前考试创建带截止时间任务 → 开始学习 → 标记完成 → 页面刷新 → 验证日期/倒计时、当前项目进度、日期附近提示、状态和课程上下文资料链接。
 - 额外覆盖至少一个失败/空状态：无任务引导、确认接口失败提示，或非法工作台 URL；截图写入仓库外 `APP_DATA_ROOT` 证据目录，不提交图片。
+- `playwright.config.ts` 的 `outputDir`、截图、trace 和失败附件必须落到当前 `APP_DATA_ROOT` 下的 `playwright/` 子目录；仓库内不得生成或提交 `test-results/`、`playwright-report/` 或真实业务截图。
 - 首次实现优先保证 Chromium 稳定；Firefox/WebKit 保持已安装可单独扩展，不把三浏览器矩阵作为阻塞性范围。
 
 ### 6.4 必跑命令
@@ -170,9 +178,10 @@
 pnpm type-check
 pnpm -r --filter backend run build
 pnpm -r --filter @ai-studybuddy/frontend run build
-$env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\phase1-t11-full-test'
+$runId = Get-Date -Format 'yyyyMMdd-HHmmss'
+$env:APP_DATA_ROOT = "I:\ai-studybuddy-tmp\runs\phase1-t11-$runId-full-test"
 pnpm test
-$env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\phase1-t11-e2e'
+$env:APP_DATA_ROOT = "I:\ai-studybuddy-tmp\runs\phase1-t11-$runId-e2e"
 pnpm test:e2e
 powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
 git diff --check
@@ -186,7 +195,8 @@ git diff --cached --check
   - `docs/04-开发任务清单-Todo-List.md`：将 T11 标为完成，记录真实范围、证据和明确未做项；
   - `docs/09-测试验收计划-Test-Plan.md`：回填浏览器闭环命令和脱敏证据摘要；
   - 如 API 契约发生长期变化，再最小化同步 `docs/08-共同底座架构-Architecture.md` / S1 PRD；不为实现日志创建新的设计文档。
-- 计划期间仅新增本 `.plans/` 文件；未经批准不修改业务代码、正式任务状态或 S3/S4 文档。
+  - 同步修正已发现的非阻塞文档状态漂移：`docs/00` 页首版本与修订记录保持一致，`docs/12` 的 S3 PRD 状态更新为“已在获批 T03 文档任务中创建，代码未开始”；不得借此扩展未来 PRD。
+- 计划审查期间仅修改本 `.plans/` 文件；未经批准不修改业务代码、正式任务状态或 S3/S4 文档。
 - 实施提交按职责拆分（后端/API、前端/Playwright、文档收尾），每个提交只含批准范围；建议最终用户可见功能提交为 `feat(s1): 完成考试确认与任务闭环`。
 - 默认不推送；只有得到用户明确授权后才合并回 master 或删除 worktree。
 
@@ -206,4 +216,4 @@ git diff --cached --check
 
 ## 9. 批准后执行记录
 
-- 待用户明确回复“批准 Phase 1-T11 计划”后填写。
+- 2026-07-15：用户明确回复“批准 Phase 1-T11 计划”，批准门禁解除；按本计划进入隔离 worktree、TDD 实施与完整验证。
