@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useApiRequest } from '../hooks/use-api-request';
 import { useMaterialPolling } from '../hooks/use-material-polling';
 import { getCourses } from '../api/study-rhythm-api';
-import { retryAiGeneration, retryConversion, uploadMaterial } from '../api/note-builder-api';
+import { replaceText, retryAiGeneration, retryConversion, uploadMaterial } from '../api/note-builder-api';
 import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import { FileDropzone } from '../components/file-dropzone';
@@ -20,6 +20,10 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
   const [uploading, setUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [replaceMaterialId, setReplaceMaterialId] = useState<string | null>(null);
+  const [replacementText, setReplacementText] = useState('');
+  const [replacementError, setReplacementError] = useState<string | null>(null);
+  const [replacementSubmittingId, setReplacementSubmittingId] = useState<string | null>(null);
 
   const coursesFetcher = useCallback(
     (signal: AbortSignal) => {
@@ -94,6 +98,47 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
     }
   };
 
+  const handleOpenReplaceText = (materialId: string) => {
+    setReplaceMaterialId(materialId);
+    setReplacementText('');
+    setReplacementError(null);
+    setErrorMessage(null);
+  };
+
+  const handleCancelReplaceText = () => {
+    setReplaceMaterialId(null);
+    setReplacementText('');
+    setReplacementError(null);
+  };
+
+  const handleSubmitReplaceText = async (materialId: string) => {
+    if (!semesterId) return;
+    const trimmedText = replacementText.trim();
+    if (!trimmedText) {
+      setReplacementError('请粘贴一份完整正文后再重新生成笔记。');
+      return;
+    }
+    if (trimmedText.length > 1048576) {
+      setReplacementError('正文不能超过 1,048,576 字符。');
+      return;
+    }
+
+    setReplacementSubmittingId(materialId);
+    setReplacementError(null);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      await replaceText(semesterId, materialId, trimmedText);
+      setSuccessMessage('人工正文已提交，正在重新生成笔记');
+      handleCancelReplaceText();
+      await refetchMaterials();
+    } catch (err) {
+      setReplacementError(err instanceof Error ? err.message : '人工正文提交失败');
+    } finally {
+      setReplacementSubmittingId(null);
+    }
+  };
+
   const selectedCourse = courses?.find((c) => c.id === selectedCourseId);
 
   if (!semesterId) {
@@ -125,7 +170,10 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
         {!coursesLoading && !coursesError && courses && courses.length > 0 && (
           <select
             value={selectedCourseId}
-            onChange={(event) => setSelectedCourseId(event.target.value)}
+            onChange={(event) => {
+              setSelectedCourseId(event.target.value);
+              handleCancelReplaceText();
+            }}
             aria-label="选择课程"
           >
             <option value="">请选择课程</option>
@@ -169,14 +217,60 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
           )}
           {sortedMaterials.length > 0 && (
             <div className="material-list">
-              {sortedMaterials.map((material) => (
-                <MaterialStatus
-                  key={material.id}
-                  material={material}
-                  onRetryConversion={() => handleRetryConversion(material.id)}
-                  onRetryAi={() => handleRetryAi(material.id)}
-                />
-              ))}
+              {sortedMaterials.map((material) => {
+                const isReplacing = replaceMaterialId === material.id;
+                const isSubmittingReplacement = replacementSubmittingId === material.id;
+                const trimmedLength = replacementText.trim().length;
+                return (
+                  <MaterialStatus
+                    key={material.id}
+                    material={material}
+                    onRetryConversion={() => handleRetryConversion(material.id)}
+                    onRetryAi={() => handleRetryAi(material.id)}
+                    onReplaceText={() => handleOpenReplaceText(material.id)}
+                    actionsDisabled={isSubmittingReplacement}
+                  >
+                    {isReplacing && (
+                      <form
+                        className="manual-text-recovery"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void handleSubmitReplaceText(material.id);
+                        }}
+                      >
+                        <p className="manual-text-hint">
+                          请粘贴完整正文，而不是只补一小段。系统会保留原始上传文件，并用这份正文重新生成笔记。
+                        </p>
+                        <label htmlFor={`manual-text-${material.id}`}>完整正文</label>
+                        <textarea
+                          id={`manual-text-${material.id}`}
+                          value={replacementText}
+                          onChange={(event) => {
+                            setReplacementText(event.target.value);
+                            if (replacementError) setReplacementError(null);
+                          }}
+                          maxLength={1048576}
+                          disabled={isSubmittingReplacement}
+                          placeholder="例如：粘贴从 PDF / 课件 / 图片中整理出的完整可读正文……"
+                          rows={8}
+                        />
+                        <div className="manual-text-footer">
+                          <span>{trimmedLength.toLocaleString()} / 1,048,576 字</span>
+                          <div className="manual-text-buttons">
+                            <button type="button" onClick={handleCancelReplaceText} disabled={isSubmittingReplacement}>
+                              取消
+                            </button>
+                            <button type="submit" className="button-primary" disabled={isSubmittingReplacement || trimmedLength === 0}>
+                              {isSubmittingReplacement ? '提交中…' : '重新生成笔记'}
+                            </button>
+                          </div>
+                        </div>
+                        {replacementError && <p className="manual-text-error">{replacementError}</p>}
+                      </form>
+                    )}
+                  </MaterialStatus>
+                );
+              })}
             </div>
           )}
         </section>

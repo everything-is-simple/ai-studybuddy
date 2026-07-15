@@ -367,25 +367,43 @@ export class NoteBuilderService {
       const material = db.prepare('SELECT status FROM materials WHERE id = ?').get(materialId) as
         { status: MaterialStatus } | undefined;
       if (!material) throw new NoteBuilderError('MATERIAL_NOT_FOUND', 404, '资料不存在');
-      if (material.status !== 'conversion_failed' && material.status !== 'pending')
+      if (material.status !== 'conversion_failed' && material.status !== 'pending_quality_check')
         throw new NoteBuilderError('INVALID_STATUS', 400, '当前状态不允许手动粘贴文本');
+      const recoveryFrom = material.status;
       const updatedAt = now();
       const normalizedTextId = id();
-      db.transaction(() => {
-        db.prepare('DELETE FROM normalized_texts WHERE material_id = ?').run(materialId);
-        db.prepare(
-          "INSERT INTO normalized_texts (id, material_id, source_type, text, char_count, metadata_json, created_at) VALUES (?, ?, 'text', ?, ?, ?, ?)"
-        ).run(normalizedTextId, materialId, text, text.length, JSON.stringify({ converter: 'manual' }), updatedAt);
-        db.prepare("UPDATE materials SET status = 'converted', updated_at = ? WHERE id = ?").run(updatedAt, materialId);
-        try {
+      try {
+        db.transaction(() => {
+          const activeJob = db
+            .prepare("SELECT job_type FROM jobs WHERE material_id = ? AND status IN ('pending', 'running') LIMIT 1")
+            .get(materialId) as { job_type: string } | undefined;
+          if (activeJob) throw new NoteBuilderError('JOB_ALREADY_PENDING', 409, '已有待执行或运行中的任务');
+          db.prepare('DELETE FROM normalized_texts WHERE material_id = ?').run(materialId);
+          db.prepare(
+            "INSERT INTO normalized_texts (id, material_id, source_type, text, char_count, metadata_json, created_at) VALUES (?, ?, 'text', ?, ?, ?, ?)"
+          ).run(
+            normalizedTextId,
+            materialId,
+            text,
+            text.length,
+            JSON.stringify({ converter: 'manual', recoveryFrom, recoveredAt: updatedAt }),
+            updatedAt
+          );
+          db.prepare(
+            "UPDATE materials SET status = 'converted', conversion_error_message = NULL, ai_generation_error_message = NULL, truncated = 0, updated_at = ? WHERE id = ?"
+          ).run(updatedAt, materialId);
           db.prepare(
             "INSERT INTO jobs (id, job_type, status, payload_json, attempts, max_attempts, available_at, created_at, material_id) VALUES (?, 'note_generate', 'pending', ?, 0, 3, ?, ?, ?)"
-          ).run(id(), JSON.stringify({ semesterId }), updatedAt, updatedAt, materialId);
-        } catch {
-          /* already pending */
-        }
-      })();
-      return { id: materialId, status: 'converted', normalizedTextId };
+          ).run(id(), JSON.stringify({ semesterId, normalizedTextId }), updatedAt, updatedAt, materialId);
+        })();
+      } catch (err) {
+        if (err instanceof NoteBuilderError) throw err;
+        const message = err instanceof Error ? err.message : '';
+        if (message.includes('UNIQUE constraint'))
+          throw new NoteBuilderError('JOB_ALREADY_PENDING', 409, '已有待执行或运行中的任务');
+        throw err;
+      }
+      return { id: materialId, status: 'converted', normalizedTextId, jobStatus: 'pending' };
     } finally {
       db.close();
     }

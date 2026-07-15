@@ -463,27 +463,32 @@ pending → converting → converted → note_generating → completed
 | converting            | 转换成功                                                               | converted             | 创建 NormalizedText 记录                                              |
 | converting            | 转换失败且聚合 jobs.attempts < 3                                       | pending               | 写入转换错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
 | converting            | 转换失败且聚合 jobs.attempts 已达 3                                    | conversion_failed     | 写入 conversion_error_message                                         |
-| conversion_failed     | 手动重试，聚合 jobs.attempts < 3 且无 pending/running 同类 Job         | conversion_failed     | 创建一个 pending material_convert Job；Worker 领取后转为 converting   |
-| conversion_failed     | 聚合 attempts >= 3 或同类 Job 已存在                                   | conversion_failed     | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
+| conversion_failed     | 手动重试转换，转换 Job 聚合 attempts < 3 且无 pending/running 同类 Job | conversion_failed     | 创建一个 pending material_convert Job；Worker 领取后转为 converting   |
+| conversion_failed     | 转换 Job 聚合 attempts >= 3 或同类 Job 已存在                          | conversion_failed     | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
+| conversion_failed     | 学生粘贴完整正文，且该 material 无 pending/running Job                 | converted             | 替换 normalized_texts；写入 manual 恢复元数据；清空失败摘要；创建新的 pending note_generate Job |
 | converted             | Job Worker 领取 AI 生成任务                                            | note_generating       | 无                                                                    |
 | note_generating       | AI 生成成功                                                            | completed             | 创建 StructuredNote、MindMap、KnowledgeModule 记录；写入 StudyEvent   |
-| note_generating       | AI 请求失败或超时且聚合 jobs.attempts < 3                              | converted             | 写入 AI 错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
-| note_generating       | AI 请求失败或超时且聚合 jobs.attempts 已达 3                           | pending_quality_check | 写入 ai_generation_error_message                                      |
-| pending_quality_check | 手动触发 AI 补全，聚合 jobs.attempts < 3 且无 pending/running 同类 Job | pending_quality_check | 创建一个 pending note_generate Job；Worker 领取后转为 note_generating |
-| pending_quality_check | 聚合 attempts >= 3 或同类 Job 已存在                                   | pending_quality_check | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
+| note_generating       | AI 请求失败或超时且当前 Job attempts < 3                               | converted             | 写入 AI 错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
+| note_generating       | AI 请求失败或超时且当前 Job attempts 已达 3                            | pending_quality_check | 写入 ai_generation_error_message                                      |
+| pending_quality_check | 手动触发 AI 补全，当前文本版本尚未耗尽且无 pending/running 同类 Job    | pending_quality_check | 创建一个 pending note_generate Job；Worker 领取后转为 note_generating |
+| pending_quality_check | 当前文本版本 attempts 已耗尽或同类 Job 已存在                          | pending_quality_check | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
+| pending_quality_check | 学生粘贴完整正文，且该 material 无 pending/running Job                 | converted             | 将手动正文视为新文本版本；替换 normalized_texts；写入 manual 恢复元数据；创建新的 pending note_generate Job |
 
 **转换失败恢复策略**：
 
-- 转换失败后，原始文件保留在 storage_key；
-- 允许手动触发重试（API `POST /materials/:id/retry-conversion`）；
-- 重试次数限制：最多 3 次；第 3 次失败后不再自动重试；
-- 学生可通过 API `POST /materials/:id/replace-text` 手动粘贴纯文本，跳过转换直接进入 converted 状态。
+- 转换失败后，原始文件保留在 `storage_key`；
+- 允许手动触发转换重试（API `POST /materials/:id/retry-conversion`）；
+- 转换重试次数限制：同一上传文件最多 3 次；第 3 次失败后不再自动重试；
+- 学生可在 `conversion_failed` 状态通过 API `POST /materials/:id/replace-text` 粘贴**完整正文**，跳过转换直接进入 `converted` 状态并创建新的 `note_generate` Job；
+- `replace-text` 不做正文追加、拼接或富文本编辑；它会替换该资料的 `normalized_texts`，并在 `metadata_json` 写入 `converter: "manual"`、`recoveryFrom`、`recoveredAt`。
 
 **AI 生成失败恢复策略**：
 
-- AI 请求失败时，normalized_text 保留可查看；
-- 允许手动触发 AI 补全（API `POST /materials/:id/retry-ai-generation`）；
-- 重试次数限制：最多 3 次；第 3 次失败后提示"AI 暂不可用"；
+- AI 请求失败时，`normalized_text` 保留可查看；
+- 允许手动触发当前文本版本的 AI 补全（API `POST /materials/:id/retry-ai-generation`）；
+- 每个文本版本的 AI 生成 Job 最多 3 次；第 3 次失败后提示"AI 暂不可用"；
+- `pending_quality_check` 状态下，若学生确认正文需要更正，可通过 `POST /materials/:id/replace-text` 提交一份新的完整正文；该完整正文视为**新文本版本**，会获得新的受限 `note_generate` Job（最多 3 次执行机会）；
+- `replace-text` 只允许 `conversion_failed` 与 `pending_quality_check` 两种失败恢复态；`pending`、`converting`、`note_generating`、`completed` 均拒绝人工覆盖，避免与 Worker 或已完成笔记竞争；
 - pending_quality_check 状态的资料在 S1 每日首页标记为"待质检"，但不阻塞学生查看原文。
 
 ### 与 S1 的交互
