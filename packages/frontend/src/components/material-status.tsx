@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { MaterialDto } from '@ai-studybuddy/shared';
 
@@ -6,6 +7,8 @@ interface MaterialStatusProps {
   onRetryConversion?: (material: MaterialDto) => void;
   onRetryAi?: (material: MaterialDto) => void;
   onReplaceText?: (material: MaterialDto) => void;
+  actionsDisabled?: boolean;
+  children?: ReactNode;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -18,8 +21,21 @@ const STATUS_LABELS: Record<string, string> = {
   pending_quality_check: '需要人工补文',
 };
 
-export function MaterialStatus({ material, onRetryConversion, onRetryAi, onReplaceText }: MaterialStatusProps) {
+const STATUS_DESCRIPTIONS: Partial<Record<string, string>> = {
+  conversion_failed: '原始文件已保留。可以重试转换，也可以粘贴一份完整正文继续生成笔记。',
+  pending_quality_check: 'AI 生成笔记失败。可以先重试生成；如果正文需要更正，请替换完整正文后重新生成。',
+};
+
+export function MaterialStatus({
+  material,
+  onRetryConversion,
+  onRetryAi,
+  onReplaceText,
+  actionsDisabled = false,
+  children,
+}: MaterialStatusProps) {
   const label = STATUS_LABELS[material.status] ?? material.status;
+  const description = STATUS_DESCRIPTIONS[material.status];
 
   return (
     <div className="material-status">
@@ -27,6 +43,7 @@ export function MaterialStatus({ material, onRetryConversion, onRetryAi, onRepla
         <strong>{material.title ?? material.originalFilename ?? '未命名资料'}</strong>
         <span className={`status-badge status-${material.status}`}>{label}</span>
       </div>
+      {description && <p className="material-status-description">{description}</p>}
       <div className="material-status-meta">
         {material.fileType && <span>类型：{material.fileType}</span>}
         {material.fileSizeBytes !== undefined && <span>大小：{formatBytes(material.fileSizeBytes)}</span>}
@@ -39,21 +56,27 @@ export function MaterialStatus({ material, onRetryConversion, onRetryAi, onRepla
           </Link>
         )}
         {material.status === 'conversion_failed' && onRetryConversion && (
-          <button type="button" onClick={() => onRetryConversion(material)}>
+          <button type="button" onClick={() => onRetryConversion(material)} disabled={actionsDisabled}>
             重试转换
           </button>
         )}
+        {material.status === 'conversion_failed' && onReplaceText && (
+          <button type="button" onClick={() => onReplaceText(material)} disabled={actionsDisabled}>
+            粘贴完整正文后继续
+          </button>
+        )}
         {material.status === 'pending_quality_check' && onReplaceText && (
-          <button type="button" onClick={() => onReplaceText(material)}>
-            手动补充文本
+          <button type="button" onClick={() => onReplaceText(material)} disabled={actionsDisabled}>
+            替换正文后重新生成
           </button>
         )}
         {material.status === 'pending_quality_check' && onRetryAi && (
-          <button type="button" onClick={() => onRetryAi(material)}>
+          <button type="button" onClick={() => onRetryAi(material)} disabled={actionsDisabled}>
             重试生成笔记
           </button>
         )}
       </div>
+      {children}
     </div>
   );
 }

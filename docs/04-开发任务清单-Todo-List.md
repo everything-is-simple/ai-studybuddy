@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ⏳ 待开始                                                          |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10 已完成）                                      |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、预警、安全                  | ⏳ 待开始                                                          |
@@ -448,11 +448,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 顺序 | 任务 | 状态 | 范围与门禁 |
 | ---- | ---- | ---- | ---------- |
 | 1 | Phase 1-T00：协作基线与路线图 | [x] | 更新 `CLAUDE.md`、`AGENTS.md`、`docs/00`、`docs/04`、`docs/07`，新建 `docs/12`；不改业务代码 |
-| 2 | Phase 1-T10：人工补文恢复闭环 | [ ] | 修复 AI 失败或质量待确认后的人工补文 UX、状态提示和恢复路径；不改变 Provider Router 架构 |
+| 2 | Phase 1-T10：人工补文恢复闭环 | [x] | 修复 AI 失败或质量待确认后的人工补文 UX、状态提示和恢复路径；不改变 Provider Router 架构 |
 | 3 | Phase 1-T11：考试确认与任务创建闭环 | [ ] | 浏览器可创建/确认考试、生成学习任务、更新任务状态；建立“考试项目工作台”外壳 |
 | 4 | Phase 1-T02：Provider 健康熔断 | [ ] | 在现有优先级故障转移基础上，实现连续失败 5 次后暂停 10 分钟；不做每请求轮换 |
 | 5 | Phase 1-T03：S3 PRD 与最小限时练习 | [ ] | 先按门禁创建 S3 轻量 PRD，再实现最小练习闭环；PRD 和代码分别验收 |
 | 6 | Phase 1-T04：S4 错题改错 | [ ] | 只有 S3 MVP 验收后才触发 S4 PRD 和错题改错实现 |
+
+> **T10 收尾证据（2026-07-15）**：后端 `replaceText()` 限定只允许 `conversion_failed` 与 `pending_quality_check` 进入人工完整正文替换，拒绝 `pending`、`converting`、`note_generating`、`completed` 等非恢复态；人工正文作为新的 normalized text 版本写入，记录 `manual` metadata，清空转换/AI 错误并重新创建受限 `note_generate` Job，不改 Provider Router 架构。前端资料卡在失败态内联展示“粘贴完整正文”textarea、空正文禁用、超长提示、提交成功后关闭表单并刷新列表，API 错误显示在当前资料卡附近。新增 API、Worker 与前端测试覆盖手动恢复、竞争 Job 拒绝、AI 失败后重新获得生成机会和原始上传文件保留；验证通过：隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t10-full-test` 下 `pnpm test` 通过；隔离 smoke run 使用 Edge 真实浏览器打开 `/materials`，完成学期 ID 应用、课程选择、`pending_quality_check` 补文入口展示、空正文禁用、输入后提交、成功提示与表单关闭，截图留在 `I:\ai-studybuddy-tmp\runs\phase1-t10-smoke\browser-smoke-success.png`。
 
 ### Phase 1 产品组织原则
 
@@ -464,7 +466,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ### 阶段目标拆解
 
-- [ ] S2 补齐：AI 失败、`pending_quality_check` 和人工补文入口形成可恢复闭环。
+- [x] S2 补齐：AI 失败、`pending_quality_check` 和人工补文入口形成可恢复闭环。
 - [ ] S1 补齐：考试确认、学习任务创建和任务状态更新形成浏览器闭环。
 - [ ] Provider 底座：健康熔断、脱敏日志和回归测试补齐。
 - [ ] S3 PracticeRunner：根据笔记/知识模块生成最小练习，客观题规则批改，错题证据进入 S4 的未来边界。
