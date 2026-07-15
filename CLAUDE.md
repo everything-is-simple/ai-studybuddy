@@ -1,141 +1,90 @@
 # CLAUDE.md
 
-**Version**: v0.02
+**Version**: v1.0
+**Updated**: 2026-07-15
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
 
-## 本仓库是什么
+## 当前状态
 
-AI StudyBuddy 是一个个人规模的学生学习助手，规划为**一个共同底座 + 七个场景子系统（S1–S7）**。仓库当前处于 **Phase 0.8 准备阶段**：`docs/` 下有完整设计文档，`packages/shared` 和 `packages/backend` 已有 monorepo 骨架和类型定义，尚无业务实现代码。所有文档和提交信息**中文优先**，英文只作辅助。
+AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七个场景子系统（S1–S7）”。当前事实：
 
-`AGENTS.md` 是面向人的协作指南，与本文件内容大量重叠；任一文件变更时，保持两者一致。
+- Phase 0.8 已完成，S1 基础与 S2 核心已在主仓库实现并通过 T09 隔离复验。
+- S1、S2 PRD 已存在；S3 PRD 触发条件已满足但尚未创建；S4–S7 仍未触发。
+- 后端、前端、shared 三个 workspace 包已存在；不要再按“无业务代码”处理。
+- AI Provider Router 已支持多 Provider 优先级故障转移；Provider 健康熔断仍是后续 Phase 1-T02。
+- KaoBuddy 只可作为产品组织方式参考，不复制源码、视觉、文案或资产。
+
+## 每次任务必读
+
+1. `docs/00-文档索引-Index.md`
+2. `docs/04-开发任务清单-Todo-List.md`
+3. 与任务相关的 PRD / `docs/08` / `docs/10` / `docs/11`
+4. `docs/12-开发规范-Dev-Rules.md`
+
+产品事实以 `docs/01` 和 `docs/02` 为准；旧备份和外部参考项目不是 SoT。
 
 ## 常用命令
 
-### 文档治理（每次提交前必须运行）
+```powershell
+# 状态检查
+git status --short --branch
 
-```bash
-# 文档治理检查（命名、索引登记、旧草稿误恢复防护）
+# 文档治理
 powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
-
-# 空白行 / 行尾空格检查
 git diff --check
-```
 
-### 工程命令（Phase 0.8 monorepo 骨架已就位，按包现状说明）
-
-```bash
-# 安装依赖（需先安装 pnpm：npm install -g pnpm）
-pnpm install
-
-# 类型检查（安装依赖后可用；所有子包都支持 type-check）
+# 工程验证
 pnpm type-check
-
-# 构建（packages/backend 已有 build 脚本；packages/shared 暂无）
-pnpm -r run build
-# 或仅构建 backend：
 pnpm -r --filter backend run build
+pnpm -r --filter @ai-studybuddy/frontend run build
+pnpm test
 
-# 开发模式启动（packages/backend 已有 dev 脚本；packages/shared 暂无，故根命令可能失败）
-# 当前阶段可用的做法：
+# 后端开发：写数据前先设置隔离目录
+$env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\<task-id>'
 pnpm -r --filter backend run dev
-# 或等待 shared 补充 dev 脚本后，再用根命令：
-# pnpm dev
 ```
 
-> **注意**：`packages/shared` 是纯类型库，暂无 `dev`/`build` 脚本。`packages/backend` 已具备完整的开发脚本。安装依赖后建议先运行 `pnpm type-check` 验证 TypeScript 配置和交叉引用；若 type-check 失败，需要修正 tsconfig 或包引用再继续。
+`<task-id>` 是占位符，不得原样执行。真实 Provider 验证必须脱敏记录，不提交密钥、正文、完整 URL 或完整 UUID。
 
-## 文档治理（核心工作流）
+## 文档门禁
 
-`docs/00-文档索引-Index.md` 是单一事实来源（SoT）和导航中心。**开始任何任务前先读它。** 产品事实以 `docs/01-总PRD-*` 和 `docs/02-七子系统地图-*` 为准；归档的旧草稿永远不作为当前工作依据。
+新增设计文档前必须：读 `docs/00` → 查文档是否已存在 → 查触发条件 → 未满足则不创建 → 满足才按 `NN-中文标题-English-Title.md` 创建 → 同步更新索引 → 运行治理检查。
 
-治理模型是**"开发动作触发文档，而不是反过来"**。新增任何设计文档前：
+当前门禁状态：
 
-1. 先读 `docs/00-文档索引-Index.md`。
-2. 检查目标文档是否已存在。
-3. 检查其**触发条件**（列在索引和 `04-开发任务清单` 中）是否满足。
-4. 不满足：**不要**创建 —— 说明"还不到创建时机"。
-5. 满足：按下方命名规范创建。
-6. 在**同一次修改**中，更新 `docs/00-文档索引-Index.md` 的索引表。
-7. 提交前运行 `scripts/check-docs-governance.ps1`。
+- S1、S2：已创建并实现 MVP，不重建。
+- S3：触发条件已满足，等待 Phase 1-T03 计划批准后创建。
+- S4：等 S3 MVP 完成后触发。
+- S5：Phase 2 触发。
+- S6：Phase 1 后期准备正式家长报告前触发。
+- S7：Phase 1.5 触发。
 
-`check-docs-governance.ps1` 会机械地强制执行以上规则：`docs/` 下每个 `.md` 必须符合命名模式、必须以文件名登记在索引中、不得复用已归档的旧草稿名（如 `PRD.md`、`ARCHITECTURE.md`、`todo-list.md`），预留文档 `08-`–`12-` 若存在则必须已登记。检查失败会阻断提交。
+## 精简 16 步流程
 
-### 命名规范
+1. 读文档定边界。
+2. 检查文档门禁。
+3. 写 `.plans/` 计划。
+4. 做独立计划审查。
+5. 修订并取得用户明确批准。
+6. 拆分任务逐项实现。
+7. 编写或更新测试。
+8. 跑 `pnpm type-check`。
+9. 跑相关 build。
+10. 跑测试。
+11. 做 smoke / 浏览器验收。
+12. 独立审查并修复。
+13. 更新任务清单和文档。
+14. 跑文档治理。
+15. 跑 diff 检查。
+16. 提交并交付说明。
 
-正式文档：`NN-中文标题-English-Title.md`（例如 `08-共同底座架构-Architecture.md`）。子系统 PRD 放在 `docs/subsystems/` 下（例如 `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md`）。
+详细分支、worktree、多 Agent、浏览器验收和隐私规则见 `docs/12-开发规范-Dev-Rules.md`。
 
-## 架构模型（代码开工后适用）
+## 禁止事项
 
-设计刻意采用渐进式，以控制在单个开发者的认知预算之内 —— 旧版"大一统"1487 行架构 + 20+ 张表正是因为一次性铺得太大而被归档。不要重新引入那种规模。
-
-- **七个子系统**：S1 StudyRhythm、S2 NoteBuilder、S3 PracticeRunner、S4 ErrorFixer、S5 ExamCrammer、S6 ParentWindow、S7 ClassCapture。每个对应一个 `packages/<name>` 包。每个新功能必须精确归属于一个子系统；每个 PR 只主攻一个子系统。边界、依赖关系和开发顺序见 `docs/02-七子系统地图-*`。
-- **渐进式 Schema**：只在某个子系统开工时才创建它需要的表。跨子系统字段放共同底座；业务字段留在其子系统内。绝不为尚未开工的子系统提前建表。主键统一用 UUID；时间字段用 `timestamptz`；每张表都有 `created_at`/`updated_at`。
-- **Adapter 边界**：主系统绝不直接依赖开源组件的内部实现。每个组件先在 `composer` 试炼场跑通（见下），再封装成 Adapter，只暴露统一的输入/输出契约。规划中的底座契约（转换结果、AI 请求/响应、带 `success`/`data`/`error` 的统一 API 响应信封）定义在 `docs/08-共同底座架构-*`。
-- **第一个里程碑（Phase 0.8）**：创建课程 → 上传 PDF/图片/文本 → 转为纯文本 → LLM（中转默认）生成结构化笔记 + 重点 + 思维导图 → 前端渲染。这界定了最小底座（S1 基础 + S2 核心）—— 不要把练习、错题本、家长面板、ASR、期末功能塞进来。
-- **AI 路由**：默认走中转渠道的 GPT/Claude（成本最优）；Kimi 作备选；国产官方直连（Kimi/Qwen）作最终兜底。转换器输出纯文本，LLM 绝不作为主要的格式转换路径。中转渠道可能不稳，官方直连随时可切换。
-
-## 本地目录与组件约定
-
-设计文档用 `G:\ai-studybuddy-*` 作为规范路径示例（本次检出恰好位于 `F:\` 下）。这些是面向未来代码的治理约定，不是仓库里实际存在的路径：
-
-- 业务代码**绝不硬编码 `G:\...`（或任何绝对）路径** —— 一律从环境变量读取（`APP_ROOT`、`DATA_ROOT`、`STUDY_FILE_ROOT`、`LOG_ROOT`、`TMP_ROOT` 等）。只提交 `.env.example`（变量名，不含真实值）。
-- 开源组件先在 `composer` 试炼场跑通 smoke test 并填写能力卡（`COMPONENT-CARD.md`），才能进入主系统。
-- 运行数据、学习文件、日志、临时文件、备份隔离到各自独立的根目录。`TMP_ROOT` 可随时清空 —— 清空后系统必须仍能正常运行。日志绝不保存完整 API Key、完整学生隐私、完整答案。
-
-完整的目录职责表见 `docs/06-本地目录治理-*`，组件接入门槛见 `docs/05-开源组件装配-*`。
-
-## 提交与 PR 规范
-
-提交信息沿用现有的 `docs: ...` 风格（例如 `docs: add document creation governance`）。PR/变更说明应写明改了哪些文档、为什么改、做了哪些验证。
-
-## 任务执行标准工作流（16 步，不可省略）
-
-每个任务必须完整走完以下流程，顺序不可颠倒。
-
-### 第一阶段：准备
-
-**Step 1 — 读文档、定边界**
-先读 `docs/00-文档索引-Index.md`，再读相关设计文档（04 任务清单、子系统 PRD、08 架构、10 后端规范等）。确认任务触发条件已满足、现有代码状态、子系统归属和 API/Schema 边界。
-
-**Step 2 — 检查文档门禁**
-确认本任务是否需要新建设计文档。需要则检查触发条件；满足才创建，并同步更新 `docs/00-文档索引-Index.md`。不需要则记录"文档无需变更"继续。
-
-**Step 3 — 编写 `.plans/` 计划**
-在 `.plans/` 创建本任务计划文件（如 `.plans/phase0.8-t07-s2-core-api-plan.md`）。计划必须包含：目标、涉及文件路径、接口/类型设计、测试策略、治理步骤。写完后提交给用户审查。
-
-**Step 4 — Claude 审查计划**
-针对计划中的设计决策逐条提出问题或风险（路径处理、事务边界、状态机兜底等），给出具体修改建议。
-
-**Step 5 — 修订并获用户批准**
-根据审查反馈修订计划。用户明确批准后，方可进入实现阶段。
-
-### 第二阶段：实现
-
-**Step 6 — 拆分任务、逐项实现**
-用 TaskCreate/TaskUpdate 把计划拆成子任务，每完成一项立即标记完成。编码遵循规范：路径走 `paths.ts`、环境变量走 `env.ts`、统一 API 信封 `{ success, data, error }`、中文优先。
-
-**Step 7 — 编写测试**
-对每个新增接口/功能编写集成测试（不 mock DB）。测试文件命名：`packages/backend/test/<feature>-api.test.mjs`。
-
-### 第三阶段：验证
-
-**Step 8 — type-check**：`pnpm type-check`，零错误才继续。
-
-**Step 9 — build**：`pnpm -r --filter backend run build`，零错误才继续。
-
-**Step 10 — test**：`pnpm test`，全部通过才继续。
-
-**Step 11 — smoke test**：启动 `pnpm -r --filter backend run dev`，用 curl 手动验证核心路径，记录结果。
-
-### 第四阶段：审查与收尾
-
-**Step 12 — GPT 代码审查 → 修复 → 回归**：把核心变更贴给 GPT 独立审查，修复边界问题并补回归测试，重新跑 Step 8–11。
-
-**Step 13 — 更新任务清单和文档**：在 `docs/04-开发任务清单-Todo-List.md` 标记本任务完成，确认索引已更新。
-
-**Step 14 — 文档治理检查**：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`，通过才能提交。
-
-**Step 15 — git diff 检查**：`git diff --check`，无尾部空白才能提交。
-
-**Step 16 — 提交并交付说明**：按 `type(scope): 中文描述` 格式提交，在对话中给出交付说明（改了哪些文件、做了哪些验证、遗留问题）。
+- 不凭记忆新建文档。
+- 不从旧 zip 或参考项目恢复旧稿到 `docs/`。
+- 不把真实密钥、资料原文、Provider URL、完整 UUID 或正式数据提交进仓库。
+- 不硬编码盘符路径到业务代码；路径必须走 `paths.ts`，环境变量走 `env.ts`。
+- 不提前实现或勾选未批准的 Phase 1 后续任务。
