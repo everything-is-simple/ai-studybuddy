@@ -9,10 +9,13 @@
     "type-check": "pnpm -r run type-check",
     "lint": "pnpm -r run lint",
     "test": "pnpm build && pnpm -r run test",
-    "format:check": "prettier --check ."
+    "test:e2e": "playwright test",
+    "format:check": "prettier --check .",
+    "playwright:install": "playwright install"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "prettier": "^3.2.5"
+    "@playwright/test": "^1.61.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
   }
 }
