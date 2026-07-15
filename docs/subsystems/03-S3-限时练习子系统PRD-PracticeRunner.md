@@ -1,8 +1,8 @@
 # S3 限时练习子系统 PracticeRunner PRD
 
-**版本**：v0.02
-**日期**：2026-07-15
-**状态**：Phase 1 轻量设计基线；定义知识模块驱动的限时练习、客观题规则批改与练习记录闭环
+**版本**：v0.03
+**日期**：2026-07-16
+**状态**：Phase 1 轻量设计基线；定义知识模块驱动的限时练习、客观题规则批改与练习记录闭环；T03A Schema 计划已创建并待批准实施
 
 ---
 
@@ -242,6 +242,8 @@ Question
   * 每道生成题只属于一个练习 session；保证作答前后题目集合、顺序和历史结果稳定
 - course_instance_id: UUID NOT NULL → CourseInstance(id) ON DELETE CASCADE
 - knowledge_module_id: UUID NOT NULL → KnowledgeModule(id) ON DELETE CASCADE
+- question_order: INTEGER NOT NULL
+  * 题目在 session 中的稳定顺序（1-based）；作答前展示、提交后批改和历史回放均以此为准
 - type: ENUM('single_choice', 'multiple_choice', 'fill_blank') NOT NULL
 - stem: TEXT NOT NULL
   * 题干；支持 KaTeX 数学公式
@@ -267,9 +269,10 @@ Question
 - created_at: TEXT NOT NULL
   * UTC ISO 8601 字符串，与现有学期库约定一致
 
-INDEX idx_question_session ON Question(practice_session_id, created_at)
+INDEX idx_question_session ON Question(practice_session_id, question_order)
 INDEX idx_question_module ON Question(knowledge_module_id, created_at DESC)
 INDEX idx_question_course ON Question(course_instance_id, difficulty, type)
+UNIQUE INDEX idx_question_session_order ON Question(practice_session_id, question_order)
 ```
 
 ```text
@@ -391,7 +394,7 @@ StudyEvent (S1 已有)
         "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
         "difficulty": "medium",
         "knowledgeModuleId": "uuid",
-        "answerOrder": 1
+        "questionOrder": 1
       }
     ],
     "questionCount": 10,
@@ -487,3 +490,13 @@ StudyEvent (S1 已有)
 | S3-v1.1 | 主观题（简答/计算）AI 评分、部分得分 |
 | S3-v1.2 | 题目难度自适应、错因分析生成详细解析 |
 | S3-v1.3 | 练习推荐（基于 S4 薄弱点自动选模块） |
+
+
+---
+
+## 11. Revision Notes
+
+| 版本 | 日期 | 说明 |
+| --- | --- | --- |
+| v0.03 | 2026-07-16 | 对齐 T03A Schema 计划：补齐 `Question.question_order`，将 API 示例字段从 `answerOrder` 校准为 `questionOrder`；仍不表示 S3 Schema 或业务代码已实现 |
+| v0.02 | 2026-07-15 | Phase 1-T03 创建 S3 轻量 PRD |

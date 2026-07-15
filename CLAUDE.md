@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-**Version**: v1.1
+**Version**: v1.2
 **Updated**: 2026-07-16
 
 This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
@@ -10,7 +10,7 @@ This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete to
 AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七个场景子系统（S1–S7）”。当前事实：
 
 - Phase 0.8 已完成，S1 基础与 S2 核心已在主仓库实现并通过 T09 隔离复验。
-- S1、S2、S3 PRD 已存在；S3 业务代码尚未开始，S4–S7 仍未触发。
+- S1、S2、S3 PRD 已存在；Phase 1-T03A 实施计划已创建并自审，但 S3 Schema/API/业务代码尚未开始，S4–S7 仍未触发。
 - 后端、前端、shared 三个 workspace 包已存在；不要再按“无业务代码”处理。
 - AI Provider Router 已支持多 Provider 优先级故障转移，并已在 Phase 1-T02 完成连续失败熔断、10 分钟冷却、恢复探测和脱敏日志。
 - KaoBuddy 只可作为产品组织方式参考，不复制源码、视觉、文案或资产。
@@ -54,7 +54,7 @@ pnpm -r --filter backend run dev
 当前门禁状态：
 
 - S1、S2：已创建并实现 MVP，不重建。
-- S3：PRD 已创建；业务代码尚未开始，下一实现任务 T03A 仍需独立计划和明确批准。
+- S3：PRD 已创建；T03A 数据库与 Schema 计划已创建并自审，仍需用户明确批准后才能修改 migration、Schema、测试、类型或业务代码。
 - S4：等 S3 MVP 完成后触发。
 - S5：Phase 2 触发。
 - S6：Phase 1 后期准备正式家长报告前触发。
