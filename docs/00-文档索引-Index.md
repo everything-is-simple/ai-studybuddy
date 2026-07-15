@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.4
+**版本**：v2.5
 **日期**：2026-07-15
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -15,7 +15,7 @@
 | 02 | [七子系统地图-Scenario-Systems.md](02-七子系统地图-Scenario-Systems.md) | ✅ 有效 | 七个场景子系统边界、共同业务对象、依赖关系、开发顺序 |
 | 03 | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md) | ✅ 有效 | S1 轻量 PRD，课程、考试、任务、StudyEvent 与时间线 |
 | 03b | [subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md](subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md) | ✅ 有效 | S2 轻量 PRD，资料上传/格式转换/AI 笔记/知识模块 |
-| 03c | [subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md](subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md) | ✅ 有效 | S3 轻量 PRD，知识模块驱动练习、客观题批改、练习记录 |
+| 03c | [subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md](subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md) | ✅ 有效 | S3 轻量 PRD，知识模块驱动练习、客观题批改、练习记录 |
 | 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | 阶段任务、执行顺序、完成门槛和验证结论 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
 | 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `I:\ai-studybuddy-*` 本地目录职责、外部试炼场与单机数据边界 |
@@ -43,7 +43,7 @@
 | ------ | -------- | -------- | -------- |
 | S1 学习节奏 | `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 必需 |
 | S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 开始开发 S2 前触发 |
-| S3 限时练习 | `subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ 已创建（Phase 1-T03） | S2 MVP 完成后触发 |
+| S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ 已创建（Phase 1-T03） | S2 MVP 完成后触发 |
 | S4 错题改错 | `subsystems/S4-错题改错子系统PRD-ErrorFixer.md` | 📅 未创建 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/S5-期末冲刺子系统PRD-ExamCrammer.md` | 📅 未创建 | Phase 2 触发 |
 | S6 家长观察 | `subsystems/S6-家长观察子系统PRD-ParentReport.md` | 📅 未创建 | Phase 1 后期、准备正式发送家长报告前触发 |
@@ -165,6 +165,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.5 | 2026-07-15 | 对齐 S1/S2/S3 子系统 PRD 文件编号；确认 Phase 1-T11 已合并到 master 并完成最终隔离验收；登记 Phase 1-T02 待批准计划 |
 | v2.4 | 2026-07-15 | Phase 1-T11：登记考试确认与多考试工作台闭环、正式 API 契约及自动化/浏览器验收证据；修正页首版本漂移 |
 | v2.3 | 2026-07-15 | Phase 1-T03：在获批文档计划范围内创建并登记 S3 限时练习 PRD |
 | v2.2 | 2026-07-15 | Phase 1-T00：登记 12-开发规范，修正 Phase 0.8 完成态、S3 触发态和 Phase 1 阅读/门禁顺序 |

@@ -6,7 +6,7 @@
 
 ## 1. 目标
 
-按文档门禁规则创建 `docs/subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md`，为后续 T03A/T03B/T03C/T03D 代码实现建立设计基线。
+按文档门禁规则创建 `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md`，为后续 T03A/T03B/T03C/T03D 代码实现建立设计基线。
 
 ## 2. 门禁确认
 
@@ -71,7 +71,7 @@
 
 | 文件 | 动作 |
 | --- | --- |
-| `docs/subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md` | 新建 |
+| `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | 新建 |
 | `docs/00-文档索引-Index.md` | 更新 S3 行状态为"已创建" |
 | `docs/04-开发任务清单-Todo-List.md` | 将 T03 PRD 标为完成 |
 
@@ -93,5 +93,6 @@
 
 ## 8. 执行记录
 
-- 2026-07-15：用户在 Plan Mode 明确批准本计划后创建 S3 PRD；新增 `docs/subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md`，并同步更新 `docs/00` 与 `docs/04`。
+- 2026-07-15：用户在 Plan Mode 明确批准本计划后创建 S3 PRD；新增 PRD，并同步更新 `docs/00` 与 `docs/04`。
+- 2026-07-15：用户为与 S1/S2 子系统 PRD 编号对齐，将文件从 `docs/subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md` 更名为 `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md`；文档内容不变。
 - 本任务未创建表、迁移、API、前端页面或任何 S3 运行数据；后续 T03A–T03D 必须各自计划并获批。

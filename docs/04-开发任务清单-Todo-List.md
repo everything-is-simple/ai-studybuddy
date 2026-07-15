@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.11
+**版本**：v1.12
 **日期**：2026-07-15
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -450,7 +450,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 1 | Phase 1-T00：协作基线与路线图 | ✅ | 更新 `CLAUDE.md`、`AGENTS.md`、`docs/00`、`docs/04`、`docs/07`，新建 `docs/12`；不改业务代码 |
 | 2 | Phase 1-T10：人工补文恢复闭环 | ✅ | 修复 AI 失败或质量待确认后的人工补文 UX、状态提示和恢复路径；不改变 Provider Router 架构 |
 | 3 | Phase 1-T11：考试确认与任务创建闭环 | ✅ | 浏览器可确认考试、进入多考试工作台、创建归属任务并更新状态；不含跨考试自动排程 |
-| 4 | Phase 1-T02：Provider 健康熔断 | ⏳ | 在现有优先级故障转移基础上，实现连续失败 5 次后暂停 10 分钟；不做每请求轮换 |
+| 4 | Phase 1-T02：Provider 健康熔断 | 📝 计划待批准 | 已创建 `.plans/phase1-t02-provider-health-circuit-breaker-plan.md`；在现有优先级故障转移基础上补连续失败 5 次、10 分钟冷却和测试，不做每请求轮换 |
 | 5 | Phase 1-T03：S3 PRD 编写 | ✅ | 按门禁创建 S3 轻量 PRD；不写业务代码 |
 | 6 | Phase 1-T03A：S3 数据库与 Schema | ⏳ | 按 S3 PRD 创建 `questions`、`practice_sessions`、`practice_answers` 表；不写 API |
 | 7 | Phase 1-T03B：S3 练习生成 API | ⏳ | AI 根据笔记/知识模块生成选择题/填空题并入库；不含批改 |
@@ -471,7 +471,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T10 收尾证据（2026-07-15）**：后端 `replaceText()` 限定只允许 `conversion_failed` 与 `pending_quality_check` 进入人工完整正文替换，拒绝 `pending`、`converting`、`note_generating`、`completed` 等非恢复态；人工正文作为新的 normalized text 版本写入，记录 `manual` metadata，清空转换/AI 错误并重新创建受限 `note_generate` Job，不改 Provider Router 架构。前端资料卡在失败态内联展示”粘贴完整正文”textarea、空正文禁用、超长提示、提交成功后关闭表单并刷新列表，API 错误显示在当前资料卡附近。新增 API、Worker 与前端测试覆盖手动恢复、竞争 Job 拒绝、AI 失败后重新获得生成机会和原始上传文件保留；验证通过：隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t10-full-test` 下 `pnpm test` 通过；隔离 smoke run 使用 Edge 真实浏览器打开 `/materials`，完成学期 ID 应用、课程选择、`pending_quality_check` 补文入口展示、空正文禁用、输入后提交、成功提示与表单关闭，截图留在 `I:\ai-studybuddy-tmp\runs\phase1-t10-smoke\browser-smoke-success.png`。commit `d053770`，merge `3ec811b`。
 
-> **T11 收尾证据（2026-07-15）**：新增单考试查询与 pending 确认 API，确认事务写入固定 S1 证据事件并立即驱动任务优先级；课程页提供确认入口，confirmed 考试可进入 `/exams/:examId` 工作台。工作台展示日期、倒计时、当前考试任务进度和任务闭环，支持 confirmed 考试切换、近期最多 5 场概览、pending 待确认边界及前后 7 天只读提示；资料导航通过白名单校验的 `courseInstanceId` 保持课程上下文。验证通过：`pnpm type-check`、后端 build、前端 build、隔离全量测试（后端 109/109、前端 32/32）及 Playwright Chromium 1/1；浏览器证据保存在仓库外 `APP_DATA_ROOT/playwright`。实现提交 `ff6322e`、`57a94ca`、`78619fa`。未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 熔断或 S3 业务代码。
+> **T11 收尾证据（2026-07-15）**：新增单考试查询与 pending 确认 API，确认事务写入固定 S1 证据事件并立即驱动任务优先级；课程页提供确认入口，confirmed 考试可进入 `/exams/:examId` 工作台。工作台展示日期、倒计时、当前考试任务进度和任务闭环，支持 confirmed 考试切换、近期最多 5 场概览、pending 待确认边界及前后 7 天只读提示；资料导航通过白名单校验的 `courseInstanceId` 保持课程上下文。验证通过：`pnpm type-check`、后端 build、前端 build、隔离全量测试（后端 109/109、前端 32/32）及 Playwright Chromium 1/1；浏览器证据保存在仓库外 `I:\ai-studybuddy-tmp\runs\phase1-t11-20260715-master-final-e2e-retry\playwright`。实现提交 `ff6322e`、`57a94ca`、`78619fa`，已快进合并到 `master`，最终 HEAD 为 `04e6f37`；当前本地 `master` 尚未 push。未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 熔断或 S3 业务代码。
 
 ### Phase 1 产品组织原则
 
@@ -508,7 +508,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **T03 PRD（已完成，纯文档）**
 - [x] 读 docs/00 确认 S3 门禁已满足
-- [x] 创建 `docs/subsystems/04-S3-限时练习子系统PRD-PracticeRunner.md`
+- [x] 创建 `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md`
 - [x] 更新 docs/00 索引
 
 **T03A Schema**（门禁：S3 PRD 已创建；T03A 独立实现计划已批准）
