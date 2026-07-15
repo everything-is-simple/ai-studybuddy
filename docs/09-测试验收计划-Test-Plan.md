@@ -134,7 +134,7 @@ Phase 0.8 已完成；以下保留为 S1/S2 后续补齐与 Phase 1 继续验收
 | 资料课程上下文 | `courseInstanceId` 查询参数只接受当前学期课程，预选后手动切换会同步 URL；非法值不会驱动前端越权读取。 | ✅ 通过 |
 | 自动化基线 | `pnpm type-check`、后端 build、前端 build 均退出码 0；隔离 `pnpm test` 后端 109/109、前端 32/32。 | ✅ 通过（Markmap chunk 大小警告非阻塞） |
 | Chromium 浏览器闭环 | Playwright 在 `Asia/Shanghai`、后端 `127.0.0.1:4311`、前端 `127.0.0.1:4173` 下 1/1 通过；覆盖三场考试、两场确认、切换、近期概览、邻近提示、任务 `todo → doing → done`、刷新读回、资料上下文和非法 URL。 | ✅ 通过 |
-| 数据隔离与证据 | 全量测试使用 `phase1-t11-20260715-215612-full-test`，浏览器验收使用 `phase1-t11-20260715-215858-e2e`；截图、trace、report、test-results 仅写入仓库外 `APP_DATA_ROOT/playwright`。 | ✅ 通过 |
+| 数据隔离与证据 | 最终全量测试使用 `phase1-t11-20260715-221112-final-test`，最终浏览器验收使用 `phase1-t11-20260715-221352-final-e2e`；截图、trace、report、test-results 仅写入仓库外 `APP_DATA_ROOT/playwright`。 | ✅ 通过 |
 | 非目标 | 未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 健康熔断或 S3 业务代码。 | ✅ 边界保持 |
 
 T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新的通过证据，不回写或改写 T09 当时的未完成事实。
