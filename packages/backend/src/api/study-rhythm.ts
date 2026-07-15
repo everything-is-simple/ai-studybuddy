@@ -67,6 +67,29 @@ router.get('/exams', (req: Request, res: Response) => {
   }
 });
 
+// ── GET /api/exams/:id ─────────────────────────────────────
+router.get('/exams/:id', (req: Request, res: Response) => {
+  try {
+    const exam = service.getExam(req.query.semesterId, req.params.id);
+    return res.json(okResponse(exam));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
+// ── PATCH /api/exams/:id/confirmation ──────────────────────
+router.patch('/exams/:id/confirmation', (req: Request, res: Response) => {
+  try {
+    const exam = service.confirmExam({
+      semesterId: req.body.semesterId,
+      assessmentAttemptId: req.params.id,
+    });
+    return res.json(okResponse(exam));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
 // ── GET /api/study-tasks ────────────────────────────────────
 router.get('/study-tasks', (req: Request, res: Response) => {
   try {

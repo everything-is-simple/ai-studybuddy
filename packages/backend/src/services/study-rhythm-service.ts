@@ -139,6 +139,23 @@ export class StudyRhythmService {
     return row;
   }
 
+  private requireExam(db: DatabaseType, semesterId: string, assessmentAttemptId: string) {
+    if (!isUuid(assessmentAttemptId)) {
+      throw new StudyRhythmError('EXAM_NOT_FOUND', 404, '考试不存在');
+    }
+    const row = db
+      .prepare(
+        `SELECT a.* FROM assessment_attempts a
+         JOIN course_instances c ON a.course_instance_id = c.id
+         WHERE a.id = ? AND c.semester_id = ?`
+      )
+      .get(assessmentAttemptId, semesterId) as Record<string, unknown> | undefined;
+    if (!row) {
+      throw new StudyRhythmError('EXAM_NOT_FOUND', 404, '考试不存在');
+    }
+    return row;
+  }
+
   private requireTask(db: DatabaseType, taskId: string) {
     if (!isUuid(taskId)) {
       throw new StudyRhythmError('TASK_NOT_FOUND', 404, '任务不存在');
@@ -437,6 +454,66 @@ export class StudyRhythmService {
           .all(semesterId) as Record<string, unknown>[];
       }
       return rows.map((row) => this.toExamDto(row));
+    } finally {
+      db.close();
+    }
+  }
+
+  getExam(semesterId: unknown, assessmentAttemptId: string): AssessmentAttemptDto {
+    if (!isUuid(semesterId)) {
+      throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    }
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      return this.toExamDto(this.requireExam(db, semesterId, assessmentAttemptId));
+    } finally {
+      db.close();
+    }
+  }
+
+  confirmExam(input: { semesterId: unknown; assessmentAttemptId: string }): AssessmentAttemptDto {
+    if (!isUuid(input.semesterId)) {
+      throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    }
+    const semesterId = input.semesterId;
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      return db.transaction(() => {
+        const row = this.requireExam(db, semesterId, input.assessmentAttemptId);
+        const status = String(row.confirmation_status) as ConfirmationStatus;
+        if (status === 'confirmed') {
+          return this.toExamDto(row);
+        }
+        if (status !== 'pending') {
+          throw new StudyRhythmError('EXAM_CONFIRMATION_INVALID', 409, '当前考试状态不允许确认');
+        }
+
+        const now = new Date().toISOString();
+        db.prepare(
+          `UPDATE assessment_attempts
+           SET confirmation_status = 'confirmed', confirmed_at = ?, updated_at = ?
+           WHERE id = ?`
+        ).run(now, now, input.assessmentAttemptId);
+        db.prepare(
+          `INSERT INTO study_events (
+            id, course_instance_id, source_system, event_type, title,
+            evidence_ref, parent_visible, occurred_at, created_at
+          ) VALUES (?, ?, 'S1', 'assessment_attempt_confirmed', '考试日期已确认', ?, 1, ?, ?)`
+        ).run(
+          crypto.randomUUID(),
+          row.course_instance_id,
+          `assessment_attempt:${input.assessmentAttemptId}`,
+          now,
+          now
+        );
+
+        return this.toExamDto({
+          ...row,
+          confirmation_status: 'confirmed',
+          confirmed_at: now,
+          updated_at: now,
+        });
+      })();
     } finally {
       db.close();
     }

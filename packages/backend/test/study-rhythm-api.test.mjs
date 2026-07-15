@@ -90,6 +90,14 @@ async function createExam(port, semesterId, courseInstanceId, overrides = {}) {
   });
 }
 
+async function getExam(port, semesterId, examId) {
+  return requestJson(port, 'GET', `/api/exams/${examId}?semesterId=${semesterId}`);
+}
+
+async function confirmExam(port, semesterId, examId) {
+  return requestJson(port, 'PATCH', `/api/exams/${examId}/confirmation`, { semesterId });
+}
+
 async function createTask(port, semesterId, courseInstanceId, overrides = {}) {
   return requestJson(port, 'POST', '/api/study-tasks', {
     semesterId,
@@ -213,6 +221,106 @@ test('persists attemptType and confirmationStatus with defaults', async (t) => {
   assert.equal(rejected.json.data.attemptType, 'makeup');
   assert.equal(rejected.json.data.confirmationStatus, 'rejected');
   assert.equal(rejected.json.data.confirmedAt, undefined);
+});
+
+test('gets one exam only from the requested ready semester', async (t) => {
+  const backend = await startBackend(t);
+  const semesterA = await initializeReadySemester(backend.port);
+  const semesterB = await initializeReadySemester(backend.port);
+  const courseA = await createCourse(backend.port, semesterA, '数学');
+  const examA = await createExam(backend.port, semesterA, courseA.json.data.id, {
+    name: '数学期中',
+  });
+
+  const found = await getExam(backend.port, semesterA, examA.json.data.id);
+  assert.equal(found.status, 200);
+  assert.equal(found.json.success, true);
+  assert.equal(found.json.data.id, examA.json.data.id);
+  assert.equal(found.json.data.name, '数学期中');
+
+  const crossSemester = await getExam(backend.port, semesterB, examA.json.data.id);
+  assert.equal(crossSemester.status, 404);
+  assert.equal(crossSemester.json.success, false);
+  assert.equal(crossSemester.json.error.code, 'EXAM_NOT_FOUND');
+
+  const missing = await getExam(backend.port, semesterA, crypto.randomUUID());
+  assert.equal(missing.status, 404);
+  assert.equal(missing.json.error.code, 'EXAM_NOT_FOUND');
+
+  const malformed = await getExam(backend.port, semesterA, 'not-a-uuid');
+  assert.equal(malformed.status, 404);
+  assert.equal(malformed.json.error.code, 'EXAM_NOT_FOUND');
+});
+
+test('confirms a pending exam once and immediately updates task priority', async (t) => {
+  const backend = await startBackend(t);
+  const semesterId = await initializeReadySemester(backend.port);
+  const course = await createCourse(backend.port, semesterId, '物理');
+  const exam = await createExam(backend.port, semesterId, course.json.data.id, {
+    name: '物理期中',
+    examAt: '2026-05-20T09:00:00.000Z',
+  });
+  const task = await createTask(backend.port, semesterId, course.json.data.id, {
+    assessmentAttemptId: exam.json.data.id,
+    title: '物理复习',
+  });
+  assert.equal(task.json.data.priorityBucket, 3);
+
+  const first = await confirmExam(backend.port, semesterId, exam.json.data.id);
+  assert.equal(first.status, 200);
+  assert.equal(first.json.success, true);
+  assert.equal(first.json.data.confirmationStatus, 'confirmed');
+  assert.equal(first.json.data.examAt, '2026-05-20T09:00:00.000Z');
+  assert.ok(first.json.data.confirmedAt);
+
+  const second = await confirmExam(backend.port, semesterId, exam.json.data.id);
+  assert.equal(second.status, 200);
+  assert.equal(second.json.data.confirmedAt, first.json.data.confirmedAt);
+
+  const tasks = await requestJson(backend.port, 'GET', `/api/study-tasks?semesterId=${semesterId}`);
+  const refreshedTask = tasks.json.data.find((item) => item.id === task.json.data.id);
+  assert.equal(refreshedTask.priorityBucket, 1);
+
+  const timeline = await requestJson(backend.port, 'GET', `/api/timeline?semesterId=${semesterId}`);
+  const confirmationEvents = timeline.json.data.filter(
+    (event) => event.eventType === 'assessment_attempt_confirmed'
+  );
+  assert.equal(confirmationEvents.length, 1);
+  assert.equal(confirmationEvents[0].title, '考试日期已确认');
+  assert.equal(confirmationEvents[0].courseInstanceId, course.json.data.id);
+  assert.equal(confirmationEvents[0].evidenceRef, `assessment_attempt:${exam.json.data.id}`);
+  assert.equal(confirmationEvents[0].occurredAt, first.json.data.confirmedAt);
+  assert.equal(confirmationEvents[0].parentVisible, true);
+});
+
+test('rejects confirmation for rejected, superseded, missing, and cross-semester exams', async (t) => {
+  const backend = await startBackend(t);
+  const semesterA = await initializeReadySemester(backend.port);
+  const semesterB = await initializeReadySemester(backend.port);
+  const courseA = await createCourse(backend.port, semesterA, '英语');
+  const rejected = await createExam(backend.port, semesterA, courseA.json.data.id, {
+    name: '已拒绝考试',
+    confirmationStatus: 'rejected',
+  });
+  const superseded = await createExam(backend.port, semesterA, courseA.json.data.id, {
+    name: '已替代考试',
+    confirmationStatus: 'superseded',
+  });
+
+  for (const examId of [rejected.json.data.id, superseded.json.data.id]) {
+    const result = await confirmExam(backend.port, semesterA, examId);
+    assert.equal(result.status, 409);
+    assert.equal(result.json.success, false);
+    assert.equal(result.json.error.code, 'EXAM_CONFIRMATION_INVALID');
+  }
+
+  const missing = await confirmExam(backend.port, semesterA, crypto.randomUUID());
+  assert.equal(missing.status, 404);
+  assert.equal(missing.json.error.code, 'EXAM_NOT_FOUND');
+
+  const crossSemester = await confirmExam(backend.port, semesterB, rejected.json.data.id);
+  assert.equal(crossSemester.status, 404);
+  assert.equal(crossSemester.json.error.code, 'EXAM_NOT_FOUND');
 });
 
 // ── 学习任务 ──────────────────────────────────────────────────
