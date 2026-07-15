@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApiRequest } from '../hooks/use-api-request';
-import { createCourse, createExam, getCourses, getExams, getStudyTasks } from '../api/study-rhythm-api';
+import { confirmExam, createCourse, createExam, getCourses, getExams, getStudyTasks } from '../api/study-rhythm-api';
 import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import type { CourseWithExams } from '../types/view-models';
@@ -23,6 +24,8 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
     goal: '',
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [confirmingExamId, setConfirmingExamId] = useState<string | null>(null);
+  const [examActionErrors, setExamActionErrors] = useState<Record<string, string>>({});
 
   const coursesFetcher = useCallback(
     (signal: AbortSignal) => {
@@ -31,8 +34,8 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
         const withDetails = await Promise.all(
           courses.map(async (course) => {
             const [exams, tasks] = await Promise.all([
-              getExams(semesterId, course.id, signal).catch(() => []),
-              getStudyTasks(semesterId, course.id, signal).catch(() => []),
+              getExams(semesterId, course.id, signal),
+              getStudyTasks(semesterId, course.id, signal),
             ]);
             return { course, exams, tasks };
           })
@@ -94,7 +97,7 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
       });
       setExamForm({ name: '', examAt: '', goal: '' });
       setActiveExamCourseId(null);
-      setSuccessMessage('考试目标已创建');
+      setSuccessMessage('考试目标已创建，下一步请确认考试日期');
       await refetch();
     } catch (err) {
       if (err instanceof Error && err.message.includes('学期不存在')) {
@@ -102,6 +105,28 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
       }
     } finally {
       setSubmittingExamFor(null);
+    }
+  };
+
+  const handleConfirmExam = async (examId: string) => {
+    if (!semesterId) return;
+    setConfirmingExamId(examId);
+    setSuccessMessage(null);
+    setExamActionErrors((current) => {
+      const next = { ...current };
+      delete next[examId];
+      return next;
+    });
+    try {
+      await confirmExam(semesterId, examId);
+      setSuccessMessage('考试日期已确认，可以进入考试项目');
+      await refetch();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '考试确认失败';
+      setExamActionErrors((current) => ({ ...current, [examId]: message }));
+      if (message.includes('学期不存在')) onSemesterError?.();
+    } finally {
+      setConfirmingExamId(null);
     }
   };
 
@@ -163,11 +188,28 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
                   ) : (
                     <ul className="exam-list">
                       {exams.map((exam) => (
-                        <li key={exam.id}>
+                        <li key={exam.id} className="exam-item">
                           <strong>{exam.name}</strong>
                           <span>时间：{new Date(exam.examAt).toLocaleString('zh-CN')}</span>
-                          <span>状态：{exam.confirmationStatus}</span>
+                          <span>状态：{formatConfirmationStatus(exam.confirmationStatus)}</span>
                           {exam.goal && <span>目标：{exam.goal}</span>}
+                          {exam.confirmationStatus === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => void handleConfirmExam(exam.id)}
+                              disabled={confirmingExamId === exam.id}
+                            >
+                              {confirmingExamId === exam.id ? '确认中…' : '确认考试日期'}
+                            </button>
+                          )}
+                          {exam.confirmationStatus === 'confirmed' && (
+                            <Link to={`/exams/${exam.id}`}>进入考试项目</Link>
+                          )}
+                          {examActionErrors[exam.id] && (
+                            <p className="form-error" role="alert">
+                              {examActionErrors[exam.id]}
+                            </p>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -216,4 +258,14 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
       </section>
     </div>
   );
+}
+
+function formatConfirmationStatus(status: string): string {
+  const labels: Record<string, string> = {
+    pending: '待确认',
+    confirmed: '已确认',
+    rejected: '已拒绝',
+    superseded: '已替代',
+  };
+  return labels[status] ?? status;
 }

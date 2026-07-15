@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/courses', label: '课程' },
+  { to: '/courses', label: '课程与考试' },
   { to: '/materials', label: '资料' },
 ];
 

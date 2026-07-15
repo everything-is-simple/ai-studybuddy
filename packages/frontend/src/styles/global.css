@@ -441,6 +441,158 @@ button:disabled {
   color: var(--color-danger);
   font-size: 0.9rem;
 }
+
+/* ===== 考试项目工作台 ===== */
+.workbench-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.workbench-eyebrow {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.workbench-header h1 {
+  margin: 4px 0;
+}
+
+.workbench-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+.workbench-metrics div {
+  display: grid;
+  gap: 4px;
+  min-width: 120px;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.workbench-metrics span,
+.overview-list span,
+.task-list span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.exam-switcher-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exam-switcher-links a {
+  padding: 6px 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.exam-switcher-links a[aria-current='page'] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.workbench-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.overview-list,
+.nearby-list,
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.overview-list li {
+  display: grid;
+  gap: 3px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-secondary);
+}
+
+.pending-overview h3 {
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.nearby-list li {
+  padding: 6px 0;
+}
+
+.task-form {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.task-form button {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.task-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-secondary);
+}
+
+.task-list li > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-overdue strong {
+  color: var(--color-danger);
+}
+
+.form-error {
+  width: 100%;
+  margin: 0;
+  color: var(--color-danger);
+}
+
+@media (max-width: 720px) {
+  .workbench-header,
+  .task-list li {
+    flex-direction: column;
+  }
+
+  .workbench-metrics,
+  .workbench-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .task-form {
+    grid-template-columns: 1fr;
+  }
+
+  .task-form button {
+    grid-column: 1;
+  }
+}
 /* ===== Markdown 笔记 ===== */
 .markdown-note {
   line-height: 1.8;

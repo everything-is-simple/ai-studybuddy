@@ -1,4 +1,10 @@
-import type { AssessmentAttemptDto, CourseInstanceDto, StudyTaskDto } from '@ai-studybuddy/shared';
+import type {
+  AssessmentAttemptDto,
+  CourseInstanceDto,
+  StudyTaskDto,
+  StudyTaskStatus,
+  StudyTaskType,
+} from '@ai-studybuddy/shared';
 import { request, requestPage, type ApiPage } from './api-client';
 
 export function getCourses(semesterId: string, signal?: AbortSignal): Promise<CourseInstanceDto[]> {
@@ -21,11 +27,34 @@ export function createCourse(
 
 export function getExams(
   semesterId: string,
-  courseInstanceId: string,
+  courseInstanceId?: string,
   signal?: AbortSignal
 ): Promise<AssessmentAttemptDto[]> {
-  const params = new URLSearchParams({ semesterId, courseInstanceId });
+  const params = new URLSearchParams({ semesterId });
+  if (courseInstanceId) params.set('courseInstanceId', courseInstanceId);
   return request<AssessmentAttemptDto[]>(`/exams?${params.toString()}`, { signal });
+}
+
+export function getExam(
+  semesterId: string,
+  examId: string,
+  signal?: AbortSignal
+): Promise<AssessmentAttemptDto> {
+  const params = new URLSearchParams({ semesterId });
+  return request<AssessmentAttemptDto>(`/exams/${encodeURIComponent(examId)}?${params.toString()}`, { signal });
+}
+
+export function confirmExam(
+  semesterId: string,
+  examId: string,
+  signal?: AbortSignal
+): Promise<AssessmentAttemptDto> {
+  return request<AssessmentAttemptDto>(`/exams/${encodeURIComponent(examId)}/confirmation`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ semesterId }),
+    signal,
+  });
 }
 
 export function createExam(
@@ -49,11 +78,46 @@ export function createExam(
 
 export function getStudyTasks(
   semesterId: string,
-  courseInstanceId: string,
+  courseInstanceId?: string,
   signal?: AbortSignal
 ): Promise<StudyTaskDto[]> {
-  const params = new URLSearchParams({ semesterId, courseInstanceId });
+  const params = new URLSearchParams({ semesterId });
+  if (courseInstanceId) params.set('courseInstanceId', courseInstanceId);
   return request<StudyTaskDto[]>(`/study-tasks?${params.toString()}`, { signal });
+}
+
+export function createStudyTask(
+  data: {
+    semesterId: string;
+    courseInstanceId: string;
+    assessmentAttemptId?: string;
+    knowledgeModuleId?: string;
+    type: StudyTaskType;
+    title: string;
+    estimatedMinutes?: number;
+    deadlineAt?: string;
+  },
+  signal?: AbortSignal
+): Promise<StudyTaskDto> {
+  return request<StudyTaskDto>('/study-tasks', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data),
+    signal,
+  });
+}
+
+export function updateStudyTaskStatus(
+  data: { semesterId: string; taskId: string; status: StudyTaskStatus; occurredAt?: string },
+  signal?: AbortSignal
+): Promise<StudyTaskDto> {
+  const { taskId, ...body } = data;
+  return request<StudyTaskDto>(`/study-tasks/${encodeURIComponent(taskId)}/status`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
 }
 
 export function getTimeline(

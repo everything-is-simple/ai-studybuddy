@@ -1,6 +1,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 
 // 避免 React 18 在 act 环境下输出 "The current testing environment is not configured to support act(...)"。
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,11 +94,28 @@ async function flush() {
   });
 }
 
-async function renderAndSelectCourse() {
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
+async function renderPage(initialEntry = '/materials') {
   await act(async () => {
-    root.render(<MaterialUploadPage semesterId="sem-1" />);
+    root.render(
+      <MemoryRouter
+        initialEntries={[initialEntry]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <LocationProbe />
+        <MaterialUploadPage semesterId="sem-1" />
+      </MemoryRouter>
+    );
   });
   await flush();
+}
+
+async function renderAndSelectCourse() {
+  await renderPage();
 
   const select = container.querySelector<HTMLSelectElement>('select[aria-label="选择课程"]');
   expect(select, '课程选择框应渲染').not.toBeNull();
@@ -186,5 +204,33 @@ describe('MaterialUploadPage 人工补文恢复闭环', () => {
     expect(container.textContent).toContain('已有待执行或运行中的任务');
     await typeIntoTextarea('修改后的正文');
     expect(container.textContent).not.toContain('已有待执行或运行中的任务');
+  });
+});
+
+describe('MaterialUploadPage 课程 URL 上下文', () => {
+  it('合法 courseInstanceId 查询参数会在课程加载后预选并读取资料', async () => {
+    await renderPage(`/materials?courseInstanceId=${STUB_COURSE.id}`);
+
+    const select = container.querySelector<HTMLSelectElement>('select[aria-label="选择课程"]');
+    expect(select?.value).toBe(STUB_COURSE.id);
+    const { getMaterials } = await import('../src/api/note-builder-api');
+    expect(getMaterials).toHaveBeenCalledWith('sem-1', STUB_COURSE.id, expect.any(AbortSignal));
+  });
+
+  it('非法 courseInstanceId 不触发资料请求并显示可恢复提示', async () => {
+    await renderPage('/materials?courseInstanceId=not-a-course');
+
+    const select = container.querySelector<HTMLSelectElement>('select[aria-label="选择课程"]');
+    expect(select?.value).toBe('');
+    expect(container.textContent).toContain('链接中的课程无效');
+    const { getMaterials } = await import('../src/api/note-builder-api');
+    expect(getMaterials).not.toHaveBeenCalled();
+  });
+
+  it('手动切换课程会同步 courseInstanceId 查询参数', async () => {
+    await renderAndSelectCourse();
+
+    const location = container.querySelector<HTMLOutputElement>('[data-testid="location"]');
+    expect(location?.textContent).toBe(`/materials?courseInstanceId=${STUB_COURSE.id}`);
   });
 });

@@ -4,6 +4,7 @@ import { CoursePage } from './pages/course-page';
 import { MaterialUploadPage } from './pages/material-upload-page';
 
 const NotePage = lazy(() => import('./pages/note-page'));
+const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
 
 const SEMESTER_ID_KEY = 'ai-studybuddy:semesterId';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -95,6 +96,14 @@ export function App() {
             element={
               <Suspense fallback={<div className="page">正在加载笔记…</div>}>
                 <NotePage semesterId={semesterId} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/exams/:examId"
+            element={
+              <Suspense fallback={<div className="page">正在加载考试项目…</div>}>
+                <ExamWorkbenchPage semesterId={semesterId} onSemesterError={handleSemesterError} />
               </Suspense>
             }
           />

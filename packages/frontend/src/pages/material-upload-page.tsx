@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApiRequest } from '../hooks/use-api-request';
 import { useMaterialPolling } from '../hooks/use-material-polling';
 import { getCourses } from '../api/study-rhythm-api';
@@ -15,6 +16,7 @@ interface MaterialUploadPageProps {
 }
 
 export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUploadPageProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -24,6 +26,7 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
   const [replacementText, setReplacementText] = useState('');
   const [replacementError, setReplacementError] = useState<string | null>(null);
   const [replacementSubmittingId, setReplacementSubmittingId] = useState<string | null>(null);
+  const [courseContextMessage, setCourseContextMessage] = useState<string | null>(null);
 
   const coursesFetcher = useCallback(
     (signal: AbortSignal) => {
@@ -39,6 +42,19 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
     error: coursesError,
     refetch: refetchCourses,
   } = useApiRequest(coursesFetcher, [semesterId]);
+
+  useEffect(() => {
+    if (coursesLoading || coursesError || !courses) return;
+    const requestedCourseId = searchParams.get('courseInstanceId');
+    if (!requestedCourseId) return;
+    if (courses.some((course) => course.id === requestedCourseId)) {
+      setSelectedCourseId(requestedCourseId);
+      setCourseContextMessage(null);
+      return;
+    }
+    setSelectedCourseId('');
+    setCourseContextMessage('链接中的课程无效或已不属于当前学期，请重新选择课程。');
+  }, [courses, coursesError, coursesLoading, searchParams]);
 
   const enabled = Boolean(semesterId && selectedCourseId);
   const {
@@ -157,6 +173,7 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
 
       {successMessage && <FeedbackMessage state="success" message={successMessage} />}
       {errorMessage && <FeedbackMessage state="error" message={errorMessage} onRetry={() => setErrorMessage(null)} />}
+      {courseContextMessage && <FeedbackMessage state="error" message={courseContextMessage} />}
 
       <section className="card">
         <h2>选择课程</h2>
@@ -171,7 +188,10 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
           <select
             value={selectedCourseId}
             onChange={(event) => {
-              setSelectedCourseId(event.target.value);
+              const courseInstanceId = event.target.value;
+              setSelectedCourseId(courseInstanceId);
+              setCourseContextMessage(null);
+              setSearchParams(courseInstanceId ? { courseInstanceId } : {}, { replace: true });
               handleCancelReplaceText();
             }}
             aria-label="选择课程"

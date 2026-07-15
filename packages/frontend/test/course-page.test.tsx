@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 
 // React 18/19 都需要这个全局标记，否则会警告 "current testing environment is not configured to support act(...)"。
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,11 +18,32 @@ const STUB_COURSE = {
   updatedAt: '2026-07-01T00:00:00.000Z',
 };
 
+const PENDING_EXAM = {
+  id: '22222222-2222-4222-8222-222222222222',
+  courseInstanceId: STUB_COURSE.id,
+  name: '期中考试',
+  attemptType: 'normal',
+  examAt: '2026-05-20T09:00:00.000Z',
+  confirmationStatus: 'pending',
+};
+
+const CONFIRMED_EXAM = {
+  ...PENDING_EXAM,
+  confirmationStatus: 'confirmed',
+  confirmedAt: '2026-07-15T12:00:00.000Z',
+};
+
+let mockExams: Array<typeof PENDING_EXAM | typeof CONFIRMED_EXAM> = [];
+
 vi.mock('../src/api/study-rhythm-api', () => ({
   getCourses: vi.fn(async () => [STUB_COURSE]),
   createCourse: vi.fn(async () => STUB_COURSE),
-  getExams: vi.fn(async () => []),
+  getExams: vi.fn(async () => mockExams),
   createExam: vi.fn(async () => ({ id: 'exam-1' })),
+  confirmExam: vi.fn(async () => {
+    mockExams = [CONFIRMED_EXAM];
+    return CONFIRMED_EXAM;
+  }),
   getStudyTasks: vi.fn(async () => []),
   getTimeline: vi.fn(async () => ({ items: [], pagination: { total: 0 } })),
 }));
@@ -35,6 +57,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  mockExams = [];
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
@@ -57,7 +80,11 @@ async function flush() {
 
 async function renderPage() {
   await act(async () => {
-    root.render(<CoursePage semesterId="sem-1" />);
+    root.render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <CoursePage semesterId="sem-1" />
+      </MemoryRouter>
+    );
   });
   await flush();
 }
@@ -116,5 +143,59 @@ describe('CoursePage 考试表单受控值', () => {
     // examAt 会经过 new Date(...).toISOString()：只断言是有效 ISO 且指向 2026-05-20。
     expect(typeof call.examAt).toBe('string');
     expect(call.examAt).toMatch(/^2026-05-20T/);
+  });
+});
+
+describe('CoursePage 考试确认入口', () => {
+  it('确认 pending 考试时禁用按钮，成功后显示考试项目入口', async () => {
+    mockExams = [PENDING_EXAM];
+    let resolveConfirmation: ((value: typeof CONFIRMED_EXAM) => void) | undefined;
+    const { confirmExam } = await import('../src/api/study-rhythm-api');
+    (confirmExam as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveConfirmation = resolve;
+        })
+    );
+    await renderPage();
+
+    expect(container.textContent).toContain('待确认');
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
+      button.textContent?.includes('确认考试日期')
+    );
+    expect(confirmButton).not.toBeNull();
+    await act(async () => {
+      confirmButton!.click();
+    });
+    expect(confirmButton!.disabled).toBe(true);
+    expect(confirmExam).toHaveBeenCalledWith('sem-1', PENDING_EXAM.id);
+
+    mockExams = [CONFIRMED_EXAM];
+    await act(async () => {
+      resolveConfirmation?.(CONFIRMED_EXAM);
+    });
+    await flush();
+
+    const link = container.querySelector<HTMLAnchorElement>(`a[href="/exams/${PENDING_EXAM.id}"]`);
+    expect(link).not.toBeNull();
+    expect(link?.textContent).toContain('进入考试项目');
+  });
+
+  it('确认失败时在考试区域显示错误并允许重试', async () => {
+    mockExams = [PENDING_EXAM];
+    const { confirmExam } = await import('../src/api/study-rhythm-api');
+    (confirmExam as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('当前考试状态不允许确认'));
+    await renderPage();
+
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
+      button.textContent?.includes('确认考试日期')
+    );
+    await act(async () => {
+      confirmButton!.click();
+    });
+    await flush();
+
+    expect(container.textContent).toContain('当前考试状态不允许确认');
+    expect(confirmButton!.disabled).toBe(false);
   });
 });
