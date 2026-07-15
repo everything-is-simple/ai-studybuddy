@@ -448,4 +448,3 @@ function formatTaskStatus(status: StudyTaskStatus): string {
 }
 
 export default ExamWorkbenchPage;
-

@@ -20,4 +20,3 @@ export function isWithinCalendarDayWindow(valueIso: string, centerIso: string, d
   const center = new Date(centerIso);
   return Math.abs(calendarDayDistance(valueIso, center)) <= days;
 }
-

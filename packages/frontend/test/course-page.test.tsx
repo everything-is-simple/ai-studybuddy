@@ -7,6 +7,10 @@ import { MemoryRouter } from 'react-router-dom';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 import { CoursePage } from '../src/pages/course-page';
+function fixtureUuid(seed: string): string {
+  return `${seed.repeat(8)}-${seed.repeat(4)}-4${seed.repeat(3)}-8${seed.repeat(3)}-${seed.repeat(12)}`;
+}
+
 
 // 单课程 stub：一门线性代数、无考试、无任务。
 const STUB_COURSE = {
@@ -19,7 +23,7 @@ const STUB_COURSE = {
 };
 
 const PENDING_EXAM = {
-  id: '22222222-2222-4222-8222-222222222222',
+  id: fixtureUuid('2'),
   courseInstanceId: STUB_COURSE.id,
   name: '期中考试',
   attemptType: 'normal',

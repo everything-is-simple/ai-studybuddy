@@ -8,6 +8,10 @@ import { ExamWorkbenchPage } from '../src/pages/exam-workbench-page';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
+function fixtureUuid(seed: string): string {
+  return `${seed.repeat(8)}-${seed.repeat(4)}-4${seed.repeat(3)}-8${seed.repeat(3)}-${seed.repeat(12)}`;
+}
+
 describe('考试工作台日期规则', () => {
   it('按本地日历日计算跨午夜倒计时，而不是按不足 24 小时算 0 天', () => {
     const now = new Date(2026, 6, 15, 23, 30);
@@ -37,7 +41,7 @@ describe('考试工作台日期规则', () => {
 });
 
 const COURSE_A = {
-  id: '11111111-1111-4111-8111-111111111111',
+  id: fixtureUuid('1'),
   semesterId: 'semester-1',
   name: '线性代数',
   createdAt: '2026-07-01T00:00:00.000Z',
@@ -45,12 +49,12 @@ const COURSE_A = {
 };
 const COURSE_B = {
   ...COURSE_A,
-  id: '22222222-2222-4222-8222-222222222222',
+  id: fixtureUuid('2'),
   name: '大学英语',
 };
-const CURRENT_EXAM_ID = '33333333-3333-4333-8333-333333333333';
-const OTHER_EXAM_ID = '44444444-4444-4444-8444-444444444444';
-const PENDING_EXAM_ID = '55555555-5555-4555-8555-555555555555';
+const CURRENT_EXAM_ID = fixtureUuid('3');
+const OTHER_EXAM_ID = fixtureUuid('4');
+const PENDING_EXAM_ID = fixtureUuid('5');
 
 function localIsoAfterDays(days: number, hour = 9): string {
   const value = new Date();
@@ -101,7 +105,7 @@ function resetFixtures() {
   ];
   allTasks = [
     {
-      id: '66666666-6666-4666-8666-666666666666',
+      id: fixtureUuid('6'),
       courseInstanceId: COURSE_A.id,
       assessmentAttemptId: CURRENT_EXAM_ID,
       type: 'custom',
@@ -114,7 +118,7 @@ function resetFixtures() {
       updatedAt: new Date().toISOString(),
     },
     {
-      id: '77777777-7777-4777-8777-777777777777',
+      id: fixtureUuid('7'),
       courseInstanceId: COURSE_A.id,
       assessmentAttemptId: CURRENT_EXAM_ID,
       type: 'material_note',
@@ -128,7 +132,7 @@ function resetFixtures() {
       updatedAt: new Date().toISOString(),
     },
     {
-      id: '88888888-8888-4888-8888-888888888888',
+      id: fixtureUuid('8'),
       courseInstanceId: COURSE_B.id,
       assessmentAttemptId: OTHER_EXAM_ID,
       type: 'custom',
@@ -155,7 +159,7 @@ vi.mock('../src/api/study-rhythm-api', () => ({
   }),
   createStudyTask: vi.fn(async (data) => {
     const task = {
-      id: '99999999-9999-4999-8999-999999999999',
+      id: fixtureUuid('9'),
       ...data,
       status: 'todo',
       derivedOverdue: false,
@@ -322,7 +326,7 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     await flush();
     expect(updateStudyTaskStatus).toHaveBeenCalledWith({
       semesterId: 'semester-1',
-      taskId: '66666666-6666-4666-8666-666666666666',
+      taskId: fixtureUuid('6'),
       status: 'doing',
     });
 
@@ -330,7 +334,7 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     await flush();
     expect(updateStudyTaskStatus).toHaveBeenCalledWith({
       semesterId: 'semester-1',
-      taskId: '66666666-6666-4666-8666-666666666666',
+      taskId: fixtureUuid('6'),
       status: 'done',
     });
   });
