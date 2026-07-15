@@ -1,14 +1,12 @@
 # Phase 1-T00 Collaboration Baseline and Roadmap Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** 修正 Phase 0.8 完成后的协作说明和文档事实，建立多 AI、多分支协作的统一规则源，并把 Phase 1 从阶段目标拆成有门禁、可执行的任务序列。
 
 **Architecture:** 以新建的 `docs/12-开发规范-Dev-Rules.md` 作为工具无关的协作规则 SoT；`CLAUDE.md` 和 `AGENTS.md` 只保留各自入口、当前状态、常用命令和对 `docs/12` 的引用。`docs/00` 负责登记与触发状态，`docs/04` 负责执行顺序，`docs/07` 负责文档分层和 PRD 门禁事实。
 
 **Tech Stack:** Markdown、PowerShell 文档治理脚本、Git。
 
-**Status:** Step 1–5 已完成并经过一次风险修订；等待用户明确批准后进入 Step 6–16。
+**Status:** 已完成；文档交付已合并至 `master`（commit `ec536df`）。
 
 ---
 
@@ -232,3 +230,4 @@
 ## 7. 执行补充记录
 
 - 2026-07-15 执行一致性搜索时发现 `docs/09-测试验收计划-Test-Plan.md` 仍保留“Phase 0.8 可以开始”的过期表述；为满足 T00 协作基线目标，做最小文本修正，不改变 T09 验收事实。
+- 2026-07-15：完成计划的 Step 6–16，交付 `CLAUDE.md`、`AGENTS.md`、`docs/00`、`docs/04`、`docs/07`、`docs/09` 和新建 `docs/12`；文档治理与差异检查通过，提交为 `docs(phase1): 更新协作基线与任务路线图`（`ec536df`）。
