@@ -4,6 +4,7 @@ import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
 import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
+import { ErrorFixerService } from './error-fixer-service';
 import {
   AiProviderError,
   AiProviderRouter,
@@ -119,6 +120,7 @@ export interface PracticeRunnerServiceOptions {
   now?: () => string;
   id?: () => string;
   retryDelayMs?: number;
+  errorFixer?: ErrorFixerService;
 }
 
 function nowIso(): string {
@@ -222,12 +224,14 @@ export class PracticeRunnerService {
   private readonly now: () => string;
   private readonly id: () => string;
   private readonly retryDelayMs: number;
+  private readonly errorFixer: ErrorFixerService;
 
   constructor(options?: PracticeRunnerServiceOptions) {
     this.ai = options?.ai ?? new AiProviderRouter();
     this.now = options?.now ?? nowIso;
     this.id = options?.id ?? uuid;
     this.retryDelayMs = options?.retryDelayMs ?? 5000;
+    this.errorFixer = options?.errorFixer ?? new ErrorFixerService({ id: this.id });
   }
 
   openReadySemesterDb(semesterId: string): DatabaseType {
@@ -794,6 +798,8 @@ export class PracticeRunnerService {
           timestamp,
           sessionId
         );
+
+        this.errorFixer.archiveIncorrectPracticeAnswers(db, sessionId, timestamp);
 
         db.prepare(
           `INSERT INTO study_events (

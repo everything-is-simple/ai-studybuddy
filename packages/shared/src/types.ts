@@ -320,6 +320,53 @@ export interface PracticeAnswerRecord {
 }
 
 // ============================================================
+// S4 ErrorFixer 存储/领域记录（非公开 API DTO）
+// ============================================================
+
+export type MistakeStatus = 'pending_review' | 'needs_review' | 'mastered';
+export type MistakeEvidenceType = 'practice_error';
+export type WeakPointStatus = 'active' | 'mastered';
+
+export interface MistakeRecord {
+  id: string;
+  courseInstanceId: string;
+  assessmentAttemptId?: string;
+  knowledgeModuleId: string;
+  questionId: string;
+  firstPracticeAnswerId: string;
+  latestPracticeAnswerId: string;
+  status: MistakeStatus;
+  errorCount: number;
+  firstErrorAt: string;
+  latestErrorAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MistakeEvidenceRecord {
+  id: string;
+  mistakeId: string;
+  sourcePracticeAnswerId: string;
+  evidenceType: MistakeEvidenceType;
+  courseInstanceId: string;
+  knowledgeModuleId: string;
+  questionId: string;
+  occurredAt: string;
+  createdAt: string;
+}
+
+export interface WeakPointRecord {
+  id: string;
+  courseInstanceId: string;
+  knowledgeModuleId: string;
+  status: WeakPointStatus;
+  evidenceCount: number;
+  firstDetectedAt: string;
+  latestDetectedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+// ============================================================
 // S3 PracticeRunner 公开 API DTO
 // 作答前 DTO 不包含正确答案、可接受答案、解析或 AI 元数据。
 // ============================================================

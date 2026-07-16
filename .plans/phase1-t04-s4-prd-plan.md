@@ -13,7 +13,7 @@
 
 本任务是文档任务，不实施 S4。提交范围只允许：
 
-- 新建 `docs/subsystems/05-S4-错题改错子系统PRD-ErrorFixer.md`；
+- 新建 `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`；
 - 更新 `docs/00-文档索引-Index.md` 的 S4 PRD 状态与索引记录；
 - 更新 `docs/04-开发任务清单-Todo-List.md` 的 T04 文档任务完成证据和下一门禁；
 - 保留本计划文件作为决策和审批记录。
@@ -41,7 +41,7 @@
 
 ## 3. 获批后将创建的 PRD 结构
 
-目标文件：`docs/subsystems/05-S4-错题改错子系统PRD-ErrorFixer.md`。
+目标文件：`docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`。
 
 PRD 使用与 S3 一致的轻量结构，并只定义以下产品设计层内容：
 
@@ -65,7 +65,7 @@ PRD 使用与 S3 一致的轻量结构，并只定义以下产品设计层内容
 
 ### 步骤 2：创建 S4 PRD 正文
 
-创建 `docs/subsystems/05-S4-错题改错子系统PRD-ErrorFixer.md`，按第 3 节列出的结构写入产品需求和边界。
+创建 `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`，按第 3 节列出的结构写入产品需求和边界。
 
 文档必须以现有 S3 事实为准：错误作答来自 `practice_answers.is_correct = false`，并通过 `question_id`、`session_id` 和 `Question.knowledge_module_id` 保持可追溯关系。不得把 S4 写成 S3 的补充 API，也不得将概念对象描述为已存在的表或实现。
 
@@ -128,7 +128,7 @@ T04A、T04B 和 T05 各自必须先有独立 `.plans/`、独立审查和用户�
 
 ### 门禁与文件范围
 
-- 计划阶段只新增 `.plans/phase1-t04-s4-prd-plan.md`，没有创建 `docs/subsystems/05-S4-错题改错子系统PRD-ErrorFixer.md`。
+- 计划阶段只新增 `.plans/phase1-t04-s4-prd-plan.md`，没有创建 `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`。
 - 获批后文件范围严格限于 S4 PRD、`docs/00`、`docs/04` 和本计划；没有业务代码、Schema 或测试文件。
 - 文档索引确认 S4 的触发条件满足，但 `docs/12` 的批准门禁仍然有效。
 - 已识别并隔离 `docs/04` 的过期“计划已批准”措辞；计划没有把这项不一致视为用户批准，也不会在批准前修改该正式文档。
@@ -156,4 +156,4 @@ T04A、T04B 和 T05 各自必须先有独立 `.plans/`、独立审查和用户�
 
 用户已于 2026-07-16 明确回复“批准执行 Phase 1-T04 S4 PRD 计划”。本次授权仅覆盖创建 S4 PRD、同步 `docs/00`/`docs/04`、运行纯文档验证以及按仓库流程提交、快进合并和推送；不授权 T04A/T04B/T05 或任何业务实现。
 
-本次已按授权创建 `docs/subsystems/05-S4-错题改错子系统PRD-ErrorFixer.md`，同步 `docs/00` v2.14 与 `docs/04` v1.22，并在任务分支通过文档治理和 `git diff --check`。T04A、T04B、T05 继续等待各自独立计划和用户明确批准。
+本次已按授权创建 `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`，同步 `docs/00` v2.14 与 `docs/04` v1.22，并在任务分支通过文档治理和 `git diff --check`。T04A、T04B、T05 继续等待各自独立计划和用户明确批准。

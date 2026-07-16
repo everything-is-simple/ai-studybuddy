@@ -324,7 +324,7 @@ test('submit grades objective answers, records missing answers, updates session,
   assert.equal(state.events[0].parent_visible, 1);
   assert.equal(state.events[0].occurred_at, state.session.submitted_at);
   assert.doesNotMatch(state.events[0].title, /零向量|VECTOR|A,C/);
-  assert.deepEqual(state.futureTables, []);
+  assert.deepEqual(state.futureTables.map((row) => row.name).sort(), ['mistakes', 'weak_points']);
 });
 
 test('submit treats equal time limit and unlimited sessions as not overtime', async (t) => {

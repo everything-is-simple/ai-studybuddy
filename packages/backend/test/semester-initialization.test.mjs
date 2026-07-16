@@ -233,7 +233,7 @@ test('versioned migration applies each version once and rejects a gap', async (t
   }
 });
 
-test('semester migrations apply v2, v3 and v4 schema changes', async (t) => {
+test('semester migrations apply through current schema changes', async (t) => {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t02-v2-fresh-'));
   t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 
@@ -241,8 +241,8 @@ test('semester migrations apply v2, v3 and v4 schema changes', async (t) => {
   const { getAppliedVersion } = await import('../dist/db/migrations.js');
   const db = initSemesterDbAtPath(path.join(dataRoot, 'semester.db'));
   try {
-    assert.equal(getAppliedVersion(db, 'semester'), 4);
-    for (const table of ['practice_sessions', 'questions', 'practice_answers']) {
+    assert.equal(getAppliedVersion(db, 'semester'), 5);
+    for (const table of ['practice_sessions', 'questions', 'practice_answers', 'mistakes', 'mistake_evidence', 'weak_points']) {
       assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
     }
     assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schedule_entries'").get());
@@ -278,7 +278,7 @@ test('semester migrations apply v2, v3 and v4 schema changes', async (t) => {
   }
 });
 
-test('semester migrations upgrade an existing v1 database through v4', async (t) => {
+test('semester migrations upgrade an existing v1 database through current schema', async (t) => {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t02-v2-upgrade-'));
   t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
 
@@ -319,8 +319,8 @@ test('semester migrations upgrade an existing v1 database through v4', async (t)
       confirmation_status: 'pending',
       confirmed_at: null,
     });
-    assert.equal(getAppliedVersion(db, 'semester'), 4);
-    for (const table of ['practice_sessions', 'questions', 'practice_answers']) {
+    assert.equal(getAppliedVersion(db, 'semester'), 5);
+    for (const table of ['practice_sessions', 'questions', 'practice_answers', 'mistakes', 'mistake_evidence', 'weak_points']) {
       assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
     }
   } finally {

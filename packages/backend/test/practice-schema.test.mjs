@@ -195,10 +195,10 @@ async function openFreshSemester(t, prefix) {
   return { db, migrations };
 }
 
-test('fresh semester database applies v4 with S3 tables, indexes, and triggers exactly once', async (t) => {
+test('fresh semester database applies current migrations with S3 tables, indexes, and triggers exactly once', async (t) => {
   const { db, migrations } = await openFreshSemester(t, 'studybuddy-t03a-fresh-');
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 4);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 5);
   assert.deepEqual(columnNames(db, 'practice_sessions'), [
     'id',
     'course_instance_id',
@@ -290,12 +290,12 @@ test('fresh semester database applies v4 with S3 tables, indexes, and triggers e
 
   migrations.migrateSemesterDb(db);
   assert.equal(
-    db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count,
+    db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 5").get().count,
     1
   );
 });
 
-test('v3 semester database upgrades to v4 without losing existing S1 or S2 data', async (t) => {
+test('v3 semester database upgrades to current schema without losing existing S1 or S2 data', async (t) => {
   const dir = await withTempDir('studybuddy-t03a-upgrade-');
   const { openDbAtPath } = await import('../dist/db/connection.js');
   const migrations = await import('../dist/db/migrations.js');
@@ -315,9 +315,9 @@ test('v3 semester database upgrades to v4 without losing existing S1 or S2 data'
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 4);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 5);
   assert.equal(
-    db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count,
+    db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 5").get().count,
     1
   );
   assert.equal(db.prepare('SELECT name FROM course_instances WHERE id = ?').get('course-1').name, '线性代数');
@@ -328,7 +328,7 @@ test('v3 semester database upgrades to v4 without losing existing S1 or S2 data'
 
   migrations.migrateSemesterDb(db);
   assert.equal(
-    db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count,
+    db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 5").get().count,
     1
   );
 });
