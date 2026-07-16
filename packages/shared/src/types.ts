@@ -318,3 +318,44 @@ export interface PracticeAnswerRecord {
   answerOrder: number;
   createdAt: string;
 }
+
+// ============================================================
+// S3 PracticeRunner 公开 API DTO
+// 作答前 DTO 不包含正确答案、可接受答案、解析或 AI 元数据。
+// ============================================================
+
+export interface CreatePracticeSessionRequest {
+  semesterId: string;
+  courseInstanceId: string;
+  assessmentAttemptId?: string | null;
+  knowledgeModuleIds: string[];
+  questionCount?: number;
+  difficultyPreference?: PracticeDifficultyPreference;
+  timeLimitSeconds?: number | null;
+}
+
+export interface PracticeQuestionForStudentDto {
+  id: string;
+  type: PracticeQuestionType;
+  stem: string;
+  options?: string[];
+  difficulty: PracticeDifficulty;
+  knowledgeModuleId: string;
+  questionOrder: number;
+}
+
+export interface PracticeSessionDetailDto {
+  id: string;
+  courseInstanceId: string;
+  assessmentAttemptId?: string | null;
+  status: PracticeSessionStatus;
+  questionCount: number;
+  timeLimitSeconds: number | null;
+  difficultyPreference: PracticeDifficultyPreference;
+  startedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  questions: PracticeQuestionForStudentDto[];
+}
+
+export type CreatePracticeSessionResponse = PracticeSessionDetailDto;
