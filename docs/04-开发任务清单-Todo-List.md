@@ -583,6 +583,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 已掌握后降低复习优先级，不删除历史记录
 - [ ] 测试：优先级派生逻辑覆盖各场景
 
+> **T05 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t05-feedback-rules-plan` 创建 `.plans/phase1-t05-feedback-rules-plan.md`，完成计划自审并等待用户明确批准。该计划仅设计 T05 回流规则，未实现业务代码、未改 Schema、未勾选上述实现项；明确不触碰 AI 错因建议、同类题/变题生成、S5/S6/S7、Worker、真实 Provider 或跨学期复用。
+
 #### T06：S6 家长报告简版（拆为 PRD + 2 个实现子任务）
 
 **T06 PRD**（门禁：Phase 1 后期且准备正式发送家长报告；T06 文档计划已批准）
