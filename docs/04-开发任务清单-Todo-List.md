@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.18
+**版本**：v1.19
 **日期**：2026-07-16
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema，以及 T03B 练习生成 API。当前下一实现门禁为 T03C，仍需独立计划和用户明确批准；S3 Worker/前端尚未开始。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API，以及 T03C 限时作答与规则批改。当前下一实现门禁为 T03D，仍需独立计划和用户明确批准；S3 Worker/前端尚未开始。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B ✅；下一门禁 T03C） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C ✅；下一门禁 T03D） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -454,7 +454,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 5 | Phase 1-T03：S3 PRD 编写 | ✅ | 按门禁创建 S3 轻量 PRD；不写业务代码 |
 | 6 | Phase 1-T03A：S3 数据库与 Schema | ✅ | 学期库 migration v4、`practice_sessions`、`questions`、`practice_answers`、最小 shared 类型与数据库约束/升级测试已完成；不含 API |
 | 7 | Phase 1-T03B：S3 练习生成 API | ✅ | AI 根据知识模块生成选择题/填空题并入库；不含批改 |
-| 8 | Phase 1-T03C：S3 限时作答与规则批改 | ⏳ | 学生限时作答、客观题规则批改、记录逐题结果；不含错题归档 |
+| 8 | Phase 1-T03C：S3 限时作答与规则批改 | ✅ | 学生限时作答、客观题规则批改、记录逐题结果；不含错题归档 |
 | 9 | Phase 1-T03D：S3 练习前端闭环 | ⏳ | 浏览器可发起练习、作答、查看批改结果；集成进工作台”练习”区 |
 | 10 | Phase 1-T04：S4 PRD 编写 | ⏳ | S3 MVP 验收后触发；创建 S4 轻量 PRD |
 | 11 | Phase 1-T04A：S4 错题归档与 Schema | ⏳ | 创建 `mistakes`、`weak_points` 表；练习错题自动归档 |
@@ -527,18 +527,20 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T03B 完成证据（2026-07-16）**：已新增 `PracticeRunnerService`、作答前公开 DTO、`POST /api/practice-sessions` 和 `GET /api/practice-sessions/:id`；练习生成只读取知识模块摘要/证据，AI 成功后同事务写入 `practice_sessions` 与 `questions`，返回给学生的题目隐藏正确答案、可接受答案、解析、来源证据和 AI 元数据。新增 `practice-generation-api.test.mjs` 使用本地 mock OpenAI-compatible Provider 覆盖成功入库、答案隐藏、AI 失败不落空 session、坏 JSON 不部分写入和跨课程模块调用 AI 前拒绝。验证通过：`pnpm type-check`、后端 build、前端 build、专项 4/4、隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t03b-full-test` 下 `pnpm test`（后端 131/131、前端 32/32）。未实现提交作答、规则批改、`practice_answers` 写入、StudyEvent、前端或错题归档。
 
-> **T03A/T03B 主线修复证据（2026-07-16）**：修复分支 `codex/phase1-t03ab-master-repair` 已将 T03A/T03B 既有实现快进合并到 `master` 并推送 `origin/master`，master 提交为 `a42090d`。主线复验通过：`pnpm type-check`、后端 build、前端 build、`practice-schema.test.mjs` 7/7、`practice-generation-api.test.mjs` 4/4、`pnpm test`（后端 131/131、前端 32/32）、文档治理检查与 `git diff --check`。额外修复 `@ai-studybuddy/shared` 声明产物漂移，保证 recursive type-check 先重建 shared 声明。T03C 仍未实施，S4/S5-S7 仍未触发。
+> **T03A/T03B 主线修复证据（2026-07-16）**：修复分支 `codex/phase1-t03ab-master-repair` 已将 T03A/T03B 既有实现快进合并到 `master` 并推送 `origin/master`，master 提交为 `a42090d`。主线复验通过：`pnpm type-check`、后端 build、前端 build、`practice-schema.test.mjs` 7/7、`practice-generation-api.test.mjs` 4/4、`pnpm test`（后端 131/131、前端 32/32）、文档治理检查与 `git diff --check`。额外修复 `@ai-studybuddy/shared` 声明产物漂移，保证 recursive type-check 先重建 shared 声明。该次修复当时未实施 T03C，S4/S5-S7 仍未触发。
 
 - [x] `PracticeRunnerService` 按知识模块和难度选题或调 AI 生成
 - [x] `POST /api/practice-sessions`（创建练习，AI 生成题目入库）
 - [x] `GET /api/practice-sessions/:id`（获取练习与题目）
 - [x] 测试：AI 生成解析、题目入库与关联正确
 
-**T03C 批改**（门禁：T03B 已验收；需独立计划并获批）
-- [ ] `POST /api/practice-sessions/:id/submit`（提交作答，规则批改客观题）
-- [ ] 批改后写入 `practice_answers`，计算 session 得分
-- [ ] 错题事实标记并写入 `practice_completed` 事件
-- [ ] 测试：选择题/填空题批改逻辑、得分计算、事件写入
+**T03C 批改（已完成）**（已按获批计划实施并通过验收；下一门禁为 T03D）
+- [x] `POST /api/practice-sessions/:id/submit`（提交作答，规则批改客观题）
+- [x] 批改后写入 `practice_answers`，计算 session 得分
+- [x] 错题事实标记并写入 `practice_completed` 事件
+- [x] 测试：选择题/填空题批改逻辑、得分计算、事件写入
+
+> **T03C 完成证据（2026-07-16）**：已新增 `POST /api/practice-sessions/:id/submit` 与 shared 提交/批改 DTO；客观题规则批改覆盖单选 trim+大小写归一、多选集合全等、填空 NFKC/大小写/空白归一及可接受答案。提交事务内写入每题 `practice_answers`，将 `practice_sessions` 更新为 `graded` 并计算 `total_score`、`correct_rate`、`overtime`、`total_duration_seconds`、`submitted_at`、`graded_at`，同时写入摘要化 `practice_completed` StudyEvent（`evidence_ref=practice_session:<id>`，不写题干或答案）。新增 `practice-submit-api.test.mjs` 覆盖成功批改、缺答、超时、重复提交、未知/跨 session 题目、非法答案/用时、跨学期隔离、StudyEvent 与不创建 `mistakes`/`weak_points`。验证通过：`pnpm type-check`、后端 build、前端 build、T03C 专项 4/4、T03B 回归 4/4、后端/前端全量测试、文档治理检查与 `git diff --check`。任务分支 `codex/phase1-t03c-practice-submit-grading`；未实现前端练习页面、错题归档、S4 PRD/Schema、S5-S7、真实外部 Provider smoke 或 Worker。
 
 **T03D 前端**（门禁：T03C 已验收；需独立计划并获批）
 - [ ] 前端 API 封装：创建练习、获取题目、提交作答

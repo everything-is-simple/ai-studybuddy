@@ -359,3 +359,34 @@ export interface PracticeSessionDetailDto {
 }
 
 export type CreatePracticeSessionResponse = PracticeSessionDetailDto;
+
+export interface SubmitPracticeAnswerInputDto {
+  questionId: string;
+  answer?: string | null;
+  timeSpentSeconds?: number | null;
+}
+
+export interface SubmitPracticeSessionRequest {
+  semesterId: string;
+  answers: SubmitPracticeAnswerInputDto[];
+  totalDurationSeconds: number;
+}
+
+export interface PracticeAnswerResultDto {
+  questionId: string;
+  studentAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+  explanation?: string | null;
+}
+
+export interface SubmitPracticeSessionResponse {
+  sessionId: string;
+  status: 'graded';
+  totalScore: number;
+  questionCount: number;
+  correctRate: number;
+  overtime: boolean;
+  totalDurationSeconds: number;
+  answers: PracticeAnswerResultDto[];
+}

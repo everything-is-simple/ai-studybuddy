@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import type { ApiError, ApiSuccess, CreatePracticeSessionResponse } from '@ai-studybuddy/shared';
+import type {
+  ApiError,
+  ApiSuccess,
+  CreatePracticeSessionResponse,
+  SubmitPracticeSessionResponse,
+} from '@ai-studybuddy/shared';
 import { PracticeRunnerError, PracticeRunnerService } from '../services/practice-runner-service';
 
 const router: Router = Router();
@@ -31,6 +36,15 @@ router.post('/practice-sessions', async (req: Request, res: Response) => {
 router.get('/practice-sessions/:id', (req: Request, res: Response) => {
   try {
     return res.json(ok(service.getPracticeSession(req.query.semesterId, req.params.id)));
+  } catch (error) {
+    return handle(error, res);
+  }
+});
+
+router.post('/practice-sessions/:id/submit', (req: Request, res: Response) => {
+  try {
+    const result: SubmitPracticeSessionResponse = service.submitPracticeSession(req.params.id, req.body);
+    return res.json(ok(result));
   } catch (error) {
     return handle(error, res);
   }

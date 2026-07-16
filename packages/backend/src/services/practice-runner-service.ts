@@ -16,9 +16,12 @@ import type {
   CreatePracticeSessionResponse,
   PracticeDifficulty,
   PracticeDifficultyPreference,
+  PracticeAnswerResultDto,
   PracticeQuestionForStudentDto,
   PracticeQuestionType,
   PracticeSessionDetailDto,
+  SubmitPracticeSessionRequest,
+  SubmitPracticeSessionResponse,
 } from '@ai-studybuddy/shared';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -58,6 +61,46 @@ interface RawAiQuestion {
   difficulty?: unknown;
   knowledge_module_id?: unknown;
   explanation?: unknown;
+}
+
+interface SubmitAnswerInput {
+  questionId: string;
+  answer: unknown;
+  timeSpentSeconds: number | null;
+}
+
+interface ValidSubmitInput {
+  semesterId: string;
+  answers: SubmitAnswerInput[];
+  totalDurationSeconds: number;
+}
+
+interface PracticeSessionRow {
+  id: string;
+  course_instance_id: string;
+  status: string;
+  question_count: number;
+  time_limit_seconds: number | null;
+}
+
+interface PracticeQuestionRow {
+  id: string;
+  type: PracticeQuestionType;
+  options_json: string | null;
+  correct_answer: string;
+  acceptable_answers_json: string | null;
+  explanation: string | null;
+  question_order: number;
+}
+
+interface GradedAnswer {
+  questionId: string;
+  studentAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+  timeSpentSeconds: number | null;
+  answerOrder: number;
+  explanation: string | null;
 }
 
 export class PracticeRunnerError extends Error {
@@ -110,6 +153,37 @@ function positiveIntegerOrNull(value: unknown): number | null {
 
 function delay(ms: number): Promise<void> {
   return ms <= 0 ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function nonNegativeInteger(value: unknown, code: string, message: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0)
+    throw new PracticeRunnerError(code, 400, message);
+  return value;
+}
+
+function optionalNonNegativeInteger(value: unknown, code: string, message: string): number | null {
+  if (value === undefined || value === null) return null;
+  return nonNegativeInteger(value, code, message);
+}
+
+function normalizeFillBlankAnswer(value: string): string {
+  return value.normalize('NFKC').trim().toLowerCase().replace(/\s+/g, '');
+}
+
+function parseJsonArray(value: string | null, message: string): string[] {
+  if (!value) return [];
+  const parsed = JSON.parse(value) as unknown;
+  if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== 'string'))
+    throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, message);
+  return parsed;
+}
+
+function normalizeStudentAnswer(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string')
+    throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '答案格式不合法');
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
 }
 
 function normalizeAnswerLetters(value: unknown, min: number, max: number): string {
@@ -261,6 +335,125 @@ export class PracticeRunnerService {
       questionCount,
       difficultyPreference,
       timeLimitSeconds: positiveIntegerOrNull(input.timeLimitSeconds),
+    };
+  }
+
+  private validateSubmitInput(input: SubmitPracticeSessionRequest): ValidSubmitInput {
+    const semesterId = requiredUuid(input.semesterId, 'PRACTICE_SUBMIT_INPUT_INVALID', 'semesterId 必须是有效 UUID');
+    if (!Array.isArray(input.answers))
+      throw new PracticeRunnerError('PRACTICE_SUBMIT_INPUT_INVALID', 400, 'answers 必须是数组');
+    const seen = new Set<string>();
+    const answers = input.answers.map((item) => {
+      if (!item || typeof item !== 'object')
+        throw new PracticeRunnerError('PRACTICE_SUBMIT_INPUT_INVALID', 400, 'answers 格式不合法');
+      const raw = item as unknown as Record<string, unknown>;
+      const questionId = requiredUuid(raw.questionId, 'PRACTICE_SUBMIT_INPUT_INVALID', 'questionId 必须是有效 UUID');
+      if (seen.has(questionId))
+        throw new PracticeRunnerError('PRACTICE_SUBMIT_INPUT_INVALID', 400, 'answers 不能包含重复题目');
+      seen.add(questionId);
+      return {
+        questionId,
+        answer: raw.answer,
+        timeSpentSeconds: optionalNonNegativeInteger(
+          raw.timeSpentSeconds,
+          'PRACTICE_SUBMIT_INPUT_INVALID',
+          'timeSpentSeconds 必须是非负整数'
+        ),
+      };
+    });
+    return {
+      semesterId,
+      answers,
+      totalDurationSeconds: nonNegativeInteger(
+        input.totalDurationSeconds,
+        'PRACTICE_SUBMIT_INPUT_INVALID',
+        'totalDurationSeconds 必须是非负整数'
+      ),
+    };
+  }
+
+  private allowedChoiceLetters(question: PracticeQuestionRow): string[] {
+    const options = parseJsonArray(question.options_json, '选择题选项格式不合法');
+    return OPTION_LETTERS.slice(0, options.length);
+  }
+
+  private normalizeChoiceAnswer(
+    value: unknown,
+    allowedLetters: string[],
+    multiple: boolean
+  ): { stored: string | null; letters: string[] } {
+    const raw = normalizeStudentAnswer(value);
+    if (raw === null) return { stored: null, letters: [] };
+    const parts = multiple ? raw.split(',').map((part) => part.trim()).filter(Boolean) : [raw.trim()];
+    if (!multiple && (raw.includes(',') || parts.length !== 1))
+      throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '单选题答案格式不合法');
+    if (multiple && parts.length === 0) return { stored: null, letters: [] };
+    const letters = parts.map((part) => part.toUpperCase());
+    if (new Set(letters).size !== letters.length)
+      throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '多选题答案不能重复');
+    if (letters.some((letter) => !allowedLetters.includes(letter)))
+      throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '答案选项不在题目范围内');
+    const sorted = [...letters].sort();
+    return { stored: sorted.join(','), letters: sorted };
+  }
+
+  private gradeQuestion(question: PracticeQuestionRow, input?: SubmitAnswerInput): GradedAnswer {
+    const timeSpentSeconds = input?.timeSpentSeconds ?? null;
+    if (question.type === 'single_choice') {
+      const result = this.normalizeChoiceAnswer(input?.answer, this.allowedChoiceLetters(question), false);
+      return {
+        questionId: question.id,
+        studentAnswer: result.stored,
+        correctAnswer: question.correct_answer,
+        isCorrect: result.stored !== null && result.stored === question.correct_answer.trim().toUpperCase(),
+        timeSpentSeconds,
+        answerOrder: question.question_order,
+        explanation: question.explanation,
+      };
+    }
+    if (question.type === 'multiple_choice') {
+      const result = this.normalizeChoiceAnswer(input?.answer, this.allowedChoiceLetters(question), true);
+      const correct = question.correct_answer
+        .split(',')
+        .map((part) => part.trim().toUpperCase())
+        .filter(Boolean)
+        .sort();
+      return {
+        questionId: question.id,
+        studentAnswer: result.stored,
+        correctAnswer: correct.join(','),
+        isCorrect:
+          result.letters.length > 0 &&
+          result.letters.length === correct.length &&
+          result.letters.every((letter, index) => letter === correct[index]),
+        timeSpentSeconds,
+        answerOrder: question.question_order,
+        explanation: question.explanation,
+      };
+    }
+    const studentAnswer = normalizeStudentAnswer(input?.answer);
+    const acceptableAnswers = [question.correct_answer, ...parseJsonArray(question.acceptable_answers_json, '填空题答案格式不合法')];
+    const normalizedStudentAnswer = studentAnswer === null ? null : normalizeFillBlankAnswer(studentAnswer);
+    return {
+      questionId: question.id,
+      studentAnswer,
+      correctAnswer: question.correct_answer,
+      isCorrect:
+        normalizedStudentAnswer !== null &&
+        acceptableAnswers.some((answer) => normalizeFillBlankAnswer(answer) === normalizedStudentAnswer),
+      timeSpentSeconds,
+      answerOrder: question.question_order,
+      explanation: question.explanation,
+    };
+  }
+
+  private toAnswerResult(answer: GradedAnswer): PracticeAnswerResultDto {
+    return {
+      questionId: answer.questionId,
+      studentAnswer: answer.studentAnswer,
+      correctAnswer: answer.correctAnswer,
+      isCorrect: answer.isCorrect,
+      explanation: answer.explanation,
     };
   }
 
@@ -513,6 +706,121 @@ export class PracticeRunnerService {
         }
       })();
       return this.toSessionDto(db, sessionId);
+    } finally {
+      db.close();
+    }
+  }
+
+  submitPracticeSession(
+    sessionIdValue: unknown,
+    input: SubmitPracticeSessionRequest
+  ): SubmitPracticeSessionResponse {
+    const sessionId = requiredUuid(sessionIdValue, 'PRACTICE_SESSION_NOT_FOUND', '练习不存在');
+    const valid = this.validateSubmitInput(input);
+    const db = this.openReadySemesterDb(valid.semesterId);
+    try {
+      return db.transaction(() => {
+        const session = db.prepare('SELECT * FROM practice_sessions WHERE id = ?').get(sessionId) as
+          | PracticeSessionRow
+          | undefined;
+        if (!session) throw new PracticeRunnerError('PRACTICE_SESSION_NOT_FOUND', 404, '练习不存在');
+        if (session.status !== 'in_progress')
+          throw new PracticeRunnerError('PRACTICE_SESSION_STATE_INVALID', 409, '当前练习状态不允许提交');
+
+        const questions = db
+          .prepare(
+            `SELECT id, type, options_json, correct_answer, acceptable_answers_json, explanation, question_order
+             FROM questions
+             WHERE practice_session_id = ?
+             ORDER BY question_order ASC`
+          )
+          .all(sessionId) as PracticeQuestionRow[];
+        if (questions.length !== Number(session.question_count))
+          throw new PracticeRunnerError('PRACTICE_QUESTION_MISMATCH', 409, '练习题目数量不一致');
+
+        const questionById = new Map(questions.map((question) => [question.id, question]));
+        for (const answer of valid.answers) {
+          if (!questionById.has(answer.questionId))
+            throw new PracticeRunnerError('PRACTICE_QUESTION_MISMATCH', 400, '答案引用了不属于该练习的题目');
+        }
+
+        const submittedByQuestionId = new Map(valid.answers.map((answer) => [answer.questionId, answer]));
+        const gradedAnswers = questions.map((question) => this.gradeQuestion(question, submittedByQuestionId.get(question.id)));
+        const totalScore = gradedAnswers.filter((answer) => answer.isCorrect).length;
+        const correctRate = questions.length === 0 ? 0 : totalScore / questions.length;
+        const overtime =
+          session.time_limit_seconds === null || session.time_limit_seconds === undefined
+            ? false
+            : valid.totalDurationSeconds > Number(session.time_limit_seconds);
+        const timestamp = this.now();
+
+        const insertAnswer = db.prepare(
+          `INSERT INTO practice_answers (
+            id, session_id, question_id, student_answer, is_correct,
+            time_spent_seconds, answer_order, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        );
+        for (const answer of gradedAnswers) {
+          insertAnswer.run(
+            this.id(),
+            sessionId,
+            answer.questionId,
+            answer.studentAnswer,
+            answer.isCorrect ? 1 : 0,
+            answer.timeSpentSeconds,
+            answer.answerOrder,
+            timestamp
+          );
+        }
+
+        db.prepare(
+          `UPDATE practice_sessions
+           SET status = 'graded',
+               submitted_at = ?,
+               graded_at = ?,
+               total_score = ?,
+               correct_rate = ?,
+               overtime = ?,
+               total_duration_seconds = ?,
+               updated_at = ?
+           WHERE id = ?`
+        ).run(
+          timestamp,
+          timestamp,
+          totalScore,
+          correctRate,
+          overtime ? 1 : 0,
+          valid.totalDurationSeconds,
+          timestamp,
+          sessionId
+        );
+
+        db.prepare(
+          `INSERT INTO study_events (
+            id, course_instance_id, source_system, event_type, title,
+            workload_minutes, evidence_ref, parent_visible, occurred_at, created_at
+          ) VALUES (?, ?, 'S3', 'practice_completed', ?, ?, ?, 1, ?, ?)`
+        ).run(
+          this.id(),
+          session.course_instance_id,
+          `完成限时练习：${totalScore}/${questions.length}`,
+          Math.ceil(valid.totalDurationSeconds / 60),
+          `practice_session:${sessionId}`,
+          timestamp,
+          timestamp
+        );
+
+        return {
+          sessionId,
+          status: 'graded' as const,
+          totalScore,
+          questionCount: questions.length,
+          correctRate,
+          overtime,
+          totalDurationSeconds: valid.totalDurationSeconds,
+          answers: gradedAnswers.map((answer) => this.toAnswerResult(answer)),
+        };
+      })();
     } finally {
       db.close();
     }

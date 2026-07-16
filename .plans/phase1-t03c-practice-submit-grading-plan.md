@@ -2,7 +2,7 @@
 
 > **For agentic workers:** 如环境提供 `superpowers:test-driven-development` 与 `superpowers:executing-plans`，实施阶段按其步骤逐项执行。未经用户明确批准，不得修改业务代码、Schema、测试、shared 类型或任务完成状态。
 
-**状态**：待用户批准；当前仅完成只读核查、计划编写与自审
+**状态**：已完成实施验证
 
 **日期**：2026-07-16
 
@@ -10,7 +10,7 @@
 
 **Goal:** 在 T03A/T03B 已验收的 S3 Schema 与练习生成 API 基础上，实现 `POST /api/practice-sessions/:id/submit`，学生提交答案后由确定性规则批改客观题，写入 `practice_answers`，更新 `practice_sessions` 的得分、正确率、超时和总用时，并写入一条摘要化的 S3 StudyEvent。
 
-**重要前置核查:** 本地 checkout 当前未找到用户指定的 `.plans/phase1-t03b-practice-generation-api-plan.md`，且 `packages/backend/src` 尚无 practice API/service 文件；但本轮用户给定事实为“Phase 1-T03B 已完成并验证”。实施 T03C 前必须先确认 T03A/T03B 代码与测试已经同步到当前工作区；若仍缺失，不得在 T03C 中补做 T03B 生成 API，应先停下请求同步或批准新的前置修复。
+**重要前置核查:** 实施前已确认 T03A/T03B 代码与测试同步到当前工作区：`practice_sessions`、`questions`、`practice_answers` Schema、练习生成 API、练习详情 API 与 T03B 回归测试均存在；T03C 未补做 T03B 范围。
 
 **Tech Stack:** TypeScript 5、Express、better-sqlite3、SQLite transaction、Node.js test runner、pnpm workspace、`@ai-studybuddy/shared` API 信封。
 
@@ -212,17 +212,17 @@
 
 `packages/backend/test/practice-submit-api.test.mjs` 至少覆盖：
 
-- [ ] 单选正确、单选错误。
-- [ ] 多选顺序不同但集合相同为正确；少选、多选、错选为错误。
-- [ ] 填空命中 `correct_answer`；命中 `acceptable_answers_json`；大小写、全半角和空白归一化生效。
-- [ ] 缺答题目写入 `student_answer = NULL` 且 `is_correct = false`。
-- [ ] 成功提交写入每题 `practice_answers`，更新 `total_score`、`correct_rate`、`overtime`、`total_duration_seconds`、`submitted_at`、`graded_at`。
-- [ ] 成功提交写入一条 `practice_completed` StudyEvent，事件只含摘要字段和 `practice_session:<id>` 证据引用。
-- [ ] 有限时且总用时大于限制时 `overtime = true`；等于限制时为 false；不限时始终 false。
-- [ ] 重复提交返回 409，既有答案和 session 汇总不被覆盖。
-- [ ] 未知题目、重复题目、跨 session 题目、非法答案格式、非法用时均返回 4xx 且无部分写入。
-- [ ] 跨学期查询不到 session，不串库。
-- [ ] 不创建或写入 `mistakes`、`weak_points`。
+- [x] 单选正确、单选错误。
+- [x] 多选顺序不同但集合相同为正确；少选、多选、错选为错误。
+- [x] 填空命中 `correct_answer`；命中 `acceptable_answers_json`；大小写、全半角和空白归一化生效。
+- [x] 缺答题目写入 `student_answer = NULL` 且 `is_correct = false`。
+- [x] 成功提交写入每题 `practice_answers`，更新 `total_score`、`correct_rate`、`overtime`、`total_duration_seconds`、`submitted_at`、`graded_at`。
+- [x] 成功提交写入一条 `practice_completed` StudyEvent，事件只含摘要字段和 `practice_session:<id>` 证据引用。
+- [x] 有限时且总用时大于限制时 `overtime = true`；等于限制时为 false；不限时始终 false。
+- [x] 重复提交返回 409，既有答案和 session 汇总不被覆盖。
+- [x] 未知题目、重复题目、跨 session 题目、非法答案格式、非法用时均返回 4xx 且无部分写入。
+- [x] 跨学期查询不到 session，不串库。
+- [x] 不创建或写入 `mistakes`、`weak_points`。
 
 ### 验证命令
 
@@ -273,7 +273,14 @@ git diff --check
 - 不需要浏览器验收，因为 T03C 明确不含前端；后续 T03D 再做页面与浏览器 smoke。
 - 标准验证包含 type-check、后端 build、专项测试、全量测试、文档治理和 diff 检查。
 
-**自审结论**：计划可执行，但依赖 T03A/T03B 已同步到当前工作区。未获用户明确批准前，本计划不得进入代码实现。
+**自审结论**：T03C 已按获批计划完成实施与验证；未越权实现前端、错题归档、S4 PRD/Schema、S5-S7、真实外部 Provider smoke 或 Worker。
+
+## 9. 完成记录
+
+- `POST /api/practice-sessions/:id/submit` 已接入 PracticeRunner API，返回统一 `{ success, data, error }` 信封。
+- 客观题规则批改已实现：单选 trim+大小写归一后精确匹配，多选逗号分隔去重后集合全等，填空 NFKC/trim/lowercase/空白归一并支持 `acceptable_answers_json`。
+- 提交事务内写入 `practice_answers`、更新 `practice_sessions` 汇总字段，并写入摘要化 `practice_completed` StudyEvent。
+- 新增后端集成测试 `packages/backend/test/practice-submit-api.test.mjs`，覆盖批改、缺答、超时、重复提交、异常回滚、跨学期隔离和 S4 边界。
 
 ---
 

@@ -24,7 +24,7 @@
 
 - Phase 0.8 已完成：S1 基础与 S2 核心已在主仓库实现，包含 SQLite 本地数据、资料上传/转换、AI 笔记、知识模块、前端最小页面和 T09 隔离复验。
 - S1、S2 PRD 已存在并已实现到 MVP 边界；不得再次创建同类 PRD。
-- S3 PRD 已在获批的 Phase 1-T03 文档任务中创建；Phase 1-T03A 数据库与 Schema、Phase 1-T03B 练习生成 API 已完成并合入 master。下一门禁为 Phase 1-T03C 限时作答与规则批改，仍需用户明确批准后再实施；S4、S5、S6、S7 仍按各自门禁等待。
+- S3 PRD 已在获批的 Phase 1-T03 文档任务中创建；Phase 1-T03A 数据库与 Schema、Phase 1-T03B 练习生成 API、Phase 1-T03C 限时作答与规则批改已完成并合入 master。下一门禁为 Phase 1-T03D S3 练习前端闭环，仍需用户明确批准后再实施；S4、S5、S6、S7 仍按各自门禁等待。
 - Phase 1-T11 已完成考试确认、考试项目工作台、考试归属任务、多考试切换与只读邻近提示；不包含跨考试自动排程、智能任务平衡、模拟考或临考速背。
 - AI Provider Router 已支持多 Provider 配置和优先级故障转移：当前实现按 `priority` 升序尝试，首个成功即返回；这不是每次请求轮换 Provider。
 - Phase 1-T02 已在现有 Router 上完成 Provider 实例级健康熔断：连续失败第 5 次后冷却 10 分钟，支持恢复探测、全冷却稳定错误和严格脱敏日志；未增加数据库、环境变量或真实外部 Provider smoke。
