@@ -13,6 +13,7 @@ import { SCHEMA_GLOBAL_SQL } from './sql/schema-global';
 import { SCHEMA_SEMESTER_SQL } from './sql/schema-semester';
 import { SEMESTER_V2_SQL } from './sql/migration-semester-v2';
 import { SEMESTER_V3_SQL } from './sql/migration-semester-v3';
+import { SEMESTER_V4_SQL } from './sql/migration-semester-v4';
 
 export interface Migration {
   version: number;
@@ -25,6 +26,7 @@ const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 1, sql: SCHEMA_SEMESTER_SQL },
   { version: 2, sql: SEMESTER_V2_SQL },
   { version: 3, sql: SEMESTER_V3_SQL },
+  { version: 4, sql: SEMESTER_V4_SQL },
 ];
 
 const CURRENT_JOBS_TABLE_SQL = `

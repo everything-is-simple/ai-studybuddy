@@ -261,3 +261,60 @@ export interface KnowledgeModuleDto {
   createdAt: string;
   updatedAt: string;
 }
+// ============================================================
+// S3 PracticeRunner 存储/领域记录（非公开 API DTO）
+// ============================================================
+
+export type PracticeQuestionType = 'single_choice' | 'multiple_choice' | 'fill_blank';
+export type PracticeDifficulty = 'easy' | 'medium' | 'hard';
+export type PracticeDifficultyPreference = PracticeDifficulty | 'mixed';
+export type PracticeSessionStatus = 'in_progress' | 'submitted' | 'graded';
+
+export interface PracticeQuestionRecord {
+  id: string;
+  practiceSessionId: string;
+  courseInstanceId: string;
+  knowledgeModuleId: string;
+  type: PracticeQuestionType;
+  stem: string;
+  options?: string[];
+  correctAnswer: string;
+  acceptableAnswers?: string[];
+  difficulty: PracticeDifficulty;
+  explanation?: string;
+  sourceEvidence?: string;
+  aiModel: string;
+  promptVersion: string;
+  questionOrder: number;
+  createdAt: string;
+}
+
+export interface PracticeSessionRecord {
+  id: string;
+  courseInstanceId: string;
+  assessmentAttemptId?: string;
+  status: PracticeSessionStatus;
+  questionCount: number;
+  timeLimitSeconds?: number;
+  startedAt: string;
+  submittedAt?: string;
+  gradedAt?: string;
+  totalScore?: number;
+  correctRate?: number;
+  overtime: boolean;
+  totalDurationSeconds?: number;
+  difficultyPreference: PracticeDifficultyPreference;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PracticeAnswerRecord {
+  id: string;
+  sessionId: string;
+  questionId: string;
+  studentAnswer?: string;
+  isCorrect?: boolean;
+  timeSpentSeconds?: number;
+  answerOrder: number;
+  createdAt: string;
+}

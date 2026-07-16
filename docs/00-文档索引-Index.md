@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.7
+**版本**：v2.8
 **日期**：2026-07-16
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -43,7 +43,7 @@
 | ------ | -------- | -------- | -------- |
 | S1 学习节奏 | `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 必需 |
 | S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 开始开发 S2 前触发 |
-| S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ PRD 已创建；T03A 计划已创建，待批准实施 | S2 MVP 完成后触发 |
+| S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | 🔄 PRD 与 T03A Schema 已完成；下一门禁 T03B | S2 MVP 完成后触发 |
 | S4 错题改错 | `subsystems/S4-错题改错子系统PRD-ErrorFixer.md` | 📅 未创建 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/S5-期末冲刺子系统PRD-ExamCrammer.md` | 📅 未创建 | Phase 2 触发 |
 | S6 家长观察 | `subsystems/S6-家长观察子系统PRD-ParentReport.md` | 📅 未创建 | Phase 1 后期、准备正式发送家长报告前触发 |
@@ -130,8 +130,8 @@ git diff --check
 ### 6.3 准备 Phase 1
 
 1. 重读 S1/S2 PRD、S3 PRD 与最新验收结论；
-2. Phase 1-T00、T10、T02、T03、T11 已完成；S3 PRD 已创建，T03A 实施计划已创建并自审，但 S3 Schema/API/业务代码尚未开始；
-3. 当前下一实现门禁仍为 T03A；T03A 计划需用户明确批准后，才可修改 migration、Schema、测试、类型或业务代码；
+2. Phase 1-T00、T10、T02、T03、T11、T03A 已完成；S3 PRD、migration v4、三张 S3 表、最小 shared 类型与数据库约束/升级测试已落地；
+3. 当前下一实现门禁为 T03B；T03B 练习生成 API 仍需独立计划、独立审查和用户明确批准，S3 API/Service/Worker/前端尚未开始；
 4. S3 MVP 完成后才触发 S4 PRD，S5/S6/S7 继续按各自门禁等待。
 
 ---
@@ -165,6 +165,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.8 | 2026-07-16 | Phase 1-T03A：登记学期库 migration v4、S3 三表、11 个索引、8 个一致性 trigger、最小 shared 类型与 127/127 后端、32/32 前端全量验证；下一实现门禁调整为 T03B |
 | v2.7 | 2026-07-16 | 登记 Phase 1-T03A 数据库与 Schema 实施计划已创建并待批准；校准 S3 PRD 题目顺序字段与下一门禁状态 |
 | v2.6 | 2026-07-16 | Phase 1-T02：登记 Provider 实例级连续失败熔断、10 分钟冷却、恢复探测、全冷却错误和脱敏日志；下一实现门禁调整为 T03A |
 | v2.5 | 2026-07-15 | 对齐 S1/S2/S3 子系统 PRD 文件编号；确认 Phase 1-T11 已合并到 master 并完成最终隔离验收；登记 Phase 1-T02 待批准计划 |
