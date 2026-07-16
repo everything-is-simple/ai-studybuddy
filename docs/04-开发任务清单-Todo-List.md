@@ -527,6 +527,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T03B 完成证据（2026-07-16）**：已新增 `PracticeRunnerService`、作答前公开 DTO、`POST /api/practice-sessions` 和 `GET /api/practice-sessions/:id`；练习生成只读取知识模块摘要/证据，AI 成功后同事务写入 `practice_sessions` 与 `questions`，返回给学生的题目隐藏正确答案、可接受答案、解析、来源证据和 AI 元数据。新增 `practice-generation-api.test.mjs` 使用本地 mock OpenAI-compatible Provider 覆盖成功入库、答案隐藏、AI 失败不落空 session、坏 JSON 不部分写入和跨课程模块调用 AI 前拒绝。验证通过：`pnpm type-check`、后端 build、前端 build、专项 4/4、隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t03b-full-test` 下 `pnpm test`（后端 131/131、前端 32/32）。未实现提交作答、规则批改、`practice_answers` 写入、StudyEvent、前端或错题归档。
 
+> **T03A/T03B 主线修复证据（2026-07-16）**：修复分支 `codex/phase1-t03ab-master-repair` 已将 T03A/T03B 既有实现快进合并到 `master` 并推送 `origin/master`，master 提交为 `a42090d`。主线复验通过：`pnpm type-check`、后端 build、前端 build、`practice-schema.test.mjs` 7/7、`practice-generation-api.test.mjs` 4/4、`pnpm test`（后端 131/131、前端 32/32）、文档治理检查与 `git diff --check`。额外修复 `@ai-studybuddy/shared` 声明产物漂移，保证 recursive type-check 先重建 shared 声明。T03C 仍未实施，S4/S5-S7 仍未触发。
+
 - [x] `PracticeRunnerService` 按知识模块和难度选题或调 AI 生成
 - [x] `POST /api/practice-sessions`（创建练习，AI 生成题目入库）
 - [x] `GET /api/practice-sessions/:id`（获取练习与题目）
