@@ -241,7 +241,7 @@ test('semester migrations apply through current schema changes', async (t) => {
   const { getAppliedVersion } = await import('../dist/db/migrations.js');
   const db = initSemesterDbAtPath(path.join(dataRoot, 'semester.db'));
   try {
-    assert.equal(getAppliedVersion(db, 'semester'), 5);
+    assert.equal(getAppliedVersion(db, 'semester'), 6);
     for (const table of ['practice_sessions', 'questions', 'practice_answers', 'mistakes', 'mistake_evidence', 'weak_points']) {
       assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
     }
@@ -319,7 +319,7 @@ test('semester migrations upgrade an existing v1 database through current schema
       confirmation_status: 'pending',
       confirmed_at: null,
     });
-    assert.equal(getAppliedVersion(db, 'semester'), 5);
+    assert.equal(getAppliedVersion(db, 'semester'), 6);
     for (const table of ['practice_sessions', 'questions', 'practice_answers', 'mistakes', 'mistake_evidence', 'weak_points']) {
       assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
     }

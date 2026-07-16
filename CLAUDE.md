@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-**Version**: v1.3
+**Version**: v1.4
 **Updated**: 2026-07-16
 
 This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
@@ -10,7 +10,7 @@ This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete to
 AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七个场景子系统（S1–S7）”。当前事实：
 
 - Phase 0.8 已完成，S1 基础与 S2 核心已在主仓库实现并通过 T09 隔离复验。
-- S1、S2、S3 PRD 已存在；Phase 1-T03A Schema、Phase 1-T03B 练习生成 API 与 Phase 1-T03C 限时作答/规则批改已完成。下一门禁为 Phase 1-T03D S3 练习前端闭环，仍需用户明确批准后才能实现；S4–S7 仍未触发。
+- S1、S2、S3、S4 PRD 已存在；Phase 1 已完成 T03A–T03D（S3 练习闭环）与 T04/T04A/T04B（S4 错题归档、Schema 与错题改错前端闭环，含 migration v6 与 S4 API）。下一门禁为 Phase 1-T05 回流规则，仍需独立计划和用户明确批准后才能实现；S5–S7 仍未触发。
 - 后端、前端、shared 三个 workspace 包已存在；不要再按“无业务代码”处理。
 - AI Provider Router 已支持多 Provider 优先级故障转移，并已在 Phase 1-T02 完成连续失败熔断、10 分钟冷却、恢复探测和脱敏日志。
 - KaoBuddy 只可作为产品组织方式参考，不复制源码、视觉、文案或资产。
@@ -64,8 +64,8 @@ pnpm -r --filter backend run dev
 当前门禁状态：
 
 - S1、S2：已创建并实现 MVP，不重建。
-- S3：PRD、T03A 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改已完成；下一门禁 T03D 前端闭环仍需独立计划和用户明确批准。
-- S4：等 S3 MVP 完成后触发。
+- S3：PRD 与 T03A–T03D 全部完成（Schema、练习生成 API、限时作答/规则批改、前端闭环）；Worker 仍未开始。
+- S4：PRD、T04A 归档与 Schema、T04B 错题改错前端闭环（含 migration v6 与 S4 API）已完成；下一门禁 T05 回流规则仍需独立计划和用户明确批准。
 - S5：Phase 2 触发。
 - S6：Phase 1 后期准备正式家长报告前触发。
 - S7：Phase 1.5 触发。

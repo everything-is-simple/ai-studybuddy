@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.23
+**版本**：v1.24
 **日期**：2026-07-16
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema。当前下一门禁为 T04B：S4 错题改错前端的独立计划、审查和用户明确批准；S3 Worker 仍未开始。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）。当前下一门禁为 T05：回流规则的独立计划、审查和用户明确批准；S3 Worker 仍未开始。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A ✅；下一门禁 T04B） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B ✅；下一门禁 T05） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -460,7 +460,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 9 | Phase 1-T03D：S3 练习前端闭环 | ✅ | 浏览器可发起练习、作答、查看批改结果；集成进工作台”练习”区 |
 | 10 | Phase 1-T04：S4 PRD 编写 | ✅ | 已按批准计划创建 S4 轻量 PRD并同步索引；仅完成文档，不含 Schema 或业务实现 |
 | 11 | Phase 1-T04A：S4 错题归档与 Schema | ✅ | 学期库 migration v5、`mistakes`/`mistake_evidence`/`weak_points`、S3 提交后幂等错题归档与集成测试已完成 |
-| 12 | Phase 1-T04B：S4 错题改错前端 | ⏳ | 浏览器可查看错题、重做、标记掌握；集成进工作台”查漏补缺”区 |
+| 12 | Phase 1-T04B：S4 错题改错前端 | ✅ | 错题列表/详情/错因确认/原题重做/薄弱点展示与工作台“查漏补缺”集成已完成；含 migration v6 与 S4 API 补洞（T04A 遗漏，经批准并入本任务） |
 | 13 | Phase 1-T05：回流规则 | ⏳ | 错题/薄弱点提升关联知识模块优先级；已掌握后降低复习频率 |
 | 14 | Phase 1-T06：S6 PRD 编写 | ⏳ | S4 完成后触发；创建 S6 轻量 PRD |
 | 15 | Phase 1-T06A：S6 家长报告生成 | ⏳ | 规则统计 + AI 润色生成日报/周报/月报/考前提醒 |
@@ -568,11 +568,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 测试：归档逻辑、重复错题计数递增
 
 > **T04A 完成证据（2026-07-16）**：已创建 `.plans/phase1-t04a-s4-schema-archive-plan.md` 并按计划实施；新增学期库 migration v5，创建 `mistakes`、`mistake_evidence`、`weak_points`，用 `mistake_evidence.source_practice_answer_id` 唯一约束保证同一 `PracticeAnswer` 幂等归档；未作答沿用 S3 `is_correct = 0` 错误事实进入归档；同课程实例 + 知识模块至少两条独立错误证据才创建 `weak_points`。`PracticeRunnerService.submitPracticeSession()` 在同一事务内写入 `practice_answers` 后调用 S4 归档，失败整体回滚。新增 `error-fixer-schema.test.mjs` 与 `error-fixer-archive-api.test.mjs`，并更新 S3 回归测试对 migration v5 与 S4 表存在的预期。验证通过：后端 build、T04A schema 3/3、T04A archive 4/4、S3 submit 4/4、S3 schema 7/7；最终全量验证见本任务交付说明。未实现 T04B 前端、错因确认、错题重做、T05 回流规则、S5-S7、Worker 或真实 Provider smoke。
-**T04B 前端**（门禁：T04A 已验收；仍需 T04B 独立实现计划、审查和用户明确批准）
-- [ ] 错题列表与筛选（按课程/模块/掌握状态）
-- [ ] 错题重做流程（重新作答 → 批改 → 更新掌握状态）
-- [ ] 工作台”查漏补缺”区集成
-- [ ] 测试：前端组件 + 浏览器 smoke
+**T04B 前端（已完成）**（已按获批"收窄版方案 A"计划实施并通过验收；下一门禁为 T05 独立计划）
+- [x] 错题列表与筛选（按课程/模块/掌握状态）
+- [x] 错题重做流程（重新作答 → 批改 → 更新掌握状态）
+- [x] 工作台"查漏补缺"区集成
+- [x] 测试：前端组件 + 浏览器 smoke
+
+> **T04B 完成证据（2026-07-16）**：已创建 `.plans/phase1-t04b-s4-errorfixer-frontend-plan.md`，经用户批准"收窄版方案 A"后实施。本任务包含一次 **Schema/API 补洞**（T04A 遗漏，属 T04B 范围，不回改 T04A 完成事实）：新增学期库 migration v6，为 `mistakes` 补错因确认最小字段（`error_cause_category` 白名单 / `error_cause_note` ≤500 字 / `error_cause_confirmed_at`），`mistake_evidence.evidence_type` 扩展 `redo_correct`/`redo_incorrect` 并重建触发器，`practice_sessions` 增加 `session_kind`（`practice`/`mistake_redo`）与 `origin_mistake_id`，`questions` 增加 `origin_question_id` 复制题溯源；均只服务 S4 原题重做，未引入 T05 回流。新增 S4 API（`GET /api/mistakes`、`GET /api/mistakes/:id`、`PATCH /api/mistakes/:id/error-cause`、`PATCH /api/mistakes/:id/status`、`POST /api/mistakes/:id/redo`、`GET /api/weak-points`），前端只消费 API 不读 SQLite；重做复用 S3 submit 通道但按 `session_kind` 旁路归档（重做失败不新建错题、不重复计数，写 `redo_incorrect` 证据并计入薄弱点；重做通过写 `redo_correct` 证据）；标记掌握需重做通过证据或学生显式确认，已掌握可重新打开；S4 写 `mistake_reviewed` 摘要事件（`evidence_ref=mistake:<id>`，无题干正文）。前端新增 `/exams/:examId/mistakes` 错题列表页（状态/模块筛选 + 薄弱点区块）、`/mistakes/:mistakeId` 详情改错页（原题事实、错因确认、重做、状态操作、证据时间线）、工作台"查漏补缺"卡片与 S3 结果页错题入口。验证通过：`pnpm type-check`、后端/前端 build、后端测试 150/150（新增 T04B API 6、v6 迁移与约束 2）、前端测试 41/41（新增错题页 4）、Playwright e2e 4/4（新增 error-fixer 全流程 1，隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t04b-e2e`）、文档治理、`git diff --check`。未实现 T05 回流规则、AI 错因建议、同类题/变题生成、S5/S6/S7、Worker 或真实 Provider smoke。
 
 #### T05：回流规则（门禁：T04B 已验收；独立计划已批准）
 

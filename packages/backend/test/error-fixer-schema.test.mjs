@@ -252,7 +252,7 @@ async function openFreshSemester(t, prefix) {
 test('fresh semester database applies v5 with S4 tables, indexes, and triggers exactly once', async (t) => {
   const { db, migrations } = await openFreshSemester(t, 'studybuddy-t04a-fresh-');
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 5);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 6);
   assert.deepEqual(columnNames(db, 'mistakes'), [
     'id',
     'course_instance_id',
@@ -267,6 +267,9 @@ test('fresh semester database applies v5 with S4 tables, indexes, and triggers e
     'latest_error_at',
     'created_at',
     'updated_at',
+    'error_cause_category',
+    'error_cause_note',
+    'error_cause_confirmed_at',
   ]);
   assert.deepEqual(columnNames(db, 'mistake_evidence'), [
     'id',
@@ -359,7 +362,7 @@ test('v4 semester database upgrades to v5 without losing existing S3 data', asyn
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 5);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 6);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM practice_answers').get().count, 1);
   for (const table of ['mistakes', 'mistake_evidence', 'weak_points']) {
     assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
@@ -419,6 +422,144 @@ test('S4 tables enforce incorrect-answer evidence, idempotent source answer, and
           '2026-07-16T00:10:00.000Z'
         ),
     /CHECK constraint failed/
+  );
+});
+
+test('v5 semester database upgrades to v6 preserving mistakes and evidence data', async (t) => {
+  const dir = await withTempDir('studybuddy-t04b-upgrade-');
+  const { openDbAtPath } = await import('../dist/db/connection.js');
+  const migrations = await import('../dist/db/migrations.js');
+  const { SCHEMA_SEMESTER_SQL } = require('../dist/db/sql/schema-semester.js');
+  const { SEMESTER_V2_SQL } = require('../dist/db/sql/migration-semester-v2.js');
+  const { SEMESTER_V3_SQL } = require('../dist/db/sql/migration-semester-v3.js');
+  const { SEMESTER_V4_SQL } = require('../dist/db/sql/migration-semester-v4.js');
+  const { SEMESTER_V5_SQL } = require('../dist/db/sql/migration-semester-v5.js');
+  const db = openDbAtPath(path.join(dir, 'semester-v5.db'));
+  registerDbCleanup(t, db, dir);
+
+  migrations.applyMigrations(db, 'semester', [
+    { version: 1, sql: SCHEMA_SEMESTER_SQL },
+    { version: 2, sql: SEMESTER_V2_SQL },
+    { version: 3, sql: SEMESTER_V3_SQL },
+    { version: 4, sql: SEMESTER_V4_SQL },
+    { version: 5, sql: SEMESTER_V5_SQL },
+  ]);
+  seedFoundation(db);
+  insertSession(db, { id: 'session-1', questionCount: 1 });
+  insertQuestion(db, { id: 'question-1', questionOrder: 1 });
+  insertAnswer(db, { id: 'answer-1', questionId: 'question-1', answerOrder: 1, isCorrect: 0 });
+  insertMistake(db, { id: 'mistake-1' });
+  insertEvidence(db, { id: 'evidence-1' });
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 5);
+
+  migrations.migrateSemesterDb(db);
+
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 6);
+  // 既有数据保留
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM mistake_evidence').get().count, 1);
+  assert.equal(
+    db.prepare('SELECT evidence_type FROM mistake_evidence WHERE id = ?').get('evidence-1').evidence_type,
+    'practice_error'
+  );
+  // 新列存在且默认值正确
+  assert.equal(db.prepare('SELECT error_cause_category FROM mistakes WHERE id = ?').get('mistake-1').error_cause_category, null);
+  assert.equal(db.prepare('SELECT session_kind FROM practice_sessions WHERE id = ?').get('session-1').session_kind, 'practice');
+  assert.equal(db.prepare('SELECT origin_question_id FROM questions WHERE id = ?').get('question-1').origin_question_id, null);
+  // 唯一索引仍生效
+  assert.throws(() => insertEvidence(db, { id: 'evidence-duplicate' }), /UNIQUE constraint failed/);
+});
+
+test('v6 constraints enforce error cause whitelist, redo session relation, and redo evidence source', async (t) => {
+  const { db } = await openFreshSemester(t, 'studybuddy-t04b-constraints-');
+  seedFoundation(db);
+  insertSession(db, { id: 'session-1', questionCount: 1 });
+  insertQuestion(db, { id: 'question-1', questionOrder: 1 });
+  insertAnswer(db, { id: 'answer-1', questionId: 'question-1', answerOrder: 1, isCorrect: 0 });
+  insertMistake(db, { id: 'mistake-1' });
+  insertEvidence(db, { id: 'evidence-1' });
+
+  // 错因类别白名单
+  assert.throws(
+    () => db.prepare("UPDATE mistakes SET error_cause_category = 'lazy' WHERE id = 'mistake-1'").run(),
+    /CHECK constraint failed/
+  );
+  db.prepare(
+    "UPDATE mistakes SET error_cause_category = 'concept_unclear', error_cause_note = '向量空间闭包条件没吃透', error_cause_confirmed_at = '2026-07-16T01:00:00.000Z' WHERE id = 'mistake-1'"
+  ).run();
+  assert.equal(
+    db.prepare('SELECT error_cause_category FROM mistakes WHERE id = ?').get('mistake-1').error_cause_category,
+    'concept_unclear'
+  );
+
+  // mistake_redo session 必须挂 origin_mistake_id 且同课程
+  const insertRedoSession = (id, originMistakeId, courseInstanceId = 'course-1') =>
+    db
+      .prepare(
+        `INSERT INTO practice_sessions (
+          id, course_instance_id, status, question_count, started_at,
+          difficulty_preference, session_kind, origin_mistake_id, created_at, updated_at
+        ) VALUES (?, ?, 'in_progress', 1, '2026-07-16T02:00:00.000Z', 'mixed', 'mistake_redo', ?, '2026-07-16T02:00:00.000Z', '2026-07-16T02:00:00.000Z')`
+      )
+      .run(id, courseInstanceId, originMistakeId);
+  assert.throws(() => insertRedoSession('bad-redo-null', null), /practice session redo relation mismatch/);
+  assert.throws(
+    () => insertRedoSession('bad-redo-cross-course', 'mistake-1', 'course-2'),
+    /practice session redo relation mismatch/
+  );
+  insertRedoSession('redo-session-1', 'mistake-1');
+
+  // 普通 practice session 不得携带 origin_mistake_id
+  assert.throws(
+    () =>
+      db
+        .prepare(
+          `INSERT INTO practice_sessions (
+            id, course_instance_id, status, question_count, started_at,
+            difficulty_preference, session_kind, origin_mistake_id, created_at, updated_at
+          ) VALUES ('bad-practice-origin', 'course-1', 'in_progress', 1, '2026-07-16T02:00:00.000Z', 'mixed', 'practice', 'mistake-1', '2026-07-16T02:00:00.000Z', '2026-07-16T02:00:00.000Z')`
+        )
+        .run(),
+    /practice session redo relation mismatch/
+  );
+
+  // 复制题溯源：origin 必须同课程同模块
+  insertQuestion(db, {
+    id: 'redo-question-1',
+    practiceSessionId: 'redo-session-1',
+    questionOrder: 1,
+  });
+  db.prepare("UPDATE questions SET origin_question_id = 'question-1' WHERE id = 'redo-question-1'").run();
+  assert.throws(
+    () => db.prepare("UPDATE questions SET origin_question_id = 'missing-question' WHERE id = 'redo-question-1'").run(),
+    /question origin relation mismatch/
+  );
+
+  // redo 证据：redo_correct 必须来自 is_correct=1 的重做作答，question_id 指向原题
+  insertAnswer(db, {
+    id: 'redo-answer-correct',
+    sessionId: 'redo-session-1',
+    questionId: 'redo-question-1',
+    studentAnswer: 'A',
+    isCorrect: 1,
+    answerOrder: 1,
+  });
+  assert.throws(
+    () =>
+      insertEvidence(db, {
+        id: 'bad-redo-evidence-type',
+        sourcePracticeAnswerId: 'redo-answer-correct',
+        evidenceType: 'redo_incorrect',
+      }),
+    /mistake evidence source mismatch/
+  );
+  insertEvidence(db, {
+    id: 'redo-evidence-1',
+    sourcePracticeAnswerId: 'redo-answer-correct',
+    evidenceType: 'redo_correct',
+  });
+  assert.equal(
+    db.prepare('SELECT evidence_type FROM mistake_evidence WHERE id = ?').get('redo-evidence-1').evidence_type,
+    'redo_correct'
   );
 });
 

@@ -82,6 +82,8 @@ interface PracticeSessionRow {
   status: string;
   question_count: number;
   time_limit_seconds: number | null;
+  session_kind: 'practice' | 'mistake_redo';
+  origin_mistake_id: string | null;
 }
 
 interface PracticeQuestionRow {
@@ -629,6 +631,13 @@ export class PracticeRunnerService {
           ? null
           : Number(session.time_limit_seconds),
       difficultyPreference: String(session.difficulty_preference) as PracticeDifficultyPreference,
+      sessionKind: (session.session_kind === 'mistake_redo' ? 'mistake_redo' : 'practice') as
+        | 'practice'
+        | 'mistake_redo',
+      originMistakeId:
+        session.origin_mistake_id === null || session.origin_mistake_id === undefined
+          ? null
+          : String(session.origin_mistake_id),
       startedAt: String(session.started_at),
       createdAt: String(session.created_at),
       updatedAt: String(session.updated_at),
@@ -799,22 +808,41 @@ export class PracticeRunnerService {
           sessionId
         );
 
-        this.errorFixer.archiveIncorrectPracticeAnswers(db, sessionId, timestamp);
+        if (session.session_kind === 'mistake_redo') {
+          // S4 原题重做：不生成新错题，只记录 redo 证据（T04B）
+          const redo = this.errorFixer.recordRedoEvidence(db, sessionId, timestamp);
+          db.prepare(
+            `INSERT INTO study_events (
+              id, course_instance_id, source_system, event_type, title,
+              workload_minutes, evidence_ref, parent_visible, occurred_at, created_at
+            ) VALUES (?, ?, 'S4', 'mistake_reviewed', ?, ?, ?, 1, ?, ?)`
+          ).run(
+            this.id(),
+            session.course_instance_id,
+            `错题重做${redo.isCorrect ? '通过' : '未通过'}`,
+            Math.ceil(valid.totalDurationSeconds / 60),
+            `mistake:${redo.mistakeId}`,
+            timestamp,
+            timestamp
+          );
+        } else {
+          this.errorFixer.archiveIncorrectPracticeAnswers(db, sessionId, timestamp);
 
-        db.prepare(
-          `INSERT INTO study_events (
-            id, course_instance_id, source_system, event_type, title,
-            workload_minutes, evidence_ref, parent_visible, occurred_at, created_at
-          ) VALUES (?, ?, 'S3', 'practice_completed', ?, ?, ?, 1, ?, ?)`
-        ).run(
-          this.id(),
-          session.course_instance_id,
-          `完成限时练习：${totalScore}/${questions.length}`,
-          Math.ceil(valid.totalDurationSeconds / 60),
-          `practice_session:${sessionId}`,
-          timestamp,
-          timestamp
-        );
+          db.prepare(
+            `INSERT INTO study_events (
+              id, course_instance_id, source_system, event_type, title,
+              workload_minutes, evidence_ref, parent_visible, occurred_at, created_at
+            ) VALUES (?, ?, 'S3', 'practice_completed', ?, ?, ?, 1, ?, ?)`
+          ).run(
+            this.id(),
+            session.course_instance_id,
+            `完成限时练习：${totalScore}/${questions.length}`,
+            Math.ceil(valid.totalDurationSeconds / 60),
+            `practice_session:${sessionId}`,
+            timestamp,
+            timestamp
+          );
+        }
 
         return {
           sessionId,

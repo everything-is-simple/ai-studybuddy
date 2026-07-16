@@ -9,6 +9,7 @@ import aiDevRouter from './api/dev-ai';
 import studyRhythmRouter from './api/study-rhythm';
 import noteBuilderRouter from './api/note-builder';
 import practiceRunnerRouter from './api/practice-runner';
+import errorFixerRouter from './api/error-fixer';
 import { MaterialJobWorker } from './services/material-job-worker';
 
 const app = express();
@@ -43,6 +44,7 @@ app.use('/api/dev/ai', aiDevRouter);
 app.use('/api', studyRhythmRouter);
 app.use('/api', noteBuilderRouter);
 app.use('/api', practiceRunnerRouter);
+app.use('/api', errorFixerRouter);
 
 // ── 启动 ──────────────────────────────────────────────────
 const server = app.listen(PORT, HOST, () => {

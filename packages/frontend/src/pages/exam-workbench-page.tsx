@@ -330,6 +330,14 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
                 </Link>
               </section>
 
+              <section className="card workbench-mistakes" data-testid="workbench-mistakes">
+                <h2>查漏补缺</h2>
+                <p>查看练习中做错的题，确认错因、原题重做，并跟踪薄弱知识点。</p>
+                <Link className="button-link" to={`/exams/${data.exam.id}/mistakes`}>
+                  进入错题本
+                </Link>
+              </section>
+
               <section className="card" data-testid="task-plan">
                 <h2>计划</h2>
                 <form className="task-form" onSubmit={handleCreateTask}>

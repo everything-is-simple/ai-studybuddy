@@ -10,6 +10,11 @@ export interface ArchiveMistakesResult {
   skippedExistingEvidence: number;
 }
 
+export interface RedoEvidenceResult {
+  mistakeId: string;
+  isCorrect: boolean;
+}
+
 interface ErrorFixerServiceOptions {
   id?: () => string;
 }
@@ -103,7 +108,8 @@ export class ErrorFixerService {
       `SELECT COUNT(*) AS count, MIN(occurred_at) AS first_at, MAX(occurred_at) AS latest_at
        FROM mistake_evidence
        WHERE course_instance_id = ?
-         AND knowledge_module_id = ?`
+         AND knowledge_module_id = ?
+         AND evidence_type IN ('practice_error', 'redo_incorrect')`
     );
     const findWeakPoint = db.prepare(
       'SELECT id FROM weak_points WHERE course_instance_id = ? AND knowledge_module_id = ?'
@@ -192,5 +198,112 @@ export class ErrorFixerService {
     }
 
     return result;
+  }
+
+  /**
+   * 记录一次原题重做的证据（T04B）。
+   * - 重做 session 的题目是复制题，经 origin_question_id 回链原题；
+   * - 证据 question_id 指向原题，source 为重做作答；
+   * - 重做错误：错题回到/保持 needs_review，并按失败证据重算薄弱点；
+   * - 重做正确：只追加掌握证据，状态变更留给学生显式操作。
+   */
+  recordRedoEvidence(db: DatabaseType, sessionId: string, occurredAt: string): RedoEvidenceResult {
+    const session = db
+      .prepare(
+        `SELECT origin_mistake_id FROM practice_sessions
+         WHERE id = ? AND session_kind = 'mistake_redo'`
+      )
+      .get(sessionId) as { origin_mistake_id: string } | undefined;
+    if (!session?.origin_mistake_id) {
+      throw new Error('[S4] redo session missing origin mistake');
+    }
+
+    const mistake = db
+      .prepare(
+        `SELECT id, course_instance_id, knowledge_module_id, question_id, status
+         FROM mistakes WHERE id = ?`
+      )
+      .get(session.origin_mistake_id) as
+      | { id: string; course_instance_id: string; knowledge_module_id: string; question_id: string; status: string }
+      | undefined;
+    if (!mistake) throw new Error('[S4] redo session origin mistake not found');
+
+    const answer = db
+      .prepare(
+        `SELECT a.id, a.is_correct
+         FROM practice_answers a
+         JOIN questions q ON q.id = a.question_id
+         WHERE a.session_id = ? AND q.origin_question_id = ?`
+      )
+      .get(sessionId, mistake.question_id) as { id: string; is_correct: number } | undefined;
+    if (!answer) throw new Error('[S4] redo answer not found');
+
+    const isCorrect = answer.is_correct === 1;
+    db.prepare(
+      `INSERT INTO mistake_evidence (
+        id, mistake_id, source_practice_answer_id, evidence_type,
+        course_instance_id, knowledge_module_id, question_id, occurred_at, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      this.id(),
+      mistake.id,
+      answer.id,
+      isCorrect ? 'redo_correct' : 'redo_incorrect',
+      mistake.course_instance_id,
+      mistake.knowledge_module_id,
+      mistake.question_id,
+      occurredAt,
+      occurredAt
+    );
+
+    if (!isCorrect) {
+      db.prepare(
+        `UPDATE mistakes SET status = 'needs_review', updated_at = ? WHERE id = ?`
+      ).run(occurredAt, mistake.id);
+
+      const evidenceStats = db
+        .prepare(
+          `SELECT COUNT(*) AS count, MIN(occurred_at) AS first_at, MAX(occurred_at) AS latest_at
+           FROM mistake_evidence
+           WHERE course_instance_id = ?
+             AND knowledge_module_id = ?
+             AND evidence_type IN ('practice_error', 'redo_incorrect')`
+        )
+        .get(mistake.course_instance_id, mistake.knowledge_module_id) as {
+        count: number;
+        first_at: string | null;
+        latest_at: string | null;
+      };
+      if (evidenceStats.count >= 2) {
+        const weakPoint = db
+          .prepare('SELECT id FROM weak_points WHERE course_instance_id = ? AND knowledge_module_id = ?')
+          .get(mistake.course_instance_id, mistake.knowledge_module_id) as WeakPointRow | undefined;
+        if (!weakPoint) {
+          db.prepare(
+            `INSERT INTO weak_points (
+              id, course_instance_id, knowledge_module_id, status, evidence_count,
+              first_detected_at, latest_detected_at, created_at, updated_at
+            ) VALUES (?, ?, ?, 'active', ?, ?, ?, ?, ?)`
+          ).run(
+            this.id(),
+            mistake.course_instance_id,
+            mistake.knowledge_module_id,
+            evidenceStats.count,
+            evidenceStats.first_at ?? occurredAt,
+            evidenceStats.latest_at ?? occurredAt,
+            occurredAt,
+            occurredAt
+          );
+        } else {
+          db.prepare(
+            `UPDATE weak_points
+             SET status = 'active', evidence_count = ?, latest_detected_at = ?, updated_at = ?
+             WHERE id = ?`
+          ).run(evidenceStats.count, evidenceStats.latest_at ?? occurredAt, occurredAt, weakPoint.id);
+        }
+      }
+    }
+
+    return { mistakeId: mistake.id, isCorrect };
   }
 }

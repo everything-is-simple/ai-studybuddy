@@ -324,7 +324,7 @@ export interface PracticeAnswerRecord {
 // ============================================================
 
 export type MistakeStatus = 'pending_review' | 'needs_review' | 'mastered';
-export type MistakeEvidenceType = 'practice_error';
+export type MistakeEvidenceType = 'practice_error' | 'redo_correct' | 'redo_incorrect';
 export type WeakPointStatus = 'active' | 'mastered';
 
 export interface MistakeRecord {
@@ -337,6 +337,9 @@ export interface MistakeRecord {
   latestPracticeAnswerId: string;
   status: MistakeStatus;
   errorCount: number;
+  errorCauseCategory?: string | null;
+  errorCauseNote?: string | null;
+  errorCauseConfirmedAt?: string | null;
   firstErrorAt: string;
   latestErrorAt: string;
   createdAt: string;
@@ -399,6 +402,8 @@ export interface PracticeSessionDetailDto {
   questionCount: number;
   timeLimitSeconds: number | null;
   difficultyPreference: PracticeDifficultyPreference;
+  sessionKind?: 'practice' | 'mistake_redo';
+  originMistakeId?: string | null;
   startedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -436,4 +441,101 @@ export interface SubmitPracticeSessionResponse {
   overtime: boolean;
   totalDurationSeconds: number;
   answers: PracticeAnswerResultDto[];
+}
+
+// ============================================================
+// S4 ErrorFixer 公开 API DTO（Phase 1-T04B）
+// 错题详情允许展示已批改事实（正确答案/解析）；
+// 重做作答前仍走 S3 作答前 DTO，不泄露答案。
+// ============================================================
+
+export type MistakeErrorCauseCategory =
+  | 'concept_unclear'
+  | 'misread'
+  | 'formula_error'
+  | 'step_missing'
+  | 'time_pressure'
+  | 'other';
+
+export interface MistakeListItemDto {
+  id: string;
+  courseInstanceId: string;
+  assessmentAttemptId?: string | null;
+  knowledgeModuleId: string;
+  knowledgeModuleTitle: string;
+  questionId: string;
+  questionType: PracticeQuestionType;
+  stemPreview: string;
+  status: MistakeStatus;
+  errorCount: number;
+  errorCauseCategory?: MistakeErrorCauseCategory | null;
+  firstErrorAt: string;
+  latestErrorAt: string;
+}
+
+export interface MistakeListResponse {
+  items: MistakeListItemDto[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface MistakeEvidenceDto {
+  id: string;
+  evidenceType: MistakeEvidenceType;
+  occurredAt: string;
+}
+
+export interface MistakeDetailDto {
+  id: string;
+  courseInstanceId: string;
+  assessmentAttemptId?: string | null;
+  knowledgeModuleId: string;
+  knowledgeModuleTitle: string;
+  questionId: string;
+  questionType: PracticeQuestionType;
+  stem: string;
+  options?: string[] | null;
+  correctAnswer: string;
+  explanation?: string | null;
+  studentAnswer: string | null;
+  status: MistakeStatus;
+  errorCount: number;
+  errorCauseCategory?: MistakeErrorCauseCategory | null;
+  errorCauseNote?: string | null;
+  errorCauseConfirmedAt?: string | null;
+  firstErrorAt: string;
+  latestErrorAt: string;
+  evidence: MistakeEvidenceDto[];
+}
+
+export interface ConfirmMistakeErrorCauseRequest {
+  semesterId: string;
+  category: MistakeErrorCauseCategory;
+  note?: string | null;
+}
+
+export interface UpdateMistakeStatusRequest {
+  semesterId: string;
+  status: Extract<MistakeStatus, 'needs_review' | 'mastered'>;
+  confirm?: boolean;
+}
+
+export interface CreateMistakeRedoRequest {
+  semesterId: string;
+}
+
+export interface WeakPointListItemDto {
+  id: string;
+  courseInstanceId: string;
+  knowledgeModuleId: string;
+  knowledgeModuleTitle: string;
+  status: WeakPointStatus;
+  evidenceCount: number;
+  firstDetectedAt: string;
+  latestDetectedAt: string;
+}
+
+export interface WeakPointListResponse {
+  items: WeakPointListItemDto[];
 }

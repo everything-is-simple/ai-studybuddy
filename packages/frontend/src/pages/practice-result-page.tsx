@@ -85,6 +85,30 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
       </header>
       {loading && <FeedbackMessage state="loading" message="正在补充题目详情…" />}
       {error && <FeedbackMessage state="error" message={error} onRetry={refetch} />}
+      {data && data.session.sessionKind === 'mistake_redo' && data.session.originMistakeId && (
+        <section className="card" data-testid="redo-result-nav">
+          <p>
+            这是一次错题重做。
+            {result.totalScore === result.questionCount
+              ? '重做通过，掌握证据已记录。'
+              : '重做未通过，这道题会保持需要复习状态。'}
+          </p>
+          <Link className="button-link" to={`/mistakes/${data.session.originMistakeId}`}>
+            返回错题详情
+          </Link>
+        </section>
+      )}
+      {data &&
+        data.session.sessionKind !== 'mistake_redo' &&
+        result.totalScore < result.questionCount &&
+        data.session.assessmentAttemptId && (
+          <section className="card" data-testid="mistake-entry">
+            <p>{result.questionCount - result.totalScore} 道错题已进入错题本，建议尽快复盘。</p>
+            <Link className="button-link" to={`/exams/${data.session.assessmentAttemptId}/mistakes`}>
+              打开错题本
+            </Link>
+          </section>
+        )}
       {data && (
         <section className="practice-result-list" aria-label="逐题批改结果">
           {data.session.questions.map((question) => {

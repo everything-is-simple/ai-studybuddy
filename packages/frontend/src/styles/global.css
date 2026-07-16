@@ -871,3 +871,142 @@ button:disabled {
   color: var(--color-text-muted);
   font-size: 0.875rem;
 }
+
+/* ============ S4 错题本（Phase 1-T04B） ============ */
+
+.mistake-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mistake-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-secondary);
+}
+
+.mistake-item-head,
+.mistake-item-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mistake-item-foot {
+  justify-content: space-between;
+}
+
+.mistake-stem-preview {
+  margin: 8px 0;
+}
+
+.mistake-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.status-pending_review {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-needs_review {
+  background: #fee2e2;
+  color: var(--color-danger);
+}
+
+.status-mastered {
+  background: #dcfce7;
+  color: var(--color-success);
+}
+
+.weak-points ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.weak-points li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+
+.weak-point-active {
+  outline: 2px solid var(--color-primary);
+}
+
+.mistake-options {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.mistake-options li {
+  padding: 4px 0;
+}
+
+.mistake-answers {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.answer-wrong {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.answer-right {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.mistake-cause-form {
+  display: grid;
+  gap: 8px;
+  max-width: 480px;
+}
+
+.mistake-action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mistake-evidence-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mistake-evidence-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.evidence-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-secondary);
+}
+
+.evidence-redo_correct {
+  background: #dcfce7;
+  color: var(--color-success);
+}
+
+.evidence-redo_incorrect,
+.evidence-practice_error {
+  background: #fee2e2;
+  color: var(--color-danger);
+}

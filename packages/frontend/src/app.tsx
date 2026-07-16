@@ -8,6 +8,8 @@ const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
 const PracticeStartPage = lazy(() => import('./pages/practice-start-page'));
 const PracticeSessionPage = lazy(() => import('./pages/practice-session-page'));
 const PracticeResultPage = lazy(() => import('./pages/practice-result-page'));
+const MistakeListPage = lazy(() => import('./pages/mistake-list-page'));
+const MistakeDetailPage = lazy(() => import('./pages/mistake-detail-page'));
 
 const SEMESTER_ID_KEY = 'ai-studybuddy:semesterId';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -131,6 +133,22 @@ export function App() {
             element={
               <Suspense fallback={<div className="page">正在加载练习结果…</div>}>
                 <PracticeResultPage semesterId={semesterId} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/exams/:examId/mistakes"
+            element={
+              <Suspense fallback={<div className="page">正在加载错题本…</div>}>
+                <MistakeListPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/mistakes/:mistakeId"
+            element={
+              <Suspense fallback={<div className="page">正在加载错题详情…</div>}>
+                <MistakeDetailPage semesterId={semesterId} onSemesterError={handleSemesterError} />
               </Suspense>
             }
           />
