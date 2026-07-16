@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.15
+**版本**：v1.16
 **日期**：2026-07-16
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -663,9 +663,10 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 1. 用任务编号或关键词在本文件中定位对应行，例如 `rg -n "T03C|Phase 1-T03C|批改" docs/04-开发任务清单-Todo-List.md`。
 2. 只勾选本轮已经完成且已验证的子项；若只是创建计划，则登记“计划已创建并待批”，不得勾选实现项。
-3. 在对应任务附近补一条收尾证据，至少包含日期、改动范围、验证命令与未实现边界。
-4. 再运行 `powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 和 `git diff --check`。
-5. 交付说明必须明确写出 `docs/04` 已更新；若未更新，必须说明本轮为何不是任务完成态。
+3. 只有代码与文档已合入 `master` 并推送到 `origin/master`，才可把实现任务标记为完成；仅在任务分支完成或推送分支，不得勾选完成。
+4. 在对应任务附近补一条收尾证据，至少包含日期、改动范围、验证命令、任务分支、master 提交和未实现边界。
+5. 再运行 `powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 和 `git diff --check`。
+6. 交付说明必须明确写出 `docs/04` 已更新；若未更新，必须说明本轮为何不是任务完成态。
 
 这条门禁优先级等同于测试和构建：未完成 `docs/04` 收尾，不得声称任务已完成。
 

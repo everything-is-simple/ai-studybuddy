@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发规范
 
-**版本**：v1.4
+**版本**：v1.5
 **日期**：2026-07-16
 **用途**：规定 AI StudyBuddy 的工具无关协作流程、分支/worktree、验证、证据、隐私和提交规则。`CLAUDE.md` 与 `AGENTS.md` 只保留入口摘要；完整规则以本文为准。
 
@@ -65,13 +65,117 @@
 
 ---
 
-## 五、分支、worktree 与提交规则
+## 五、Git 分支、worktree、提交与合并规则
 
-- 默认分支名前缀为 `codex/`，例如 `codex/phase1-t00-docs`。
-- 有并行任务或长期任务时，优先使用隔离 worktree，避免污染主 checkout。
-- 创建 worktree 前必须检查目标目录不存在、分支不存在、主 checkout 是否只有预期变更；不得删除或覆盖用户改动。
+### 5.1 分支事实定义
+
+- `master` 是唯一集成事实分支：只有已经合回 `master`、通过验证、同步 `docs/04`、并推送到 `origin/master` 的任务，才可称为“主系统已完成”。
+- 任务分支、远端分支、worktree 分支上的实现只能称为“分支实现”或“待合并实现”；不得写成“master 已完成”。
+- `docs/04` 的完成状态必须描述 `master` 状态，而不是某个未合并分支状态。
+
+### 5.2 分支命名
+
+每个任务使用一个任务分支，格式：
+
+```text
+<executor>/<work-id>-<short-scope>
+```
+
+`<executor>` 固定为：
+
+- `codex`：Codex / GPT 执行；
+- `claude`：Claude 执行；
+- `human`：人工执行；
+- `review`：纯审查或合并修复。
+
+`<work-id>` 优先使用 Phase 任务号，如 `phase1-t03a`；跨任务规范治理使用 `process`，紧急修复使用 `hotfix`。
+
+示例：
+
+```text
+codex/phase1-t03a-s3-schema
+claude/phase1-t03b-practice-generation-api
+review/phase1-t03a-merge-audit
+codex/process-git-workflow
+```
+
+同一任务多轮修复仍尽量复用同一任务分支；确需重开时加后缀，如 `codex/phase1-t03a-s3-schema-v2`，并在交付说明中解释原因。
+
+### 5.3 开始任务
+
+开始任何实现任务前：
+
+```powershell
+git status --short --branch
+git fetch origin
+git checkout master
+git pull --ff-only origin master
+git checkout -b <task-branch>
+```
+
+如主 checkout 有未提交变更，先确认所有权：属于本任务才继续；不属于本任务则停下，不得覆盖或夹带。
+
+有并行任务或长期任务时，优先使用隔离 worktree，避免污染主 checkout。创建 worktree 前必须检查目标目录不存在、分支不存在、主 checkout 是否只有预期变更；不得删除或覆盖用户改动。
+
+### 5.4 分支提交与推送
+
 - 每个任务只暂存批准范围内的文件；不得把 `.env.local`、真实数据、截图原图、外部参考源码、`node_modules`、临时输出或凭据加入提交。
-- 默认不推送、不合并、不删除 worktree，除非用户明确授权。
+- 提交信息使用 `type(scope): 中文描述`。
+- 可以在任务分支推送远端备份或请求审查：
+
+```powershell
+git push -u origin <task-branch>
+```
+
+- 推送任务分支不代表任务完成；交付说明必须明确“仅推分支，尚未合入 master”。
+
+### 5.5 合并到 master
+
+只有满足以下条件才允许合并：
+
+1. `.plans/` 中批准范围已完成；
+2. 测试、构建、smoke 或浏览器验收按任务要求通过；
+3. `docs/04` 已勾选本任务实际完成项并登记日期、验证命令和未实现边界；
+4. 必要时 `docs/00` 已同步下一门禁；
+5. `git diff --check` 和必要的 `git diff --cached --check` 通过；
+6. 用户已明确允许合并或任务说明已包含合并授权。
+
+合并流程固定为快进合并，保证历史可追踪：
+
+```powershell
+git checkout <task-branch>
+git fetch origin
+git rebase origin/master
+git checkout master
+git pull --ff-only origin master
+git merge --ff-only <task-branch>
+```
+
+如果 rebase、快进合并或验证出现冲突/失败，立即停止并报告；不得使用 `git reset --hard`、强推或手工跳过冲突来“凑合完成”。
+
+### 5.6 master 验证与推送
+
+合并后必须在 `master` 重新运行任务要求的验证。验证通过后：
+
+```powershell
+git push origin master
+git status --short --branch
+```
+
+只有 `origin/master` 包含合并后的提交，且 `git status --short --branch` 显示 `master...origin/master` 无未提交变更，才可报告“任务已完成并推送”。
+
+### 5.7 交付说明必填
+
+每次交付必须写清：
+
+1. 当前分支；
+2. 任务分支名；
+3. 提交哈希；
+4. 是否已推任务分支；
+5. 是否已合入 `master`；
+6. 是否已推送 `origin/master`；
+7. `docs/04` 的更新位置；
+8. 剩余未合并分支或未触发任务。
 
 ---
 
