@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:test-driven-development` and `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. 未经用户明确批准不得修改 Schema、migration、业务代码、测试或任务完成状态。
 
-**状态**：待用户批准；当前仅完成只读核查、计划编写与自审
+**状态**：已于 2026-07-16 获用户明确批准；实现、验证与文档治理已完成
 
 **日期**：2026-07-16
 
@@ -38,6 +38,7 @@
 ### 获批后修改
 
 - `packages/backend/src/db/migrations.ts`：import `SEMESTER_V4_SQL` 并登记 `{ version: 4, sql: SEMESTER_V4_SQL }`。
+- `packages/backend/test/semester-initialization.test.mjs`：把既有 fresh/upgrade migration 回归从 v3 校准到 v4，并断言三张 S3 表存在，避免全量测试保留过期版本假设。
 - `packages/shared/src/types.ts`：增加不泄露 API 行为的 S3 基础枚举/记录类型。
 - `docs/04-开发任务清单-Todo-List.md`：仅在实现与验证全部通过、且确认不会覆盖现有修改后，将 T03A 标为完成并登记证据。
 - `docs/00-文档索引-Index.md`：仅在 T03A 完成后把“下一实现门禁”从 T03A 调整为 T03B；不创建新编号文档。
@@ -92,8 +93,9 @@
 
 **Files:**
 - Create: `packages/backend/test/practice-schema.test.mjs`
+- Modify: `packages/backend/test/semester-initialization.test.mjs`
 
-- [ ] **Step 1：建立隔离数据库测试夹具**
+- [x] **Step 1：建立隔离数据库测试夹具**
 
 测试文件使用 `mkdtemp()` 和 `better-sqlite3`，从构建产物导入 migration：
 
@@ -143,7 +145,16 @@ function seedFoundation(db) {
 }
 ```
 
-- [ ] **Step 2：写 fresh database shape 测试**
+- [x] **Step 2：先校准既有 migration 回归测试到 v4（RED）**
+
+修改 `packages/backend/test/semester-initialization.test.mjs` 中两个仍断言最高版本为 3 的用例：
+
+- fresh database 用例名称改为 `semester migrations apply v2, v3 and v4 schema changes`，期望版本改为 4，并断言 `practice_sessions`、`questions`、`practice_answers` 存在。
+- legacy upgrade 用例名称改为 `semester migrations upgrade an existing v1 database through v4`，期望版本改为 4，并保留已有 S1 数据断言。
+
+在 v4 尚未登记时，至少一个版本断言必须失败，证明既有全量回归不会被遗忘。
+
+- [x] **Step 3：写 fresh database shape 测试**
 
 断言：
 
@@ -168,7 +179,7 @@ assert.deepEqual(columnNames(db, 'practice_answers'), [
 
 同时通过 `sqlite_master` / `PRAGMA index_list` 断言计划中的索引和 trigger 全部存在。
 
-- [ ] **Step 3：写 v3 → v4 升级兼容测试**
+- [x] **Step 4：写 v3 → v4 升级兼容测试**
 
 测试先用 `SCHEMA_SEMESTER_SQL`、`SEMESTER_V2_SQL`、`SEMESTER_V3_SQL` 和 `applyMigrations()` 构造真实 v3 数据库，插入一条已有课程/考试/资料/知识模块，再调用 `migrateSemesterDb(db)`：
 
@@ -180,23 +191,32 @@ migrateSemesterDb(db);
 assert.equal(db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count, 1);
 ```
 
-- [ ] **Step 4：写 session 约束与关联测试**
+- [x] **Step 5：写 session 约束与关联测试**
 
-覆盖：非法状态、题数 0/21、限时 0、非法难度偏好、负分、正确率越界、非法 overtime、负总用时，以及“考试属于另一课程”的 trigger 拒绝。正向插入一个合法 session。
+覆盖：非法状态、题数 0/21/小数、限时 0/小数、非法难度偏好、负分/小数分、正确率越界/非数值、非法 overtime、负数或小数总用时，以及“考试属于另一课程”的 trigger 拒绝。正向插入一个合法 session。
 
-- [ ] **Step 5：写 question 约束与关联测试**
+- [x] **Step 6：写 question 约束与关联测试**
 
-覆盖：非法题型、空题干、题干超过 2000、选择题 options 为空或非法 JSON、填空题携带 options、选择题携带 acceptable answers、非法难度、空模型、顺序小于 1、同 session 顺序重复，以及 session/course/module 不一致。正向插入单选、多选、填空各一题。
+覆盖：非法题型、空题干、题干超过 2000、选择题 options 为 NULL 或非法 JSON、填空题携带 options、选择题携带 acceptable answers、非法难度、空模型、顺序小于 1 或为小数、同 session 顺序重复，以及 session/course/module 不一致。正向插入单选、多选、填空各一题。
 
-- [ ] **Step 6：写 answer 约束与关联测试**
+- [x] **Step 7：写 answer 约束与关联测试**
 
-覆盖：非法 `is_correct`、负用时、顺序小于 1、重复 session+question、重复 session+answer_order、答案引用另一 session 的题目、answer_order 与 question_order 不一致。正向插入已答题和未作答记录。
+覆盖：非法 `is_correct`、负数或小数用时、顺序小于 1 或为小数、重复 session+question、重复 session+answer_order、答案引用另一 session 的题目、answer_order 与 question_order 不一致。正向插入已答题和未作答记录。
 
-- [ ] **Step 7：写删除语义测试**
+- [x] **Step 8：写删除语义测试**
 
 覆盖：删除 assessment 后 session 的 `assessment_attempt_id` 变 NULL；删除 session 后其 questions 与 practice_answers 级联删除；删除 knowledge module 按 PRD 级联删除对应 question 与 answer。
 
-- [ ] **Step 8：构建当前代码并运行 RED**
+- [x] **Step 9：写父记录/顺序更新的一致性测试**
+
+覆盖以下反向更新，确认数据库层不能在已有引用后制造脏关联：
+
+- 已有 session 时，不允许把关联 assessment 移到另一课程；
+- 已有 question 时，不允许把 session 或 knowledge module 移到另一课程；
+- 已有 answer 时，不允许把 question 改到另一 session，或把 `question_order` 改成与 `answer_order` 不一致；
+- 合法且不破坏引用关系的更新仍可执行。
+
+- [x] **Step 10：构建当前代码并运行 RED**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -213,7 +233,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/practice-
 - Create: `packages/backend/src/db/sql/migration-semester-v4.ts`
 - Modify: `packages/backend/src/db/migrations.ts`
 
-- [ ] **Step 1：新增完整 v4 SQL 常量**
+- [x] **Step 1：新增完整 v4 SQL 常量**
 
 `migration-semester-v4.ts` 应一次性创建三表、索引和 trigger；表创建顺序固定为 session → question → answer。SQL 使用以下契约（实现时保持字段和约束一致，不引入额外业务表）：
 
@@ -224,15 +244,23 @@ CREATE TABLE practice_sessions (
   assessment_attempt_id TEXT,
   status TEXT NOT NULL DEFAULT 'in_progress'
     CHECK(status IN ('in_progress', 'submitted', 'graded')),
-  question_count INTEGER NOT NULL CHECK(question_count BETWEEN 1 AND 20),
-  time_limit_seconds INTEGER CHECK(time_limit_seconds IS NULL OR time_limit_seconds > 0),
+  question_count INTEGER NOT NULL
+    CHECK(typeof(question_count) = 'integer' AND question_count BETWEEN 1 AND 20),
+  time_limit_seconds INTEGER
+    CHECK(time_limit_seconds IS NULL OR (typeof(time_limit_seconds) = 'integer' AND time_limit_seconds > 0)),
   started_at TEXT NOT NULL,
   submitted_at TEXT,
   graded_at TEXT,
-  total_score INTEGER CHECK(total_score IS NULL OR total_score BETWEEN 0 AND question_count),
-  correct_rate REAL CHECK(correct_rate IS NULL OR (correct_rate >= 0.0 AND correct_rate <= 1.0)),
-  overtime INTEGER NOT NULL DEFAULT 0 CHECK(overtime IN (0, 1)),
-  total_duration_seconds INTEGER CHECK(total_duration_seconds IS NULL OR total_duration_seconds >= 0),
+  total_score INTEGER
+    CHECK(total_score IS NULL OR (typeof(total_score) = 'integer' AND total_score BETWEEN 0 AND question_count)),
+  correct_rate REAL
+    CHECK(correct_rate IS NULL OR (typeof(correct_rate) IN ('integer', 'real')
+      AND correct_rate >= 0.0 AND correct_rate <= 1.0)),
+  overtime INTEGER NOT NULL DEFAULT 0
+    CHECK(typeof(overtime) = 'integer' AND overtime IN (0, 1)),
+  total_duration_seconds INTEGER
+    CHECK(total_duration_seconds IS NULL OR
+      (typeof(total_duration_seconds) = 'integer' AND total_duration_seconds >= 0)),
   difficulty_preference TEXT NOT NULL DEFAULT 'mixed'
     CHECK(difficulty_preference IN ('easy', 'medium', 'hard', 'mixed')),
   created_at TEXT NOT NULL,
@@ -256,7 +284,8 @@ CREATE TABLE questions (
   source_evidence TEXT,
   ai_model TEXT NOT NULL CHECK(length(trim(ai_model)) > 0),
   prompt_version TEXT NOT NULL DEFAULT 's3-practice-v1.0' CHECK(length(trim(prompt_version)) > 0),
-  question_order INTEGER NOT NULL CHECK(question_order >= 1),
+  question_order INTEGER NOT NULL
+    CHECK(typeof(question_order) = 'integer' AND question_order >= 1),
   created_at TEXT NOT NULL,
   CHECK(
     (type IN ('single_choice', 'multiple_choice')
@@ -277,16 +306,20 @@ CREATE TABLE practice_answers (
   session_id TEXT NOT NULL,
   question_id TEXT NOT NULL,
   student_answer TEXT,
-  is_correct INTEGER CHECK(is_correct IS NULL OR is_correct IN (0, 1)),
-  time_spent_seconds INTEGER CHECK(time_spent_seconds IS NULL OR time_spent_seconds >= 0),
-  answer_order INTEGER NOT NULL CHECK(answer_order >= 1),
+  is_correct INTEGER
+    CHECK(is_correct IS NULL OR (typeof(is_correct) = 'integer' AND is_correct IN (0, 1))),
+  time_spent_seconds INTEGER
+    CHECK(time_spent_seconds IS NULL OR
+      (typeof(time_spent_seconds) = 'integer' AND time_spent_seconds >= 0)),
+  answer_order INTEGER NOT NULL
+    CHECK(typeof(answer_order) = 'integer' AND answer_order >= 1),
   created_at TEXT NOT NULL,
   FOREIGN KEY(session_id) REFERENCES practice_sessions(id) ON DELETE CASCADE,
   FOREIGN KEY(question_id) REFERENCES questions(id) ON DELETE CASCADE
 );
 ```
 
-- [ ] **Step 2：增加索引和唯一约束**
+- [x] **Step 2：增加索引和唯一约束**
 
 ```sql
 CREATE INDEX idx_practice_sessions_course
@@ -315,7 +348,7 @@ CREATE UNIQUE INDEX idx_practice_answers_session_order
   ON practice_answers(session_id, answer_order);
 ```
 
-- [ ] **Step 3：增加跨表一致性 trigger**
+- [x] **Step 3：增加跨表一致性 trigger**
 
 必须同时覆盖 INSERT 与相关列 UPDATE：
 
@@ -335,17 +368,21 @@ END;
 CREATE TRIGGER validate_practice_sessions_update
 BEFORE UPDATE OF course_instance_id, assessment_attempt_id ON practice_sessions
 FOR EACH ROW
-WHEN NEW.assessment_attempt_id IS NOT NULL AND NOT EXISTS (
+WHEN (NEW.assessment_attempt_id IS NOT NULL AND NOT EXISTS (
   SELECT 1 FROM assessment_attempts a
   WHERE a.id = NEW.assessment_attempt_id
     AND a.course_instance_id = NEW.course_instance_id
+)) OR EXISTS (
+  SELECT 1 FROM questions q
+  WHERE q.practice_session_id = OLD.id
+    AND q.course_instance_id <> NEW.course_instance_id
 )
 BEGIN
-  SELECT RAISE(ABORT, 'practice session assessment course mismatch');
+  SELECT RAISE(ABORT, 'practice session relation mismatch');
 END;
 ```
 
-`questions` 与 `practice_answers` 的四个 trigger 使用以下条件；UPDATE trigger 只监听关联列：
+`questions` 与 `practice_answers` 的四个 trigger 使用以下条件；question UPDATE 必须同时监听 `question_order` 并保护既有 answers：
 
 ```sql
 CREATE TRIGGER validate_questions_insert
@@ -365,7 +402,7 @@ BEGIN
 END;
 
 CREATE TRIGGER validate_questions_update
-BEFORE UPDATE OF practice_session_id, course_instance_id, knowledge_module_id ON questions
+BEFORE UPDATE OF practice_session_id, course_instance_id, knowledge_module_id, question_order ON questions
 FOR EACH ROW
 WHEN NOT EXISTS (
   SELECT 1 FROM practice_sessions s
@@ -375,9 +412,13 @@ WHEN NOT EXISTS (
   SELECT 1 FROM knowledge_modules m
   WHERE m.id = NEW.knowledge_module_id
     AND m.course_instance_id = NEW.course_instance_id
+) OR EXISTS (
+  SELECT 1 FROM practice_answers a
+  WHERE a.question_id = OLD.id
+    AND (a.session_id <> NEW.practice_session_id OR a.answer_order <> NEW.question_order)
 )
 BEGIN
-  SELECT RAISE(ABORT, 'question course relation mismatch');
+  SELECT RAISE(ABORT, 'question relation mismatch');
 END;
 
 CREATE TRIGGER validate_practice_answers_insert
@@ -405,11 +446,35 @@ WHEN NOT EXISTS (
 BEGIN
   SELECT RAISE(ABORT, 'practice answer relation mismatch');
 END;
+
+CREATE TRIGGER validate_assessment_practice_course_update
+BEFORE UPDATE OF course_instance_id ON assessment_attempts
+FOR EACH ROW
+WHEN EXISTS (
+  SELECT 1 FROM practice_sessions s
+  WHERE s.assessment_attempt_id = OLD.id
+    AND s.course_instance_id <> NEW.course_instance_id
+)
+BEGIN
+  SELECT RAISE(ABORT, 'assessment practice course mismatch');
+END;
+
+CREATE TRIGGER validate_knowledge_module_question_course_update
+BEFORE UPDATE OF course_instance_id ON knowledge_modules
+FOR EACH ROW
+WHEN EXISTS (
+  SELECT 1 FROM questions q
+  WHERE q.knowledge_module_id = OLD.id
+    AND q.course_instance_id <> NEW.course_instance_id
+)
+BEGIN
+  SELECT RAISE(ABORT, 'knowledge module question course mismatch');
+END;
 ```
 
-错误摘要固定、无资料正文和完整 UUID。
+错误摘要固定、无资料正文和完整 UUID。共创建 8 个一致性 trigger；测试必须覆盖 INSERT、子记录 UPDATE 和父记录 UPDATE 三个方向。
 
-- [ ] **Step 4：登记连续 migration v4**
+- [x] **Step 4：登记连续 migration v4**
 
 在 `migrations.ts` 中增加：
 
@@ -430,7 +495,7 @@ const SEMESTER_MIGRATIONS: readonly Migration[] = [
 
 不得修改 runner 的 gap、transaction 或 jobs repair 行为。
 
-- [ ] **Step 5：运行专项测试确认 GREEN**
+- [x] **Step 5：运行专项测试确认 GREEN**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -446,7 +511,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/practice-
 **Files:**
 - Modify: `packages/shared/src/types.ts`
 
-- [ ] **Step 1：增加枚举与记录类型**
+- [x] **Step 1：增加枚举与记录类型**
 
 类型使用 camelCase，不定义 API endpoint，不把“未提交时隐藏答案”误当成已实现行为：
 
@@ -508,7 +573,7 @@ export interface PracticeAnswerRecord {
 
 这些是存储/领域记录，不是公开响应 DTO；T03B/T03C 必须另行定义“作答前隐藏正确答案”和“批改后结果”契约。
 
-- [ ] **Step 2：运行 type-check**
+- [x] **Step 2：运行 type-check**
 
 ```powershell
 pnpm type-check
@@ -524,19 +589,19 @@ pnpm type-check
 - Review only first: all T03A files
 - Modify only if a confirmed defect is found: files already listed in this plan
 
-- [ ] **Step 1：迁移审查**
+- [x] **Step 1：迁移审查**
 
 逐项确认：v4 连续、v1-v3 未改写、单事务、重复迁移不重复记录、fresh 与 v3 upgrade 都通过、JSON1 函数在当前 SQLite 可用。
 
-- [ ] **Step 2：关联审查**
+- [x] **Step 2：关联审查**
 
-逐项确认：assessment/course、session/course、module/course、answer/session/question/order 不可串联；外键删除语义与 PRD 一致。
+逐项确认：assessment/course、session/course、module/course、answer/session/question/order 不可串联；父记录 course 归属变更、session course 变更、question session/order 变更也不能破坏已有引用；外键删除语义与 PRD 一致。
 
-- [ ] **Step 3：范围与隐私审查**
+- [x] **Step 3：范围与隐私审查**
 
 确认没有 API、Service、Worker、AI prompt、前端、S4 表、真实资料、真实考试名称、Provider 配置、完整 UUID 或运行数据库进入 diff。测试数据只能使用固定占位 ID 和虚构短文本。
 
-- [ ] **Step 4：针对发现的问题先补失败测试，再做最小修复**
+- [x] **Step 4：针对发现的问题先补失败测试，再做最小修复**
 
 任何修复都遵循 RED → GREEN；不得借机重构 migration runner、S1/S2 schema 或 shared 类型全文件。
 
@@ -549,7 +614,7 @@ pnpm type-check
 - Modify after all code verification passes: `docs/00-文档索引-Index.md`
 - Modify after all code verification passes: `.plans/phase1-t03a-s3-database-schema-plan.md`
 
-- [ ] **Step 1：重新检查工作区并设置唯一隔离目录**
+- [x] **Step 1：重新检查工作区并设置唯一隔离目录**
 
 ```powershell
 git status --short --branch
@@ -558,7 +623,7 @@ $env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\phase1-t03a-20260716-final-001'
 
 若该目录已经存在，改用 `phase1-t03a-20260716-final-002`；不得复用正式运行数据。虽然专项测试使用系统临时目录，全量命令仍保留该隔离环境变量。
 
-- [ ] **Step 2：运行专项验证**
+- [x] **Step 2：运行专项验证**
 
 ```powershell
 pnpm -r --filter @ai-studybuddy/backend run build
@@ -567,7 +632,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/practice-
 
 预期：退出码 0，v4 fresh/upgrade/constraint/relationship/cascade 全部通过。
 
-- [ ] **Step 3：运行全量验证**
+- [x] **Step 3：运行全量验证**
 
 ```powershell
 pnpm type-check
@@ -578,7 +643,7 @@ pnpm test
 
 预期：全部退出码 0。T03A 无页面或 API，不要求浏览器 smoke；数据库集成测试是本任务的 smoke 证据。
 
-- [ ] **Step 4：更新完成态文档**
+- [x] **Step 4：更新完成态文档**
 
 仅在 Step 2-3 全部通过后：
 
@@ -587,7 +652,7 @@ pnpm test
 - 计划文件状态改为“已批准、实现与验证完成”，登记真实命令和结果。
 - 若 `docs/04` 的现有未提交状态无法确认所有权或无法安全保留，停止该文件的更新并向用户报告，不覆盖、不清理。
 
-- [ ] **Step 5：运行文档治理与 diff 检查**
+- [x] **Step 5：运行文档治理与 diff 检查**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
@@ -598,7 +663,7 @@ git status --short --branch
 如用户随后要求提交，才显式暂存本任务文件并运行：
 
 ```powershell
-git add -- .plans/phase1-t03a-s3-database-schema-plan.md packages/backend/src/db/sql/migration-semester-v4.ts packages/backend/src/db/migrations.ts packages/backend/test/practice-schema.test.mjs packages/shared/src/types.ts docs/00-文档索引-Index.md docs/04-开发任务清单-Todo-List.md
+git add -- .plans/phase1-t03a-s3-database-schema-plan.md packages/backend/src/db/sql/migration-semester-v4.ts packages/backend/src/db/migrations.ts packages/backend/test/practice-schema.test.mjs packages/backend/test/semester-initialization.test.mjs packages/shared/src/types.ts docs/00-文档索引-Index.md docs/04-开发任务清单-Todo-List.md
 git diff --cached --check
 git commit -m "feat(s3): 建立限时练习数据库 Schema"
 ```
@@ -609,15 +674,16 @@ git commit -m "feat(s3): 建立限时练习数据库 Schema"
 
 ## 4. 验收标准
 
-- [ ] 学期库从 v3 连续升级到 v4，重复迁移不重复执行，已有 S1/S2 数据保留。
-- [ ] fresh database 与 upgrade database 都包含 `practice_sessions`、`questions`、`practice_answers`。
-- [ ] 表字段覆盖 PRD 与目标文件要求；`question_order` 补齐作答前题目排序缺口。
-- [ ] 类型、状态、难度、题干、JSON、题数、限时、分数、正确率、布尔值和用时约束可由测试证明。
-- [ ] assessment/course、session/course/module、answer/session/question/order 不可交叉串联。
-- [ ] session/question/answer 唯一索引与查询索引存在。
-- [ ] shared 类型与 Schema 字段命名、可空性和枚举一致。
-- [ ] 不新增 API、Service、Worker、AI 调用、前端、S4 归档或未来 PRD。
-- [ ] type-check、后端 build、前端 build、专项测试、全量测试、docs governance、`git diff --check` 全部通过。
+- [x] 学期库从 v3 连续升级到 v4，重复迁移不重复执行，已有 S1/S2 数据保留。
+- [x] fresh database 与 upgrade database 都包含 `practice_sessions`、`questions`、`practice_answers`。
+- [x] 表字段覆盖 PRD 与目标文件要求；`question_order` 补齐作答前题目排序缺口。
+- [x] 类型、状态、难度、题干、JSON、题数、限时、分数、正确率、布尔值和用时约束可由测试证明。
+- [x] assessment/course、session/course/module、answer/session/question/order 不可交叉串联；父记录和题目顺序更新也不能制造脏关联。
+- [x] session/question/answer 唯一索引与查询索引存在。
+- [x] shared 类型与 Schema 字段命名、可空性和枚举一致。
+- [x] 不新增 API、Service、Worker、AI 调用、前端、S4 归档或未来 PRD。
+- [x] 既有 `semester-initialization.test.mjs` 已从 v3 期望更新到 v4，fresh 与 legacy upgrade 回归均通过。
+- [x] type-check、后端 build、前端 build、专项测试、全量测试、docs governance、`git diff --check` 全部通过。
 
 ---
 
@@ -625,7 +691,7 @@ git commit -m "feat(s3): 建立限时练习数据库 Schema"
 
 ### 5.1 规格覆盖
 
-- 三张目标表、题型/题干/选项/答案/可接受答案/难度/知识模块/来源证据、考试关联、限时、状态、时间、超时、得分/正确率、逐题答案/正确性/用时均有明确字段和测试。
+- 三张目标表、题型/题干/选项/答案/可接受答案/难度/知识模块/来源证据、考试关联、限时、状态、时间、超时、得分/正确率、逐题答案/正确性/用时均有明确字段和测试；SQLite 非 STRICT 表的整数/数值字段增加 `typeof(...)` 约束，避免小数绕过。
 - 来源资料采用“KnowledgeModule.material_id 回链 + Question.source_evidence 快照”，避免重复 material 外键产生漂移。
 - PRD 的 API 示例包含题目顺序但数据对象漏字段；计划增加 `question_order` 并用唯一索引/answer trigger 固化顺序。
 
@@ -634,6 +700,7 @@ git commit -m "feat(s3): 建立限时练习数据库 Schema"
 - 不改 v1-v3，升级只追加新表/索引/trigger；现有数据无需回填，风险低。
 - SQLite migration runner 无自动 down migration；若 v4 失败，单事务应回滚且不写 version 4。已应用后的回退只能恢复数据库备份或发布后续修复 migration，不能手工改写 v4。
 - 已用当前 `better-sqlite3` 的内存数据库只读核查 SQLite `3.53.2`，`json_valid()` 与 `json_type()` 可用；专项测试仍需把该约束纳入 RED/GREEN，防止运行时升级后漂移。
+- 独立复审发现既有 `semester-initialization.test.mjs` 硬编码最高版本为 v3，且原六个 trigger 无法阻止父记录或题目顺序更新后产生脏关联；本计划已补入既有回归更新、整数类型约束和父/子双向更新测试。
 
 ### 5.3 范围与隐私
 
@@ -641,16 +708,26 @@ git commit -m "feat(s3): 建立限时练习数据库 Schema"
 - 题干、答案和来源证据属于学生学习内容；T03A 不新增日志，不把测试正文、真实资料或完整 UUID 写入仓库证据。
 - 家长访问控制属于后续 API/S6，不在 Schema 计划中新增家长可见题目字段。
 
-### 5.4 待用户批准的关键设计点
+### 5.4 已批准并落地的关键设计点
 
 1. migration 编号固定为 v4。
 2. `questions` 增加 `question_order`，解决 PRD 中“作答前顺序”缺口。
 3. 不增加冗余 `source_material_id`，通过知识模块回链资料。
 4. 使用 trigger 强制跨表课程/session/order 一致性，而不是等到 T03B/T03C Service 才发现脏关联。
-5. T03A 完成前不更新任务状态；当前阶段只提交本计划供审查。
+5. 仅在实现与验证通过后更新 T03A 完成态；下一实现门禁切换为 T03B，但仍需独立计划和用户批准。
 
 ---
 
-## 6. 批准门禁
+## 6. 批准门禁（已满足）
 
-当前只允许保存和审查本计划。只有用户明确回复批准 Phase 1-T03A 实施后，才从 Task 1 的失败测试开始修改测试、migration、类型和完成态文档。
+用户已于 2026-07-16 明确批准 Phase 1-T03A 实施；本计划已按 TDD 完成实现与代码验证。后续 T03B 不因本次批准自动获批，必须另行计划、审查并取得用户明确批准。
+
+## 7. 实施与验证结果（2026-07-16）
+
+- RED：当前 v3 构建下，`practice-schema.test.mjs` 7/7 失败，fresh/upgrade 明确报告 `3 !== 4`；既有 migration 回归 2/2 同样因最高版本仍为 3 失败。
+- GREEN：新增 `migration-semester-v4.ts` 并登记连续 v4；专项数据库集成测试 7/7 通过，既有 fresh/legacy migration 回归 2/2 通过。
+- Schema：创建 3 张表、11 个索引、8 个跨表一致性 trigger；覆盖 SQLite 数值类型、JSON、唯一性、跨表归属、父子 UPDATE 与删除语义。
+- Shared：增加 S3 最小存储/领域枚举与记录类型，明确不是公开 API DTO。
+- 最终代码验证使用隔离 `APP_DATA_ROOT`：`pnpm type-check`、后端 build、前端 build、专项测试和 `pnpm test` 全部退出码 0；后端 127/127、前端 32/32 通过。
+- 范围：未新增 S3 API、Service、Worker、AI 调用、前端、错题归档或 S4-S7 PRD。
+- Git：当前仅为隔离 worktree 本地修改，未暂存、未提交、未推送、未合并。
