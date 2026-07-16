@@ -1,8 +1,8 @@
 # S3 限时练习子系统 PracticeRunner PRD
 
-**版本**：v0.05
+**版本**：v0.06
 **日期**：2026-07-16
-**状态**：Phase 1 轻量设计基线；T03A Schema、T03B 练习生成 API 与 T03C 批改 API 已完成；T03D 前端仍待独立计划和批准
+**状态**：Phase 1 MVP 已完成；T03A Schema、T03B 练习生成 API、T03C 批改 API 与 T03D 前端闭环已完成；错题归档留待 S4 门禁
 
 ---
 
@@ -498,6 +498,7 @@ StudyEvent (S1 已有)
 
 | 版本 | 日期 | 说明 |
 | --- | --- | --- |
+| v0.06 | 2026-07-16 | Phase 1-T03D 完成：前端已提供练习发起、限时作答、提交、结果查看和工作台“练习”区入口；不新增后端 result/list API，结果仅由本次提交响应在同浏览器会话恢复；错题归档与 S4 仍未实现 |
 | v0.05 | 2026-07-16 | Phase 1-T03C 完成：新增提交作答 API、客观题规则批改、逐题答案记录、session 汇总和 `practice_completed` StudyEvent；前端、错题归档、S4 仍未实现 |
 | v0.04 | 2026-07-16 | Phase 1-T03B 完成：新增练习生成 Service/API，作答前隐藏答案；提交作答、规则批改、前端和错题归档仍未实现 |
 | v0.03 | 2026-07-16 | 对齐 T03A Schema 计划：补齐 `Question.question_order`，将 API 示例字段从 `answerOrder` 校准为 `questionOrder`；仍不表示 S3 Schema 或业务代码已实现 |

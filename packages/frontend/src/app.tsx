@@ -5,6 +5,9 @@ import { MaterialUploadPage } from './pages/material-upload-page';
 
 const NotePage = lazy(() => import('./pages/note-page'));
 const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
+const PracticeStartPage = lazy(() => import('./pages/practice-start-page'));
+const PracticeSessionPage = lazy(() => import('./pages/practice-session-page'));
+const PracticeResultPage = lazy(() => import('./pages/practice-result-page'));
 
 const SEMESTER_ID_KEY = 'ai-studybuddy:semesterId';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -104,6 +107,30 @@ export function App() {
             element={
               <Suspense fallback={<div className="page">正在加载考试项目…</div>}>
                 <ExamWorkbenchPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/exams/:examId/practice"
+            element={
+              <Suspense fallback={<div className="page">正在加载练习发起页…</div>}>
+                <PracticeStartPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/practice-sessions/:sessionId"
+            element={
+              <Suspense fallback={<div className="page">正在加载练习…</div>}>
+                <PracticeSessionPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/practice-sessions/:sessionId/result"
+            element={
+              <Suspense fallback={<div className="page">正在加载练习结果…</div>}>
+                <PracticeResultPage semesterId={semesterId} />
               </Suspense>
             }
           />

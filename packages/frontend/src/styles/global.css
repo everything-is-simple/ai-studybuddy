@@ -573,6 +573,170 @@ button:disabled {
   color: var(--color-danger);
 }
 
+/* ===== S3 限时练习 ===== */
+.practice-start-form fieldset {
+  display: grid;
+  gap: 10px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.practice-start-form legend {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.practice-module-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.practice-module-option,
+.practice-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.practice-module-option span {
+  display: grid;
+  gap: 2px;
+}
+
+.practice-module-option small {
+  color: var(--color-text-muted);
+}
+
+.practice-session-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  align-items: flex-start;
+}
+
+.practice-timer {
+  display: grid;
+  gap: 2px;
+  min-width: 130px;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.practice-timer span,
+.practice-timer small {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.practice-overtime {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.practice-question-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--gap);
+}
+
+.practice-question-nav button {
+  min-width: 38px;
+}
+
+.practice-question-nav button.active {
+  outline: 3px solid #bfdbfe;
+}
+
+.practice-question {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 var(--gap);
+  padding: var(--gap);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.practice-question legend {
+  font-weight: 700;
+}
+
+.practice-stem {
+  white-space: pre-wrap;
+}
+
+.practice-options {
+  display: grid;
+  gap: 8px;
+}
+
+.practice-question > input {
+  max-width: 100%;
+}
+
+.practice-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.practice-submit-link {
+  margin-top: 12px;
+}
+
+.practice-result-summary dl,
+.practice-result-item dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.practice-result-summary dt,
+.practice-result-item dt {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.practice-result-summary dd,
+.practice-result-item dd {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+}
+
+.practice-result-list {
+  display: grid;
+  gap: var(--gap);
+}
+
+.practice-result-item {
+  padding: var(--gap);
+  border: 1px solid var(--color-secondary);
+  border-left-width: 5px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.practice-result-item h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.practice-correct {
+  border-left-color: var(--color-success);
+}
+
+.practice-incorrect {
+  border-left-color: var(--color-danger);
+}
+
 @media (max-width: 720px) {
   .workbench-header,
   .task-list li {
@@ -591,6 +755,15 @@ button:disabled {
 
   .task-form button {
     grid-column: 1;
+  }
+
+  .practice-session-header {
+    flex-direction: column;
+  }
+
+  .practice-result-summary dl,
+  .practice-result-item dl {
+    grid-template-columns: 1fr;
   }
 }
 /* ===== Markdown 笔记 ===== */

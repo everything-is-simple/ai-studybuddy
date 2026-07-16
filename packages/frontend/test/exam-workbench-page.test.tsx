@@ -257,6 +257,7 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(pendingOverview?.textContent).toContain('待确认');
     expect(pendingOverview?.textContent).not.toContain('还有');
     expect(container.querySelector(`a[href="/materials?courseInstanceId=${COURSE_A.id}"]`)).not.toBeNull();
+    expect(container.querySelector(`a[href="/exams/${CURRENT_EXAM_ID}/practice"]`)).not.toBeNull();
   });
 
   it('pending 考试只显示确认动作，确认后才显示正式计划', async () => {
@@ -265,6 +266,7 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
 
     expect(container.textContent).toContain('考试日期待确认');
     expect(container.querySelector('[data-testid="task-plan"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workbench-practice"]')).toBeNull();
     await act(async () => buttonContaining('确认考试日期').click());
     await flush();
 

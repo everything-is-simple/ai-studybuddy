@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.19
+**版本**：v1.20
 **日期**：2026-07-16
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API，以及 T03C 限时作答与规则批改。当前下一实现门禁为 T03D，仍需独立计划和用户明确批准；S3 Worker/前端尚未开始。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改，以及 T03D S3 练习前端闭环。当前下一门禁为 T04：S4 PRD 计划、审查和用户明确批准；S3 Worker 仍未开始。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C ✅；下一门禁 T03D） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D ✅；下一门禁 T04） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -455,8 +455,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 6 | Phase 1-T03A：S3 数据库与 Schema | ✅ | 学期库 migration v4、`practice_sessions`、`questions`、`practice_answers`、最小 shared 类型与数据库约束/升级测试已完成；不含 API |
 | 7 | Phase 1-T03B：S3 练习生成 API | ✅ | AI 根据知识模块生成选择题/填空题并入库；不含批改 |
 | 8 | Phase 1-T03C：S3 限时作答与规则批改 | ✅ | 学生限时作答、客观题规则批改、记录逐题结果；不含错题归档 |
-| 9 | Phase 1-T03D：S3 练习前端闭环 | ⏳ | 浏览器可发起练习、作答、查看批改结果；集成进工作台”练习”区 |
-| 10 | Phase 1-T04：S4 PRD 编写 | ⏳ | S3 MVP 验收后触发；创建 S4 轻量 PRD |
+| 9 | Phase 1-T03D：S3 练习前端闭环 | ✅ | 浏览器可发起练习、作答、查看批改结果；集成进工作台”练习”区 |
+| 10 | Phase 1-T04：S4 PRD 编写 | ⏳ | S3 MVP 已验收，PRD 触发条件满足；仍需独立计划、审查和用户明确批准 |
 | 11 | Phase 1-T04A：S4 错题归档与 Schema | ⏳ | 创建 `mistakes`、`weak_points` 表；练习错题自动归档 |
 | 12 | Phase 1-T04B：S4 错题改错前端 | ⏳ | 浏览器可查看错题、重做、标记掌握；集成进工作台”查漏补缺”区 |
 | 13 | Phase 1-T05：回流规则 | ⏳ | 错题/薄弱点提升关联知识模块优先级；已掌握后降低复习频率 |
@@ -542,12 +542,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T03C 完成证据（2026-07-16）**：已新增 `POST /api/practice-sessions/:id/submit` 与 shared 提交/批改 DTO；客观题规则批改覆盖单选 trim+大小写归一、多选集合全等、填空 NFKC/大小写/空白归一及可接受答案。提交事务内写入每题 `practice_answers`，将 `practice_sessions` 更新为 `graded` 并计算 `total_score`、`correct_rate`、`overtime`、`total_duration_seconds`、`submitted_at`、`graded_at`，同时写入摘要化 `practice_completed` StudyEvent（`evidence_ref=practice_session:<id>`，不写题干或答案）。新增 `practice-submit-api.test.mjs` 覆盖成功批改、缺答、超时、重复提交、未知/跨 session 题目、非法答案/用时、跨学期隔离、StudyEvent 与不创建 `mistakes`/`weak_points`。验证通过：`pnpm type-check`、后端 build、前端 build、T03C 专项 4/4、T03B 回归 4/4、后端/前端全量测试、文档治理检查与 `git diff --check`。任务分支 `codex/phase1-t03c-practice-submit-grading`，实现提交 `97d68a4` 已快进合入 `master`；未实现前端练习页面、错题归档、S4 PRD/Schema、S5-S7、真实外部 Provider smoke 或 Worker。
 
-**T03D 前端**（门禁：T03C 已验收；需独立计划并获批）
-- [ ] 前端 API 封装：创建练习、获取题目、提交作答
-- [ ] 练习页面：限时倒计时、逐题作答、提交
-- [ ] 结果页面：逐题批改详情、得分、错题标记
-- [ ] 工作台”练习”区集成：从知识模块发起练习
-- [ ] 测试：前端组件测试 + 浏览器 smoke
+**T03D 前端（已完成）**（已按获批计划实施并通过验收；下一门禁为 T04 S4 PRD 计划）
+- [x] 前端 API 封装：创建练习、获取题目、提交作答
+- [x] 练习页面：限时倒计时、逐题作答、提交
+- [x] 结果页面：逐题批改详情、得分、错题标记
+- [x] 工作台”练习”区集成：从知识模块发起练习
+- [x] 测试：前端组件测试 + 浏览器 smoke
+
+> **T03D 完成证据（2026-07-16）**：新增 PracticeRunner 前端 API 封装、练习发起/作答/结果页面、单选/多选/填空作答控件、基于浏览器性能时钟的限时/逐题计时与同浏览器会话草稿/结果恢复；已确认考试工作台新增“练习”区入口。结果页只消费既有提交响应和作答前详情，不新增后端 result/list API；缓存缺失时显示中文降级，不伪造历史结果。新增前端 API/页面测试与 Playwright `practice-runner.spec.ts`；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t03d-frontend` 浏览器验收覆盖发起、三类题作答、超时提交、逐题批改、刷新恢复及非法 session 错误页，使用本地 route fixture，不调用真实 Provider。验证通过：`pnpm type-check`、前端 build、前端 37/37、Playwright 2/2；不实现后端 API/Schema、错题归档、`mistakes`/`weak_points`、S4 PRD/Schema、S5-S7、真实外部 Provider smoke 或 Worker。
 
 #### T04：S4 错题改错（拆为 PRD + 2 个实现子任务）
 

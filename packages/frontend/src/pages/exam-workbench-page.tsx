@@ -322,6 +322,14 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
                 </Link>
               </section>
 
+              <section className="card workbench-practice" data-testid="workbench-practice">
+                <h2>练习</h2>
+                <p>选择当前课程的知识模块，生成客观题并完成限时练习。</p>
+                <Link className="button-link" to={`/exams/${data.exam.id}/practice`}>
+                  开始练习
+                </Link>
+              </section>
+
               <section className="card" data-testid="task-plan">
                 <h2>计划</h2>
                 <form className="task-form" onSubmit={handleCreateTask}>
