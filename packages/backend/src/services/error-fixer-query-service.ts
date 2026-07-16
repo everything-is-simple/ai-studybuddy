@@ -10,6 +10,7 @@ import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
 import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
+import { FeedbackRulesService } from './feedback-rules-service';
 import type {
   ConfirmMistakeErrorCauseRequest,
   CreateMistakeRedoRequest,
@@ -103,15 +104,18 @@ const MISTAKE_SELECT = `
 export interface ErrorFixerQueryServiceOptions {
   now?: () => string;
   id?: () => string;
+  feedbackRules?: FeedbackRulesService;
 }
 
 export class ErrorFixerQueryService {
   private readonly now: () => string;
   private readonly id: () => string;
+  private readonly feedbackRules: FeedbackRulesService;
 
   constructor(options?: ErrorFixerQueryServiceOptions) {
     this.now = options?.now ?? nowIso;
     this.id = options?.id ?? crypto.randomUUID;
+    this.feedbackRules = options?.feedbackRules ?? new FeedbackRulesService({ now: this.now, id: this.id });
   }
 
   private openReadySemesterDb(semesterIdValue: unknown): DatabaseType {
@@ -293,8 +297,8 @@ export class ErrorFixerQueryService {
     try {
       const timestamp = this.now();
       db.transaction(() => {
-        const row = db.prepare('SELECT id, status FROM mistakes WHERE id = ?').get(mistakeId) as
-          | { id: string; status: MistakeStatus }
+        const row = db.prepare('SELECT id, status, course_instance_id, knowledge_module_id FROM mistakes WHERE id = ?').get(mistakeId) as
+          | { id: string; status: MistakeStatus; course_instance_id: string; knowledge_module_id: string }
           | undefined;
         if (!row) throw new ErrorFixerApiError('MISTAKE_NOT_FOUND', 404, '错题不存在');
         db.prepare(
@@ -306,6 +310,12 @@ export class ErrorFixerQueryService {
                updated_at = ?
            WHERE id = ?`
         ).run(input.category, note, timestamp, timestamp, mistakeId);
+        this.feedbackRules.applyForModule(db, {
+          courseInstanceId: row.course_instance_id,
+          knowledgeModuleId: row.knowledge_module_id,
+          reason: 'error_cause_confirmed',
+          occurredAt: timestamp,
+        });
       })();
       return this.getMistakeWithinDb(db, mistakeId);
     } finally {
@@ -322,8 +332,8 @@ export class ErrorFixerQueryService {
     try {
       const timestamp = this.now();
       db.transaction(() => {
-        const row = db.prepare('SELECT id, status FROM mistakes WHERE id = ?').get(mistakeId) as
-          | { id: string; status: MistakeStatus }
+        const row = db.prepare('SELECT id, status, course_instance_id, knowledge_module_id FROM mistakes WHERE id = ?').get(mistakeId) as
+          | { id: string; status: MistakeStatus; course_instance_id: string; knowledge_module_id: string }
           | undefined;
         if (!row) throw new ErrorFixerApiError('MISTAKE_NOT_FOUND', 404, '错题不存在');
 
@@ -350,6 +360,12 @@ export class ErrorFixerQueryService {
           timestamp,
           mistakeId
         );
+        this.feedbackRules.applyForModule(db, {
+          courseInstanceId: row.course_instance_id,
+          knowledgeModuleId: row.knowledge_module_id,
+          reason: input.status === 'mastered' ? 'mistake_mastered' : 'mistake_reopened',
+          occurredAt: timestamp,
+        });
       })();
       return this.getMistakeWithinDb(db, mistakeId);
     } finally {

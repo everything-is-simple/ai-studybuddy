@@ -205,6 +205,33 @@ export class StudyRhythmService {
     };
   }
 
+  private hasActiveFeedbackPriority(db: DatabaseType, row: Record<string, unknown>): boolean {
+    if (row.type !== 'error_review') return false;
+    if (row.knowledge_module_id === null || row.knowledge_module_id === undefined) return false;
+    const status = String(row.status) as StudyTaskStatus;
+    if (status === 'done' || status === 'skipped') return false;
+    const courseInstanceId = String(row.course_instance_id);
+    const knowledgeModuleId = String(row.knowledge_module_id);
+    const activeWeakPoint = db
+      .prepare(
+        `SELECT 1 FROM weak_points
+         WHERE course_instance_id = ?
+           AND knowledge_module_id = ?
+           AND status = 'active'`
+      )
+      .get(courseInstanceId, knowledgeModuleId);
+    if (activeWeakPoint) return true;
+    const needsReviewMistake = db
+      .prepare(
+        `SELECT 1 FROM mistakes
+         WHERE course_instance_id = ?
+           AND knowledge_module_id = ?
+           AND status = 'needs_review'`
+      )
+      .get(courseInstanceId, knowledgeModuleId);
+    return !!needsReviewMistake;
+  }
+
   private toTaskDto(db: DatabaseType, row: Record<string, unknown>): StudyTaskDto {
     const now = new Date().toISOString();
     const status = String(row.status) as StudyTaskStatus;
@@ -214,6 +241,8 @@ export class StudyRhythmService {
     let priorityBucket: 0 | 1 | 2 | 3 = 3;
     if (derivedOverdue) {
       priorityBucket = 0;
+    } else if (this.hasActiveFeedbackPriority(db, row)) {
+      priorityBucket = 1;
     } else if (row.assessment_attempt_id) {
       const exam = db
         .prepare('SELECT confirmation_status FROM assessment_attempts WHERE id = ?')

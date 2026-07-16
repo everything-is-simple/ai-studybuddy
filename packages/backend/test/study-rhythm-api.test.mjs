@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+const require = createRequire(import.meta.url);
+const Database = require('better-sqlite3');
 const backendDir = path.resolve(import.meta.dirname, '..');
 
 // 顺序分配端口，避免同一测试文件内多个后端实例因随机冲突导致健康检查超时。
@@ -106,6 +109,10 @@ async function createTask(port, semesterId, courseInstanceId, overrides = {}) {
     title: '练习任务',
     ...overrides,
   });
+}
+
+function openSemesterDb(dataRoot, semesterId) {
+  return new Database(path.join(dataRoot, 'semesters', semesterId, 'semester.db'));
 }
 
 // ── 课程 ──────────────────────────────────────────────────────
@@ -459,6 +466,75 @@ test('only confirmed examAt drives task priority', async (t) => {
 
   assert.equal(pendingTask.json.data.priorityBucket, 3);
   assert.equal(confirmedTask.json.data.priorityBucket, 1);
+});
+
+test('active weak point raises error_review task priority without overriding overdue priority', async (t) => {
+  const backend = await startBackend(t);
+  const semesterId = await initializeReadySemester(backend.port);
+  const course = await createCourse(backend.port, semesterId, '线性代数');
+  const db = openSemesterDb(backend.dataRoot, semesterId);
+  const moduleId = crypto.randomUUID();
+  try {
+    db.prepare(
+      `INSERT INTO knowledge_modules (
+        id, course_instance_id, material_id, title, importance, difficulty,
+        source_evidence, learn_status, content_summary, exam_relevance, created_at, updated_at
+      ) VALUES (?, ?, NULL, '向量空间定义', 'high', 'medium', '测试证据', 'learning', '理解定义', '常见概念题', ?, ?)`
+    ).run(moduleId, course.json.data.id, '2026-07-17T00:00:00.000Z', '2026-07-17T00:00:00.000Z');
+    db.prepare(
+      `INSERT INTO weak_points (
+        id, course_instance_id, knowledge_module_id, status, evidence_count,
+        first_detected_at, latest_detected_at, created_at, updated_at
+      ) VALUES (?, ?, ?, 'active', 2, ?, ?, ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      course.json.data.id,
+      moduleId,
+      '2026-07-17T00:00:00.000Z',
+      '2026-07-17T00:00:00.000Z',
+      '2026-07-17T00:00:00.000Z',
+      '2026-07-17T00:00:00.000Z'
+    );
+    db.prepare(
+      `INSERT INTO study_tasks (
+        id, course_instance_id, knowledge_module_id, type, title, status,
+        estimated_minutes, deadline_at, created_at, updated_at
+      ) VALUES (?, ?, ?, 'error_review', '复习薄弱点：向量空间定义', 'todo', 20, NULL, ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      course.json.data.id,
+      moduleId,
+      '2026-07-17T00:00:00.000Z',
+      '2026-07-17T00:00:00.000Z'
+    );
+    db.prepare(
+      `INSERT INTO study_tasks (
+        id, course_instance_id, knowledge_module_id, type, title, status,
+        estimated_minutes, deadline_at, created_at, updated_at
+      ) VALUES (?, ?, ?, 'error_review', '逾期错题复习', 'todo', 20, '2020-01-01T00:00:00.000Z', ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      course.json.data.id,
+      moduleId,
+      '2026-07-17T00:00:01.000Z',
+      '2026-07-17T00:00:01.000Z'
+    );
+  } finally {
+    db.close();
+  }
+
+  const listed = await requestJson(
+    backend.port,
+    'GET',
+    `/api/study-tasks?semesterId=${semesterId}&courseInstanceId=${course.json.data.id}`
+  );
+  assert.equal(listed.status, 200);
+  const activeReview = listed.json.data.find((task) => task.title === '复习薄弱点：向量空间定义');
+  const overdueReview = listed.json.data.find((task) => task.title === '逾期错题复习');
+  assert.equal(activeReview.derivedOverdue, false);
+  assert.equal(activeReview.priorityBucket, 1);
+  assert.equal(overdueReview.derivedOverdue, true);
+  assert.equal(overdueReview.priorityBucket, 0);
 });
 
 test('lists study tasks for the requested course in deadline order', async (t) => {

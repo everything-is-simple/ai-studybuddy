@@ -323,6 +323,30 @@ test('error cause confirmation moves pending mistake to needs_review and validat
   assert.equal(confirmed.json.data.errorCauseNote, '封闭性概念没吃透');
   assert.ok(confirmed.json.data.errorCauseConfirmedAt);
   assert.equal(confirmed.json.data.status, 'needs_review');
+
+  const db = openSemesterDb(backend.dataRoot, semesterId);
+  try {
+    const module = db.prepare('SELECT learn_status FROM knowledge_modules WHERE id = ?').get(target.knowledgeModuleId);
+    assert.equal(module.learn_status, 'learning');
+    const tasks = db
+      .prepare(
+        `SELECT type, status, knowledge_module_id, assessment_attempt_id
+         FROM study_tasks
+         WHERE knowledge_module_id = ? AND type = 'error_review'`
+      )
+      .all(target.knowledgeModuleId);
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].status, 'todo');
+    assert.equal(tasks[0].assessment_attempt_id, target.assessmentAttemptId);
+    const event = db
+      .prepare("SELECT * FROM study_events WHERE event_type = 'feedback_review_required' AND evidence_ref = ?")
+      .get(`km:${target.knowledgeModuleId}`);
+    assert.equal(event.source_system, 'S4');
+    assert.equal(event.parent_visible, 1);
+    assert.ok(!event.title.includes('封闭性'), 'feedback event must not contain stem text');
+  } finally {
+    db.close();
+  }
 });
 
 test('redo flow: incorrect redo keeps needs_review without new mistakes; correct redo enables mastery', async (t) => {
@@ -361,6 +385,26 @@ test('redo flow: incorrect redo keeps needs_review without new mistakes; correct
   assert.equal(afterWrong.json.data.status, 'needs_review');
   assert.equal(afterWrong.json.data.errorCount, 1, 'redo failure must not bump original error_count');
   assert.ok(afterWrong.json.data.evidence.some((item) => item.evidenceType === 'redo_incorrect'));
+
+  const feedbackDbAfterWrong = openSemesterDb(backend.dataRoot, semesterId);
+  try {
+    const module = feedbackDbAfterWrong
+      .prepare('SELECT learn_status FROM knowledge_modules WHERE id = ?')
+      .get(target.knowledgeModuleId);
+    assert.equal(module.learn_status, 'learning');
+    const tasks = feedbackDbAfterWrong
+      .prepare("SELECT * FROM study_tasks WHERE knowledge_module_id = ? AND type = 'error_review'")
+      .all(target.knowledgeModuleId);
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].status, 'todo');
+    const event = feedbackDbAfterWrong
+      .prepare("SELECT * FROM study_events WHERE event_type = 'feedback_review_required' AND evidence_ref = ?")
+      .get(`km:${target.knowledgeModuleId}`);
+    assert.equal(event.source_system, 'S4');
+    assert.ok(!event.title.includes('封闭性'), 'feedback event must not contain stem text');
+  } finally {
+    feedbackDbAfterWrong.close();
+  }
 
   // 关键回归：重做不产生新的错题
   const listAfterWrong = await requestJson(

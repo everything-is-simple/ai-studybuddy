@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.24
-**日期**：2026-07-16
+**版本**：v1.25
+**日期**：2026-07-17
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）。当前下一门禁为 T05：回流规则的独立计划、审查和用户明确批准；S3 Worker 仍未开始。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则。当前下一门禁为 T06：S6 PRD 编写的独立计划、审查和用户明确批准；S3 Worker 仍未开始。各阶段任务按单一责任拆分。
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B ✅；下一门禁 T05） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05 ✅；下一门禁 T06） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -461,7 +461,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 10 | Phase 1-T04：S4 PRD 编写 | ✅ | 已按批准计划创建 S4 轻量 PRD并同步索引；仅完成文档，不含 Schema 或业务实现 |
 | 11 | Phase 1-T04A：S4 错题归档与 Schema | ✅ | 学期库 migration v5、`mistakes`/`mistake_evidence`/`weak_points`、S3 提交后幂等错题归档与集成测试已完成 |
 | 12 | Phase 1-T04B：S4 错题改错前端 | ✅ | 错题列表/详情/错因确认/原题重做/薄弱点展示与工作台“查漏补缺”集成已完成；含 migration v6 与 S4 API 补洞（T04A 遗漏，经批准并入本任务） |
-| 13 | Phase 1-T05：回流规则 | ⏳ | 错题/薄弱点提升关联知识模块优先级；已掌握后降低复习频率 |
+| 13 | Phase 1-T05：回流规则 | ✅ | 错题/薄弱点提升关联知识模块优先级；已掌握后降低复习频率 |
 | 14 | Phase 1-T06：S6 PRD 编写 | ⏳ | S4 完成后触发；创建 S6 轻量 PRD |
 | 15 | Phase 1-T06A：S6 家长报告生成 | ⏳ | 规则统计 + AI 润色生成日报/周报/月报/考前提醒 |
 | 16 | Phase 1-T06B：S6 报告推送渠道 | ⏳ | QQ SMTP + 飞书 Webhook 推送；失败不丢报告 |
@@ -578,12 +578,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 #### T05：回流规则（门禁：T04B 已验收；需独立计划、审查和用户明确批准）
 
-- [ ] 错题/薄弱点提升关联知识模块 `studyStatus` 为”需要复习”
-- [ ] 关联学习任务 `priorityBucket` 受薄弱点影响提升
-- [ ] 已掌握后降低复习优先级，不删除历史记录
-- [ ] 测试：优先级派生逻辑覆盖各场景
+- [x] 错题/薄弱点提升关联知识模块 `studyStatus` 为”需要复习”
+- [x] 关联学习任务 `priorityBucket` 受薄弱点影响提升
+- [x] 已掌握后降低复习优先级，不删除历史记录
+- [x] 测试：优先级派生逻辑覆盖各场景
 
 > **T05 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t05-feedback-rules-plan` 创建 `.plans/phase1-t05-feedback-rules-plan.md`，完成计划自审并等待用户明确批准。该计划仅设计 T05 回流规则，未实现业务代码、未改 Schema、未勾选上述实现项；明确不触碰 AI 错因建议、同类题/变题生成、S5/S6/S7、Worker、真实 Provider 或跨学期复用。
+
+> **T05 完成证据（2026-07-17）**：已按获批计划在任务分支 `codex/phase1-t05-feedback-rules` 实现 `FeedbackRulesService`，在 S4 错题归档、错因确认、重做失败和状态流转事务内触发回流规则；使用现有 `knowledge_modules.learn_status`、`study_tasks(type='error_review')`、`weak_points.status`、`study_events` 和 S1 `priorityBucket` 派生，不新增 Schema、公开 API、前端页面或 shared 类型。单条 `practice_error` 仅保留证据；错因确认、活跃薄弱点、重做失败或已掌握错题重开会把模块置为 `learning` 并创建/提升复习任务；全部错题已掌握时模块/薄弱点降为 `mastered` 并完成 open `error_review` 任务；历史错题、证据和重做记录不删除。验证通过：`pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build`、`pnpm test`（后端 157/157，前端 41/41）。未实现 AI 错因建议、同类题/变题生成、S5/S6/S7、Worker、真实 Provider 或跨学期复用；T05 未改前端交互，故未新增 Playwright e2e。
 
 #### T06：S6 家长报告简版（拆为 PRD + 2 个实现子任务）
 

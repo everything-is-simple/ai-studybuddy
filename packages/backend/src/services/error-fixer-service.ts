@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import type { DatabaseType } from '../db/connection';
+import { FeedbackRulesService } from './feedback-rules-service';
 
 export interface ArchiveMistakesResult {
   createdMistakes: number;
@@ -17,6 +18,7 @@ export interface RedoEvidenceResult {
 
 interface ErrorFixerServiceOptions {
   id?: () => string;
+  feedbackRules?: FeedbackRulesService;
 }
 
 interface IncorrectPracticeAnswerRow {
@@ -40,9 +42,11 @@ interface WeakPointRow {
 
 export class ErrorFixerService {
   private readonly id: () => string;
+  private readonly feedbackRules: FeedbackRulesService;
 
   constructor(options?: ErrorFixerServiceOptions) {
     this.id = options?.id ?? crypto.randomUUID;
+    this.feedbackRules = options?.feedbackRules ?? new FeedbackRulesService({ id: this.id });
   }
 
   archiveIncorrectPracticeAnswers(
@@ -171,6 +175,13 @@ export class ErrorFixerService {
       );
       result.createdEvidence += 1;
 
+      this.feedbackRules.applyForModule(db, {
+        courseInstanceId: row.course_instance_id,
+        knowledgeModuleId: row.knowledge_module_id,
+        reason: 'practice_error',
+        occurredAt,
+      });
+
       const evidenceStats = countModuleEvidence.get(row.course_instance_id, row.knowledge_module_id) as {
         count: number;
         first_at: string | null;
@@ -195,6 +206,13 @@ export class ErrorFixerService {
         updateWeakPoint.run(evidenceStats.count, evidenceStats.latest_at ?? evidenceAt, occurredAt, weakPoint.id);
         result.updatedWeakPoints += 1;
       }
+
+      this.feedbackRules.applyForModule(db, {
+        courseInstanceId: row.course_instance_id,
+        knowledgeModuleId: row.knowledge_module_id,
+        reason: 'weak_point_active',
+        occurredAt,
+      });
     }
 
     return result;
@@ -302,6 +320,12 @@ export class ErrorFixerService {
           ).run(evidenceStats.count, evidenceStats.latest_at ?? occurredAt, occurredAt, weakPoint.id);
         }
       }
+      this.feedbackRules.applyForModule(db, {
+        courseInstanceId: mistake.course_instance_id,
+        knowledgeModuleId: mistake.knowledge_module_id,
+        reason: 'redo_incorrect',
+        occurredAt,
+      });
     }
 
     return { mistakeId: mistake.id, isCorrect };

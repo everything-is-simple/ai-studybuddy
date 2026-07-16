@@ -263,6 +263,36 @@ test('one wrong evidence creates a mistake but not a weak point', async (t) => {
   assert.equal(state.weakPoints.length, 0);
 });
 
+test('archive calls feedback rules for a single practice error while keeping it evidence-only', async (t) => {
+  const { backend, semesterId, moduleId, questions, sessionId } = await setupPractice(t);
+
+  const db = openSemesterDb(backend.dataRoot, semesterId);
+  const calls = [];
+  try {
+    db.prepare(
+      `INSERT INTO practice_answers (
+        id, session_id, question_id, student_answer, is_correct, time_spent_seconds, answer_order, created_at
+      ) VALUES (?, ?, ?, 'B', 0, 9, 1, ?)`
+    ).run(crypto.randomUUID(), sessionId, questions[0].id, '2026-07-16T00:30:00.000Z');
+    const { ErrorFixerService } = await import('../dist/services/error-fixer-service.js');
+    const service = new ErrorFixerService({
+      feedbackRules: {
+        applyForModule(_db, input) {
+          calls.push(input);
+        },
+      },
+    });
+    service.archiveIncorrectPracticeAnswers(db, sessionId, '2026-07-16T00:30:00.000Z');
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].reason, 'practice_error');
+    assert.equal(calls[0].knowledgeModuleId, moduleId);
+    assert.equal(db.prepare("SELECT COUNT(*) AS count FROM study_tasks WHERE type = 'error_review'").get().count, 0);
+  } finally {
+    db.close();
+  }
+});
+
 test('archiving the same PracticeAnswer again is idempotent', async (t) => {
   const { backend, semesterId, questions, sessionId } = await setupPractice(t);
   const submitted = await requestJson(backend.port, 'POST', `/api/practice-sessions/${sessionId}/submit`, {
