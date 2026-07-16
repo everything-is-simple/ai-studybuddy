@@ -576,7 +576,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T04B 完成证据（2026-07-16）**：已创建 `.plans/phase1-t04b-s4-errorfixer-frontend-plan.md`，经用户批准"收窄版方案 A"后实施。本任务包含一次 **Schema/API 补洞**（T04A 遗漏，属 T04B 范围，不回改 T04A 完成事实）：新增学期库 migration v6，为 `mistakes` 补错因确认最小字段（`error_cause_category` 白名单 / `error_cause_note` ≤500 字 / `error_cause_confirmed_at`），`mistake_evidence.evidence_type` 扩展 `redo_correct`/`redo_incorrect` 并重建触发器，`practice_sessions` 增加 `session_kind`（`practice`/`mistake_redo`）与 `origin_mistake_id`，`questions` 增加 `origin_question_id` 复制题溯源；均只服务 S4 原题重做，未引入 T05 回流。新增 S4 API（`GET /api/mistakes`、`GET /api/mistakes/:id`、`PATCH /api/mistakes/:id/error-cause`、`PATCH /api/mistakes/:id/status`、`POST /api/mistakes/:id/redo`、`GET /api/weak-points`），前端只消费 API 不读 SQLite；重做复用 S3 submit 通道但按 `session_kind` 旁路归档（重做失败不新建错题、不重复计数，写 `redo_incorrect` 证据并计入薄弱点；重做通过写 `redo_correct` 证据）；标记掌握需重做通过证据或学生显式确认，已掌握可重新打开；S4 写 `mistake_reviewed` 摘要事件（`evidence_ref=mistake:<id>`，无题干正文）。前端新增 `/exams/:examId/mistakes` 错题列表页（状态/模块筛选 + 薄弱点区块）、`/mistakes/:mistakeId` 详情改错页（原题事实、错因确认、重做、状态操作、证据时间线）、工作台"查漏补缺"卡片与 S3 结果页错题入口。验证通过：`pnpm type-check`、后端/前端 build、后端测试 150/150（新增 T04B API 6、v6 迁移与约束 2）、前端测试 41/41（新增错题页 4）、Playwright e2e 4/4（新增 error-fixer 全流程 1，隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t04b-e2e`）、文档治理、`git diff --check`。未实现 T05 回流规则、AI 错因建议、同类题/变题生成、S5/S6/S7、Worker 或真实 Provider smoke。
 
-#### T05：回流规则（门禁：T04B 已验收；独立计划已批准）
+#### T05：回流规则（门禁：T04B 已验收；需独立计划、审查和用户明确批准）
 
 - [ ] 错题/薄弱点提升关联知识模块 `studyStatus` 为”需要复习”
 - [ ] 关联学习任务 `priorityBucket` 受薄弱点影响提升
