@@ -15,7 +15,7 @@
 - `docs/`：有效设计、任务、测试和规范文档。
 - `.plans/`：已批准或待批准的任务计划。
 
-Phase 0.8 已完成，S1 基础与 S2 核心已实现。S3 PRD 已在 Phase 1-T03 中创建，Phase 1-T03A 实施计划已创建并自审，但 S3 Schema/API/业务代码尚未开始；S4–S7 仍按门禁等待。
+Phase 0.8 已完成，S1 基础与 S2 核心已实现。S3 PRD、Phase 1-T03A Schema 与 Phase 1-T03B 练习生成 API 已完成；下一门禁为 Phase 1-T03C 限时作答与规则批改，仍需用户明确批准后才能实现。S4–S7 仍按门禁等待。
 
 ## 必读顺序
 
@@ -78,7 +78,7 @@ pnpm -r --filter backend run dev
 5. 满足则创建并同步更新索引。
 6. 提交前运行 `scripts/check-docs-governance.ps1`。
 
-当前状态：S1/S2/S3 PRD 已创建；T03A 计划已创建但尚未获批实施；S3 Schema/API/业务代码尚未开始；S4/S5/S6/S7 未触发。
+当前状态：S1/S2/S3 PRD 已创建；T03A Schema 与 T03B 练习生成 API 已完成；T03C 计划已创建但尚未获批实施；S4/S5/S6/S7 未触发。
 
 ## 标准 16 步流程摘要
 

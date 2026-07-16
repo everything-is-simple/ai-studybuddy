@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.10
+**版本**：v2.11
 **日期**：2026-07-16
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -165,6 +165,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.11 | 2026-07-16 | 修复 master 漂移：将既有 T03A/T03B 分支实现纳入主线状态，入口规则与下一门禁统一为 T03C；S4-S7 仍未触发 |
 | v2.10 | 2026-07-16 | Phase 1-T03B：登记 PracticeRunnerService、`POST /api/practice-sessions`、`GET /api/practice-sessions/:id`、作答前隐藏答案 DTO 与 mock AI API 测试已完成；下一门禁调整为 T03C |
 | v2.9 | 2026-07-16 | Phase 1-T03B：登记练习生成 API 实施计划已创建并自审，等待用户明确批准；S3 API/Service/Worker/前端仍未开始 |
 | v2.8 | 2026-07-16 | Phase 1-T03A：登记学期库 migration v4、S3 三表、11 个索引、8 个一致性 trigger、最小 shared 类型与 127/127 后端、32/32 前端全量验证；下一实现门禁调整为 T03B |

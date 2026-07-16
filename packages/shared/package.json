@@ -5,7 +5,8 @@
   "main": "./src/index.js",
   "types": "./src/index.ts",
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "build": "tsc --build",
+    "type-check": "tsc --build --force"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
