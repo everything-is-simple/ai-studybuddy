@@ -75,6 +75,10 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
     semesterId,
     name: 'T07 课程 B',
   });
+  const courseC = await postData<CreatedRecord>(request, '/courses', {
+    semesterId,
+    name: 'T07 课程 C',
+  });
 
   const examA = await postData<CreatedRecord>(request, '/exams', {
     semesterId,
@@ -89,6 +93,14 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
     name: 'T07 课程 B 期末考试',
     examAt: isoAfterDays(25),
     attemptType: 'normal',
+  });
+  const examC = await postData<CreatedRecord>(request, '/exams', {
+    semesterId,
+    courseInstanceId: courseC.id,
+    name: 'T07 课程 C 期末考试',
+    examAt: isoAfterDays(30),
+    attemptType: 'normal',
+    confirmationStatus: 'confirmed',
   });
   await patchData(request, `/exams/${examA.id}/confirmation`, { semesterId });
   await patchData(request, `/exams/${examB.id}/confirmation`, { semesterId });
@@ -169,6 +181,13 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
   for (const source of ['S2资料笔记', 'S3限时练习', 'S4错题改错', 'S7课堂采集']) {
     await expect(activity.getByText(source, { exact: true })).toBeVisible();
   }
+  const orderedEventLabels = await activity.locator('.study-event-item strong').allTextContents();
+  expect(orderedEventLabels.slice(0, 4)).toEqual([
+    '未分类学习活动',
+    '错题重做结果',
+    '限时练习已完成',
+    '资料笔记已生成',
+  ]);
   await expect(activity.getByText('学习任务已完成', { exact: true })).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText(sensitiveSentinel);
   await expect(page.locator('body')).not.toContainText(sensitiveUuid);
@@ -183,6 +202,42 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
   for (const label of ['资料笔记已生成', '限时练习已完成', '错题重做结果', '未分类学习活动']) {
     await expect(activity.getByText(label, { exact: true })).toHaveCount(0);
   }
+  await expect(page.locator('body')).not.toContainText(sensitiveSentinel);
+  await expect(page.locator('body')).not.toContainText(sensitiveUuid);
+
+  await page.getByRole('link', { name: 'T07 课程 C 期末考试' }).click();
+  await expect(page).toHaveURL(`/exams/${examC.id}`);
+  await expect(page.getByRole('heading', { name: 'T07 课程 C 期末考试', level: 1 })).toBeVisible();
+  await expect(activity.getByText('暂无近期学习活动', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('task-plan')).toBeVisible();
+
+  let timelineRequests = 0;
+  await page.route('**/api/timeline*', async (route) => {
+    timelineRequests += 1;
+    if (timelineRequests === 1) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          error: { code: 'TIMELINE_TEST_FAILURE', message: '受控时间线失败' },
+        }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+  await page.getByRole('link', { name: 'T07 课程 A 期末考试' }).click();
+  await expect(page.getByRole('heading', { name: 'T07 课程 A 期末考试', level: 1 })).toBeVisible();
+  await expect(activity.getByText('受控时间线失败', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('task-plan')).toBeVisible();
+  await expect(page.getByTestId('workbench-practice')).toBeVisible();
+  await expect(page.getByTestId('workbench-mistakes')).toBeVisible();
+  await activity.getByRole('button', { name: '重试' }).click();
+  await expect(activity.getByText('未分类学习活动', { exact: true })).toBeVisible();
+  await expect(activity.getByText('受控时间线失败', { exact: true })).toHaveCount(0);
+  expect(timelineRequests).toBe(2);
+  await page.unroute('**/api/timeline*');
   await expect(page.locator('body')).not.toContainText(sensitiveSentinel);
   await expect(page.locator('body')).not.toContainText(sensitiveUuid);
 
