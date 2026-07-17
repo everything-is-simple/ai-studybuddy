@@ -4,9 +4,9 @@
 **日期**：2026-07-17
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送和 T07 S1 时间线扩展。当前下一门禁为 T08：本机配置中心与连接验收的独立实施计划、审查和用户明确批准；T08 尚未实现；S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展和 T08 本机配置中心与连接验收。当前下一门禁为 T09A：学期创建、选择与切换的独立实施计划、审查和用户明确批准；S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
-> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。当前下一门禁为 T08 独立计划、审查和用户批准。
+> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。当前下一门禁为 T09A 学期创建、选择与切换的独立计划、审查和用户批准。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -20,7 +20,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07 ✅；下一门禁 T08 配置中心独立计划） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08 ✅；下一门禁 T09A 学期创建与选择独立计划） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -470,7 +470,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 15 | Phase 1-T06A：S6 家长报告生成 | ✅ | 脱敏规则报告 + 可选 AI 润色生成日报/周报/月报/考前提醒；不含发送渠道 |
 | 16 | Phase 1-T06B：S6 报告推送渠道 | ✅ | QQ SMTP HTML + 飞书 Webhook 卡片、冻结脱敏快照、渠道级去重/重试与失败隔离已完成；真实渠道 smoke 非常规验证 |
 | 17 | Phase 1-T07：S1 时间线扩展 | ✅ | 已读回 S2/S3/S4 正式 StudyEvent，支持事件类型精确过滤并在考试工作台展示当前课程近期活动 |
-| 18 | Phase 1-T08：本机配置中心与连接验收 | ⏳ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；必须先有独立计划、审查和用户批准 |
+| 18 | Phase 1-T08：本机配置中心与连接验收 | ✅ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；已完成 DPAPI 加密存储、连接测试、运行时热切换、设置页与验证 |
 | 19 | Phase 1-T09A：学期创建、选择与切换 | ⏳ | 学期创建向导（名称+日期+课表上传+识别预览+一次确认创建）、已有学期列表选择、切换当前学期；彻底移除手输 UUID；课表创建后的查看编辑归入 T09C；必须先有独立计划、审查和用户批准 |
 | 20 | Phase 1-T09B：每日学习首页 | ⏳ | 今日待办任务、临近考试倒计时、待质检资料、错题复习提醒、下一步行动建议；必须先有独立计划、审查和用户批准 |
 | 21 | Phase 1-T09C：课程课表与考试目标完善 | ⏳ | 已创建学期的课表查看、人工编辑与修改、完整课表视图、考试目标设定与倒计时、状态反馈与空状态引导；必须先有独立计划、审查和用户批准 |
@@ -636,15 +636,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 #### T08：本机配置中心与连接验收（门禁：T07 完成或用户明确调整顺序；需独立实施计划、审查和用户明确批准）
 
-- [ ] 首次启动向导：后端无 AI/SMTP/飞书配置时仍可启动，前端可进入配置中心
-- [ ] 配置分区：AI Provider、QQ SMTP、飞书 Webhook 和运行状态分别展示配置状态
-- [ ] 秘密存储：API Key、SMTP 授权码、飞书 Webhook URL 不进入浏览器持久化、普通 SQLite 表、日志或 API 响应，由后端使用 Windows 当前用户加密存储
-- [ ] 连接测试：AI 最小请求、SMTP 连接验证与显式测试邮件、飞书固定测试卡片分别可执行并返回脱敏结果
-- [ ] 运行门禁：AI 未验证时 AI 依赖功能明确降级；单一渠道失败不阻断另一渠道；双渠道失败仍保留本机脱敏报告
-- [ ] 配置更新：测试成功后原子激活运行时配置，失败或损坏时保留上一份可用配置并给出固定错误码
-- [ ] 测试：秘密不回显/不落前端存储、配置加密读写、测试成功/失败、渠道隔离、重启恢复和脱敏日志
+- [x] 首次启动向导：后端无 AI/SMTP/飞书配置时仍可启动，前端可进入配置中心
+- [x] 配置分区：AI Provider、QQ SMTP、飞书 Webhook 和运行状态分别展示配置状态
+- [x] 秘密存储：API Key、SMTP 授权码、飞书 Webhook URL 不进入浏览器持久化、普通 SQLite 表、日志或 API 响应，由后端使用 Windows 当前用户加密存储
+- [x] 连接测试：AI 最小请求、SMTP 连接验证与显式测试邮件、飞书固定测试卡片分别可执行并返回脱敏结果
+- [x] 运行门禁：AI 未验证时 AI 依赖功能明确降级；单一渠道失败不阻断另一渠道；双渠道失败仍保留本机脱敏报告
+- [x] 配置更新：测试成功后原子激活运行时配置，失败或损坏时保留上一份可用配置并给出固定错误码
+- [x] 测试：秘密不回显/不落前端存储、配置加密读写、测试成功/失败、渠道隔离、重启恢复和脱敏日志
 
-> **T08 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t08-config-center-plan` 创建 `.plans/phase1-t08-config-center-plan.md`。计划经五轮审查修订至 v6：v2 `0480d6f`、v3 `44ca521`、v4 `960717b`、v5 `dcb7957`；v6 解决五审剩余问题，使用覆盖整个 `/api` 的 loopback Origin 策略替代开放 CORS，补齐 Vite `5173`、固定 preview `4173`、合法预检顺序和配置初始化先于 Express/Worker/报告投递的启动门禁。此前已固化候选配置不落盘、DPAPI 静态 API、Router 引用传递保留熔断、channel 串行锁、逐 Provider 全通过激活、真实渠道不作合并门槛、输入资源上限和临时文件清理。当前计划 v6 待用户明确批准后方可实施；未实现 ConfigurationService、DPAPI Adapter、连接测试、API、前端设置页、CORS 改造或运行时消费者接入。
+> **T08 完成证据（2026-07-17）**：任务分支 `codex/phase1-t08-config-center` 按 `.plans/phase1-t08-config-center-plan.md` v6 实施。关键提交：`4cbc54c` DPAPI 安全配置存储，`dfb1f71` 配置状态与连接测试，`4a6b5fc` 配置 API、loopback Origin 策略、启动门禁与运行时热切换，`45ce9e2` 前端设置中心。Node 22 DPAPI roundtrip 证据：Node `v22.23.1`、win32 x64、`isPlatformSupported=true`、`roundtrip=true`；`DpapiProtector` 包装器 roundtrip 也通过。验证：隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t08-full` 下 `pnpm -r --filter @ai-studybuddy/backend run build` 通过、`pnpm -r --filter @ai-studybuddy/backend run test` 212/212 通过；前端 `pnpm -r --filter @ai-studybuddy/frontend test` 10 files / 52 tests 通过，`pnpm -r --filter @ai-studybuddy/frontend run build` 通过；根级 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t08-root` 下 `pnpm type-check` 与 `pnpm test` 通过。测试覆盖候选配置不落盘、DPAPI 不可用降级、active/prev 恢复、唯一 tmp 清理、同 channel 串行锁、跨 channel 并行、逐 Provider 全通过才激活、API 输入上限、非 JSON 拒绝、loopback Origin 策略、配置初始化先于 listen/Worker、AI Router 引用热切换保留熔断、SMTP/飞书快照隔离、前端密钥成功后清空且不写 localStorage、失败只显示固定错误码。未运行真实 AI/SMTP/飞书 smoke；未实现 T09A–T09E 学生端产品化界面、学期向导、每日首页、S5、S7 或家长 Web 面板。
 
 ---
 
