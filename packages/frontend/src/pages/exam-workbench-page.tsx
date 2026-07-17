@@ -341,7 +341,9 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
 
               <section className="card workbench-timeline" data-testid="recent-study-activity">
                 <h2>近期学习活动</h2>
-                {timelineError ? (
+                {data.exam.id !== examId ? (
+                  <FeedbackMessage state="loading" message="正在加载近期学习活动…" />
+                ) : timelineError ? (
                   <FeedbackMessage state="error" message={timelineError} onRetry={refetchTimeline} />
                 ) : timelineLoading || timelineData?.courseInstanceId !== data.exam.courseInstanceId ? (
                   <FeedbackMessage state="loading" message="正在加载近期学习活动…" />

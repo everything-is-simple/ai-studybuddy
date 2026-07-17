@@ -395,7 +395,7 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(timeline?.textContent).toContain('资料笔记已生成');
     expect(timeline?.textContent).toContain('知识模块状态已更新');
     expect(timeline?.textContent).toContain('限时练习已完成');
-    expect(timeline?.textContent).toContain('错题重做已完成');
+    expect(timeline?.textContent).toContain('错题重做结果');
     expect(timeline?.textContent).toContain('知识模块需要复习');
     expect(timeline?.textContent).toContain('错题复习已掌握');
     expect(timeline?.textContent).toContain('未分类学习活动');
@@ -475,7 +475,44 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     await flush();
 
     const completedTimeline = container.querySelector('[data-testid="recent-study-activity"]');
-    expect(completedTimeline?.textContent).toContain('错题重做已完成');
+    expect(completedTimeline?.textContent).toContain('错题重做结果');
+    expect(completedTimeline?.textContent).not.toContain('学习任务已完成');
+  });
+
+  it('路由切换后在新考试主请求完成前隐藏旧考试时间线', async () => {
+    const { getExam, getTimeline } = await import('../src/api/study-rhythm-api');
+    const getExamMock = getExam as unknown as ReturnType<typeof vi.fn>;
+    const timelineMock = getTimeline as unknown as ReturnType<typeof vi.fn>;
+    const otherExam = allExams.find((exam) => exam.id === OTHER_EXAM_ID);
+    let resolveOtherExam: ((exam: any) => void) | undefined;
+
+    getExamMock.mockImplementation(async (_semesterId: string, requestedExamId: string) => {
+      if (requestedExamId === CURRENT_EXAM_ID) return currentExam;
+      return new Promise((resolve) => {
+        resolveOtherExam = resolve;
+      });
+    });
+    timelineMock.mockImplementation(async (_semesterId: string, options: { courseInstanceId?: string }) =>
+      options.courseInstanceId === COURSE_A.id
+        ? [timelineEvent('S1', 'study_task_completed')]
+        : [timelineEvent('S4', 'mistake_reviewed', { courseInstanceId: COURSE_B.id })]
+    );
+
+    await renderWorkbench();
+    expect(container.querySelector('[data-testid="recent-study-activity"]')?.textContent).toContain('学习任务已完成');
+
+    await act(async () => container.querySelector<HTMLAnchorElement>(`a[href="/exams/${OTHER_EXAM_ID}"]`)!.click());
+    await flush();
+
+    const pendingTimeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(pendingTimeline?.textContent).toContain('正在加载近期学习活动');
+    expect(pendingTimeline?.textContent).not.toContain('学习任务已完成');
+
+    await act(async () => resolveOtherExam?.(otherExam));
+    await flush();
+
+    const completedTimeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(completedTimeline?.textContent).toContain('错题重做结果');
     expect(completedTimeline?.textContent).not.toContain('学习任务已完成');
   });
 });

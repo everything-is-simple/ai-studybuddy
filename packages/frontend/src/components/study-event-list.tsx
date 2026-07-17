@@ -10,7 +10,7 @@ const EVENT_LABELS: Record<string, string> = {
   material_note_completed: '资料笔记已生成',
   knowledge_module_status_changed: '知识模块状态已更新',
   practice_completed: '限时练习已完成',
-  mistake_reviewed: '错题重做已完成',
+  mistake_reviewed: '错题重做结果',
   feedback_review_required: '知识模块需要复习',
   feedback_review_mastered: '错题复习已掌握',
 };
