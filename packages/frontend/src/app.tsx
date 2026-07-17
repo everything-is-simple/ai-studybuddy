@@ -1,5 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { AppNavigation } from './components/app-navigation';
+import { getConfigurationStatus, type ConfigurationStatus } from './api/configuration-api';
 import { CoursePage } from './pages/course-page';
 import { MaterialUploadPage } from './pages/material-upload-page';
 
@@ -10,6 +12,7 @@ const PracticeSessionPage = lazy(() => import('./pages/practice-session-page'));
 const PracticeResultPage = lazy(() => import('./pages/practice-result-page'));
 const MistakeListPage = lazy(() => import('./pages/mistake-list-page'));
 const MistakeDetailPage = lazy(() => import('./pages/mistake-detail-page'));
+const SettingsPage = lazy(() => import('./pages/settings-page'));
 
 const SEMESTER_ID_KEY = 'ai-studybuddy:semesterId';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -18,6 +21,7 @@ export function App() {
   const [semesterId, setSemesterId] = useState<string>('');
   const [inputValue, setInputValue] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
+  const [configurationStatus, setConfigurationStatus] = useState<ConfigurationStatus | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(SEMESTER_ID_KEY);
@@ -26,6 +30,18 @@ export function App() {
       setInputValue(saved);
     }
   }, []);
+
+  useEffect(() => {
+    void getConfigurationStatus()
+      .then(setConfigurationStatus)
+      .catch(() => setConfigurationStatus(null));
+  }, []);
+
+  const showFirstRunGuide =
+    configurationStatus !== null &&
+    configurationStatus.ai.status === 'unconfigured' &&
+    configurationStatus.smtp.status === 'unconfigured' &&
+    configurationStatus.feishu.status === 'unconfigured';
 
   const handleApply = useCallback(() => {
     const value = inputValue.trim();
@@ -84,9 +100,17 @@ export function App() {
             {inputError}
           </p>
         )}
+        <AppNavigation />
       </header>
 
       <main className="app-main">
+        {showFirstRunGuide && (
+          <aside className="first-run-guide" role="status">
+            <strong>首次使用建议先完成本机配置。</strong>
+            <span>AI、QQ SMTP 和飞书未配置时，系统会降级运行。</span>
+            <Link to="/settings">进入配置中心</Link>
+          </aside>
+        )}
         <Routes>
           <Route
             path="/courses"
@@ -149,6 +173,14 @@ export function App() {
             element={
               <Suspense fallback={<div className="page">正在加载错题详情…</div>}>
                 <MistakeDetailPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Suspense fallback={<div className="page">正在加载配置中心…</div>}>
+                <SettingsPage />
               </Suspense>
             }
           />
