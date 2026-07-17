@@ -36,11 +36,29 @@
 | PowerShell child_process | ~518ms/次 | ❌ 作为灾难恢复文档方案保留，不用于运行时 |
 | `koffi` FFI | 可行但需大量 struct 定义 | ❌ 不必要复杂度 |
 
-Node 22 兼容性：`@primno/dpapi` 使用 N-API（ABI 稳定），声明 `engines: >=14`，spike 已在本机 Node 22 验证加解密 roundtrip 通过。
+**API 调用形式（P1 修订）：**
+
+```ts
+import { Dpapi, isPlatformSupported } from '@primno/dpapi';
+
+if (!isPlatformSupported) {
+  throw new Error('CONFIG_DPAPI_UNAVAILABLE');
+}
+
+// 静态方法调用，不需要 new Dpapi()
+const encrypted = Dpapi.protectData(
+  Buffer.from("secret", "utf-8"),
+  null,
+  'CurrentUser'
+);
+const decrypted = Dpapi.unprotectData(encrypted, null, 'CurrentUser');
+```
+
+Node 兼容性：声明 `engines: >=14`，当前终端 Node v25.4.0。**实施门槛**：T08-A 开始前必须在 Node 22 实机执行 roundtrip 验证，验证通过后才继续后续子任务。验证脚本输出包含 Node 版本、加密后长度、解密后内容一致性，留存为 `.plans/phase1-t08-dpapi-roundtrip-evidence.txt`。
 
 安装方式：`pnpm add @primno/dpapi --filter backend`，预构建二进制自动下载，不需要 Python/MSVC。
 
-失败错误码：若 `@primno/dpapi` 加载失败（如 Node 版本不兼容或缺少 .node 文件），`SecretProtector` 返回 `CONFIG_DPAPI_UNAVAILABLE` 错误码，系统降级运行（视同无配置）。
+失败错误码：若 `isPlatformSupported` 为 false 或 `Dpapi.protectData` 抛错，`SecretProtector` 返回 `CONFIG_DPAPI_UNAVAILABLE` 错误码，系统降级运行（视同无配置）。
 
 ### 0.4 降级策略
 
@@ -61,7 +79,7 @@ Node 22 兼容性：`@primno/dpapi` 使用 N-API（ABI 稳定），声明 `engin
                         → 失败：丢弃内存候选值，返回错误
                         → 成功：一次性写入 {channel}.active.enc（原子 rename）
                                  → 如旧 active 存在，先备份为 {channel}.prev.enc
-                                 → 更新 state.json 为 verified_pass
+                                 → 更新内存快照
                                  → 通知运行时消费者使用新快照
 ```
 
@@ -71,19 +89,44 @@ Node 22 兼容性：`@primno/dpapi` 使用 N-API（ABI 稳定），声明 `engin
 {APP_DATA_ROOT}/config/
 ├── ai.active.enc          # 当前已激活的 AI 配置（DPAPI 加密）
 ├── ai.prev.enc            # 上一份有效 AI 配置（备份）
-├── smtp.active.enc        # 当前已激活的 SMTP 配置
-├── smtp.prev.enc          # 上一份有效 SMTP 配置
-├── feishu.active.enc      # 当前已激活的飞书配置
-├── feishu.prev.enc        # 上一份有效飞书配置
-└── state.json             # 非加密，只含各通道状态枚举和最后验证时间
+├── smtp.active.enc
+├── smtp.prev.enc
+├── feishu.active.enc
+├── feishu.prev.enc
+└── state.json             # 非加密，只含各通道状态和最后验证时间（辅助元数据，非激活事实来源）
 ```
 
-**重启行为：**
+**原子写入流程（P1 二审修订）：**
 
-1. 读取 `{channel}.active.enc` → 解密成功 → 加载到内存快照，状态读 `state.json`
-2. `active.enc` 不存在 → 该通道状态 = `unconfigured`，降级运行
-3. `active.enc` 损坏（解密失败）→ 尝试 `{channel}.prev.enc` → 成功则恢复并记录 `CONFIG_RECOVERED_FROM_BACKUP`；失败则状态 = `unconfigured`，记录 `CONFIG_CORRUPT_DEGRADED`
-4. 不存在"候选未验证"的磁盘文件——候选配置只在请求内存中存活
+为避免"active 重命名为 prev 后、新 active 写入前"的中断窗口，采用以下顺序：
+
+1. 加密候选配置 → 写入 `{channel}.new.tmp`
+2. 如果 `{channel}.active.enc` 存在 → `rename(active.enc, prev.enc)`（覆盖旧 prev）
+3. `rename({channel}.new.tmp, active.enc)`
+4. 若步骤 2/3 任一失败 → 清理临时文件 → **不更新内存快照，不发事件** → 返回错误
+5. 只有 `active.enc` 写入成功后 → 更新内存快照 → 发激活事件
+
+**重启行为（P1 二审补充）：**
+
+1. 读取 `{channel}.active.enc` → 解密成功 → 加载到内存快照
+2. `active.enc` 不存在但 `prev.enc` 存在 → **自动恢复**：`rename(prev.enc, active.enc)` → 解密成功 → 加载 → 记录 `CONFIG_RECOVERED_FROM_PREV`
+3. `active.enc` 解密失败（损坏）→ 尝试 `prev.enc` → 成功则 `rename(prev.enc, active.enc)` → 记录 `CONFIG_RECOVERED_FROM_BACKUP`
+4. `active.enc` 和 `prev.enc` 均不可用 → 该通道状态 = `unconfigured`，记录 `CONFIG_CORRUPT_DEGRADED`，降级运行
+5. 不存在"候选未验证"的磁盘文件——候选配置只在请求内存中存活
+
+**state.json 定位：**
+
+- 只记录 `{ [channel]: { status, lastVerifiedAt, summary } }`
+- 不是激活事实来源——启动时以 `active.enc` 可解密为准
+- 激活时间和配置摘要可选地写入 state.json，供前端展示"最后验证"时间
+- 如果 state.json 损坏或缺失，不影响配置恢复——从 active.enc 重建状态
+
+**验证要求（P1 二审补充）：**
+
+T08-A 实现后，针对原子写入流程注入中断点，验证：
+- 步骤 2 后中断 → 重启后从 prev 恢复
+- 步骤 3 失败 → 内存快照和事件不触发，旧配置继续有效
+- 双文件损坏 → 降级到 unconfigured，不崩溃
 
 **与 `.env.local` 共存优先级：**
 
@@ -110,9 +153,9 @@ Node 22 兼容性：`@primno/dpapi` 使用 N-API（ABI 稳定），声明 `engin
   }
   ```
 - [ ] 新建 `packages/backend/src/config/dpapi-protector.ts`
-  - 使用 `@primno/dpapi`：`new Dpapi().protectData(data, null, 'CurrentUser')`
-  - `available` 属性：try-catch 加载 `@primno/dpapi`，加载失败返回 false
-  - 加载失败时 `encrypt`/`decrypt` 抛出 `CONFIG_DPAPI_UNAVAILABLE`
+  - 使用 `@primno/dpapi`：**静态方法** `Dpapi.protectData(data, null, 'CurrentUser')`（不是 `new Dpapi().protectData`）
+  - `available` 属性：检查 `isPlatformSupported`
+  - 平台不支持或加载失败时 `encrypt`/`decrypt` 抛出 `CONFIG_DPAPI_UNAVAILABLE`
 - [ ] 新建 `packages/backend/src/config/test-protector.ts`
   - 简单的 XOR 或 base64 "加密"，仅用于自动化测试
   - 与生产隔离：只在 `NODE_ENV=test` 或依赖注入时使用
@@ -120,12 +163,17 @@ Node 22 兼容性：`@primno/dpapi` 使用 N-API（ABI 稳定），声明 `engin
 - [ ] 验证：在本机运行 roundtrip 测试确认 `@primno/dpapi` 正常工作
 - [ ] 新建 `packages/backend/src/config/secure-store.ts`
   - 接受注入的 `SecretProtector`
-  - `write(channel, data)`: 加密 → 写 `.tmp` → rename 为 `{channel}.active.enc`；旧 active 先 rename 为 `.prev.enc`
-  - `read(channel)`: 读 `active.enc` → 解密 → 返回；损坏时尝试 `.prev.enc`
+  - `write(channel, data)`: 按 0.5 原子写入流程执行：
+    1. 加密 → 写 `{channel}.new.tmp`
+    2. 若 `active.enc` 存在 → `rename(active.enc, prev.enc)`（覆盖旧 prev）
+    3. `rename(new.tmp, active.enc)`
+    4. 任一步骤失败 → 清理临时文件 → 抛错（不更新调用方状态）
+  - `read(channel)`: 读 `active.enc` → 解密 → 返回；损坏时尝试 `prev.enc`；`active` 不存在但 `prev` 存在时自动恢复
   - `exists(channel)`: 检查 `active.enc` 是否存在
 - [ ] 测试覆盖（使用 TestProtector）：
   - 加密后 roundtrip 恢复
-  - 原子写入（中断不损坏旧文件）
+  - 原子写入中断注入：步骤 2 后进程退出 → 重启后从 prev 自动恢复
+  - 写入失败不留下半成品
   - 损坏 active 时 fallback 到 prev
   - prev 也损坏时返回明确错误码 `CONFIG_CORRUPT_DEGRADED`
   - 不同 channel 文件互不影响
@@ -251,50 +299,55 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 
 **目标：** 所有配置消费者通过统一机制获取不可变快照；激活新配置后，在途请求继续使用旧快照，新请求使用新快照。
 
-**当前消费者清单：**
+**当前消费者清单（P1 二审纠正）：**
 
 | 消费者 | 文件 | 当前读取方式 | T08 接入方式 |
 |--------|------|-------------|-------------|
-| AI: dev API | `api/dev-ai.ts:12` | `new AiProviderRouter()` → 读 `config` | 改为从 `ConfigurationService` 获取 AI 快照构建 |
-| AI: 资料 Worker | `services/material-job-worker.ts:48` | `new AiProviderRouter()` → 读 `config` | 同上 |
-| AI: 练习服务 | `services/practice-runner-service.ts:232` | `new AiProviderRouter()` → 读 `config` | 同上 |
-| AI: 报告润色 | `services/parent-report-service.ts` | 通过 AiProviderRouter | 同上 |
-| SMTP | `services/parent-report-delivery-service.ts:475` | 直接读 `config.smtp*` | 改为调用 `configService.getActiveSnapshot('smtp')` |
-| 飞书 | `services/parent-report-delivery-service.ts:501` | 直接读 `config.feishuWebhookUrl` | 改为调用 `configService.getActiveSnapshot('feishu')` |
+| AI: dev API | `api/dev-ai.ts:12` | 模块级 `const aiRouter = new AiProviderRouter()` | 改为稳定代理对象 |
+| AI: 资料 Worker | `services/material-job-worker.ts:48` | 类属性 `new AiProviderRouter()` | 改为每次 job 执行时获取当前 router |
+| AI: 练习服务 | `services/practice-runner-service.ts:232` | 构造时 `new AiProviderRouter()` | 改为每次请求时获取当前 router |
+| SMTP | `services/parent-report-delivery-service.ts:475` | 直接读 `config.smtp*` | 改为调用 `getActiveSmtpConfig()` |
+| 飞书 | `services/parent-report-delivery-service.ts:501` | 直接读 `config.feishuWebhookUrl` | 改为调用 `getActiveFeishuConfig()` |
 
-**设计：中央 Provider 工厂 + 不可变快照**
+**说明：** 报告 AI 润色当前未接线（ParentReportService 默认构造不传 `summarizeWithAi`），不是消费者。实际 AI 消费者为 3 个。
 
-- [ ] 新建 `packages/backend/src/config/config-aware-providers.ts`
-  - 导出 `getAiRouter(): AiProviderRouter` — 返回当前快照构建的 router 实例
-  - 导出 `getSmtpConfig(): SmtpConfig | null` — 返回当前 SMTP 快照或 null
-  - 导出 `getFeishuConfig(): FeishuConfig | null` — 返回当前飞书快照或 null
-  - 内部订阅 `ConfigurationService.onConfigActivated`，激活时替换对应 provider/config 引用
-  - 不可变快照保证：已取得引用的在途请求继续使用旧对象，新请求获取新引用
-- [ ] 改造 `AiProviderRouter`：
-  - 构造时可接受显式 `providers` 数组（不再硬读 `config` 全局）
-  - 保留无参构造作为 `.env.local` fallback（开发兼容）
-  - 移除内部的 `buildProvidersFromConfig()` 对 `config` 全局的直接依赖
+**设计：稳定代理对象 + 每次请求时解引用（P1 二审修订）**
+
+不能让模块级长生命周期实例永久持有旧 Router。改为：
+
+- [ ] 新建 `packages/backend/src/config/config-snapshot.ts`
+  - 导出 `interface AiSnapshot { providers: ProviderConfig[] }`、`SmtpSnapshot`、`FeishuSnapshot`
+  - 导出 `let currentAiSnapshot: AiSnapshot | null`（模块级可变变量）
+  - 导出 `function updateAiSnapshot(snapshot: AiSnapshot)` — 更新引用
+  - 导出 `function getCurrentAiSnapshot(): AiSnapshot | null` — 获取当前快照
+  - 同理导出 SMTP 和飞书的快照管理
+  - `ConfigurationService` 激活时调用 `updateXxxSnapshot()` 更新引用
+- [ ] 新建 `packages/backend/src/adapters/ai/ai-router-proxy.ts`
+  - 导出 `class AiRouterProxy implements AiProvider`
+  - `generate(request)`: 每次调用时从 `getCurrentAiSnapshot()` 获取最新快照 → 构建临时 Router → 调用 `generate`
+  - 如果快照为 null 且 `.env.local` 也无配置 → 返回 `AI_NOT_CONFIGURED`
+  - 在途请求：一旦进入 `generate()` 方法并获取到快照，整个请求生命周期内使用该不可变快照
 - [ ] 改造 AI 消费者（3 处）：
-  - `dev-ai.ts`：改为 `getAiRouter()`
-  - `material-job-worker.ts`：改为 `getAiRouter()`（每次 job 执行时获取最新引用）
-  - `practice-runner-service.ts`：构造时仍支持注入（测试），默认改为 `getAiRouter()`
+  - `dev-ai.ts:12`：改为 `const aiRouter = new AiRouterProxy()`（稳定代理实例）
+  - `material-job-worker.ts:48`：改为 `private readonly ai: AiProvider = new AiRouterProxy()`
+  - `practice-runner-service.ts:232`：默认值改为 `new AiRouterProxy()`，仍支持注入（测试）
 - [ ] 改造 SMTP/飞书消费者：
-  - `parent-report-delivery-service.ts`：`isSmtpConfigured()` 和 `isFeishuConfigured()` 改为读 `getSmtpConfig()` / `getFeishuConfig()`
-  - 发送时使用获取到的快照对象，不再读 `config.*`
-- [ ] 家长报告 runner（独立进程问题）：
-  - 当前 `parent-report-runner` 是一次性脚本进程，启动时初始化 ConfigurationService 即可获取配置
+  - `parent-report-delivery-service.ts`：`isSmtpConfigured()` 和发送时改为读 `getCurrentSmtpSnapshot()`
+  - `isFeishuConfigured()` 和发送时改为读 `getCurrentFeishuSnapshot()`
+- [ ] 家长报告 runner（独立进程）：
+  - 一次性脚本进程，启动时初始化 ConfigurationService 即可获取配置
   - 无需热重载——它每次运行都是新进程
 - [ ] 启动优先级规则：
   1. `ConfigurationService.initialize()` 尝试读取 `{channel}.active.enc`
-  2. 成功 → 使用加密存储配置
-  3. 失败 → fallback 读 `.env.local` 的对应字段
-  4. 两者都无 → 该通道 unconfigured，降级运行
+  2. 成功 → 使用加密存储配置 → 调用 `updateXxxSnapshot()` 更新模块级快照
+  3. 失败 → fallback 读 `.env.local` 的对应字段 → 同样调用 `updateXxxSnapshot()` 以统一代码路径
+  4. 两者都无 → 快照为 null，该通道 unconfigured，降级运行
 - [ ] 测试覆盖：
-  - 注入 TestProtector + 模拟配置激活 → 消费者获取新快照
+  - 注入 TestProtector + 模拟配置激活 → 代理对象获取新快照
   - 空配置启动所有消费者不崩溃
   - AI 未配置时所有 AI 请求返回 `AI_NOT_CONFIGURED`
   - `.env.local` fallback 正常（CI 环境）
-  - 在途请求不受新配置影响
+  - 在途请求不受新配置影响（并发测试：A 请求进行中，激活新配置，A 完成时使用旧快照）
 
 ### T08-F：前端设置页面（含运行状态分区）
 
@@ -349,18 +402,28 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 - [ ] **前端首次引导**：打开浏览器 → 显示配置引导提示 → 点击进入 settings → 运行状态面板可见
 - [ ] **AI 配置全流程**：填写 provider → "测试并激活" → pass → AI 功能立即恢复（无需重启）
 - [ ] **AI 测试失败**：填写错误密钥 → "测试并激活" → 失败 → 显示脱敏错误 → 已有 active 配置不受影响
-- [ ] **SMTP 配置全流程**：填写 SMTP 信息 → "测试并激活"（含测试邮件）→ 收到邮件 → 激活成功
-- [ ] **飞书配置全流程**：填写 webhook → "测试并激活" → 收到测试卡片 → 激活成功
+- [ ] **SMTP 配置全流程（P2 二审修订）**：填写 SMTP 信息 → "测试并激活" → **自动化测试使用 mock SMTP 验证连接逻辑** → 激活成功；真实邮件发送测试由用户显式触发，不作为常规验收依赖
+- [ ] **飞书配置全流程（P2 二审修订）**：填写 webhook → "测试并激活" → **自动化测试使用 mock Feishu 验证连接逻辑** → 激活成功；真实飞书卡片测试由用户显式触发，不作为常规验收依赖
 - [ ] **密钥不泄漏**：GET 状态 API 不含明文密钥；前端不存储密钥；日志不含密钥
 - [ ] **通道隔离**：AI 配置失败不影响 SMTP/飞书功能
 - [ ] **重启恢复**：激活后重启后端 → 自动加载已激活配置 → 状态保持 → 消费者正常使用
 - [ ] **损坏恢复**：手动损坏 `ai.active.enc` → 重启 → 尝试 `ai.prev.enc` 恢复 → 成功则继续；双损坏则降级到 unconfigured，不崩溃
+- [ ] **active 缺失恢复（P1 二审补充）**：手动删除 `ai.active.enc` 但保留 `ai.prev.enc` → 重启 → 自动从 prev 恢复并记录 `CONFIG_RECOVERED_FROM_PREV`
 - [ ] **`.env.local` 兼容**：无 active.enc 但 `.env.local` 有配置时，消费者正常使用 `.env.local` 值
 - [ ] **`.env.local` 被加密存储覆盖**：active.enc 存在时，`.env.local` 中同类配置被忽略
-- [ ] **在途请求安全**：AI 请求进行中，激活新配置 → 在途请求完成不受影响
+- [ ] **在途请求安全（P1 二审补充）**：AI 请求进行中，激活新配置 → 在途请求完成时使用启动时的快照，不受新配置影响
 - [ ] 构建验证：`pnpm type-check` + 后端 build + 前端 build + `pnpm test` 全通过
 - [ ] 文档治理通过
-- [ ] Playwright 浏览器验收脚本覆盖设置页面基本流程
+- [ ] Playwright 浏览器验收脚本覆盖设置页面基本流程（使用 mock 连接测试，不依赖真实外部服务）
+
+**真实渠道测试规则（P2 二审补充）：**
+
+真实 AI Provider、SMTP 邮件、飞书 Webhook 测试**不作为自动化验收或常规合并门槛**。它们：
+
+- 由用户通过前端设置页显式触发（"发送测试邮件"勾选框、真实 Provider 测试）
+- 仅在用户另行批准后执行
+- 结果不阻塞分支合并到 master
+- 用于验证真实环境配置正确性，不替代自动化测试覆盖
 
 ---
 
@@ -451,3 +514,4 @@ T08-E (消费者统一接入) ←── T08-B                     │
 |------|------|---------|
 | v1 | 2026-07-17 | 初始计划 |
 | v2 | 2026-07-17 | P1: 消除"保存未验证配置到磁盘"，改为内存测试+一次性写入激活；P1: 依赖改为已验证的 `@primno/dpapi` + SecretProtector 抽象；P1: 补充全部运行时消费者（AI×4 + SMTP + 飞书）统一接入和优先级规则；P2: 补充运行状态分区定义和 API |
+| v3 | 2026-07-17 | P1: 修正 AI Router 热切换方案为稳定代理对象（每次请求解引用）；纠正 AI 消费者数量为 3（报告润色未接线）；P1: 修正原子写入流程顺序，补充 active 缺失时从 prev 自动恢复；P1: 修正 `@primno/dpapi` 调用形式为静态方法，增加 Node 22 实机 roundtrip 验证门槛；P2: 真实渠道 smoke 改为用户显式触发，不作为常规合并门槛 |
