@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-**Version**: v1.6
-**Updated**: 2026-07-17
+**Version**: v1.7
+**Updated**: 2026-07-18
 
 This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
 
@@ -21,6 +21,8 @@ AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七
 2. `docs/04-开发任务清单-Todo-List.md`
 3. 与任务相关的 PRD / `docs/08` / `docs/10` / `docs/11`
 4. `docs/12-开发规范-Dev-Rules.md`
+
+开工前必须在 `docs/04` 找到当前任务和“Phase 1 行动计划索引”。任务未登记时先登记；计划尚未创建或未获批准时，不得直接进入实现。
 
 产品事实以 `docs/01` 和 `docs/02` 为准；旧备份和外部参考项目不是 SoT。
 

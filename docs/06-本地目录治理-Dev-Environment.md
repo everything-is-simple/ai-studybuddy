@@ -1,8 +1,8 @@
 # AI StudyBuddy 本地目录与验证资产治理
 
-**版本**：v1.4
+**版本**：v1.5
 **状态**：已确认
-**日期**：2026-07-10
+**日期**：2026-07-18
 **用途**：定义主系统、外部组件试炼场、运行数据、日志、临时文件和备份的唯一边界。本文件是 Windows 单机目录治理的单一事实来源（SoT）。
 
 ---
@@ -51,18 +51,27 @@ COMPONENT-CARD.md 版本、命令、输入输出、耗时、内存、失败边�
 
 ```text
 APP_DATA_ROOT\
-  data\studybuddy.sqlite
-  data\backups\
-  materials\<course-id>\<yyyy-mm-dd>\<generated-name>
-  tmp\<job-id>\
-  exports\<yyyy-mm>\
-  logs\
+  studybuddy.db
+  config\
+    ai.active.enc / ai.prev.enc
+    smtp.active.enc / smtp.prev.enc
+    feishu.active.enc / feishu.prev.enc
+    state.json
+  semesters\<semester-id>\
+    semester.db
+    files\<course-id>\<generated-name>
+    tmp\
+    parent-reports\
+  tmp\
+  backups\
 ```
 
 - 数据表只保存逻辑 `storage_key`，不保存绝对文件路径。
 - SQLite 关闭后才能复制到 `data\backups`；恢复前保留原库的只读副本。
 - `tmp` 和 `I:\ai-studybuddy-tmp` 可以清理，但清理脚本必须拒绝跨目录删除，且绝不删除 `materials`、`data` 或备份。
 - 邮件附件和导出放在 `exports`；发送记录由 SQLite 的 `report_deliveries` 去重。
+- `config/*.enc` 只能由创建它的 Windows 当前用户解密；`state.json` 只存状态和验证时间，不存密钥、完整 URL 或邮箱授权码。
+- 测试和浏览器验收必须把 `APP_DATA_ROOT` 指向 `I:\ai-studybuddy-tmp\runs\<task-id>` 等隔离目录，不得读写正式运行目录。
 
 ## 五、密钥、日志与备份
 

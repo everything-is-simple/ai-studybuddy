@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.14
-**日期**：2026-07-17
-**状态**：Phase 0.7/0.8 已完成；Phase 1-T02 已补齐 AI Provider Router 的实例级健康熔断、冷却恢复与脱敏日志；Phase 1-T03A/T03B/T03C/T03D 已完成 S3 练习 Schema、生成/提交批改 API 与前端闭环；Phase 1-T04/T04A/T04B 已完成 S4 PRD、错题归档与错题改错前端；Phase 1-T05 已完成回流规则；Phase 1-T06 已创建 S6 家长观察 PRD，T06A 已生成脱敏规则报告，T06B 已实现 QQ SMTP/飞书渠道投递、冻结快照、失败隔离、去重重试与一次性计划任务 runner；Phase 1-T07 已扩展 S1 时间线查询并在考试工作台展示当前课程近期活动；下一门禁为 T08 本机配置中心与连接验收的独立计划、审查和用户明确批准，T08 尚未实现
+**版本**：v1.15
+**日期**：2026-07-18
+**状态**：Phase 0.7/0.8 与 Phase 1 功能核心已完成；T08 已实现 Windows DPAPI 配置存储、分渠道连接测试、运行时热切换和 loopback API 防护；下一门禁为 T09A 学期创建、选择与切换
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
@@ -33,9 +33,10 @@
 | OCR        | RapidOCR Python 子进程                                                         | stdin/参数只传文件路径；stdout 仅 JSON；用完退出；失败可转入分级 fallback                     |
 | AI         | `AiProviderRouter` + `OpenAiProvider` + 后续 `QualityGateService`              | 按 priority 首个成功返回；连续失败 5 次冷却 10 分钟，冷却期间跳过并保持 fallback                 |
 | 报告       | `ReportService`                                                                | 基于确定性证据聚合 INFO/SIGNAL/TREND；不读取资料正文、答案或聊天内容                          |
-| 邮件       | `nodemailer` + QQ SMTP                                                         | HTML 正式报告；密钥仅在 `.env.local`                                                          |
+| 邮件       | `nodemailer` + QQ SMTP                                                         | HTML 正式报告；运行时读取配置快照，不读取浏览器或 SQLite 明文秘密                             |
 | 飞书       | 自定义机器人 Webhook                                                           | 完整脱敏报告卡片；不暴露完整 URL                                                              |
 | 调度       | Windows Task Scheduler                                                         | 独立 `report.js`；不启动 OCR 或学习 Web 服务                                                  |
+| 配置保护   | `SecretProtector` + `@primno/dpapi`                                            | 当前 Windows 用户加密；active/prev 原子激活与恢复；密钥只进不出                               |
 
 主系统位于 `I:\ai-studybuddy`；最小验证位于外部 `I:\ai-studybuddy-composer\windows-native`。后者不加入 workspace，不能被 `packages/` import。数据根目录通过 `APP_DATA_ROOT` 配置，开发机建议 `I:\ai-studybuddy-data`，成品可使用 `%LOCALAPPDATA%\AIStudyBuddy`。
 
@@ -61,6 +62,7 @@ Phase 0.5 的 PostgreSQL/pgvector、MinIO、Redis/BullMQ 和 Docker/WSL2 结论�
 ```text
 APP_DATA_ROOT/
   studybuddy.db                         # 全局索引与配置，不承载学期业务明细
+  config/*.active.enc / *.prev.enc      # DPAPI 加密配置；state.json 只存非秘密状态元数据
   semesters/<semester-id>/semester.db   # 一个学期一个业务 SQLite
   semesters/<semester-id>/files/...     # 原始资料、导出等，通过 storage_key 引用
   tmp/<semester-id>/<course-id>/<job-id>/ # 可随时清空的处理缓存
@@ -160,7 +162,7 @@ HP 实机兼容复测（Windows 11、Ryzen 5 5625U、Node 22 LTS、16GB）在设
 
 `.env.local`、`.venv`、`node_modules`、真实资料、输出和日志不进主仓库 Git。日志不得输出 API Key、SMTP 授权码、完整 Feishu Webhook 或学生隐私全文。
 
-### 6.1 本机配置中心（后续 Phase 1-T08 候选）
+### 6.1 本机配置中心（Phase 1-T08 已实现）
 
 - 配置中心服务于首次可用和日常维护，不要求后端因缺少 AI、SMTP 或飞书凭据而无法启动。
 - 普通设置与秘密分离：普通设置进入全局配置；API Key、SMTP 授权码、飞书 Webhook URL 由后端保存到 Windows 当前用户可解密的加密存储。
@@ -169,5 +171,9 @@ HP 实机兼容复测（Windows 11、Ryzen 5 5625U、Node 22 LTS、16GB）在设
 - AI 使用最小请求测试；SMTP 同时支持连接验证和显式测试邮件；飞书发送固定测试卡片。测试载荷不得包含学生资料、笔记、题目、答案或正式报告。
 - 配置状态按 AI、SMTP、飞书独立维护；一个渠道失败不得阻断其他渠道。AI 未验证时保留规则功能，渠道未验证时保留本机报告生成和归档。
 - `.env.local` 保留为开发、迁移和故障恢复入口；正式配置中心不能把它作为浏览器可读写的明文后端文件。
+- 后端先初始化 `ConfigurationService`，再监听 Express，最后启动 Material Worker；家长报告 runner 也必须先初始化配置再构造投递服务。
+- `GET /api/config/status` 只返回脱敏状态和运行信息；`POST /api/config/:channel/test-and-activate` 只在连接测试全部通过后写入加密 active；`retest` 不重写 active。
+- 所有 `/api` 请求使用 loopback Origin 策略；默认允许 Vite `5173` 和 preview/Playwright `4173`，无 Origin 的本机 CLI 可通过，远程网页来源返回固定 403。
+- 磁盘持久态只有 `unconfigured` 与 `verified_pass`；`testing`/`test_failed` 是前端瞬时状态，不存在“保存但未验证”的候选文件。
 
 HP 实机兼容复测目标（待机会执行，不阻塞 Phase 0.8）：Docker Desktop 与 WSL2 未运行；学习服务可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出；重复同周期不重复发送。

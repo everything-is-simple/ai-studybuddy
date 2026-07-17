@@ -1,8 +1,8 @@
 # S2 资料笔记子系统 NoteBuilder PRD
 
-**版本**：v0.03
-**日期**：2026-07-13
-**状态**：Phase 0.8 开工前轻量设计基线；已对齐 Windows 单机 MVP 的资料处理、AI 笔记生成与知识模块闭环；补齐完整字段约束、API 契约、状态机、Job Worker 重试策略和可执行验收标准
+**版本**：v0.04
+**日期**：2026-07-18
+**状态**：Phase 0.8 S2 核心与前端资料/笔记闭环已实现；T10 人工补文恢复已完成，T08 配置中心可在 AI 未配置时保持降级运行
 
 ---
 
@@ -840,7 +840,7 @@ pending → converting → converted → note_generating → completed
 | 404    | KNOWLEDGE_MODULE_NOT_FOUND | "Knowledge module {id} not found"                             |
 | 400    | INVALID_ENUM_VALUE         | "learnStatus must be one of: not_started, learning, mastered" |
 
-### Pages（T08 负责实现）
+### Pages（Phase 0.8-T08 已实现）
 
 | 页面         | 说明                                                |
 | ------------ | --------------------------------------------------- |
@@ -929,3 +929,5 @@ pending → converting → converted → note_generating → completed
 | S2-v1.1                 | 笔记重新生成、手动触发 AI 补全、URL 批量导入            |
 | S2-v1.2                 | 知识模块与考试范围关联、模块覆盖率统计                  |
 | S2-v2.0                 | 多资料交叉知识图谱、知识模块自动合并去重                |
+
+> 当前实现完成证据以 `docs/04` 的 Phase 0.8-T07/T08/T09 与 Phase 1-T10 记录为准。以上验收清单保留完整产品契约，不表示 URL 批量导入、资料删除、章节分段合并或所有性能目标已经进入当前完成范围。Phase 1-T08 只改变 Provider 配置与降级入口，不改变 S2 数据对象或业务 API。
