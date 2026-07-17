@@ -5,8 +5,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { SecureStore } from '../dist/config/secure-store.js';
-import { TestProtector } from '../dist/config/test-protector.js';
+const moduleDataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t08-store-module-'));
+process.env.APP_DATA_ROOT = moduleDataRoot;
+test.after(() => rm(moduleDataRoot, { recursive: true, force: true }));
+const { SecureStore } = await import('../dist/config/secure-store.js');
+const { TestProtector } = await import('../dist/config/test-protector.js');
 
 test('TestProtector encrypts and decrypts without leaving plaintext unchanged', () => {
   const protector = new TestProtector();

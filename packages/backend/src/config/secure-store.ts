@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { getConfigDir } from '../db/paths';
-import type { SecretProtector } from './secret-protector';
+import { SecretProtectionError, type SecretProtector } from './secret-protector';
 
 export type ConfigChannel = 'ai' | 'smtp' | 'feishu';
 
@@ -79,7 +79,8 @@ export class SecureStore {
     if (fs.existsSync(activePath)) {
       try {
         return { data: await this.readFile<T>(activePath), recoveredFromPrev: false };
-      } catch {
+      } catch (error) {
+        if (isDpapiUnavailable(error)) throw error;
         // Continue to the verified previous snapshot.
       }
     }
@@ -95,7 +96,8 @@ export class SecureStore {
       const data = await this.readFile<T>(prevPath);
       await this.restorePrevious(channel, prevPath, activePath);
       return { data, recoveredFromPrev: true };
-    } catch {
+    } catch (error) {
+      if (isDpapiUnavailable(error)) throw error;
       throw new SecureStoreError('CONFIG_CORRUPT_DEGRADED', '已激活配置及备份均损坏');
     }
   }
@@ -123,4 +125,10 @@ export class SecureStore {
   private filePath(channel: ConfigChannel, suffix: string): string {
     return path.join(this.configDir, `${channel}.${suffix}`);
   }
+}
+
+function isDpapiUnavailable(error: unknown): boolean {
+  return (
+    error instanceof SecretProtectionError && error.code === 'CONFIG_DPAPI_UNAVAILABLE'
+  );
 }
