@@ -819,7 +819,12 @@ export class StudyRhythmService {
     }
   }
 
-  getTimeline(semesterId: unknown, courseInstanceId?: unknown, limitInput?: unknown): StudyEventDto[] {
+  getTimeline(
+    semesterId: unknown,
+    courseInstanceId?: unknown,
+    limitInput?: unknown,
+    eventTypeInput?: unknown
+  ): StudyEventDto[] {
     if (!isUuid(semesterId)) {
       throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     }
@@ -827,6 +832,18 @@ export class StudyRhythmService {
       limitInput === undefined ? 50 : typeof limitInput === 'string' ? Number(limitInput) : Number(limitInput);
     if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
       throw new StudyRhythmError('TIMELINE_QUERY_INVALID', 400, 'limit 必须是 1 到 200 之间的整数');
+    }
+
+    let eventTypes: string[] | undefined;
+    if (eventTypeInput !== undefined) {
+      const values = Array.isArray(eventTypeInput) ? eventTypeInput : [eventTypeInput];
+      if (values.some((value) => typeof value !== 'string' || value.trim().length === 0)) {
+        throw new StudyRhythmError('TIMELINE_QUERY_INVALID', 400, 'eventType 必须是非空字符串');
+      }
+      eventTypes = [...new Set(values as string[])];
+      if (eventTypes.length > 20) {
+        throw new StudyRhythmError('TIMELINE_QUERY_INVALID', 400, 'eventType 最多接受 20 个不同值');
+      }
     }
 
     const db = this.openReadySemesterDb(semesterId);
@@ -837,9 +854,17 @@ export class StudyRhythmService {
 
       let sql = 'SELECT * FROM study_events';
       const params: (string | number)[] = [];
+      const conditions: string[] = [];
       if (courseInstanceId !== undefined) {
-        sql += ' WHERE course_instance_id = ?';
+        conditions.push('course_instance_id = ?');
         params.push(String(courseInstanceId));
+      }
+      if (eventTypes !== undefined) {
+        conditions.push(`event_type IN (${eventTypes.map(() => '?').join(', ')})`);
+        params.push(...eventTypes);
+      }
+      if (conditions.length > 0) {
+        sql += ` WHERE ${conditions.join(' AND ')}`;
       }
       sql += ' ORDER BY occurred_at DESC, created_at DESC, id DESC LIMIT ?';
       params.push(limit);

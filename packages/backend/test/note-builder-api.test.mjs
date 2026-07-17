@@ -9,8 +9,8 @@ import test from 'node:test';
 const backendDir = path.resolve(import.meta.dirname, '..');
 let nextPort = 49000;
 
-async function startBackend(t) {
-  const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t07-api-'));
+async function startBackend(t, providedDataRoot) {
+  const dataRoot = providedDataRoot ?? (await mkdtemp(path.join(tmpdir(), 'studybuddy-t07-api-')));
   const port = nextPort++;
   const child = spawn(process.execPath, ['dist/server.js'], {
     cwd: backendDir,
@@ -26,7 +26,9 @@ async function startBackend(t) {
   });
   t.after(async () => {
     child.kill();
-    await rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    if (providedDataRoot === undefined) {
+      await rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
   });
   let stderr = '';
   child.stderr.on('data', (chunk) => {
@@ -223,6 +225,26 @@ test('S2 worker runOnce generates notes, modules, list metadata, and study evide
     quality_gate: 'passed',
     source_confidence: 1,
   });
+
+  const port = await startBackend(t, dataRoot);
+  const interference = await json(port, 'POST', '/api/study-events', {
+    semesterId: semester.semesterId,
+    sourceSystem: 'S1',
+    eventType: 'study_task_completed',
+    title: '干扰事件',
+    courseInstanceId: course.id,
+  });
+  assert.equal(interference.status, 201);
+  const timeline = await json(
+    port,
+    'GET',
+    `/api/timeline?semesterId=${semester.semesterId}&eventType=material_note_completed`
+  );
+  assert.equal(timeline.status, 200);
+  assert.equal(timeline.json.data.length, 1);
+  assert.equal(timeline.json.data[0].sourceSystem, 'S2');
+  assert.equal(timeline.json.data[0].courseInstanceId, course.id);
+  assert.equal(timeline.json.data[0].evidenceRef, `material:${uploaded.id}`);
 
   const updated = service.updateKnowledgeModule({
     semesterId: semester.semesterId,

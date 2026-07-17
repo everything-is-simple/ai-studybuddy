@@ -468,6 +468,27 @@ test('redo flow: incorrect redo keeps needs_review without new mistakes; correct
   } finally {
     db.close();
   }
+
+  const interference = await requestJson(backend.port, 'POST', '/api/study-events', {
+    semesterId,
+    sourceSystem: 'S1',
+    eventType: 'study_task_completed',
+    title: '干扰事件',
+    courseInstanceId: course.id,
+  });
+  assert.equal(interference.status, 201);
+  const timeline = await requestJson(
+    backend.port,
+    'GET',
+    `/api/timeline?semesterId=${semesterId}&eventType=mistake_reviewed`
+  );
+  assert.equal(timeline.status, 200);
+  assert.equal(timeline.json.data.length, 2);
+  for (const event of timeline.json.data) {
+    assert.equal(event.courseInstanceId, course.id);
+    assert.equal(event.evidenceRef, `mistake:${target.id}`);
+    assert.ok(!event.title.includes('封闭性'), 'timeline event title must not contain stem text');
+  }
 });
 
 test('mastery with explicit student confirm works without redo evidence', async (t) => {

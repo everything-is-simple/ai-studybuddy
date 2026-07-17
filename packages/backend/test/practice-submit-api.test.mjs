@@ -325,6 +325,25 @@ test('submit grades objective answers, records missing answers, updates session,
   assert.equal(state.events[0].occurred_at, state.session.submitted_at);
   assert.doesNotMatch(state.events[0].title, /零向量|VECTOR|A,C/);
   assert.deepEqual(state.futureTables.map((row) => row.name).sort(), ['mistakes', 'weak_points']);
+
+  const interference = await requestJson(backend.port, 'POST', '/api/study-events', {
+    semesterId,
+    sourceSystem: 'S1',
+    eventType: 'study_task_completed',
+    title: '干扰事件',
+    courseInstanceId: course.id,
+  });
+  assert.equal(interference.status, 201);
+  const timeline = await requestJson(
+    backend.port,
+    'GET',
+    `/api/timeline?semesterId=${semesterId}&eventType=practice_completed`
+  );
+  assert.equal(timeline.status, 200);
+  assert.equal(timeline.json.data.length, 1);
+  assert.equal(timeline.json.data[0].courseInstanceId, course.id);
+  assert.equal(timeline.json.data[0].evidenceRef, `practice_session:${sessionId}`);
+  assert.equal(timeline.json.data[0].workloadMinutes, 11);
 });
 
 test('submit treats equal time limit and unlimited sessions as not overtime', async (t) => {

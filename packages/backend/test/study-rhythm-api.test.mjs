@@ -597,7 +597,7 @@ test('study-events reject cross-semester course or task references', async (t) =
   assert.equal(crossTask.json.error.code, 'TASK_NOT_FOUND');
 });
 
-test('timeline returns only requested semester in descending order with course filter', async (t) => {
+test('timeline filters one or multiple event types with course AND, descending order, and semester isolation', async (t) => {
   const backend = await startBackend(t);
   const semesterA = await initializeReadySemester(backend.port);
   const semesterB = await initializeReadySemester(backend.port);
@@ -607,24 +607,24 @@ test('timeline returns only requested semester in descending order with course f
   await requestJson(backend.port, 'POST', '/api/study-events', {
     semesterId: semesterA,
     sourceSystem: 'S1',
-    eventType: 'manual_note',
-    title: '政治笔记',
+    eventType: 'practice_completed',
+    title: '政治练习',
     courseInstanceId: courseA.json.data.id,
     occurredAt: '2026-03-01T10:00:00.000Z',
   });
   await requestJson(backend.port, 'POST', '/api/study-events', {
     semesterId: semesterA,
     sourceSystem: 'S1',
-    eventType: 'manual_note',
-    title: '体育笔记',
+    eventType: 'practice_completed',
+    title: '体育练习',
     courseInstanceId: courseB.json.data.id,
     occurredAt: '2026-03-02T10:00:00.000Z',
   });
   await requestJson(backend.port, 'POST', '/api/study-events', {
     semesterId: semesterB,
     sourceSystem: 'S1',
-    eventType: 'manual_note',
-    title: 'B学期笔记',
+    eventType: 'mistake_reviewed',
+    title: 'B学期错题',
     occurredAt: '2026-03-03T10:00:00.000Z',
   });
 
@@ -632,22 +632,111 @@ test('timeline returns only requested semester in descending order with course f
   assert.equal(allA.status, 200);
   assert.deepEqual(
     allA.json.data.map((event) => event.title),
-    ['体育笔记', '政治笔记']
+    ['体育练习', '政治练习']
   );
 
-  const filtered = await requestJson(
+  await requestJson(backend.port, 'POST', '/api/study-events', {
+    semesterId: semesterA,
+    sourceSystem: 'S4',
+    eventType: 'mistake_reviewed',
+    title: '政治错题',
+    courseInstanceId: courseA.json.data.id,
+    occurredAt: '2026-03-04T10:00:00.000Z',
+  });
+  await requestJson(backend.port, 'POST', '/api/study-events', {
+    semesterId: semesterA,
+    sourceSystem: 'S2',
+    eventType: 'material_note_completed',
+    title: '政治资料',
+    courseInstanceId: courseA.json.data.id,
+    occurredAt: '2026-02-28T10:00:00.000Z',
+  });
+
+  const singleType = await requestJson(
     backend.port,
     'GET',
-    `/api/timeline?semesterId=${semesterA}&courseInstanceId=${courseA.json.data.id}`
+    `/api/timeline?semesterId=${semesterA}&eventType=practice_completed`
   );
   assert.deepEqual(
-    filtered.json.data.map((event) => event.title),
-    ['政治笔记']
+    singleType.json.data.map((event) => event.title),
+    ['体育练习', '政治练习']
+  );
+
+  const multipleTypes = await requestJson(
+    backend.port,
+    'GET',
+    `/api/timeline?semesterId=${semesterA}&eventType=material_note_completed&eventType=mistake_reviewed`
+  );
+  assert.deepEqual(
+    multipleTypes.json.data.map((event) => event.title),
+    ['政治错题', '政治资料']
+  );
+
+  const courseAndTypes = await requestJson(
+    backend.port,
+    'GET',
+    `/api/timeline?semesterId=${semesterA}&courseInstanceId=${courseA.json.data.id}&eventType=practice_completed&eventType=mistake_reviewed`
+  );
+  assert.deepEqual(
+    courseAndTypes.json.data.map((event) => event.title),
+    ['政治错题', '政治练习']
   );
 
   const limited = await requestJson(backend.port, 'GET', `/api/timeline?semesterId=${semesterA}&limit=1`);
   assert.equal(limited.json.data.length, 1);
-  assert.equal(limited.json.data[0].title, '体育笔记');
+  assert.equal(limited.json.data[0].title, '政治错题');
+});
+
+test('timeline preserves exact event type values, deduplicates identical values, and validates query shape', async (t) => {
+  const backend = await startBackend(t);
+  const semesterId = await initializeReadySemester(backend.port);
+  const spacedType = '  existing type  ';
+  const longType = `existing-${'x'.repeat(80)}`;
+
+  for (const [eventType, title] of [
+    [spacedType, '带空格类型'],
+    [longType, '长类型'],
+  ]) {
+    const created = await requestJson(backend.port, 'POST', '/api/study-events', {
+      semesterId,
+      sourceSystem: 'S1',
+      eventType,
+      title,
+    });
+    assert.equal(created.status, 201);
+  }
+
+  const exactParams = new URLSearchParams({ semesterId });
+  exactParams.append('eventType', spacedType);
+  exactParams.append('eventType', longType);
+  const exact = await requestJson(backend.port, 'GET', `/api/timeline?${exactParams}`);
+  assert.equal(exact.status, 200);
+  assert.deepEqual(
+    exact.json.data.map((event) => event.eventType).sort(),
+    [longType, spacedType].sort()
+  );
+
+  const duplicates = new URLSearchParams({ semesterId });
+  for (let index = 0; index < 21; index += 1) duplicates.append('eventType', spacedType);
+  const deduplicated = await requestJson(backend.port, 'GET', `/api/timeline?${duplicates}`);
+  assert.equal(deduplicated.status, 200);
+  assert.equal(deduplicated.json.data.length, 1);
+  assert.equal(deduplicated.json.data[0].eventType, spacedType);
+
+  const invalidQueries = [
+    `semesterId=${semesterId}&eventType=`,
+    `semesterId=${semesterId}&eventType=${encodeURIComponent('   ')}`,
+    `semesterId=${semesterId}&eventType[value]=practice_completed`,
+  ];
+  const tooMany = new URLSearchParams({ semesterId });
+  for (let index = 0; index < 21; index += 1) tooMany.append('eventType', `type-${index}`);
+  invalidQueries.push(tooMany.toString());
+
+  for (const query of invalidQueries) {
+    const response = await requestJson(backend.port, 'GET', `/api/timeline?${query}`);
+    assert.equal(response.status, 400, query);
+    assert.equal(response.json.error.code, 'TIMELINE_QUERY_INVALID');
+  }
 });
 
 test('rejects invalid timeline limit', async (t) => {

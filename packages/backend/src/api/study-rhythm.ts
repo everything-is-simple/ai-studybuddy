@@ -137,7 +137,12 @@ router.post('/study-events', (req: Request, res: Response) => {
 // ── GET /api/timeline ───────────────────────────────────────
 router.get('/timeline', (req: Request, res: Response) => {
   try {
-    const events = service.getTimeline(req.query.semesterId, req.query.courseInstanceId, req.query.limit);
+    const events = service.getTimeline(
+      req.query.semesterId,
+      req.query.courseInstanceId,
+      req.query.limit,
+      req.query.eventType
+    );
     return res.json(okResponse(events));
   } catch (error) {
     return handleError(error, res);
