@@ -607,6 +607,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **T06A 完成证据（2026-07-17）**：已按获批计划在任务分支 `codex/phase1-t06a-parent-report-generation` 实现 `ParentReportService` 与真实 SQLite 专项测试。服务只读取既有 S1/S2/S3/S4/T05 脱敏聚合值，生成日报、周报、月报及仅限已确认考试的考前 7/3/1 天提醒；规则报告可独立生成，AI 仅接收脱敏报告区块做可选摘要/润色，AI 未配置、抛错或返回空内容时保留规则报告。未新增 Schema、HTTP API、shared 类型、Worker、前端页面、QQ SMTP、飞书 Webhook、`report_deliveries` 写入或真实 Provider smoke。验证通过：隔离 `APP_DATA_ROOT` 下的 `pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm test`（后端 164/164、前端 41/41）、`powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1`、`git diff --check`。
 
 **T06B 推送渠道**（门禁：T06A 已验收；需独立实施计划与用户明确批准）
+> **T06B 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t06b-report-delivery-plan` 创建 `.plans/phase1-t06b-report-delivery-plan.md`。计划定义 QQ SMTP HTML、飞书 Webhook 卡片、`Asia/Shanghai` 22:30 的单个 `report:<date>` 合并批次、脱敏冻结快照、渠道级去重、失败隔离、退避重试，以及由 Windows Task Scheduler（`StartWhenAvailable` + 登录补发）调用的一次性 runner；同一 `report_key` 重试必须复用快照而不重新生成事实。计划明确使用隔离 SQLite 与可注入渠道替身测试，不运行真实 SMTP、飞书或 Provider smoke；不实现 HTTP API、常驻/队列 Worker、前端、家长账号、S5、S7 或 Phase 3。计划待自审、用户明确批准后才可进入 T06B 实现。
 - [ ] QQ SMTP HTML 报告发送
 - [ ] 飞书 Webhook 卡片推送
 - [ ] 渠道失败互不阻塞，去重 `report:<date>` 记录
