@@ -1,4 +1,4 @@
-# Phase 1-T08 本机配置中心与连接验收实施计划（修订 v5）
+# Phase 1-T08 本机配置中心与连接验收实施计划（修订 v6）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -294,7 +294,7 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 
 ### T08-D：配置 API 端点与安全防护
 
-**目标：** 前端可通过 REST API 读取状态、提交并测试配置（一步完成）、查看运行状态。配置写接口受 Origin 校验保护。
+**目标：** 前端可通过 REST API 读取状态、提交并测试配置（一步完成）、查看运行状态。整个本机 API 受统一的 loopback Origin 策略保护，配置写接口额外限定 JSON 请求。
 
 **端点设计：**
 
@@ -304,25 +304,32 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 | POST | `/api/config/:channel/test-and-activate` | 接收候选配置 → 内存测试 → 成功则加密写入并激活 | Origin 校验 + JSON only |
 | POST | `/api/config/:channel/retest` | 使用已激活配置重新测试连接 | Origin 校验 + JSON only |
 
-**P1 四审：Origin/CORS 防护**
+**P1 四审 + 五审：Origin/CORS 防护**
 
-当前 `server.ts:22` 使用 `app.use(cors())`（开放 CORS）。配置写接口可改写 AI/SMTP/飞书配置并触发后端外连，必须防止恶意网页跨站调用。
+当前 `server.ts:22` 使用 `app.use(cors())`（开放 CORS）。它会在配置路由之前处理预检请求；仅给 `/api/config/*` 叠加第二个 CORS 中间件无法形成可靠边界。配置中心启用真实 Provider 后，恶意网页还可能调用其他写 API 或开发 AI API，因此 T08 将替换整个 `/api` 的开放 CORS，而不是只保护配置路由。
 
-- [ ] 新建 `packages/backend/src/middleware/config-cors.ts`
-  - 配置路由 `/api/config/*` 使用独立的 CORS 中间件（不影响其他 API 的开放 CORS）
-  - 允许的 Origin 白名单：
-    - `http://localhost:4173`、`http://localhost:4174`、`http://127.0.0.1:4173`、`http://127.0.0.1:4174`（Vite 预览/开发）
-    - 可通过环境变量 `CONFIG_ALLOWED_ORIGINS` 追加（逗号分隔），不能使用 `*`
+- [ ] 新建 `packages/backend/src/middleware/api-origin-policy.ts`
+  - 在 `server.ts` 中移除开放的 `app.use(cors())`，改为在所有 `/api` 路由之前挂载统一 Origin 策略
+  - 默认允许的 Origin：
+    - `http://localhost:5173`、`http://127.0.0.1:5173`（Vite 开发）
+    - `http://localhost:4173`、`http://127.0.0.1:4173`（Vite preview / Playwright）
+  - 同步给 Vite `server` 和 `preview` 设置固定端口与 `strictPort: true`，避免自动漂移到未授权端口
+  - 当前临时使用的 `4174` 不作为永久默认；确需使用时通过 `CONFIG_ALLOWED_ORIGINS` 显式追加
+  - `CONFIG_ALLOWED_ORIGINS` 通过 `env.ts` 集中读取，并同步 `.env.example` 与 `docs/10`
+  - 追加项必须由 `URL` 解析为精确 Origin，只允许 `http:` + loopback hostname（`localhost`、`127.0.0.1` 或 `[::1]`）+ 显式端口；拒绝远程 host、凭据、路径、查询、fragment 和 `*`
   - 请求包含 `Origin` 头时：校验 Origin 是否在白名单中
     - 不在白名单 → 返回 403，响应体为固定错误码 `CONFIG_ORIGIN_REJECTED`，不回显 Origin、URL 或密钥
   - 请求不包含 `Origin` 头（本机 CLI 请求如 curl、测试脚本）→ 允许通过
-  - 只接受 `Content-Type: application/json`，拒绝 `application/x-www-form-urlencoded` 和 `multipart/form-data`
+  - `OPTIONS` 必须先完成 Origin 校验：白名单 Origin 返回 204 和允许头，非法 Origin 返回 403 且不返回 `Access-Control-Allow-Origin`
+  - 预检处理完成后，配置 POST 路由才检查 Content-Type；GET/OPTIONS 不要求 JSON
+  - 配置 POST 只接受 `Content-Type: application/json`，拒绝 `application/x-www-form-urlencoded` 和 `multipart/form-data`
     - 表单式提交返回 415 `CONFIG_UNSUPPORTED_CONTENT_TYPE`
-  - Preflight (OPTIONS) 只对白名单 Origin 返回允许头
 - [ ] 测试覆盖：
-  - 允许的 Origin → 通过
+  - `127.0.0.1:5173`、`localhost:5173`、`127.0.0.1:4173` → 通过
+  - 合法 OPTIONS 预检不被 JSON 检查误判为 415
   - 恶意 Origin（`http://evil.com`）→ 403
   - 伪造 preflight（OPTIONS + 恶意 Origin）→ 不返回 Access-Control-Allow-Origin
+  - `CONFIG_ALLOWED_ORIGINS` 中的 loopback 追加项 → 通过；远程 Origin、`*`、带路径或凭据的值 → 启动校验拒绝
   - 无 Origin 的本机 CLI 请求 → 通过
   - `Content-Type: application/x-www-form-urlencoded` → 415
   - 403/415 响应不含密钥、URL 或 Origin 值
@@ -375,7 +382,7 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   }
   ```
 - [ ] 响应中永远不返回完整 apiKey、authCode、webhookUrl、完整路径；summary 只含模型名或 provider 数量
-- [ ] 注册路由到 Express app（config-cors 中间件挂载在 `/api/config` 前缀）
+- [ ] 注册路由到 Express app；统一 Origin 策略先于全部 `/api` 路由，配置 JSON-only 检查只挂载在配置 POST 路由
 - [ ] 测试覆盖：
   - 状态读取不含密钥
   - 无效 channel 返回 400
@@ -460,6 +467,12 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 - [ ] 家长报告 runner（独立进程）：
   - 一次性脚本进程，启动时初始化 ConfigurationService → 调用 `setAiRouter/setSmtpConfig/setFeishuConfig`
   - 无需热重载——每次运行都是新进程
+- [ ] **启动顺序（P2 五审补充）：**
+  - Web 后端使用显式 `bootstrap()`：先完成 `ConfigurationService.initialize()`，再调用 Express `listen()`，最后启动 Material Worker 定时器
+  - 模块级 `AiRouterProxy` 可以提前构造，但初始化完成前不对外接收请求、不运行 Job
+  - DPAPI 不可用、单通道文件损坏或缺少配置属于受控降级：`initialize()` 返回各通道状态，不留下未处理 Promise
+  - 非预期初始化异常写固定脱敏错误码；除 `APP_DATA_ROOT` 不可用等既有启动硬失败外，其余通道错误不得阻止后端进入降级模式
+  - 家长报告 runner 必须先 `await ConfigurationService.initialize()`，再创建 `ParentReportDeliveryService` 并执行重试/投递
 - [ ] 启动优先级规则：
   1. `ConfigurationService.initialize()` 尝试读取 `{channel}.active.enc`
   2. 成功 → 用加密存储配置构建 Router/Config → 调用 `setXxx()` 注册
@@ -472,6 +485,9 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   - 空配置启动所有消费者不崩溃
   - AI 未配置时返回 `AI_NOT_CONFIGURED`
   - `.env.local` fallback 正常（CI 环境）
+  - 配置初始化完成前 Express 尚未监听、Material Worker 尚未执行
+  - 单通道初始化失败时其他通道和 Web 后端仍可用
+  - 家长报告 runner 在初始化完成后才构造并调用投递服务
 
 ### T08-F：前端设置页面（含运行状态分区）
 
@@ -641,3 +657,4 @@ T08-E (消费者统一接入) ←── T08-B                     │
 | v3 | 2026-07-17 | P1: AI Router 改为代理对象；P1: 原子写入补充 prev 恢复；P1: DPAPI 静态方法+实施门槛；P2: 真实渠道 smoke 不作合并门槛 |
 | v4 | 2026-07-17 | P1: AiRouterProxy 引用传递保留 T02 熔断；P1: 每 channel Promise 串行锁+唯一临时文件名；P2: AI 逐 Provider 测试全通过才激活；P2: roundtrip 证据位置修正 |
 | v5 | 2026-07-17 | P1: 配置写接口增加 Origin 白名单校验和 JSON-only 限制，防止恶意网页跨站改写；P2: Promise 锁增加 finally 释放语义和失败后继回归测试；P2: 输入格式与资源上限（Provider 数量、字段长度、port 范围、URL 协议、控制字符清理、整体测试超时）；P2: 启动时清理残留 .tmp 文件（严格白名单模式匹配） |
+| v6 | 2026-07-17 | P1: 用统一 loopback Origin 策略替换全局开放 CORS，补齐真实 Vite 5173、固定 preview 4173、合法预检顺序和受限 Origin 扩展；P2: 明确 ConfigurationService 必须先于 Express listen、Material Worker 和家长报告投递初始化；同步五审状态 |
