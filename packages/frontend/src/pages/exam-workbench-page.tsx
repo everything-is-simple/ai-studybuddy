@@ -80,8 +80,13 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
     async (signal: AbortSignal): Promise<TimelineData> => {
       const courseInstanceId = data?.exam.courseInstanceId ?? null;
       if (!semesterId || !courseInstanceId) return { courseInstanceId, events: [] };
-      const events = await getTimeline(semesterId, { limit: 8, courseInstanceId }, signal);
-      return { courseInstanceId, events };
+      try {
+        const events = await getTimeline(semesterId, { limit: 8, courseInstanceId }, signal);
+        return { courseInstanceId, events };
+      } catch (caughtError) {
+        if (signal.aborted) return { courseInstanceId, events: [] };
+        throw caughtError;
+      }
     },
     [data?.exam.courseInstanceId, semesterId]
   );

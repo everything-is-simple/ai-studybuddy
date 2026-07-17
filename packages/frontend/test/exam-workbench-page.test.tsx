@@ -515,6 +515,53 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(completedTimeline?.textContent).toContain('错题重做结果');
     expect(completedTimeline?.textContent).not.toContain('学习任务已完成');
   });
+
+  it('忽略已取消的旧课程时间线普通错误并保留新课程结果', async () => {
+    const { getExam, getTimeline } = await import('../src/api/study-rhythm-api');
+    const getExamMock = getExam as unknown as ReturnType<typeof vi.fn>;
+    const timelineMock = getTimeline as unknown as ReturnType<typeof vi.fn>;
+    let rejectCourseA: ((error: Error) => void) | undefined;
+    let courseASignal: AbortSignal | undefined;
+    let courseAWasAborted = false;
+
+    getExamMock.mockImplementation(async () => currentExam);
+    timelineMock.mockImplementation(
+      async (_semesterId: string, options: { courseInstanceId?: string }, signal: AbortSignal) => {
+        if (options.courseInstanceId === COURSE_A.id) {
+          courseASignal = signal;
+          signal.addEventListener('abort', () => {
+            courseAWasAborted = true;
+          });
+          return new Promise<any[]>((_resolve, reject) => {
+            rejectCourseA = reject;
+          });
+        }
+        return [timelineEvent('S4', 'mistake_reviewed', { courseInstanceId: COURSE_B.id })];
+      }
+    );
+
+    await renderWorkbench();
+    expect(container.querySelector('[data-testid="recent-study-activity"]')?.textContent).toContain(
+      '正在加载近期学习活动'
+    );
+
+    currentExam = allExams.find((exam) => exam.id === OTHER_EXAM_ID);
+    await act(async () => container.querySelector<HTMLAnchorElement>(`a[href="/exams/${OTHER_EXAM_ID}"]`)!.click());
+    await flush();
+
+    expect(courseASignal?.aborted).toBe(true);
+    expect(courseAWasAborted).toBe(true);
+    expect(container.querySelector('[data-testid="recent-study-activity"]')?.textContent).toContain('错题重做结果');
+
+    await act(async () => rejectCourseA?.(new Error('已取消请求的包装错误')));
+    await flush();
+
+    const timeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(timeline?.textContent).toContain('错题重做结果');
+    expect(timeline?.textContent).not.toContain('已取消请求的包装错误');
+    expect(container.textContent).toContain('英语测验');
+    expect(container.querySelector('[data-testid="task-plan"]')).not.toBeNull();
+  });
 });
 
 function timelineEvent(sourceSystem: string, eventType: string, overrides: Record<string, unknown> = {}) {
