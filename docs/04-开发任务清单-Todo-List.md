@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.28
+**版本**：v1.29
 **日期**：2026-07-17
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD。当前下一门禁为 T06A：S6 家长报告生成的用户明确批准与实现；T06A 独立实施计划已创建待批，S3 Worker 仍未开始。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD。T06A：S6 家长报告生成已完成；当前下一门禁为 T06B 推送渠道的独立实施计划与用户明确批准，S3 Worker 仍未开始。各阶段任务按单一责任拆分。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -18,7 +18,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06 ✅；T06A 计划已创建待批） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A ✅；T06B 待独立门禁） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -465,7 +465,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 12 | Phase 1-T04B：S4 错题改错前端 | ✅ | 错题列表/详情/错因确认/原题重做/薄弱点展示与工作台“查漏补缺”集成已完成；含 migration v6 与 S4 API 补洞（T04A 遗漏，经批准并入本任务） |
 | 13 | Phase 1-T05：回流规则 | ✅ | 错题/薄弱点提升关联知识模块优先级；已掌握后降低复习频率 |
 | 14 | Phase 1-T06：S6 PRD 编写 | ✅ | 已创建 S6 轻量 PRD；仅完成文档，不含报告生成或推送实现 |
-| 15 | Phase 1-T06A：S6 家长报告生成 | ⏳ | 规则统计 + AI 润色生成日报/周报/月报/考前提醒 |
+| 15 | Phase 1-T06A：S6 家长报告生成 | ✅ | 脱敏规则报告 + 可选 AI 润色生成日报/周报/月报/考前提醒；不含发送渠道 |
 | 16 | Phase 1-T06B：S6 报告推送渠道 | ⏳ | QQ SMTP + 飞书 Webhook 推送；失败不丢报告 |
 | 17 | Phase 1-T07：S1 时间线扩展 | ⏳ | 接收 S2/S3/S4 的 StudyEvent，时间线完整可读 |
 
@@ -598,14 +598,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **T06 完成证据（2026-07-17）**：已按用户批准计划在任务分支 `codex/phase1-t06-s6-prd` 补齐 `.plans/phase1-t06-s6-prd-plan.md`，创建 `docs/subsystems/06-S6-家长观察子系统PRD-ParentReport.md` 并同步 `docs/00` 索引。S6 PRD 仅定义脱敏日报/周报/月报/考前 7/3/1 提醒、规则优先、AI 摘要降级、`report_key + channel` 去重与渠道失败隔离边界；不新增业务代码、Schema、API、shared 类型、Worker、前端页面、SMTP 或飞书实现。验证通过：`powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1`、`git diff --check`。
 
 **T06A 报告生成**（门禁：S6 PRD 已创建；T06A 独立实现计划已批准）
-- [ ] 复用 Phase 0.7 规则报告：统计课程/任务/完成/逾期/学习时长/趋势
-- [ ] AI 润色成功附加总结，失败仍发送规则报告
-- [ ] 报告不含资料原文、笔记正文、答案或聊天内容
-- [ ] 测试：日报/周报/月报/考前提醒生成正确
+- [x] 复用既有事实生成规则报告：统计课程/任务/完成/逾期/学习时长、资料处理、知识模块、练习、错题/薄弱点和回流任务
+- [x] AI 润色成功附加总结，失败、未配置或空内容时仍保留规则报告
+- [x] 报告不含资料原文、笔记正文、完整题干/答案/学生作答、错因正文、聊天内容、渠道地址或完整 UUID
+- [x] 测试：日报/周报/月报证据窗口、已确认考前 7/3/1 天提醒、AI 成功/失败回退和隐私边界
 
-> **T06A 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t06a-parent-report-generation-plan` 创建 `.plans/phase1-t06a-parent-report-generation-plan.md`，完成计划自审并等待用户明确批准。该计划仅设计 T06A 家长报告生成：新增后端 `ParentReportService` 与后端专项测试，基于既有 S1/S2/S3/S4/T05 事实生成脱敏日报、周报、月报和考前 7/3/1 天提醒；规则报告可独立生成，AI 仅做脱敏摘要/润色且失败时保留规则报告。本计划分支不实现业务代码、不新增 Schema、HTTP API、shared 类型、Worker、前端页面、SMTP、飞书 Webhook、渠道发送或真实 Provider smoke；T06B、S5、S7、Phase 3 继续等待各自门禁。
+> **T06A 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t06a-parent-report-generation-plan` 创建 `.plans/phase1-t06a-parent-report-generation-plan.md`，完成计划自审并获用户明确批准。该计划仅设计 T06A 家长报告生成：新增后端 `ParentReportService` 与后端专项测试，基于既有 S1/S2/S3/S4/T05 事实生成脱敏日报、周报、月报和考前 7/3/1 天提醒；规则报告可独立生成，AI 仅做脱敏摘要/润色且失败时保留规则报告。本计划分支不实现业务代码、不新增 Schema、HTTP API、shared 类型、Worker、前端页面、SMTP、飞书 Webhook、渠道发送或真实 Provider smoke；T06B、S5、S7、Phase 3 继续等待各自门禁。
+> **T06A 完成证据（2026-07-17）**：已按获批计划在任务分支 `codex/phase1-t06a-parent-report-generation` 实现 `ParentReportService` 与真实 SQLite 专项测试。服务只读取既有 S1/S2/S3/S4/T05 脱敏聚合值，生成日报、周报、月报及仅限已确认考试的考前 7/3/1 天提醒；规则报告可独立生成，AI 仅接收脱敏报告区块做可选摘要/润色，AI 未配置、抛错或返回空内容时保留规则报告。未新增 Schema、HTTP API、shared 类型、Worker、前端页面、QQ SMTP、飞书 Webhook、`report_deliveries` 写入或真实 Provider smoke。验证通过：隔离 `APP_DATA_ROOT` 下的 `pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm test`（后端 164/164、前端 41/41）、`powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1`、`git diff --check`。
 
-**T06B 推送渠道**（门禁：T06A 已验收；T06B 独立实现计划已批准）
+**T06B 推送渠道**（门禁：T06A 已验收；需独立实施计划与用户明确批准）
 - [ ] QQ SMTP HTML 报告发送
 - [ ] 飞书 Webhook 卡片推送
 - [ ] 渠道失败互不阻塞，去重 `report:<date>` 记录
