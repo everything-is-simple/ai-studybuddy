@@ -4,6 +4,7 @@ import type {
   AssessmentAttemptDto,
   CourseInstanceDto,
   StudyTaskDto,
+  StudyEventDto,
   StudyTaskStatus,
   StudyTaskType,
 } from '@ai-studybuddy/shared';
@@ -14,10 +15,12 @@ import {
   getExam,
   getExams,
   getStudyTasks,
+  getTimeline,
   updateStudyTaskStatus,
 } from '../api/study-rhythm-api';
 import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
+import { StudyEventList } from '../components/study-event-list';
 import { useApiRequest } from '../hooks/use-api-request';
 import { calendarDayDistance, formatExamCountdown, isWithinCalendarDayWindow } from './exam-workbench-date';
 
@@ -31,6 +34,11 @@ interface WorkbenchData {
   courses: CourseInstanceDto[];
   exams: AssessmentAttemptDto[];
   tasks: StudyTaskDto[];
+}
+
+interface TimelineData {
+  courseInstanceId: string | null;
+  events: StudyEventDto[];
 }
 
 const TASK_TYPE_OPTIONS: Array<{ value: StudyTaskType; label: string }> = [
@@ -67,6 +75,23 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
   );
 
   const { data, loading, error, refetch } = useApiRequest(fetcher, [fetcher]);
+
+  const timelineFetcher = useCallback(
+    async (signal: AbortSignal): Promise<TimelineData> => {
+      const courseInstanceId = data?.exam.courseInstanceId ?? null;
+      if (!semesterId || !courseInstanceId) return { courseInstanceId, events: [] };
+      const events = await getTimeline(semesterId, { limit: 8, courseInstanceId }, signal);
+      return { courseInstanceId, events };
+    },
+    [data?.exam.courseInstanceId, semesterId]
+  );
+
+  const {
+    data: timelineData,
+    loading: timelineLoading,
+    error: timelineError,
+    refetch: refetchTimeline,
+  } = useApiRequest(timelineFetcher, [timelineFetcher]);
 
   useEffect(() => {
     if (!data?.exam) return;
@@ -312,6 +337,17 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
                     </>
                   )}
                 </div>
+              </section>
+
+              <section className="card workbench-timeline" data-testid="recent-study-activity">
+                <h2>近期学习活动</h2>
+                {timelineError ? (
+                  <FeedbackMessage state="error" message={timelineError} onRetry={refetchTimeline} />
+                ) : timelineLoading || timelineData?.courseInstanceId !== data.exam.courseInstanceId ? (
+                  <FeedbackMessage state="loading" message="正在加载近期学习活动…" />
+                ) : (
+                  <StudyEventList events={timelineData.events} />
+                )}
               </section>
 
               <section className="card workbench-materials">

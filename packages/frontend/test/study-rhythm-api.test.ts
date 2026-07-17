@@ -6,6 +6,7 @@ import {
   getExam,
   getExams,
   getStudyTasks,
+  getTimeline,
   updateStudyTaskStatus,
 } from '../src/api/study-rhythm-api';
 
@@ -146,6 +147,33 @@ describe('study-rhythm API client', () => {
         method: 'PATCH',
         body: JSON.stringify({ semesterId: 'semester-1', status: 'doing' }),
       })
+    );
+  });
+
+  it('returns the flat timeline array and appends repeated eventType query parameters', async () => {
+    const events = [
+      {
+        id: 'event-1',
+        sourceSystem: 'S3',
+        eventType: 'practice_completed',
+        title: 'private title',
+        parentVisible: true,
+        occurredAt: '2026-07-17T08:00:00.000Z',
+        createdAt: '2026-07-17T08:00:00.000Z',
+      },
+    ];
+    mockSuccess(events);
+
+    const result = await getTimeline('semester-1', {
+      limit: 8,
+      courseInstanceId: 'course-1',
+      eventTypes: ['practice_completed', 'mistake_reviewed'],
+    });
+
+    expect(result).toEqual(events);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      `${baseUrl}/timeline?semesterId=semester-1&limit=8&courseInstanceId=course-1&eventType=practice_completed&eventType=mistake_reviewed`,
+      expect.any(Object)
     );
   });
 });

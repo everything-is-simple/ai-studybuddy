@@ -573,6 +573,45 @@ button:disabled {
   color: var(--color-danger);
 }
 
+.study-event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.study-event-item {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-secondary);
+}
+
+.study-event-item:last-child {
+  border-bottom: 0;
+}
+
+.study-event-item time {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.study-event-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.study-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
 /* ===== S3 限时练习 ===== */
 .practice-start-form fieldset {
   display: grid;
@@ -764,6 +803,16 @@ button:disabled {
   .practice-result-summary dl,
   .practice-result-item dl {
     grid-template-columns: 1fr;
+  }
+
+  .study-event-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .study-event-meta {
+    flex-direction: column;
+    gap: 2px;
   }
 }
 /* ===== Markdown 笔记 ===== */

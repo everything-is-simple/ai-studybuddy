@@ -72,6 +72,7 @@ function toLocalDateTimeInput(iso: string): string {
 let currentExam: any;
 let allExams: any[];
 let allTasks: any[];
+let timelineEvents: any[];
 
 function resetFixtures() {
   currentExam = {
@@ -145,6 +146,7 @@ function resetFixtures() {
       updatedAt: new Date().toISOString(),
     },
   ];
+  timelineEvents = [];
 }
 
 vi.mock('../src/api/study-rhythm-api', () => ({
@@ -152,6 +154,7 @@ vi.mock('../src/api/study-rhythm-api', () => ({
   getCourses: vi.fn(async () => [COURSE_A, COURSE_B]),
   getExams: vi.fn(async () => allExams),
   getStudyTasks: vi.fn(async () => allTasks),
+  getTimeline: vi.fn(async () => timelineEvents),
   confirmExam: vi.fn(async () => {
     currentExam = { ...currentExam, confirmationStatus: 'confirmed', confirmedAt: new Date().toISOString() };
     allExams = allExams.map((exam) => (exam.id === currentExam.id ? currentExam : exam));
@@ -353,4 +356,140 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(container.textContent).toContain('任务创建失败');
     expect(container.querySelector<HTMLInputElement>('input[name="taskTitle"]')?.value).toBe('失败任务');
   });
+
+  it('按当前课程读取近期活动并只展示固定文案和脱敏元信息', async () => {
+    const sensitiveUuid = fixtureUuid('a');
+    const occurredAt = '2026-07-17T08:30:00.000Z';
+    timelineEvents = [
+      timelineEvent('S1', 'assessment_attempt_confirmed', {
+        title: `聊天正文 ${sensitiveUuid}`,
+        evidenceRef: `chat:${sensitiveUuid}`,
+      }),
+      timelineEvent('S2', 'material_note_completed', {
+        title: `资料正文 ${sensitiveUuid}`,
+        evidenceRef: `material:${sensitiveUuid}`,
+        workloadMinutes: 18,
+        qualityGate: 'passed',
+        occurredAt,
+      }),
+      timelineEvent('S3', 'practice_completed', { qualityGate: 'pending' }),
+      timelineEvent('S4', 'mistake_reviewed', { qualityGate: 'failed' }),
+      timelineEvent('S2', 'knowledge_module_status_changed'),
+      timelineEvent('S4', 'feedback_review_required'),
+      timelineEvent('S4', 'feedback_review_mastered'),
+      timelineEvent('S1', 'study_task_completed'),
+      timelineEvent('S7', 'unexpected_private_event', {
+        title: `聊天正文 资料正文 ${sensitiveUuid}`,
+        evidenceRef: sensitiveUuid,
+      }),
+    ];
+
+    await renderWorkbench();
+
+    const { getTimeline } = await import('../src/api/study-rhythm-api');
+    expect(getTimeline).toHaveBeenCalledWith('semester-1', { limit: 8, courseInstanceId: COURSE_A.id }, expect.any(AbortSignal));
+
+    const timeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(timeline?.textContent).toContain('考试日期已确认');
+    expect(timeline?.textContent).toContain('学习任务已完成');
+    expect(timeline?.textContent).toContain('资料笔记已生成');
+    expect(timeline?.textContent).toContain('知识模块状态已更新');
+    expect(timeline?.textContent).toContain('限时练习已完成');
+    expect(timeline?.textContent).toContain('错题重做已完成');
+    expect(timeline?.textContent).toContain('知识模块需要复习');
+    expect(timeline?.textContent).toContain('错题复习已掌握');
+    expect(timeline?.textContent).toContain('未分类学习活动');
+    expect(timeline?.textContent).toContain('S1学习节奏');
+    expect(timeline?.textContent).toContain('S2资料笔记');
+    expect(timeline?.textContent).toContain('S3限时练习');
+    expect(timeline?.textContent).toContain('S4错题改错');
+    expect(timeline?.textContent).toContain('S7课堂采集');
+    expect(timeline?.textContent).toContain(new Date(occurredAt).toLocaleString('zh-CN'));
+    expect(timeline?.textContent).toContain('18 分钟');
+    expect(timeline?.textContent).toContain('已通过');
+    expect(timeline?.textContent).toContain('待检查');
+    expect(timeline?.textContent).toContain('未通过');
+    expect(timeline?.textContent).not.toContain('聊天正文');
+    expect(timeline?.textContent).not.toContain('资料正文');
+    expect(timeline?.textContent).not.toContain(sensitiveUuid);
+  });
+
+  it('近期活动为空时显示独立空状态', async () => {
+    timelineEvents = [];
+    await renderWorkbench();
+
+    expect(container.querySelector('[data-testid="recent-study-activity"]')?.textContent).toContain('暂无近期学习活动');
+  });
+
+  it('时间线失败只影响活动区，并可局部重试', async () => {
+    const { getTimeline } = await import('../src/api/study-rhythm-api');
+    const timelineMock = getTimeline as unknown as ReturnType<typeof vi.fn>;
+    timelineMock.mockRejectedValueOnce(new Error('近期活动加载失败')).mockResolvedValueOnce([
+      timelineEvent('S3', 'practice_completed'),
+    ]);
+
+    await renderWorkbench();
+
+    expect(container.textContent).toContain('线性代数期中');
+    expect(container.querySelector('[data-testid="task-plan"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="workbench-practice"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="workbench-mistakes"]')).not.toBeNull();
+    const timeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(timeline?.textContent).toContain('近期活动加载失败');
+
+    await act(async () => buttonContaining('重试').click());
+    await flush();
+
+    expect(timelineMock).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('[data-testid="recent-study-activity"]')?.textContent).toContain('限时练习已完成');
+  });
+
+  it('切换考试时在新请求完成前隐藏旧课程活动，完成后只显示新课程', async () => {
+    const { getTimeline } = await import('../src/api/study-rhythm-api');
+    const timelineMock = getTimeline as unknown as ReturnType<typeof vi.fn>;
+    let resolveCourseB: ((events: any[]) => void) | undefined;
+    timelineMock.mockImplementation(async (_semesterId: string, options: { courseInstanceId?: string }) => {
+      if (options.courseInstanceId === COURSE_A.id) return [timelineEvent('S1', 'study_task_completed')];
+      return new Promise<any[]>((resolve) => {
+        resolveCourseB = resolve;
+      });
+    });
+
+    await renderWorkbench();
+    expect(container.querySelector('[data-testid="recent-study-activity"]')?.textContent).toContain('学习任务已完成');
+
+    currentExam = allExams.find((exam) => exam.id === OTHER_EXAM_ID);
+    await act(async () => container.querySelector<HTMLAnchorElement>(`a[href="/exams/${OTHER_EXAM_ID}"]`)!.click());
+    await flush();
+
+    const pendingTimeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(pendingTimeline?.textContent).not.toContain('学习任务已完成');
+    expect(pendingTimeline?.textContent).toContain('正在加载近期学习活动');
+    expect(timelineMock).toHaveBeenLastCalledWith(
+      'semester-1',
+      { limit: 8, courseInstanceId: COURSE_B.id },
+      expect.any(AbortSignal)
+    );
+
+    await act(async () => resolveCourseB?.([timelineEvent('S4', 'mistake_reviewed', { courseInstanceId: COURSE_B.id })]));
+    await flush();
+
+    const completedTimeline = container.querySelector('[data-testid="recent-study-activity"]');
+    expect(completedTimeline?.textContent).toContain('错题重做已完成');
+    expect(completedTimeline?.textContent).not.toContain('学习任务已完成');
+  });
 });
+
+function timelineEvent(sourceSystem: string, eventType: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id: `event-${sourceSystem}-${eventType}`,
+    courseInstanceId: COURSE_A.id,
+    sourceSystem,
+    eventType,
+    title: '数据库标题不得展示',
+    parentVisible: true,
+    occurredAt: '2026-07-17T08:00:00.000Z',
+    createdAt: '2026-07-17T08:00:00.000Z',
+    ...overrides,
+  };
+}

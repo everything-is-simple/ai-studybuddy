@@ -1,11 +1,12 @@
 import type {
   AssessmentAttemptDto,
   CourseInstanceDto,
+  StudyEventDto,
   StudyTaskDto,
   StudyTaskStatus,
   StudyTaskType,
 } from '@ai-studybuddy/shared';
-import { request, requestPage, type ApiPage } from './api-client';
+import { request } from './api-client';
 
 export function getCourses(semesterId: string, signal?: AbortSignal): Promise<CourseInstanceDto[]> {
   return request<CourseInstanceDto[]>(`/courses?semesterId=${encodeURIComponent(semesterId)}`, {
@@ -122,12 +123,13 @@ export function updateStudyTaskStatus(
 
 export function getTimeline(
   semesterId: string,
-  options: { limit?: number; courseInstanceId?: string } = {},
+  options: { limit?: number; courseInstanceId?: string; eventTypes?: string[] } = {},
   signal?: AbortSignal
-): Promise<ApiPage<unknown>> {
+): Promise<StudyEventDto[]> {
   const params = new URLSearchParams();
   params.set('semesterId', semesterId);
   if (options.limit !== undefined) params.set('limit', String(options.limit));
   if (options.courseInstanceId) params.set('courseInstanceId', options.courseInstanceId);
-  return requestPage<unknown>(`/timeline?${params.toString()}`, { signal });
+  for (const eventType of options.eventTypes ?? []) params.append('eventType', eventType);
+  return request<StudyEventDto[]>(`/timeline?${params.toString()}`, { signal });
 }
