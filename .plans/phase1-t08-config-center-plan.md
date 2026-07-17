@@ -1,4 +1,4 @@
-# Phase 1-T08 本机配置中心与连接验收实施计划（修订 v4）
+# Phase 1-T08 本机配置中心与连接验收实施计划（修订 v5）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -106,8 +106,9 @@ Node 兼容性：声明 `engines: >=14`，当前终端 Node v25.4.0。**实施�
 4. 若步骤 2/3 任一失败 → 清理临时文件 → **不更新内存快照，不发事件** → 返回错误
 5. 只有 `active.enc` 写入成功后 → 更新内存快照 → 发激活事件
 
-**重启行为（P1 二审补充）：**
+**重启行为（P1 二审 + P2 四审补充）：**
 
+0. **临时文件清理（P2 四审补充）：** 扫描 `{APP_DATA_ROOT}/config/` 目录，删除匹配 `{channel}.*.tmp` 模式的文件（严格白名单：channel 为 `ai`/`smtp`/`feishu`，后缀必须为 `.tmp`）。这些是上次进程中断留下的未完成写入产物。其他文件（包括 `.enc`、`state.json`、不匹配模式的文件）一律不删除。
 1. 读取 `{channel}.active.enc` → 解密成功 → 加载到内存快照
 2. `active.enc` 不存在但 `prev.enc` 存在 → **自动恢复**：`rename(prev.enc, active.enc)` → 解密成功 → 加载 → 记录 `CONFIG_RECOVERED_FROM_PREV`
 3. `active.enc` 解密失败（损坏）→ 尝试 `prev.enc` → 成功则 `rename(prev.enc, active.enc)` → 记录 `CONFIG_RECOVERED_FROM_BACKUP`
@@ -127,6 +128,8 @@ T08-A 实现后，针对原子写入流程注入中断点，验证：
 - 步骤 2 后中断 → 重启后从 prev 恢复
 - 步骤 3 失败 → 内存快照和事件不触发，旧配置继续有效
 - 双文件损坏 → 降级到 unconfigured，不崩溃
+- 残留 `.tmp` 文件 → 启动时清理，不影响正常配置加载
+- 非白名单文件（如 `unknown.dat`）→ 不被清理
 
 **与 `.env.local` 共存优先级：**
 
@@ -214,12 +217,30 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   - `testAndActivate(channel, candidateConfig)`: 核心方法——获取 channel 锁 → 在内存中用候选值执行连接测试 → 成功则写入磁盘并更新快照 → 失败则丢弃候选值并返回错误 → 释放锁
   - `getActiveSnapshot(channel)`: 返回当前内存中的不可变配置快照（内部使用）
   - `onConfigActivated(listener)`: 事件订阅，通知所有消费者
-- [ ] **并发控制（P1 三审补充）：**
+- [ ] **并发控制（P1 三审 + P2 四审补充）：**
   - 每个 channel 维护一个独立的 Promise 串行队列（`channelLocks: Map<Channel, Promise<void>>`）
   - `testAndActivate()` 入口获取 channel 锁，测试 + 写入 + 激活作为一个串行临界区
   - 不同 channel 仍可并行（AI 激活不阻塞 SMTP 激活）
   - 临时文件使用唯一名称：`{channel}.{randomId}.tmp`（不再使用固定的 `new.tmp`）
-  - 串行锁保证：同一 channel 的第二个请求等待第一个完成后再进入测试
+  - **异常释放语义（P2 四审补充）：**
+    - 锁在 `finally` 中无条件释放（resolve），无论测试/写入成功或失败
+    - 后继任务等待的是前一个锁的 settle（resolve），不继承 rejected 状态
+    - 实现模式：
+      ```ts
+      async testAndActivate(channel, config) {
+        const prev = this.channelLocks.get(channel) ?? Promise.resolve();
+        let release: () => void;
+        const current = new Promise<void>(r => { release = r; });
+        this.channelLocks.set(channel, current);
+        await prev;  // 等待前一个完成（无论成功/失败）
+        try {
+          return await this.doTestAndActivate(channel, config);
+        } finally {
+          release!();  // 释放锁，后继者可继续
+        }
+      }
+      ```
+    - 后继任务始终能执行——第一个任务抛错不阻塞第二个
   - 重复提交（同一候选值）：幂等无害——重新测试并重新写入
 - [ ] `state.json` 只记录 `{ [channel]: { status, lastVerifiedAt } }`，作为启动时的辅助元数据
 - [ ] 测试覆盖：
@@ -230,6 +251,7 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   - 事件订阅者收到正确的新快照
   - **同 channel 并发激活**：两个请求同时调用 `testAndActivate('ai', ...)`，只有一个在执行测试和写入，另一个排队等待，最终两个都成功但结果是最后一个写入的值
   - **跨 channel 并发激活**：AI 和 SMTP 同时激活，互不阻塞，各自独立完成
+  - **前一个失败，后继仍可成功（P2 四审回归）：** 第一个请求使用错误密钥导致测试失败，第二个请求使用正确密钥排队后正常激活
 
 ### T08-C：连接测试服务
 
@@ -270,30 +292,72 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   - 返回结果不含密钥或完整 URL
   - 各通道独立
 
-### T08-D：配置 API 端点
+### T08-D：配置 API 端点与安全防护
 
-**目标：** 前端可通过 REST API 读取状态、提交并测试配置（一步完成）、查看运行状态。
+**目标：** 前端可通过 REST API 读取状态、提交并测试配置（一步完成）、查看运行状态。配置写接口受 Origin 校验保护。
 
 **端点设计：**
 
-| 方法 | 路径 | 用途 |
-|------|------|------|
-| GET | `/api/config/status` | 返回三组配置状态 + 运行状态面板；不含密钥 |
-| POST | `/api/config/:channel/test-and-activate` | 接收候选配置 → 内存测试 → 成功则加密写入并激活 → 返回结果 |
-| POST | `/api/config/:channel/retest` | 使用已激活配置重新测试连接（用于检查是否仍有效） |
+| 方法 | 路径 | 用途 | 安全等级 |
+|------|------|------|---------|
+| GET | `/api/config/status` | 返回三组配置状态 + 运行状态面板；不含密钥 | Origin 校验 |
+| POST | `/api/config/:channel/test-and-activate` | 接收候选配置 → 内存测试 → 成功则加密写入并激活 | Origin 校验 + JSON only |
+| POST | `/api/config/:channel/retest` | 使用已激活配置重新测试连接 | Origin 校验 + JSON only |
 
-**关键设计变更（P1 修订）：**
+**P1 四审：Origin/CORS 防护**
 
-不再有分离的 PUT（保存）、POST test、POST activate 三步。改为单一 `test-and-activate` 端点——候选配置从请求体直接进入内存测试，测试通过后一次性写入磁盘并激活。这消除了"保存未验证配置到磁盘"的窗口。
+当前 `server.ts:22` 使用 `app.use(cors())`（开放 CORS）。配置写接口可改写 AI/SMTP/飞书配置并触发后端外连，必须防止恶意网页跨站调用。
+
+- [ ] 新建 `packages/backend/src/middleware/config-cors.ts`
+  - 配置路由 `/api/config/*` 使用独立的 CORS 中间件（不影响其他 API 的开放 CORS）
+  - 允许的 Origin 白名单：
+    - `http://localhost:4173`、`http://localhost:4174`、`http://127.0.0.1:4173`、`http://127.0.0.1:4174`（Vite 预览/开发）
+    - 可通过环境变量 `CONFIG_ALLOWED_ORIGINS` 追加（逗号分隔），不能使用 `*`
+  - 请求包含 `Origin` 头时：校验 Origin 是否在白名单中
+    - 不在白名单 → 返回 403，响应体为固定错误码 `CONFIG_ORIGIN_REJECTED`，不回显 Origin、URL 或密钥
+  - 请求不包含 `Origin` 头（本机 CLI 请求如 curl、测试脚本）→ 允许通过
+  - 只接受 `Content-Type: application/json`，拒绝 `application/x-www-form-urlencoded` 和 `multipart/form-data`
+    - 表单式提交返回 415 `CONFIG_UNSUPPORTED_CONTENT_TYPE`
+  - Preflight (OPTIONS) 只对白名单 Origin 返回允许头
+- [ ] 测试覆盖：
+  - 允许的 Origin → 通过
+  - 恶意 Origin（`http://evil.com`）→ 403
+  - 伪造 preflight（OPTIONS + 恶意 Origin）→ 不返回 Access-Control-Allow-Origin
+  - 无 Origin 的本机 CLI 请求 → 通过
+  - `Content-Type: application/x-www-form-urlencoded` → 415
+  - 403/415 响应不含密钥、URL 或 Origin 值
+
+**P2 四审：输入格式与资源上限**
+
+- [ ] POST body 验证规则：
+  - AI:
+    - `providers` 数组长度：1–10（上限 10 个 Provider）
+    - `name`：1–50 字符，去除控制字符（`\x00-\x1F`）后存储和记录日志
+    - `baseUrl`：1–200 字符，只允许 `https://` 或 `http://`（本机 HTTP Provider 允许，但仅限 `127.0.0.1` 或 `localhost`），不允许 `file://`、`ftp://` 或无协议
+    - `apiKey`：1–200 字符
+    - `model`：1–100 字符，去除控制字符
+    - `priority`：整数，范围 1–100，不允许 NaN/Infinity
+    - Provider 按 `priority` 升序稳定排序（priority 相同时保留提交顺序）
+  - SMTP:
+    - `host`：1–253 字符
+    - `port`：整数，范围 1–65535
+    - `secure`：布尔
+    - `user`：1–200 字符
+    - `authCode`：1–200 字符
+    - `to`：1–200 字符，基本邮箱格式校验（含 `@`）
+  - feishu:
+    - `webhookUrl`：1–500 字符，必须以 `https://` 开头
+  - 所有字符串字段超出上限 → 400 + 固定错误码 `CONFIG_FIELD_TOO_LONG`
+  - Provider 名称进入日志前去除控制字符，避免误填密钥扩散到日志
+- [ ] AI 多 Provider 测试整体超时：
+  - 单 Provider 超时 15s
+  - 整体测试超时 = `min(providers.length * 15, 60)` 秒（上限 60s）
+  - 整体超时触发时，未完成的 Provider 标记为 `AI_TEST_OVERALL_TIMEOUT`
 
 **实现要点：**
 
 - [ ] 新建 `packages/backend/src/routes/config-routes.ts`
 - [ ] `channel` 参数验证：只接受 `ai` | `smtp` | `feishu`
-- [ ] POST body 验证：
-  - AI: `{ providers: [{name, baseUrl, apiKey, model, priority}], sendTestEmail?: never }` — 至少一个 provider，apiKey 必填非空
-  - SMTP: `{ host, port, secure, user, authCode, to, sendTestEmail?: boolean }` — authCode 必填非空
-  - feishu: `{ webhookUrl }` — webhookUrl 必填非空
 - [ ] GET `/api/config/status` 响应：
   ```json
   {
@@ -311,13 +375,17 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   }
   ```
 - [ ] 响应中永远不返回完整 apiKey、authCode、webhookUrl、完整路径；summary 只含模型名或 provider 数量
-- [ ] 注册路由到 Express app
+- [ ] 注册路由到 Express app（config-cors 中间件挂载在 `/api/config` 前缀）
 - [ ] 测试覆盖：
   - 状态读取不含密钥
   - 无效 channel 返回 400
-  - test-and-activate 成功 → 状态变 verified_pass + 返回测试结果
+  - test-and-activate 成功 → 状态变 verified_pass + 返回逐 Provider 测试结果
   - test-and-activate 失败 → 状态不变 + 返回错误码和脱敏消息
   - retest 在无 active 时返回 404
+  - providers 超过 10 个 → 400
+  - port 超出范围 → 400
+  - 字段超长 → 400 `CONFIG_FIELD_TOO_LONG`
+  - 控制字符被清除后正常保存
 
 ### T08-E：运行时配置消费者统一接入（P1 三审修订）
 
@@ -557,7 +625,7 @@ T08-E (消费者统一接入) ←── T08-B                     │
 | T08-A SecretProtector + SecureStore | 中（抽象 + @primno/dpapi 集成 + 原子写入 + prev 备份） |
 | T08-B ConfigService | 中（状态机 + 事件通知 + 启动恢复） |
 | T08-C 连接测试 | 中（三个通道各需不同协议） |
-| T08-D API 端点 | 小（test-and-activate 合一，路由注册） |
+| T08-D API 端点 + 安全防护 | 中（Origin 校验 + 输入上限 + 路由注册） |
 | T08-E 消费者统一接入 | 中（改造 5 处消费者 + 代理+注册表 + 优先级规则） |
 | T08-F 前端设置页 + 运行状态 | 中（四分区 + 表单 + 多 provider 编辑） |
 | T08-G 集成验收 | 中（Playwright + 冷启动 + 重启 + 损坏恢复） |
@@ -569,6 +637,7 @@ T08-E (消费者统一接入) ←── T08-B                     │
 | 版本 | 日期 | 修订内容 |
 |------|------|---------|
 | v1 | 2026-07-17 | 初始计划 |
-| v2 | 2026-07-17 | P1: 消除"保存未验证配置到磁盘"，改为内存测试+一次性写入激活；P1: 依赖改为 `@primno/dpapi` + SecretProtector 抽象；P1: 补充运行时消费者统一接入；P2: 补充运行状态分区 |
-| v3 | 2026-07-17 | P1: AI Router 热切换改为代理对象（每次请求解引用）；纠正 AI 消费者为 3；P1: 原子写入补充 active 缺失时从 prev 恢复；P1: 修正 DPAPI 为静态方法+实施门槛；P2: 真实渠道 smoke 不作为合并门槛 |
-| v4 | 2026-07-17 | P1: AiRouterProxy 改为引用传递——激活时构建新 Router 并原子替换模块级引用，保留 T02 熔断跨请求累计；P1: 增加每 channel Promise 串行锁和唯一临时文件名，消除并发激活竞态；P2: AI 测试改为逐 Provider 分别测试，全部通过才激活；P2: 风险表移除"已验证"措辞，roundtrip 证据登记在 docs/04 而非 .plans/ |
+| v2 | 2026-07-17 | P1: 消除"保存未验证配置到磁盘"；P1: 依赖改为 `@primno/dpapi` + SecretProtector 抽象；P1: 运行时消费者统一接入；P2: 运行状态分区 |
+| v3 | 2026-07-17 | P1: AI Router 改为代理对象；P1: 原子写入补充 prev 恢复；P1: DPAPI 静态方法+实施门槛；P2: 真实渠道 smoke 不作合并门槛 |
+| v4 | 2026-07-17 | P1: AiRouterProxy 引用传递保留 T02 熔断；P1: 每 channel Promise 串行锁+唯一临时文件名；P2: AI 逐 Provider 测试全通过才激活；P2: roundtrip 证据位置修正 |
+| v5 | 2026-07-17 | P1: 配置写接口增加 Origin 白名单校验和 JSON-only 限制，防止恶意网页跨站改写；P2: Promise 锁增加 finally 释放语义和失败后继回归测试；P2: 输入格式与资源上限（Provider 数量、字段长度、port 范围、URL 协议、控制字符清理、整体测试超时）；P2: 启动时清理残留 .tmp 文件（严格白名单模式匹配） |

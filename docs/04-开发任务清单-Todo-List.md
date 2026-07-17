@@ -644,7 +644,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 配置更新：测试成功后原子激活运行时配置，失败或损坏时保留上一份可用配置并给出固定错误码
 - [ ] 测试：秘密不回显/不落前端存储、配置加密读写、测试成功/失败、渠道隔离、重启恢复和脱敏日志
 
-> **T08 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t08-config-center-plan` 创建 `.plans/phase1-t08-config-center-plan.md`，提交 `0480d6f`（v2 初稿）。初审发现 4 个 P1 阻塞项和 2 个 P2 收尾项，已修订为 v3：消除候选配置落盘窗口、验证 `@primno/dpapi` 调用形式、修正 AI Router 热切换为稳定代理对象、补充原子写入中断恢复、补充运行状态分区、移除真实渠道 smoke 作为合并门槛。当前计划版本 v3 等待二审批准后开始实施；未实施 ConfigurationService、DPAPI Adapter、连接测试、API、前端设置页或运行时消费者接入。
+> **T08 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t08-config-center-plan` 创建 `.plans/phase1-t08-config-center-plan.md`。经四轮审查修订至 v5：v2 `0480d6f`、v3 `44ca521`、v4 `960717b`、v5 待提交。审查已确认通过：候选配置不落盘、DPAPI 静态 API、Router 引用传递保留熔断、channel 串行锁并发控制、逐 Provider 测试全通过激活、真实渠道不作合并门槛。v5 新增：Origin/CORS 防护、Promise 锁异常释放语义、输入格式与资源上限、启动清理残留临时文件。当前计划 v5 等待四审批准后开始实施；未实施 ConfigurationService、DPAPI Adapter、连接测试、API、前端设置页或运行时消费者接入。
 
 ---
 
