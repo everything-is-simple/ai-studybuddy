@@ -8,3 +8,4 @@ export {
   AllProvidersCoolingDownError,
 } from './router';
 export type { AiProviderRouterOptions } from './router';
+export { AiRouterProxy } from './ai-router-proxy';

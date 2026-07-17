@@ -5,6 +5,7 @@
 // ============================================================
 
 import { openGlobalDb } from '../db/connection';
+import { initializeRuntimeConfiguration } from '../config/runtime-configuration';
 import {
   ParentReportDeliveryService,
   type ParentReportDeliveryResult,
@@ -147,6 +148,7 @@ export class ParentReportDeliveryRunner {
 }
 
 async function main(): Promise<void> {
+  await initializeRuntimeConfiguration();
   const result = await new ParentReportDeliveryRunner().run();
   // 只输出状态和日期，避免日志出现学期 ID、渠道地址或外部响应。
   process.stdout.write(`${JSON.stringify(result)}\n`);

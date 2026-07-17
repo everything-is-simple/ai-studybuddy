@@ -6,10 +6,10 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import type { AiRequest, AiResponse, ApiError, ApiSuccess } from '@ai-studybuddy/shared';
-import { AiProviderRouter, AllProvidersFailedError, AiProviderError } from '../adapters';
+import { AiRouterProxy, AllProvidersFailedError, AiProviderError } from '../adapters';
 
 const router: Router = Router();
-const aiRouter = new AiProviderRouter();
+const aiRouter = new AiRouterProxy();
 
 function okResponse<T>(data: T): ApiSuccess<T> {
   return { success: true, data };

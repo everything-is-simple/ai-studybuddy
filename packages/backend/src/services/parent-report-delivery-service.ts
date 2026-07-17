@@ -10,7 +10,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import nodemailer from 'nodemailer';
 import { fetch as undiciFetch } from 'undici';
-import { config } from '../config/env';
+import { getCurrentFeishuConfig, getCurrentSmtpConfig } from '../config/config-registry';
 import { openExistingDbAtPath, type DatabaseType } from '../db/connection';
 import { migrateSemesterDb } from '../db/migrations';
 import { getSemesterDbPath, getSemesterParentReportArchiveDir } from '../db/paths';
@@ -472,20 +472,22 @@ export class SmtpParentReportAdapter implements ParentReportChannelAdapter {
   readonly channel = 'smtp' as const;
 
   isConfigured(): boolean {
-    return Boolean(config.smtpHost && config.smtpUser && config.smtpAuthCode && config.smtpTo);
+    return getCurrentSmtpConfig() !== null;
   }
 
   async send(payload: ParentReportChannelPayload): Promise<void> {
     if (!this.isConfigured() || !payload.html) throw new Error('SMTP_UNCONFIGURED');
+    const smtp = getCurrentSmtpConfig();
+    if (!smtp) throw new Error('SMTP_UNCONFIGURED');
     const transport = nodemailer.createTransport({
-      host: config.smtpHost,
-      port: config.smtpPort,
-      secure: config.smtpSecure,
-      auth: { user: config.smtpUser, pass: config.smtpAuthCode },
+      host: smtp.host,
+      port: smtp.port,
+      secure: smtp.secure,
+      auth: { user: smtp.user, pass: smtp.authCode },
     });
     await transport.sendMail({
-      from: config.smtpUser,
-      to: config.smtpTo,
+      from: smtp.user,
+      to: smtp.to,
       subject: `学习日报 ${payload.snapshot.reportDate}`,
       html: payload.html,
     });
@@ -498,12 +500,14 @@ export class FeishuParentReportAdapter implements ParentReportChannelAdapter {
   constructor(private readonly request: typeof fetch = undiciFetch as unknown as typeof fetch) {}
 
   isConfigured(): boolean {
-    return Boolean(config.feishuWebhookUrl);
+    return getCurrentFeishuConfig() !== null;
   }
 
   async send(payload: ParentReportChannelPayload): Promise<void> {
     if (!this.isConfigured() || !payload.card) throw new Error('FEISHU_UNCONFIGURED');
-    const response = await this.request(config.feishuWebhookUrl, {
+    const feishu = getCurrentFeishuConfig();
+    if (!feishu) throw new Error('FEISHU_UNCONFIGURED');
+    const response = await this.request(feishu.webhookUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload.card),

@@ -1,7 +1,7 @@
 # AI StudyBuddy 后端开发规范 Backend Guidelines
 
-**版本**：v1.3
-**日期**：2026-07-16
+**版本**：v1.4
+**日期**：2026-07-17
 **状态**：有效
 **用途**：Phase 0.8 正式后端开发的目录结构、SQLite 约定、Adapter 输出、日志、环境变量和验证规则。写第一个后端服务 / Adapter / API / Worker 前必须读本文件。
 
@@ -79,6 +79,7 @@ APP_DATA_ROOT/
     tmp/
   tmp/
   backups/
+  config/                 # DPAPI 加密的 active/prev 配置与非秘密状态元数据
 ```
 
 ---
@@ -204,6 +205,7 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 | `APP_DATA_ROOT`      | 运行数据根目录                                                                 | 是                        |
 | `BACKEND_PORT`       | 后端端口（默认 3000）                                                          | 否                        |
 | `BACKEND_HOST`       | 后端监听地址（默认 127.0.0.1）                                                 | 否                        |
+| `CONFIG_ALLOWED_ORIGINS` | 追加本机前端 Origin；只接受带显式端口的 `http://localhost`、`127.0.0.1` 或 `[::1]`，逗号分隔 | 否 |
 | `AI_PROVIDERS`       | 多 Provider JSON 数组；按 `priority` 升序 fallback                             | 否；推荐配置              |
 | `AI_TIMEOUT_MS`      | 单次 AI 请求超时毫秒数（默认 60000）                                           | 否                        |
 | `AI_BASE_URL`        | legacy 单 Provider 的 OpenAI-compatible Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否                        |
@@ -216,6 +218,8 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 | `SMTP_AUTH_CODE`     | QQ SMTP 授权码；只填入 `.env.local`，不得进入日志或提交                        | 否；S6 正式发送报告时必填 |
 | `SMTP_TO`            | 家长收件邮箱；只填入 `.env.local`                                              | 否；S6 正式发送报告时必填 |
 | `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL；只填入 `.env.local`，不得进入日志或提交                      | 否；S6 正式发送报告时必填 |
+
+所有 `/api` 路由统一执行 loopback Origin 校验。默认允许 Vite 开发端口 `5173` 与 preview/Playwright 端口 `4173`；无 `Origin` 的本机 CLI 请求允许通过。配置 POST 额外只接受 JSON。`CONFIG_ALLOWED_ORIGINS` 不接受远程 host、`*`、凭据、路径、查询或 fragment。
 
 > Phase 0.7 已验证 QQ SMTP 与飞书 Webhook 的真实送达；Phase 0.8 T06 只实现 S1 学习节奏核心 API，不消费这些报告发送变量。正式业务发送留到 S6 ParentReport。
 

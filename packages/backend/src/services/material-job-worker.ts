@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
 import { getGlobalDbPath } from '../db/paths';
-import { StorageAdapter, dispatchConverter, AiProviderRouter } from '../adapters';
+import { StorageAdapter, dispatchConverter, AiRouterProxy } from '../adapters';
 import type { AiProvider } from '../adapters';
 import { NoteBuilderService } from './note-builder-service';
 
@@ -45,7 +45,7 @@ export class MaterialJobWorker {
   constructor(
     private readonly service = new NoteBuilderService(),
     private readonly storage = new StorageAdapter(),
-    private readonly ai: AiProvider = new AiProviderRouter()
+    private readonly ai: AiProvider = new AiRouterProxy()
   ) {}
 
   async runOnce(): Promise<boolean> {

@@ -206,3 +206,32 @@ test('initialize reports DPAPI unavailable separately from corrupt configuration
 
   assert.equal(service.getChannelStatus('ai').errorCode, 'CONFIG_DPAPI_UNAVAILABLE');
 });
+
+test('retest uses only the active snapshot and never rewrites or deactivates it', async (t) => {
+  let shouldPass = true;
+  const seen = [];
+  const tester = passingTester({
+    testAi: async (candidate) => {
+      seen.push(candidate);
+      return shouldPass
+        ? { pass: true, providers: [{ name: 'primary', pass: true }] }
+        : { pass: false, errorCode: 'AI_AUTH_FAILED', sanitizedMessage: 'AI Provider 身份验证失败', providers: [] };
+    },
+  });
+  const { service } = await createService(t, tester);
+  await service.initialize();
+  assert.equal(await service.retest('ai'), null);
+  await service.testAndActivate('ai', ai('active-secret'));
+  let events = 0;
+  service.onConfigActivated(() => { events += 1; });
+  shouldPass = false;
+
+  const result = await service.retest('ai');
+
+  assert.equal(result.activated, false);
+  assert.equal(result.test.pass, false);
+  assert.deepEqual(seen.at(-1), ai('active-secret'));
+  assert.deepEqual(service.getActiveSnapshot('ai'), ai('active-secret'));
+  assert.equal(service.getChannelStatus('ai').status, 'verified_pass');
+  assert.equal(events, 0);
+});

@@ -78,6 +78,7 @@ export const config = {
 
   backendPort: Number(process.env.BACKEND_PORT ?? 3000),
   backendHost: process.env.BACKEND_HOST ?? '127.0.0.1',
+  configAllowedOrigins: process.env.CONFIG_ALLOWED_ORIGINS ?? '',
 
   // OCR 子进程配置（T04 使用）
   pythonPath: process.env.PYTHON_PATH ?? 'python',

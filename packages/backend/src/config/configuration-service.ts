@@ -60,6 +60,7 @@ export class ConfigurationService {
   private readonly tester: ConnectionTesterLike;
   private readonly configDir: string;
   private readonly now: () => string;
+  private readonly runtimeAvailability?: (channel: ConfigChannel) => boolean;
   private readonly snapshots: Partial<Record<ConfigChannel, ChannelConfig>> = {};
   private readonly statuses = new Map<ConfigChannel, ChannelStatus>();
   private readonly listeners = new Set<ActivatedListener>();
@@ -70,11 +71,13 @@ export class ConfigurationService {
     tester: ConnectionTesterLike;
     configDir: string;
     now?: () => string;
+    runtimeAvailability?: (channel: ConfigChannel) => boolean;
   }) {
     this.store = options.store;
     this.tester = options.tester;
     this.configDir = options.configDir;
     this.now = options.now ?? (() => new Date().toISOString());
+    this.runtimeAvailability = options.runtimeAvailability;
     for (const channel of CHANNELS) this.setUnconfigured(channel, null);
   }
 
@@ -120,13 +123,17 @@ export class ConfigurationService {
       feishu: this.getChannelStatus('feishu'),
       runtime: {
         dataDir,
-        aiAvailable: this.snapshots.ai !== undefined,
-        smtpAvailable: this.snapshots.smtp !== undefined,
-        feishuAvailable: this.snapshots.feishu !== undefined,
+        aiAvailable: this.isRuntimeAvailable('ai'),
+        smtpAvailable: this.isRuntimeAvailable('smtp'),
+        feishuAvailable: this.isRuntimeAvailable('feishu'),
         uptime: Math.floor(process.uptime()),
         nodeVersion: process.version,
       },
     };
+  }
+
+  private isRuntimeAvailable(channel: ConfigChannel): boolean {
+    return this.runtimeAvailability?.(channel) ?? this.snapshots[channel] !== undefined;
   }
 
   getActiveSnapshot<C extends ConfigChannel>(
@@ -145,6 +152,24 @@ export class ConfigurationService {
     candidate: ChannelConfigMap[C],
     options: { sendTestEmail?: boolean } = {}
   ): Promise<TestAndActivateResult> {
+    return this.withChannelLock(channel, () =>
+      this.doTestAndActivate(channel, candidate, options)
+    );
+  }
+
+  async retest(
+    channel: ConfigChannel,
+    options: { sendTestEmail?: boolean } = {}
+  ): Promise<TestAndActivateResult | null> {
+    return this.withChannelLock(channel, async () => {
+      const snapshot = this.getActiveSnapshot(channel);
+      if (!snapshot) return null;
+      const result = await this.runTest(channel, snapshot as never, options);
+      return { activated: false, test: result };
+    });
+  }
+
+  private async withChannelLock<T>(channel: ConfigChannel, operation: () => Promise<T>): Promise<T> {
     const previous = this.channelLocks.get(channel) ?? Promise.resolve();
     let release!: () => void;
     const current = new Promise<void>((resolve) => {
@@ -153,7 +178,7 @@ export class ConfigurationService {
     this.channelLocks.set(channel, current);
     await previous;
     try {
-      return await this.doTestAndActivate(channel, candidate, options);
+      return await operation();
     } finally {
       release();
       if (this.channelLocks.get(channel) === current) this.channelLocks.delete(channel);

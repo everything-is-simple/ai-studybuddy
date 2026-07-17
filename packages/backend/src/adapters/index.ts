@@ -17,5 +17,6 @@ export {
   AllProvidersFailedError,
   AllProvidersCoolingDownError,
   OpenAiProvider,
+  AiRouterProxy,
 } from './ai';
 export type { AiProvider, AiProviderRouterOptions } from './ai';

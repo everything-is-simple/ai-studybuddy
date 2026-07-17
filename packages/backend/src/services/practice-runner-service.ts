@@ -7,7 +7,7 @@ import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
 import { ErrorFixerService } from './error-fixer-service';
 import {
   AiProviderError,
-  AiProviderRouter,
+  AiRouterProxy,
   AllProvidersCoolingDownError,
   AllProvidersFailedError,
 } from '../adapters';
@@ -229,7 +229,7 @@ export class PracticeRunnerService {
   private readonly errorFixer: ErrorFixerService;
 
   constructor(options?: PracticeRunnerServiceOptions) {
-    this.ai = options?.ai ?? new AiProviderRouter();
+    this.ai = options?.ai ?? new AiRouterProxy();
     this.now = options?.now ?? nowIso;
     this.id = options?.id ?? uuid;
     this.retryDelayMs = options?.retryDelayMs ?? 5000;
