@@ -1,4 +1,4 @@
-# Phase 1-T08 本机配置中心与连接验收实施计划（修订 v2）
+# Phase 1-T08 本机配置中心与连接验收实施计划（修订 v4）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -54,7 +54,7 @@ const encrypted = Dpapi.protectData(
 const decrypted = Dpapi.unprotectData(encrypted, null, 'CurrentUser');
 ```
 
-Node 兼容性：声明 `engines: >=14`，当前终端 Node v25.4.0。**实施门槛**：T08-A 开始前必须在 Node 22 实机执行 roundtrip 验证，验证通过后才继续后续子任务。验证脚本输出包含 Node 版本、加密后长度、解密后内容一致性，留存为 `.plans/phase1-t08-dpapi-roundtrip-evidence.txt`。
+Node 兼容性：声明 `engines: >=14`，当前终端 Node v25.4.0。**实施门槛**：T08-A 开始前必须在 Node 22 实机执行 roundtrip 验证，验证通过后才继续后续子任务。实施时记录脱敏命令结果（Node 版本、架构、roundtrip 布尔通过），并在 `docs/04` T08 完成证据中登记。不记录明文或密文，不输出到 `.plans/` 目录。
 
 安装方式：`pnpm add @primno/dpapi --filter backend`，预构建二进制自动下载，不需要 Python/MSVC。
 
@@ -96,13 +96,13 @@ Node 兼容性：声明 `engines: >=14`，当前终端 Node v25.4.0。**实施�
 └── state.json             # 非加密，只含各通道状态和最后验证时间（辅助元数据，非激活事实来源）
 ```
 
-**原子写入流程（P1 二审修订）：**
+**原子写入流程（P1 二审+三审修订）：**
 
-为避免"active 重命名为 prev 后、新 active 写入前"的中断窗口，采用以下顺序：
+为避免"active 重命名为 prev 后、新 active 写入前"的中断窗口，采用以下顺序。临时文件使用唯一名称（`{channel}.{randomId}.tmp`），避免并发请求覆盖同一临时文件（但同 channel 同时只有一个请求在写入——由 T08-B 串行锁保证）。
 
-1. 加密候选配置 → 写入 `{channel}.new.tmp`
+1. 加密候选配置 → 写入 `{channel}.{randomId}.tmp`
 2. 如果 `{channel}.active.enc` 存在 → `rename(active.enc, prev.enc)`（覆盖旧 prev）
-3. `rename({channel}.new.tmp, active.enc)`
+3. `rename({channel}.{randomId}.tmp, active.enc)`
 4. 若步骤 2/3 任一失败 → 清理临时文件 → **不更新内存快照，不发事件** → 返回错误
 5. 只有 `active.enc` 写入成功后 → 更新内存快照 → 发激活事件
 
@@ -164,9 +164,9 @@ T08-A 实现后，针对原子写入流程注入中断点，验证：
 - [ ] 新建 `packages/backend/src/config/secure-store.ts`
   - 接受注入的 `SecretProtector`
   - `write(channel, data)`: 按 0.5 原子写入流程执行：
-    1. 加密 → 写 `{channel}.new.tmp`
+    1. 加密 → 写 `{channel}.{randomId}.tmp`（唯一名称）
     2. 若 `active.enc` 存在 → `rename(active.enc, prev.enc)`（覆盖旧 prev）
-    3. `rename(new.tmp, active.enc)`
+    3. `rename({randomId}.tmp, active.enc)`
     4. 任一步骤失败 → 清理临时文件 → 抛错（不更新调用方状态）
   - `read(channel)`: 读 `active.enc` → 解密 → 返回；损坏时尝试 `prev.enc`；`active` 不存在但 `prev` 存在时自动恢复
   - `exists(channel)`: 检查 `active.enc` 是否存在
@@ -207,13 +207,20 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 **实现要点：**
 
 - [ ] 新建 `packages/backend/src/config/configuration-service.ts`
-  - 构造时接受 `SecureStore` 实例
+  - 构造时接受 `SecureStore` 实例和 `ConnectionTester` 实例
   - `initialize()`: 启动时读取三个 channel 的 active 配置，加载到内存快照；读取失败按 0.5 节规则处理
   - `getChannelStatus(channel)`: 返回 `{ status, lastVerified, summary }`（脱敏）
   - `getAllStatus()`: 三组 + 运行状态聚合
-  - `testAndActivate(channel, candidateConfig)`: 核心方法——在内存中用候选值执行连接测试 → 成功则写入磁盘并更新快照 → 失败则丢弃候选值并返回错误
+  - `testAndActivate(channel, candidateConfig)`: 核心方法——获取 channel 锁 → 在内存中用候选值执行连接测试 → 成功则写入磁盘并更新快照 → 失败则丢弃候选值并返回错误 → 释放锁
   - `getActiveSnapshot(channel)`: 返回当前内存中的不可变配置快照（内部使用）
   - `onConfigActivated(listener)`: 事件订阅，通知所有消费者
+- [ ] **并发控制（P1 三审补充）：**
+  - 每个 channel 维护一个独立的 Promise 串行队列（`channelLocks: Map<Channel, Promise<void>>`）
+  - `testAndActivate()` 入口获取 channel 锁，测试 + 写入 + 激活作为一个串行临界区
+  - 不同 channel 仍可并行（AI 激活不阻塞 SMTP 激活）
+  - 临时文件使用唯一名称：`{channel}.{randomId}.tmp`（不再使用固定的 `new.tmp`）
+  - 串行锁保证：同一 channel 的第二个请求等待第一个完成后再进入测试
+  - 重复提交（同一候选值）：幂等无害——重新测试并重新写入
 - [ ] `state.json` 只记录 `{ [channel]: { status, lastVerifiedAt } }`，作为启动时的辅助元数据
 - [ ] 测试覆盖：
   - 启动时无配置不崩溃
@@ -221,6 +228,8 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   - testAndActivate 失败 → 磁盘无变化 + 内存快照不变
   - 损坏恢复流程（active 损坏 → prev 恢复 / 双损坏 → unconfigured）
   - 事件订阅者收到正确的新快照
+  - **同 channel 并发激活**：两个请求同时调用 `testAndActivate('ai', ...)`，只有一个在执行测试和写入，另一个排队等待，最终两个都成功但结果是最后一个写入的值
+  - **跨 channel 并发激活**：AI 和 SMTP 同时激活，互不阻塞，各自独立完成
 
 ### T08-C：连接测试服务
 
@@ -229,9 +238,24 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
 **实现要点：**
 
 - [ ] 新建 `packages/backend/src/config/connection-tester.ts`
-- [ ] `testAi(candidateConfig)`: 使用候选配置构建临时 Provider，发送最小请求（"reply OK"），超时 15s
-  - 成功：返回 `{ pass: true, latencyMs, model }`
-  - 失败：返回 `{ pass: false, errorCode, sanitizedMessage }`（不含 URL/key/完整错误栈）
+- [ ] `testAi(candidateConfig)`: **逐个 Provider 分别测试（P2 三审补充）**
+  - 对 `candidateConfig.providers` 数组中的每个 Provider 独立执行最小请求（"reply OK"），超时 15s
+  - 返回按 Provider 名称划分的结果数组：
+    ```ts
+    interface AiTestResult {
+      pass: boolean;  // 全部通过才为 true
+      providers: Array<{
+        name: string;          // provider 名称（安全展示）
+        pass: boolean;
+        latencyMs?: number;
+        model?: string;
+        errorCode?: string;
+        sanitizedMessage?: string;  // 不含 URL/key
+      }>;
+    }
+    ```
+  - **全部通过**才允许激活。部分失败时返回 `pass: false` + 逐 Provider 状态
+  - 理由：若只测第一个成功就激活，备用 Provider 的错误密钥在故障转移时才暴露
 - [ ] `testSmtp(candidateConfig, sendTestEmail: boolean)`: 使用 `nodemailer.createTransport(config).verify()` 验证连接
   - 可选发送测试邮件（固定模板 "AI StudyBuddy 配置测试"，收件地址用配置中的 `to`）
   - 成功：`{ pass: true, smtpGreeting }`
@@ -295,59 +319,91 @@ verified_pass ──(active.enc损坏+prev恢复失败)──→ unconfigured
   - test-and-activate 失败 → 状态不变 + 返回错误码和脱敏消息
   - retest 在无 active 时返回 404
 
-### T08-E：运行时配置消费者统一接入（P1 修订重点）
+### T08-E：运行时配置消费者统一接入（P1 三审修订）
 
-**目标：** 所有配置消费者通过统一机制获取不可变快照；激活新配置后，在途请求继续使用旧快照，新请求使用新快照。
+**目标：** 所有配置消费者通过统一机制获取配置；激活新配置后，在途请求继续使用旧 Router，新请求使用新 Router；同一配置下的 Router 实例复用，保留 T02 熔断状态。
 
-**当前消费者清单（P1 二审纠正）：**
+**当前消费者清单：**
 
 | 消费者 | 文件 | 当前读取方式 | T08 接入方式 |
 |--------|------|-------------|-------------|
-| AI: dev API | `api/dev-ai.ts:12` | 模块级 `const aiRouter = new AiProviderRouter()` | 改为稳定代理对象 |
-| AI: 资料 Worker | `services/material-job-worker.ts:48` | 类属性 `new AiProviderRouter()` | 改为每次 job 执行时获取当前 router |
-| AI: 练习服务 | `services/practice-runner-service.ts:232` | 构造时 `new AiProviderRouter()` | 改为每次请求时获取当前 router |
-| SMTP | `services/parent-report-delivery-service.ts:475` | 直接读 `config.smtp*` | 改为调用 `getActiveSmtpConfig()` |
-| 飞书 | `services/parent-report-delivery-service.ts:501` | 直接读 `config.feishuWebhookUrl` | 改为调用 `getActiveFeishuConfig()` |
+| AI: dev API | `api/dev-ai.ts:12` | 模块级 `const aiRouter = new AiProviderRouter()` | 改为 `AiRouterProxy` |
+| AI: 资料 Worker | `services/material-job-worker.ts:48` | 类属性 `new AiProviderRouter()` | 改为 `AiRouterProxy` |
+| AI: 练习服务 | `services/practice-runner-service.ts:232` | 构造时 `new AiProviderRouter()` | 改为 `AiRouterProxy` |
+| SMTP | `services/parent-report-delivery-service.ts:475` | 直接读 `config.smtp*` | 改为 `getCurrentSmtpConfig()` |
+| 飞书 | `services/parent-report-delivery-service.ts:501` | 直接读 `config.feishuWebhookUrl` | 改为 `getCurrentFeishuConfig()` |
 
 **说明：** 报告 AI 润色当前未接线（ParentReportService 默认构造不传 `summarizeWithAi`），不是消费者。实际 AI 消费者为 3 个。
 
-**设计：稳定代理对象 + 每次请求时解引用（P1 二审修订）**
+**设计：激活时构建 Router + 原子替换引用 + 代理读取（P1 三审修订）**
 
-不能让模块级长生命周期实例永久持有旧 Router。改为：
+核心思想：
+- 模块级 `currentAiRouter` 保存一个完整的 `AiProviderRouter` 实例（含熔断状态）
+- 激活新 AI 配置时，**构建一个新的 `AiProviderRouter`**，然后原子替换 `currentAiRouter` 引用
+- `AiRouterProxy.generate()` 在每次请求**开始时**读取一次 `currentAiRouter` 并调用，整个请求使用同一实例
+- 同一配置下的多次请求复用同一 Router 实例 → T02 熔断状态正常跨请求累计
 
-- [ ] 新建 `packages/backend/src/config/config-snapshot.ts`
-  - 导出 `interface AiSnapshot { providers: ProviderConfig[] }`、`SmtpSnapshot`、`FeishuSnapshot`
-  - 导出 `let currentAiSnapshot: AiSnapshot | null`（模块级可变变量）
-  - 导出 `function updateAiSnapshot(snapshot: AiSnapshot)` — 更新引用
-  - 导出 `function getCurrentAiSnapshot(): AiSnapshot | null` — 获取当前快照
-  - 同理导出 SMTP 和飞书的快照管理
-  - `ConfigurationService` 激活时调用 `updateXxxSnapshot()` 更新引用
+```
+配置激活 → new AiProviderRouter(newProviders) → currentAiRouter = newRouter
+             ↗ 旧 Router 被在途请求持有，GC 在所有引用释放后回收
+请求 A → proxy.generate() → const router = currentAiRouter → router.generate(...)
+请求 B → proxy.generate() → const router = currentAiRouter → router.generate(...)
+// A 和 B 使用同一实例，熔断计数跨请求累计
+```
+
+- [ ] 新建 `packages/backend/src/config/config-registry.ts`
+  - 模块级变量：
+    ```ts
+    let currentAiRouter: AiProviderRouter | null = null;
+    let currentSmtpConfig: SmtpConfig | null = null;
+    let currentFeishuConfig: FeishuConfig | null = null;
+    ```
+  - `setAiRouter(router: AiProviderRouter | null)` — 原子替换（单赋值）
+  - `getAiRouter(): AiProviderRouter | null` — 返回当前引用
+  - `setSmtpConfig(config: SmtpConfig | null)` — 原子替换
+  - `getCurrentSmtpConfig(): SmtpConfig | null`
+  - `setFeishuConfig(config: FeishuConfig | null)` — 原子替换
+  - `getCurrentFeishuConfig(): FeishuConfig | null`
+- [ ] `ConfigurationService` 激活 AI 配置时：
+  - 用新的 provider 列表调用 `new AiProviderRouter({ providers })` 构建新实例
+  - 调用 `setAiRouter(newRouter)` 原子替换
+  - 旧 Router 不主动销毁——在途请求持有的引用继续有效，GC 自然回收
 - [ ] 新建 `packages/backend/src/adapters/ai/ai-router-proxy.ts`
   - 导出 `class AiRouterProxy implements AiProvider`
-  - `generate(request)`: 每次调用时从 `getCurrentAiSnapshot()` 获取最新快照 → 构建临时 Router → 调用 `generate`
-  - 如果快照为 null 且 `.env.local` 也无配置 → 返回 `AI_NOT_CONFIGURED`
-  - 在途请求：一旦进入 `generate()` 方法并获取到快照，整个请求生命周期内使用该不可变快照
+  - `generate(request)`:
+    ```ts
+    const router = getAiRouter();
+    if (!router) throw new AiProviderError('AI_NOT_CONFIGURED', ...);
+    return router.generate(request);  // 整个请求使用同一 router 实例
+    ```
+  - 不在 generate 内构建新 Router——只读取并调用现有实例
 - [ ] 改造 AI 消费者（3 处）：
-  - `dev-ai.ts:12`：改为 `const aiRouter = new AiRouterProxy()`（稳定代理实例）
-  - `material-job-worker.ts:48`：改为 `private readonly ai: AiProvider = new AiRouterProxy()`
+  - `dev-ai.ts:12`：`const aiRouter = new AiRouterProxy()`
+  - `material-job-worker.ts:48`：`private readonly ai: AiProvider = new AiRouterProxy()`
   - `practice-runner-service.ts:232`：默认值改为 `new AiRouterProxy()`，仍支持注入（测试）
+- [ ] 改造 `AiProviderRouter` 构造：
+  - 接受显式 `providers: AiProvider[]` 参数
+  - 不再读 `config` 全局——provider 列表由调用方提供
+  - 保留 `buildProvidersFromConfig()` 作为初始化 helper（读 `.env.local` fallback 时使用）
 - [ ] 改造 SMTP/飞书消费者：
-  - `parent-report-delivery-service.ts`：`isSmtpConfigured()` 和发送时改为读 `getCurrentSmtpSnapshot()`
-  - `isFeishuConfigured()` 和发送时改为读 `getCurrentFeishuSnapshot()`
+  - `parent-report-delivery-service.ts`：`isSmtpConfigured()` 读 `getCurrentSmtpConfig()`
+  - 发送时使用 `getCurrentSmtpConfig()` 返回的快照
+  - 飞书同理：`getCurrentFeishuConfig()`
 - [ ] 家长报告 runner（独立进程）：
-  - 一次性脚本进程，启动时初始化 ConfigurationService 即可获取配置
-  - 无需热重载——它每次运行都是新进程
+  - 一次性脚本进程，启动时初始化 ConfigurationService → 调用 `setAiRouter/setSmtpConfig/setFeishuConfig`
+  - 无需热重载——每次运行都是新进程
 - [ ] 启动优先级规则：
   1. `ConfigurationService.initialize()` 尝试读取 `{channel}.active.enc`
-  2. 成功 → 使用加密存储配置 → 调用 `updateXxxSnapshot()` 更新模块级快照
-  3. 失败 → fallback 读 `.env.local` 的对应字段 → 同样调用 `updateXxxSnapshot()` 以统一代码路径
-  4. 两者都无 → 快照为 null，该通道 unconfigured，降级运行
+  2. 成功 → 用加密存储配置构建 Router/Config → 调用 `setXxx()` 注册
+  3. 失败 → fallback 读 `.env.local` 的对应字段 → 同样调用 `setXxx()` 注册
+  4. 两者都无 → 不调用 `setXxx()`，保持 null，该通道 unconfigured 降级运行
 - [ ] 测试覆盖：
-  - 注入 TestProtector + 模拟配置激活 → 代理对象获取新快照
+  - 同一配置下多次 generate 使用同一 Router 实例（断言引用相等）
+  - 激活新配置后，新请求使用新 Router，旧请求继续完成
+  - T02 熔断状态跨请求累计：连续失败 5 次后进入冷却
   - 空配置启动所有消费者不崩溃
-  - AI 未配置时所有 AI 请求返回 `AI_NOT_CONFIGURED`
+  - AI 未配置时返回 `AI_NOT_CONFIGURED`
   - `.env.local` fallback 正常（CI 环境）
-  - 在途请求不受新配置影响（并发测试：A 请求进行中，激活新配置，A 完成时使用旧快照）
 
 ### T08-F：前端设置页面（含运行状态分区）
 
@@ -484,13 +540,13 @@ T08-E (消费者统一接入) ←── T08-B                     │
 
 | 风险 | 缓解 |
 |------|------|
-| `@primno/dpapi` 预构建缺少当前 arch | spike 已在本机 Node 22 x64 验证通过；包同时提供 arm64 预构建 |
+| `@primno/dpapi` 预构建缺少当前 arch | 包声明 N-API `engines: >=14`，提供 x64/arm64 预构建；实施 T08-A 前先做 Node 22 实机 roundtrip 验证（见 0.3 实施门槛） |
 | `@primno/dpapi` 未来不维护 | 接口通过 `SecretProtector` 抽象，可替换为 koffi 或 PowerShell 实现 |
 | CI 无 Windows/DPAPI | 所有测试注入 `TestProtector`，不依赖真实 DPAPI |
 | SMTP/飞书测试依赖外部服务 | 自动化测试全部使用 mock；真实通道测试是用户手动操作 |
 | 配置文件损坏（断电/磁盘错误） | 原子写入（tmp + rename）+ prev 备份 + 双损坏降级到 unconfigured |
-| 多个 AI Router 实例不同步 | 改为中央工厂 `getAiRouter()`，所有消费者获取同一个可替换引用 |
-| 在途 AI 请求与配置切换竞态 | 不可变快照设计——已获取的 router 引用在整个请求生命周期内有效 |
+| 同 channel 并发激活竞态 | 每 channel 独立串行锁（见 T08-B 并发控制） |
+| 在途 AI 请求与配置切换竞态 | 不可变引用设计——请求开始时读取 `currentAiRouter`，整个请求生命周期使用该实例 |
 
 ---
 
@@ -502,7 +558,7 @@ T08-E (消费者统一接入) ←── T08-B                     │
 | T08-B ConfigService | 中（状态机 + 事件通知 + 启动恢复） |
 | T08-C 连接测试 | 中（三个通道各需不同协议） |
 | T08-D API 端点 | 小（test-and-activate 合一，路由注册） |
-| T08-E 消费者统一接入 | 中（改造 6 处消费者 + 中央工厂 + 优先级规则） |
+| T08-E 消费者统一接入 | 中（改造 5 处消费者 + 代理+注册表 + 优先级规则） |
 | T08-F 前端设置页 + 运行状态 | 中（四分区 + 表单 + 多 provider 编辑） |
 | T08-G 集成验收 | 中（Playwright + 冷启动 + 重启 + 损坏恢复） |
 
@@ -513,5 +569,6 @@ T08-E (消费者统一接入) ←── T08-B                     │
 | 版本 | 日期 | 修订内容 |
 |------|------|---------|
 | v1 | 2026-07-17 | 初始计划 |
-| v2 | 2026-07-17 | P1: 消除"保存未验证配置到磁盘"，改为内存测试+一次性写入激活；P1: 依赖改为已验证的 `@primno/dpapi` + SecretProtector 抽象；P1: 补充全部运行时消费者（AI×4 + SMTP + 飞书）统一接入和优先级规则；P2: 补充运行状态分区定义和 API |
-| v3 | 2026-07-17 | P1: 修正 AI Router 热切换方案为稳定代理对象（每次请求解引用）；纠正 AI 消费者数量为 3（报告润色未接线）；P1: 修正原子写入流程顺序，补充 active 缺失时从 prev 自动恢复；P1: 修正 `@primno/dpapi` 调用形式为静态方法，增加 Node 22 实机 roundtrip 验证门槛；P2: 真实渠道 smoke 改为用户显式触发，不作为常规合并门槛 |
+| v2 | 2026-07-17 | P1: 消除"保存未验证配置到磁盘"，改为内存测试+一次性写入激活；P1: 依赖改为 `@primno/dpapi` + SecretProtector 抽象；P1: 补充运行时消费者统一接入；P2: 补充运行状态分区 |
+| v3 | 2026-07-17 | P1: AI Router 热切换改为代理对象（每次请求解引用）；纠正 AI 消费者为 3；P1: 原子写入补充 active 缺失时从 prev 恢复；P1: 修正 DPAPI 为静态方法+实施门槛；P2: 真实渠道 smoke 不作为合并门槛 |
+| v4 | 2026-07-17 | P1: AiRouterProxy 改为引用传递——激活时构建新 Router 并原子替换模块级引用，保留 T02 熔断跨请求累计；P1: 增加每 channel Promise 串行锁和唯一临时文件名，消除并发激活竞态；P2: AI 测试改为逐 Provider 分别测试，全部通过才激活；P2: 风险表移除"已验证"措辞，roundtrip 证据登记在 docs/04 而非 .plans/ |
