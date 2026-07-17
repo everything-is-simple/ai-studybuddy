@@ -1,10 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.25
+**版本**：v1.26
 **日期**：2026-07-17
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
 > 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则。当前下一门禁为 T06：S6 PRD 编写的独立计划、审查和用户明确批准；S3 Worker 仍未开始。各阶段任务按单一责任拆分。
+
+> **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
 ---
 
@@ -516,7 +518,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 创建 `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md`
 - [x] 更新 docs/00 索引
 
-**T03A Schema（已完成）**（已按获批计划实施并通过验收；下一门禁为 T03B）
+**T03A Schema（已完成）**（已按获批计划实施并通过验收；后续 T03B/T03C/T03D 已完成）
 
 > **T03A 完成证据（2026-07-16）**：已新增学期库 migration v4、`practice_sessions`、`questions`、`practice_answers` 三表、11 个索引、8 个跨表一致性 trigger 与 S3 最小 shared 类型；7/7 专项数据库集成测试覆盖 fresh/v3 升级、约束、关联、父子更新和级联语义。最终 `pnpm type-check`、后端 build、前端 build 均通过，后端全量 127/127、前端全量 32/32 通过。未实现 S3 API、Service、Worker、AI 调用、前端或错题归档。
 
@@ -525,7 +527,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 创建 `practice_answers` 表（逐题作答、正确性、用时）
 - [x] migration v4、数据库约束/升级测试与 type-check 验证
 
-**T03B 练习生成（已完成）**（已按获批计划实施并通过验收；下一门禁为 T03C）
+**T03B 练习生成（已完成）**（已按获批计划实施并通过验收；后续 T03C/T03D 已完成）
 
 > **T03B 完成证据（2026-07-16）**：已新增 `PracticeRunnerService`、作答前公开 DTO、`POST /api/practice-sessions` 和 `GET /api/practice-sessions/:id`；练习生成只读取知识模块摘要/证据，AI 成功后同事务写入 `practice_sessions` 与 `questions`，返回给学生的题目隐藏正确答案、可接受答案、解析、来源证据和 AI 元数据。新增 `practice-generation-api.test.mjs` 使用本地 mock OpenAI-compatible Provider 覆盖成功入库、答案隐藏、AI 失败不落空 session、坏 JSON 不部分写入和跨课程模块调用 AI 前拒绝。验证通过：`pnpm type-check`、后端 build、前端 build、专项 4/4、隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t03b-full-test` 下 `pnpm test`（后端 131/131、前端 32/32）。未实现提交作答、规则批改、`practice_answers` 写入、StudyEvent、前端或错题归档。
 
@@ -536,7 +538,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] `GET /api/practice-sessions/:id`（获取练习与题目）
 - [x] 测试：AI 生成解析、题目入库与关联正确
 
-**T03C 批改（已完成）**（已按获批计划实施并通过验收；下一门禁为 T03D）
+**T03C 批改（已完成）**（已按获批计划实施并通过验收；后续 T03D 已完成）
 - [x] `POST /api/practice-sessions/:id/submit`（提交作答，规则批改客观题）
 - [x] 批改后写入 `practice_answers`，计算 session 得分
 - [x] 错题事实标记并写入 `practice_completed` 事件
@@ -544,7 +546,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T03C 完成证据（2026-07-16）**：已新增 `POST /api/practice-sessions/:id/submit` 与 shared 提交/批改 DTO；客观题规则批改覆盖单选 trim+大小写归一、多选集合全等、填空 NFKC/大小写/空白归一及可接受答案。提交事务内写入每题 `practice_answers`，将 `practice_sessions` 更新为 `graded` 并计算 `total_score`、`correct_rate`、`overtime`、`total_duration_seconds`、`submitted_at`、`graded_at`，同时写入摘要化 `practice_completed` StudyEvent（`evidence_ref=practice_session:<id>`，不写题干或答案）。新增 `practice-submit-api.test.mjs` 覆盖成功批改、缺答、超时、重复提交、未知/跨 session 题目、非法答案/用时、跨学期隔离、StudyEvent 与不创建 `mistakes`/`weak_points`。验证通过：`pnpm type-check`、后端 build、前端 build、T03C 专项 4/4、T03B 回归 4/4、后端/前端全量测试、文档治理检查与 `git diff --check`。任务分支 `codex/phase1-t03c-practice-submit-grading`，实现提交 `97d68a4` 已快进合入 `master`；未实现前端练习页面、错题归档、S4 PRD/Schema、S5-S7、真实外部 Provider smoke 或 Worker。
 
-**T03D 前端（已完成）**（已按获批计划实施并通过验收；下一门禁为 T04 S4 PRD 计划）
+**T03D 前端（已完成）**（已按获批计划实施并通过验收；后续 T04/T04A/T04B/T05 已完成）
 - [x] 前端 API 封装：创建练习、获取题目、提交作答
 - [x] 练习页面：限时倒计时、逐题作答、提交
 - [x] 结果页面：逐题批改详情、得分、错题标记
@@ -555,20 +557,20 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 #### T04：S4 错题改错（拆为 PRD + 2 个实现子任务）
 
-**T04 PRD（已完成，纯文档）**（已按获批计划实施并通过文档验收；下一门禁为 T04A 独立计划）
+**T04 PRD（已完成，纯文档）**（已按获批计划实施并通过文档验收；后续 T04A/T04B/T05 已完成）
 - [x] 创建 `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`
 - [x] 更新 docs/00 索引
 
 > **T04 完成证据（2026-07-16）**：已创建 S4 轻量 PRD，明确 `practice_answers.is_correct = false` 是只读、可追溯的错误事实输入；定义错因由学生确认、原题/同类题/变题重做边界、重做证据、薄弱点必须由多次证据支撑、掌握可重新打开、学期隔离及 S6 只读脱敏聚合。已同步 `docs/00` v2.14；`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check` 通过。未创建 `mistakes`/`weak_points` Schema，未实现归档、重做、回流、API、页面、Worker、真实 Provider 或 S5-S7。
 
-**T04A Schema 与归档（已完成）**（已按获批计划实施并通过验收；下一门禁为 T04B 独立计划）
+**T04A Schema 与归档（已完成）**（已按获批计划实施并通过验收；后续 T04B/T05 已完成）
 - [x] 创建 `mistakes` 表（错题记录、次数、最近错误、掌握状态、关联 question/module）
 - [x] 创建 `weak_points` 表（薄弱点由多次错题证据归纳）
 - [x] S3 练习批改后自动归档到 `mistakes`
 - [x] 测试：归档逻辑、重复错题计数递增
 
 > **T04A 完成证据（2026-07-16）**：已创建 `.plans/phase1-t04a-s4-schema-archive-plan.md` 并按计划实施；新增学期库 migration v5，创建 `mistakes`、`mistake_evidence`、`weak_points`，用 `mistake_evidence.source_practice_answer_id` 唯一约束保证同一 `PracticeAnswer` 幂等归档；未作答沿用 S3 `is_correct = 0` 错误事实进入归档；同课程实例 + 知识模块至少两条独立错误证据才创建 `weak_points`。`PracticeRunnerService.submitPracticeSession()` 在同一事务内写入 `practice_answers` 后调用 S4 归档，失败整体回滚。新增 `error-fixer-schema.test.mjs` 与 `error-fixer-archive-api.test.mjs`，并更新 S3 回归测试对 migration v5 与 S4 表存在的预期。验证通过：后端 build、T04A schema 3/3、T04A archive 4/4、S3 submit 4/4、S3 schema 7/7；最终全量验证见本任务交付说明。未实现 T04B 前端、错因确认、错题重做、T05 回流规则、S5-S7、Worker 或真实 Provider smoke。
-**T04B 前端（已完成）**（已按获批"收窄版方案 A"计划实施并通过验收；下一门禁为 T05 独立计划）
+**T04B 前端（已完成）**（已按获批"收窄版方案 A"计划实施并通过验收；后续 T05 已完成）
 - [x] 错题列表与筛选（按课程/模块/掌握状态）
 - [x] 错题重做流程（重新作答 → 批改 → 更新掌握状态）
 - [x] 工作台"查漏补缺"区集成
@@ -590,7 +592,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 #### T06：S6 家长报告简版（拆为 PRD + 2 个实现子任务）
 
 **T06 PRD**（门禁：Phase 1 后期且准备正式发送家长报告；T06 文档计划已批准）
-- [ ] 创建 `docs/subsystems/06-S6-家长面板子系统PRD-ParentWindow.md`
+- [ ] 创建 `docs/subsystems/06-S6-家长观察子系统PRD-ParentReport.md`
 - [ ] 更新 docs/00 索引
 
 **T06A 报告生成**（门禁：S6 PRD 已创建；T06A 独立实现计划已批准）

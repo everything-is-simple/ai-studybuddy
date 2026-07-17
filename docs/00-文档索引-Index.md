@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.15
-**日期**：2026-07-16
+**版本**：v2.16
+**日期**：2026-07-17
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -45,10 +45,10 @@
 | S1 学习节奏 | `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 必需 |
 | S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 开始开发 S2 前触发 |
 | S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ MVP 已完成：Schema、生成、提交批改与前端闭环均已验收 | S2 MVP 完成后触发 |
-| S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ PRD 已创建；T04A Schema 与归档已完成；下一门禁为 T04B 错题改错前端的独立计划、审查和用户明确批准 | S3 MVP 完成后触发 |
-| S5 期末冲刺 | `subsystems/S5-期末冲刺子系统PRD-ExamCrammer.md` | 📅 未创建 | Phase 2 触发 |
-| S6 家长观察 | `subsystems/S6-家长观察子系统PRD-ParentReport.md` | 📅 未创建 | Phase 1 后期、准备正式发送家长报告前触发 |
-| S7 课堂采集 | `subsystems/S7-课堂采集子系统PRD-ClassCapture.md` | 📅 未创建 | Phase 1.5 触发 |
+| S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
+| S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | 📅 未创建 | Phase 2 触发 |
+| S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | 📅 未创建；当前下一门禁为 T06 PRD | Phase 1 后期、准备正式发送家长报告前触发 |
+| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | 📅 未创建 | Phase 1.5 触发 |
 
 ---
 
@@ -131,9 +131,9 @@ git diff --check
 ### 6.3 准备 Phase 1
 
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
-2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环，S4 已完成轻量 PRD、Schema 与错误作答归档；
-3. 当前下一门禁为 T04B：S4 错题改错前端的独立计划、审查和用户明确批准。S3 Worker 不属于当前 MVP，仍未开始；
-4. T04B 未获批准前不得创建错题前端页面、错因确认、错题重做或工作台“查漏补缺”区；T05 回流规则、S5/S6/S7 继续按各自门禁等待。
+2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B 与 T05 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环，S4 已完成错题归档、错题改错前端与回流规则；
+3. 当前下一门禁为 T06：S6 家长观察 PRD 的创建与索引同步。S3 Worker 不属于当前 MVP，仍未开始；
+4. T06 PRD 完成前不得实现 T06A 报告生成或 T06B 推送渠道；S5/S7 继续按各自门禁等待。
 
 ---
 
@@ -166,6 +166,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.16 | 2026-07-17 | 同步系统进度：登记 T04B 错题改错前端与 T05 回流规则均已完成，下一门禁调整为 T06 S6 家长观察 PRD；统一 S5/S6/S7 未来 PRD 文件名 |
 | v2.15 | 2026-07-16 | Phase 1-T04A：创建学期库 migration v5、`mistakes`/`mistake_evidence`/`weak_points`，实现 S3 提交后错误作答幂等归档与两证据薄弱点；下一门禁调整为 T04B 独立计划与明确批准 |
 | v2.14 | 2026-07-16 | Phase 1-T04：创建并登记 S4 错题改错轻量 PRD，明确 S3 错误作答只读输入、错因确认、重做证据、薄弱点多证据原则和隐私边界；下一门禁调整为 T04A 独立计划与明确批准 |
 | v2.13 | 2026-07-16 | Phase 1-T03D：登记 S3 前端 API 封装、练习发起/作答/结果页、工作台“练习”区、前端测试与隔离浏览器验收已完成；S3 MVP 完成，S4 PRD 触发条件满足但仍需独立计划和明确批准 |

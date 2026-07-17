@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.10
-**日期**：2026-07-16
-**状态**：Phase 0.7/0.8 已完成；Phase 1-T02 已补齐 AI Provider Router 的实例级健康熔断、冷却恢复与脱敏日志；Phase 1-T03A/T03B/T03C/T03D 已完成 S3 练习 Schema、生成/提交批改 API 与前端闭环；Phase 1-T04 已创建 S4 PRD，Phase 1-T04A 已完成 S4 错题归档与 Schema；下一门禁为 T04B 错题改错前端的独立计划和批准
+**版本**：v1.11
+**日期**：2026-07-17
+**状态**：Phase 0.7/0.8 已完成；Phase 1-T02 已补齐 AI Provider Router 的实例级健康熔断、冷却恢复与脱敏日志；Phase 1-T03A/T03B/T03C/T03D 已完成 S3 练习 Schema、生成/提交批改 API 与前端闭环；Phase 1-T04/T04A/T04B 已完成 S4 PRD、错题归档与错题改错前端；Phase 1-T05 已完成回流规则；下一门禁为 T06 S6 家长观察 PRD
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
