@@ -1,6 +1,6 @@
 # AI StudyBuddy 后端开发规范 Backend Guidelines
 
-**版本**：v1.2
+**版本**：v1.3
 **日期**：2026-07-16
 **状态**：有效
 **用途**：Phase 0.8 正式后端开发的目录结构、SQLite 约定、Adapter 输出、日志、环境变量和验证规则。写第一个后端服务 / Adapter / API / Worker 前必须读本文件。
@@ -218,6 +218,15 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 | `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL；只填入 `.env.local`，不得进入日志或提交                      | 否；S6 正式发送报告时必填 |
 
 > Phase 0.7 已验证 QQ SMTP 与飞书 Webhook 的真实送达；Phase 0.8 T06 只实现 S1 学习节奏核心 API，不消费这些报告发送变量。正式业务发送留到 S6 ParentReport。
+
+### 8.4 本机配置中心边界（Phase 1-T08 候选）
+
+- 配置 API 只能返回普通配置、掩码值、`configured`、`lastTestAt`、`lastTestStatus` 和固定错误码；禁止提供读取完整 API Key、SMTP 授权码或 Webhook URL 的接口。
+- 秘密由后端配置服务接收后在内存中完成测试，测试成功才写入 Windows 当前用户加密存储，并以临时文件 + 原子替换方式激活。
+- 运行时 Adapter 依赖配置服务提供的不可变快照；不得在业务代码中新增对 `process.env` 的直接读取，也不得把秘密写入普通 SQLite 表、JSON 明文文件或日志。
+- AI 测试必须使用最小无隐私请求；SMTP 测试分为连接验证与用户显式触发的测试邮件；飞书测试必须发送固定无隐私测试卡片。
+- 保存失败、测试失败、解密失败和配置损坏必须返回固定脱敏错误码；不得把第三方 SDK 原始 Error、请求 URL、响应正文或秘密传入日志和 API 响应。
+- 配置中心实现前必须创建独立 `.plans/` 计划，覆盖 Windows 加密依赖、启动恢复、动态配置快照、API 契约、前端状态和安全/连接测试。
 
 ---
 
