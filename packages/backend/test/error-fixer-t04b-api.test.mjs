@@ -485,10 +485,17 @@ test('redo flow: incorrect redo keeps needs_review without new mistakes; correct
   assert.equal(timeline.status, 200);
   assert.equal(timeline.json.data.length, 2);
   for (const event of timeline.json.data) {
+    assert.equal(event.sourceSystem, 'S4');
     assert.equal(event.courseInstanceId, course.id);
     assert.equal(event.evidenceRef, `mistake:${target.id}`);
-    assert.ok(!event.title.includes('封闭性'), 'timeline event title must not contain stem text');
+    assert.equal(event.workloadMinutes, 1);
+    assert.ok(Number.isInteger(event.workloadMinutes) && event.workloadMinutes > 0);
+    assert.doesNotMatch(event.title, /封闭性|用于验证错题详情展示/);
   }
+  assert.deepEqual(
+    timeline.json.data.map((event) => event.title).sort(),
+    ['错题重做未通过', '错题重做通过'].sort()
+  );
 });
 
 test('mastery with explicit student confirm works without redo evidence', async (t) => {

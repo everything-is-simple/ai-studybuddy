@@ -242,9 +242,13 @@ test('S2 worker runOnce generates notes, modules, list metadata, and study evide
   );
   assert.equal(timeline.status, 200);
   assert.equal(timeline.json.data.length, 1);
-  assert.equal(timeline.json.data[0].sourceSystem, 'S2');
-  assert.equal(timeline.json.data[0].courseInstanceId, course.id);
-  assert.equal(timeline.json.data[0].evidenceRef, `material:${uploaded.id}`);
+  const timelineEvent = timeline.json.data[0];
+  assert.equal(timelineEvent.sourceSystem, 'S2');
+  assert.equal(timelineEvent.courseInstanceId, course.id);
+  assert.equal(timelineEvent.evidenceRef, `material:${uploaded.id}`);
+  assert.equal(timelineEvent.workloadMinutes, undefined);
+  assert.equal(timelineEvent.title, '资料笔记已生成');
+  assert.doesNotMatch(timelineEvent.title, /向量空间|线性组合/);
 
   const updated = service.updateKnowledgeModule({
     semesterId: semester.semesterId,

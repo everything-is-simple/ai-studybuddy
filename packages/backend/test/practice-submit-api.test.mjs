@@ -341,9 +341,13 @@ test('submit grades objective answers, records missing answers, updates session,
   );
   assert.equal(timeline.status, 200);
   assert.equal(timeline.json.data.length, 1);
-  assert.equal(timeline.json.data[0].courseInstanceId, course.id);
-  assert.equal(timeline.json.data[0].evidenceRef, `practice_session:${sessionId}`);
-  assert.equal(timeline.json.data[0].workloadMinutes, 11);
+  const timelineEvent = timeline.json.data[0];
+  assert.equal(timelineEvent.sourceSystem, 'S3');
+  assert.equal(timelineEvent.courseInstanceId, course.id);
+  assert.equal(timelineEvent.evidenceRef, `practice_session:${sessionId}`);
+  assert.equal(timelineEvent.workloadMinutes, 11);
+  assert.equal(timelineEvent.title, '完成限时练习：4/7');
+  assert.doesNotMatch(timelineEvent.title, /向量空间|零向量|VECTOR|A,C/);
 });
 
 test('submit treats equal time limit and unlimited sessions as not overtime', async (t) => {
