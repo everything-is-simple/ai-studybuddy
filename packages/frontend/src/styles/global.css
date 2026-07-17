@@ -777,6 +777,26 @@ button:disabled {
 }
 
 @media (max-width: 720px) {
+  .app-header {
+    align-items: stretch;
+  }
+
+  .semester-bar {
+    width: 100%;
+    min-width: 0;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+
+  .semester-bar label {
+    flex-basis: 100%;
+  }
+
+  .semester-bar input {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
   .workbench-header,
   .task-list li {
     flex-direction: column;
