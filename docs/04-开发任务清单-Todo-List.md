@@ -1,12 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.32
+**版本**：v1.33
 **日期**：2026-07-17
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成和 T06B S6 家长报告推送。当前下一门禁为 T07：S1 时间线扩展的独立实施计划、审查和用户明确批准；后续 T08 本机配置中心与连接验收已登记但未实现；S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送和 T07 S1 时间线扩展。当前下一门禁为 T08：本机配置中心与连接验收的独立实施计划、审查和用户明确批准；T08 尚未实现；S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
-> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及 T07 优先评估每日入口/时间线的原则；页面数量、系统设置、学期向导、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。本次研究不改变下一门禁，仍为 T07 独立计划、审查和用户批准。
+> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。当前下一门禁为 T08 独立计划、审查和用户批准。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -20,7 +20,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B ✅；下一门禁 T07；T08 配置中心已登记待后续独立门禁） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07 ✅；下一门禁 T08 配置中心独立计划） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -469,7 +469,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 14 | Phase 1-T06：S6 PRD 编写 | ✅ | 已创建 S6 轻量 PRD；仅完成文档，不含报告生成或推送实现 |
 | 15 | Phase 1-T06A：S6 家长报告生成 | ✅ | 脱敏规则报告 + 可选 AI 润色生成日报/周报/月报/考前提醒；不含发送渠道 |
 | 16 | Phase 1-T06B：S6 报告推送渠道 | ✅ | QQ SMTP HTML + 飞书 Webhook 卡片、冻结脱敏快照、渠道级去重/重试与失败隔离已完成；真实渠道 smoke 非常规验证 |
-| 17 | Phase 1-T07：S1 时间线扩展 | ⏳ | 接收 S2/S3/S4 的 StudyEvent，时间线完整可读 |
+| 17 | Phase 1-T07：S1 时间线扩展 | ✅ | 已读回 S2/S3/S4 正式 StudyEvent，支持事件类型精确过滤并在考试工作台展示当前课程近期活动 |
 | 18 | Phase 1-T08：本机配置中心与连接验收 | ⏳ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；必须先有独立计划、审查和用户批准 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
@@ -620,12 +620,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 #### T07：S1 时间线扩展（门禁：至少一个新增 S3/S4 事件生产者已验收；需独立实施计划、审查和用户明确批准）
 
-- [ ] 完整接收 S2/S3/S4 写入的 StudyEvent（`material_note_completed`、`practice_completed`、`mistake_reviewed` 等）
-- [ ] 时间线 API 按事件类型过滤
-- [ ] 前端工作台总览展示近期学习活动
-- [ ] 测试：多子系统事件写入与读取
+- [x] 完整接收 S2/S3/S4 写入的 StudyEvent（`material_note_completed`、`practice_completed`、`mistake_reviewed` 等）
+- [x] 时间线 API 按事件类型过滤
+- [x] 前端工作台总览展示近期学习活动
+- [x] 测试：多子系统事件写入与读取
 
-> **T07 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t07-timeline-plan` 创建 `.plans/phase1-t07-timeline-plan.md`，计划复用既有 `study_events` 表和 S1/S2/S3/S4 事件生产者，只扩展 `GET /api/timeline` 的重复 `eventType` 查询过滤，并在考试工作台展示当前考试所属课程最近 8 条学习活动。计划明确不新增 Schema、migration、StudyEvent 生产者、独立时间线页、每日首页、全局导航、S6 页面、T08、S5、S7 或真实外部渠道 smoke。当前仅为计划待批，T07 实现项保持未勾选；用户明确批准前不得修改业务代码。
+> **T07 计划证据（2026-07-17）**：已在任务分支 `codex/phase1-t07-timeline-plan` 创建 `.plans/phase1-t07-timeline-plan.md`，提交 `5ee0def`；计划经独立审查并获用户明确批准，随后纳入实施分支 `codex/phase1-t07-timeline`，对应计划提交 `26666e5`。获批范围复用既有 `study_events` 表和 S1/S2/S3/S4 事件生产者，只扩展 `GET /api/timeline` 的重复 `eventType` 查询过滤，并在考试工作台展示当前考试所属课程最近 8 条学习活动。
+
+> **T07 完成证据（2026-07-17）**：后端在既有 `GET /api/timeline` 上支持重复 `eventType` 参数的精确匹配，课程条件与事件类型条件按 AND 组合，`eventType` 去重后构造过滤，结果按事件倒序返回最多 20 条；集成测试从 S2 `material_note_completed`、S3 `practice_completed`、S4 `mistake_reviewed` 的正式生产路径读回事件，覆盖双课程隔离和重复过滤。考试工作台只请求当前考试所属课程并展示最近 8 条，以固定中文事件类型文案和时间/工作量摘要呈现，不渲染 `title`、`evidenceRef` 或 UUID。加载、空态、错误与重试均局部隔离，考试切换和取消请求的竞态不会让旧课程结果覆盖当前课程。Playwright `e2e/timeline.spec.ts` 1/1 通过，覆盖重复 `eventType` 真实过滤、事件倒序、双课程隔离、第三课程空态、受控 500 失败隔离与局部重试、刷新，以及 390/1440 视口无横向溢出；截图已 mask UUID，移动端证据 `I:\ai-studybuddy-tmp\runs\phase1-t07-browser\playwright\timeline-mobile.png`（SHA256 `C40B4ECA53716B176D565DE28542E5136C02CDB7090B9279FBACA9706F6784FB`），桌面端 SHA256 `CD4215642FBA7DB5714A08E5FA0B798A8ED65B691E6CFBDED027D268713E4341`。Playwright 在 390px 验收中发现应用壳既存溢出，提交 `ec066ac` 仅补充 `<=720px` 最小 CSS 修复以满足本任务移动验收，不是全局视觉重构。最终 `pnpm type-check`、后端 build、前端 build 均通过，`pnpm test` 为后端 178/178、前端 48/48。任务分支 `codex/phase1-t07-timeline`；关键提交：后端 `ae0b6e6`、测试补强 `c34c9db`、前端 `5b999e6`、竞态修复 `b78c228`/`4a44ab7`、移动壳 CSS 修复 `ec066ac`、浏览器验收 `e022564`/`eb2bfd7`。未新增 Schema、migration、StudyEvent 生产者、独立时间线页、每日首页、全局导航、S6 页面或家长面板；未实现 T08、S5、S7 或 S3 Worker，未运行真实外部渠道 smoke。
 
 #### T08：本机配置中心与连接验收（门禁：T07 完成或用户明确调整顺序；需独立实施计划、审查和用户明确批准）
 
@@ -637,7 +639,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [ ] 配置更新：测试成功后原子激活运行时配置，失败或损坏时保留上一份可用配置并给出固定错误码
 - [ ] 测试：秘密不回显/不落前端存储、配置加密读写、测试成功/失败、渠道隔离、重启恢复和脱敏日志
 
-> **T08 文档边界证据（2026-07-17）**：已在 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`、`docs/08-共同底座架构-Architecture.md`、`docs/10-后端开发规范-Backend-Guidelines.md` 与 `docs/11-前端开发规范-Frontend-Guidelines.md` 固化配置中心方向。当前仅登记需求边界，未实现 `ConfigurationService`、DPAPI、设置 API、连接测试、前端配置页或真实渠道测试；当前下一门禁仍为 T07。
+> **T08 文档边界证据（2026-07-17）**：已在 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`、`docs/08-共同底座架构-Architecture.md`、`docs/10-后端开发规范-Backend-Guidelines.md` 与 `docs/11-前端开发规范-Frontend-Guidelines.md` 固化配置中心方向。当前仅登记需求边界，未实现 `ConfigurationService`、DPAPI、设置 API、连接测试、前端配置页或真实渠道测试；当前下一门禁为 T08 的独立实施计划、审查和用户明确批准。
 
 ---
 
