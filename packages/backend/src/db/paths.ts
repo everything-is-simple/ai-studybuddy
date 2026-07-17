@@ -98,6 +98,10 @@ export function getBackupsDir(): string {
   return resolveAppDataPath('backups');
 }
 
+export function getConfigDir(): string {
+  return resolveAppDataPath('config');
+}
+
 // ── 供测试或诊断使用 ────────────────────────────────────────
 export function getAppDataRoot(): string {
   return APP_DATA_ROOT;

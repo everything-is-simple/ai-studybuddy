@@ -25,6 +25,9 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
+      '@primno/dpapi':
+        specifier: 2.0.1
+        version: 2.0.1
       '@types/multer':
         specifier: ^2.2.0
         version: 2.2.0
@@ -834,12 +837,16 @@ packages:
       { integrity: sha512-DxuT1ClnIPts1kQx8FBmkk4BQDTfI5kIzywAaMjQSXfNnra5UFU9PwurXrl+Je3bJ6BGsp/zmshVVFbCmyI+ww== }
     engines: { node: '>= 10' }
 
-
   '@playwright/test@1.61.1':
     resolution:
       { integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig== }
     engines: { node: '>=18' }
     hasBin: true
+
+  '@primno/dpapi@2.0.1':
+    resolution:
+      { integrity: sha512-uX756jYkiyHHJU1981oRJMg3FtCGlBGpGcztTs7SFxeh0L/c0aLQcooF61HQ9V3MdaCDPIi8yreN7MlISr4mJg== }
+    engines: { node: '>=14' }
 
   '@remix-run/router@1.23.3':
     resolution:
@@ -1879,7 +1886,6 @@ packages:
     resolution:
       { integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow== }
 
-
   fsevents@2.3.2:
     resolution:
       { integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA== }
@@ -2491,6 +2497,11 @@ packages:
       { integrity: sha512-W5ZNO5KRPB5TkYmGVD9F6YqhsglXJzE6etpbmT+f6EQElhiX/UTG551cnsRGvLG3fyZEg9HwaDmNmj5nwJ4z9g== }
     engines: { node: '>=10' }
 
+  node-gyp-build@4.8.4:
+    resolution:
+      { integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ== }
+    hasBin: true
+
   node-releases@2.0.51:
     resolution:
       { integrity: sha512-wRNIrw4DmVLKQlbgOMdkMx27Wrpzes2hh5Jtbi2bjPd+4wJstWIqP5A+lscnqbm0xxmT5Bpg8Lec5ItEBwx6BQ== }
@@ -2618,7 +2629,6 @@ packages:
   picocolors@1.1.1:
     resolution:
       { integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA== }
-
 
   playwright-core@1.61.1:
     resolution:
@@ -3731,10 +3741,13 @@ snapshots:
       '@napi-rs/canvas-linux-x64-musl': 0.1.80
       '@napi-rs/canvas-win32-x64-msvc': 0.1.80
 
-
   '@playwright/test@1.61.1':
     dependencies:
       playwright: 1.61.1
+
+  '@primno/dpapi@2.0.1':
+    dependencies:
+      node-gyp-build: 4.8.4
 
   '@remix-run/router@1.23.3': {}
 
@@ -4628,7 +4641,6 @@ snapshots:
 
   fs-constants@1.0.0: {}
 
-
   fsevents@2.3.2:
     optional: true
 
@@ -5418,6 +5430,8 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
+  node-gyp-build@4.8.4: {}
+
   node-releases@2.0.51: {}
 
   nodemailer@7.0.13: {}
@@ -5497,7 +5511,6 @@ snapshots:
       '@napi-rs/canvas': 0.1.80
 
   picocolors@1.1.1: {}
-
 
   playwright-core@1.61.1: {}
 
