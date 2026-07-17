@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.16
+**版本**：v2.17
 **日期**：2026-07-17
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -17,6 +17,7 @@
 | 03b | [subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md](subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md) | ✅ 有效 | S2 轻量 PRD，资料上传/格式转换/AI 笔记/知识模块 |
 | 03c | [subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md](subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md) | ✅ 有效 | S3 轻量 PRD，知识模块驱动练习、客观题批改、练习记录 |
 | 03d | [subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md](subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md) | ✅ 有效 | S4 轻量 PRD，错误作答事实、错因确认、重做证据、薄弱点与掌握边界 |
+| 03e | [subsystems/06-S6-家长观察子系统PRD-ParentReport.md](subsystems/06-S6-家长观察子系统PRD-ParentReport.md) | ✅ 有效 | S6 轻量 PRD，脱敏日报/周报/月报/考前提醒与家长报告隐私边界 |
 | 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | 阶段任务、执行顺序、完成门槛和验证结论 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
 | 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `I:\ai-studybuddy-*` 本地目录职责、外部试炼场与单机数据边界 |
@@ -47,7 +48,7 @@
 | S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ MVP 已完成：Schema、生成、提交批改与前端闭环均已验收 | S2 MVP 完成后触发 |
 | S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | 📅 未创建 | Phase 2 触发 |
-| S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | 📅 未创建；当前下一门禁为 T06 PRD | Phase 1 后期、准备正式发送家长报告前触发 |
+| S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | ✅ PRD 已创建；T06A/T06B 待独立门禁 | Phase 1 后期、准备正式发送家长报告前触发 |
 | S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | 📅 未创建 | Phase 1.5 触发 |
 
 ---
@@ -132,8 +133,8 @@ git diff --check
 
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B 与 T05 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环，S4 已完成错题归档、错题改错前端与回流规则；
-3. 当前下一门禁为 T06：S6 家长观察 PRD 的创建与索引同步。S3 Worker 不属于当前 MVP，仍未开始；
-4. T06 PRD 完成前不得实现 T06A 报告生成或 T06B 推送渠道；S5/S7 继续按各自门禁等待。
+3. S6 家长观察 PRD 已创建并登记索引，当前下一门禁为 T06A：S6 家长报告生成的独立计划、审查和用户明确批准。S3 Worker 不属于当前 MVP，仍未开始；
+4. T06A 完成前不得实现 T06B 推送渠道；S5/S7 继续按各自门禁等待。
 
 ---
 
@@ -166,6 +167,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.17 | 2026-07-17 | Phase 1-T06：创建 S6 家长观察 PRD 并登记索引；下一门禁调整为 T06A S6 家长报告生成独立计划 |
 | v2.16 | 2026-07-17 | 同步系统进度：登记 T04B 错题改错前端与 T05 回流规则均已完成，下一门禁调整为 T06 S6 家长观察 PRD；统一 S5/S6/S7 未来 PRD 文件名 |
 | v2.15 | 2026-07-16 | Phase 1-T04A：创建学期库 migration v5、`mistakes`/`mistake_evidence`/`weak_points`，实现 S3 提交后错误作答幂等归档与两证据薄弱点；下一门禁调整为 T04B 独立计划与明确批准 |
 | v2.14 | 2026-07-16 | Phase 1-T04：创建并登记 S4 错题改错轻量 PRD，明确 S3 错误作答只读输入、错因确认、重做证据、薄弱点多证据原则和隐私边界；下一门禁调整为 T04A 独立计划与明确批准 |
