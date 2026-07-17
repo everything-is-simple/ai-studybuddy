@@ -16,10 +16,12 @@ import { SEMESTER_V3_SQL } from './sql/migration-semester-v3';
 import { SEMESTER_V4_SQL } from './sql/migration-semester-v4';
 import { SEMESTER_V5_SQL } from './sql/migration-semester-v5';
 import { SEMESTER_V6_SQL } from './sql/migration-semester-v6';
+import { migrateSemesterV7 } from './sql/migration-semester-v7';
 
 export interface Migration {
   version: number;
-  sql: string;
+  sql?: string;
+  apply?: (db: DatabaseType) => void;
 }
 
 const GLOBAL_MIGRATIONS: readonly Migration[] = [{ version: 1, sql: SCHEMA_GLOBAL_SQL }];
@@ -31,6 +33,7 @@ const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 4, sql: SEMESTER_V4_SQL },
   { version: 5, sql: SEMESTER_V5_SQL },
   { version: 6, sql: SEMESTER_V6_SQL },
+  { version: 7, apply: migrateSemesterV7 },
 ];
 
 const CURRENT_JOBS_TABLE_SQL = `
@@ -101,7 +104,13 @@ export function applyMigrations(
     }
 
     db.transaction(() => {
-      db.exec(migration.sql);
+      if (migration.apply) {
+        migration.apply(db);
+      } else if (migration.sql) {
+        db.exec(migration.sql);
+      } else {
+        throw new Error(`[MIGRATION] ${scope} migration ${migration.version} has no executor`);
+      }
       db.prepare('INSERT INTO schema_migrations (scope, version, applied_at) VALUES (?, ?, ?)').run(
         scope,
         migration.version,

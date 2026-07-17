@@ -53,6 +53,12 @@ export function getSemesterTmpDir(semesterId: string): string {
   return resolveAppDataPath(path.join('semesters', semesterId, 'tmp'));
 }
 
+// ── 家长报告双渠道失败留档 ──────────────────────────────
+// 仅保存已经脱敏的 HTML 与错误摘要，供本机维护者在渠道恢复后人工补发。
+export function getSemesterParentReportArchiveDir(semesterId: string): string {
+  return resolveAppDataPath(path.join('semesters', semesterId, 'parent-reports'));
+}
+
 // ── 学期文件目录 ────────────────────────────────────────────
 export function getSemesterCourseFilesDir(semesterId: string, courseId: string): string {
   return resolveAppDataPath(path.join('semesters', semesterId, 'files', courseId));

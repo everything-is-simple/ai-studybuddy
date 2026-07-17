@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.29
+**版本**：v1.30
 **日期**：2026-07-17
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD。T06A：S6 家长报告生成已完成；当前下一门禁为 T06B 推送渠道的独立实施计划与用户明确批准，S3 Worker 仍未开始。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成和 T06B S6 家长报告推送。当前下一门禁为 T07：S1 时间线扩展的独立实施计划、审查和用户明确批准；S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -18,7 +18,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A ✅；T06B 待独立门禁） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B ✅；下一门禁 T07 待独立计划、审查与批准） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -466,7 +466,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 13 | Phase 1-T05：回流规则 | ✅ | 错题/薄弱点提升关联知识模块优先级；已掌握后降低复习频率 |
 | 14 | Phase 1-T06：S6 PRD 编写 | ✅ | 已创建 S6 轻量 PRD；仅完成文档，不含报告生成或推送实现 |
 | 15 | Phase 1-T06A：S6 家长报告生成 | ✅ | 脱敏规则报告 + 可选 AI 润色生成日报/周报/月报/考前提醒；不含发送渠道 |
-| 16 | Phase 1-T06B：S6 报告推送渠道 | ⏳ | QQ SMTP + 飞书 Webhook 推送；失败不丢报告 |
+| 16 | Phase 1-T06B：S6 报告推送渠道 | ✅ | QQ SMTP HTML + 飞书 Webhook 卡片、冻结脱敏快照、渠道级去重/重试与失败隔离已完成；真实渠道 smoke 非常规验证 |
 | 17 | Phase 1-T07：S1 时间线扩展 | ⏳ | 接收 S2/S3/S4 的 StudyEvent，时间线完整可读 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
@@ -607,13 +607,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **T06A 完成证据（2026-07-17）**：已按获批计划在任务分支 `codex/phase1-t06a-parent-report-generation` 实现 `ParentReportService` 与真实 SQLite 专项测试。服务只读取既有 S1/S2/S3/S4/T05 脱敏聚合值，生成日报、周报、月报及仅限已确认考试的考前 7/3/1 天提醒；规则报告可独立生成，AI 仅接收脱敏报告区块做可选摘要/润色，AI 未配置、抛错或返回空内容时保留规则报告。未新增 Schema、HTTP API、shared 类型、Worker、前端页面、QQ SMTP、飞书 Webhook、`report_deliveries` 写入或真实 Provider smoke。验证通过：隔离 `APP_DATA_ROOT` 下的 `pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm test`（后端 164/164、前端 41/41）、`powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1`、`git diff --check`。
 
 **T06B 推送渠道**（门禁：T06A 已验收；需独立实施计划与用户明确批准）
-- [ ] QQ SMTP HTML 报告发送
-- [ ] 飞书 Webhook 卡片推送
-- [ ] 渠道失败互不阻塞，去重 `report:<date>` 记录
-- [ ] 测试：双渠道独立、失败隔离、去重
+- [x] QQ SMTP HTML 报告发送
+- [x] 飞书 Webhook 卡片推送
+- [x] 渠道失败互不阻塞，去重 `report:<date>` 记录
+- [x] 测试：双渠道独立、失败隔离、去重、迁移、租约恢复、双失败本机留档
+
+> **T06B 完成证据（2026-07-17）**：用户已批准独立计划 `.plans/phase1-t06b-report-delivery-plan.md`（计划分支 `codex/phase1-t06b-report-delivery-plan`，提交 `268b76c`）；实现分支 `codex/phase1-t06b-report-delivery` 新增学期库 migration v7、`ParentReportDeliveryService`、一次性 `parent-report-runner`、QQ SMTP/飞书可注入 Adapter 与 Windows Task Scheduler 注册/注销脚本。服务以 `report:<yyyy-mm-dd>` 冻结 T06A 脱敏合并快照，并以 `report_key + channel` 渠道级去重；SMTP/飞书独立投递、失败隔离，失败渠道使用有限退避重试与过期租约恢复，双渠道失败时只保留本机脱敏 HTML 和固定错误摘要；自动重试按 `report_key + channel` 跨运行累计最多 3 次，第三次失败后保留脱敏本机归档并等待人工处理。`report_key + channel` 保证数据库记录与正常重复运行的渠道级去重；外部渠道在“已接收、尚未写入 `sent`”的进程中断窗口按至少一次投递处理，可能重复相同冻结脱敏快照。已在隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t06b-final-post-review-rerun-2` 下通过 T06B 后端专项 `node --test`（13/13，含 v6 既有库缺少 `report_deliveries` 的 migration 回归与跨进程三次重试上限回归）、`pnpm type-check`、后端/前端 build、`pnpm test`（后端 177/177、前端 41/41）、文档治理和 diff 检查。未运行真实 QQ SMTP、飞书 Webhook、Provider 或 Task Scheduler 注册 smoke；未实现 HTTP API、前端、常驻/队列 Worker、家长面板/账号、S5/S7 或 Phase 3。
 
 
-#### T07：S1 时间线扩展（门禁：至少一个新增 S3/S4 事件生产者已验收；独立计划已批准）
+#### T07：S1 时间线扩展（门禁：至少一个新增 S3/S4 事件生产者已验收；需独立实施计划、审查和用户明确批准）
 
 - [ ] 完整接收 S2/S3/S4 写入的 StudyEvent（`material_note_completed`、`practice_completed`、`mistake_reviewed` 等）
 - [ ] 时间线 API 按事件类型过滤

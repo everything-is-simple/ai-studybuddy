@@ -249,10 +249,10 @@ async function openFreshSemester(t, prefix) {
   return { db, migrations };
 }
 
-test('fresh semester database applies v5 with S4 tables, indexes, and triggers exactly once', async (t) => {
+test('fresh semester database applies current migrations with S4 tables, indexes, and triggers exactly once', async (t) => {
   const { db, migrations } = await openFreshSemester(t, 'studybuddy-t04a-fresh-');
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 6);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 7);
   assert.deepEqual(columnNames(db, 'mistakes'), [
     'id',
     'course_instance_id',
@@ -337,7 +337,7 @@ test('fresh semester database applies v5 with S4 tables, indexes, and triggers e
   );
 });
 
-test('v4 semester database upgrades to v5 without losing existing S3 data', async (t) => {
+test('v4 semester database upgrades through current migrations without losing existing S3 data', async (t) => {
   const dir = await withTempDir('studybuddy-t04a-upgrade-');
   const { openDbAtPath } = await import('../dist/db/connection.js');
   const migrations = await import('../dist/db/migrations.js');
@@ -362,7 +362,7 @@ test('v4 semester database upgrades to v5 without losing existing S3 data', asyn
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 6);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 7);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM practice_answers').get().count, 1);
   for (const table of ['mistakes', 'mistake_evidence', 'weak_points']) {
     assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
@@ -425,7 +425,7 @@ test('S4 tables enforce incorrect-answer evidence, idempotent source answer, and
   );
 });
 
-test('v5 semester database upgrades to v6 preserving mistakes and evidence data', async (t) => {
+test('v5 semester database upgrades through current migrations preserving mistakes and evidence data', async (t) => {
   const dir = await withTempDir('studybuddy-t04b-upgrade-');
   const { openDbAtPath } = await import('../dist/db/connection.js');
   const migrations = await import('../dist/db/migrations.js');
@@ -454,7 +454,7 @@ test('v5 semester database upgrades to v6 preserving mistakes and evidence data'
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 6);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 7);
   // 既有数据保留
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM mistake_evidence').get().count, 1);
   assert.equal(

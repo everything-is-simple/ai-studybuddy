@@ -80,17 +80,36 @@ CREATE TABLE IF NOT EXISTS jobs (
   created_at TEXT NOT NULL
 );
 
--- report_deliveries：报告渠道去重
-CREATE TABLE IF NOT EXISTS report_deliveries (
-  report_key TEXT NOT NULL,
-  channel TEXT NOT NULL,
-  status TEXT NOT NULL,
-  sent_at TEXT,
-  error_summary TEXT,
-  created_at TEXT NOT NULL,
-  PRIMARY KEY(report_key, channel)
+-- parent_reports：家长报告脱敏冻结快照
+CREATE TABLE IF NOT EXISTS parent_reports (
+  report_key TEXT PRIMARY KEY,
+  report_date TEXT NOT NULL,
+  timezone TEXT NOT NULL,
+  generated_at TEXT NOT NULL,
+  content_json TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_parent_reports_report_date
+  ON parent_reports(report_date);
+
+-- report_deliveries：报告渠道去重与可恢复状态
+CREATE TABLE IF NOT EXISTS report_deliveries (
+  report_key TEXT NOT NULL,
+  channel TEXT NOT NULL CHECK(channel IN ('smtp', 'feishu')),
+  status TEXT NOT NULL CHECK(status IN ('pending', 'sending', 'sent', 'failed')),
+  sent_at TEXT,
+  error_summary TEXT,
+  attempt_count INTEGER NOT NULL DEFAULT 0,
+  last_attempt_at TEXT,
+  next_retry_at TEXT,
+  updated_at TEXT,
+  lease_expires_at TEXT,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY(report_key, channel),
+  FOREIGN KEY(report_key) REFERENCES parent_reports(report_key)
+);
 -- materials：文件索引
 CREATE TABLE IF NOT EXISTS materials (
   id TEXT PRIMARY KEY,
