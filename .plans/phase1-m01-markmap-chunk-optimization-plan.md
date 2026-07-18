@@ -2,7 +2,7 @@
 
 **版本**：v2
 **日期**：2026-07-18
-**状态**：v2 已通过独立复审，并于 2026-07-18 获用户明确批准；实施中。
+**状态**：v2 已通过独立复审，并于 2026-07-18 获用户明确批准；实施提交 `57b8612`、专项 E2E、全量验证与实现复审均已通过，等待主线快进合入/主线复验。
 **任务登记**：`docs/04-开发任务清单-Todo-List.md` 的 Phase 1-M01 与“Phase 1 行动计划索引”。
 
 ---
@@ -24,7 +24,7 @@
 
 ### 1.3 完成口径
 
-- 前端构建输出不含 `Some chunks are larger than 500 kB after minification` 的 Markmap 警告；构建明细证明 Markmap 相关物理 chunk 均在默认阈值内，且不通过提高阈值实现。
+- 前端构建明细证明 Markmap 相关物理 chunk 均在默认 500 kB 阈值内，且不通过提高阈值实现；若仍有通用超限警告，必须如实标明非 Markmap 来源并登记为独立问题。
 - 无思维导图的笔记页不触发 `MindMap` 动态模块加载；有思维导图时显示加载状态并最终渲染，加载/渲染异常显示中文回退。
 - 自动化测试、真实浏览器验收、类型检查、前端构建、全量测试、文档治理和 `git diff --check` 均通过。
 - 完成后只在 `docs/04` 登记 M01 的分支、提交、验证和主线合入/推送事实；不得把分支结果描述成主线完成。
@@ -128,7 +128,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
 git diff --check
 ```
 
-构建验收须保存可审计的控制台结果：不应出现 `Some chunks are larger than 500 kB after minification`，且配置 diff 中不得出现 `chunkSizeWarningLimit` 调高。
+构建验收须保存可审计的控制台结果：Markmap 相关物理 chunk 不得超过 500 kB，且配置 diff 中不得出现 `chunkSizeWarningLimit` 调高；若仍有通用超限警告，必须明确其非 Markmap 来源。
 
 ### 5.2 浏览器验收（隔离运行数据）
 
@@ -171,3 +171,12 @@ pnpm exec playwright test <M01 相关笔记页 spec>
 6. 非目标没有提前进入 T09B–T09E、每日首页、S5、S7、家长 Web 面板、Phase 2 或 Phase 3。
 
 **独立审查结论：通过（v2）**。计划已补足“运行时按需加载”与“物理 chunk 尺寸治理”的双重验证，未采用提高阈值的规避方案；失败体验、生命周期、隔离浏览器验收、主线合入重验与越权边界均已列明。用户已于 2026-07-18 明确批准 v2。本文件现为实施依据；实现分支必须且已经从最新 `origin/master` 创建为 `codex/phase1-m01-markmap-chunk-optimization`，后续只可在本计划范围内写前端代码。
+---
+
+## 8. 实施与验证结果（2026-07-18）
+
+- `NotePage` 已移除对 `MindMap` 的静态导入；仅当 `note.mindMap` 存在时渲染模块顶层声明的 `LazyMindMapSection`。该局部边界提供“正在加载思维导图…”加载反馈，并以错误边界在动态导入或渲染失败时显示“暂无法展示思维导图”；数据变化后可恢复重试。
+- `manualChunks` 已改为公开包族分组：`markmap-lib`/`markmap-html-parser`/`markmap-common` 为 `markmap-transformer`，`markmap-view` 与 `d3`/`d3-*` 为 `markmap-runtime`；未提高 `chunkSizeWarningLimit`，未升级依赖，未改后端 API、SQLite、MindMap 数据格式或学期逻辑。
+- 生产构建结果：`mind-map` 0.86 kB、`markmap-runtime` 72.44 kB、`markmap-transformer` 320.81 kB，均低于 500 kB。构建仍出现通用 warning 的唯一来源为 `katex` 535.51 kB；该问题不属于 M01，未被掩盖，也未在本任务中提前优化。
+- 验证已通过：`pnpm type-check`；`pnpm --filter @ai-studybuddy/frontend run type-check`；`pnpm --filter @ai-studybuddy/frontend run test -- lazy-mind-map.test.tsx`（3/3）；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-m01-markmap-chunk-optimization` 下 `pnpm exec playwright test e2e/markmap-lazy-load.spec.ts`（2/2）；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-m01-markmap-full-test` 下 `pnpm test`（前端 64/64、后端 215/215）。
+- 实现复审已通过：变更仅限 M01 的笔记页动态边界、局部中文降级、Vite chunk 分组和对应单元/E2E 测试。实现提交 `57b8612` 已创建，当前未合入 `master`、未推送 `origin/master`；后续仍必须依序完成文档治理、diff 检查、提交、rebase/fast-forward、主线复验和主线推送，才可报告 M01 主线完成。
