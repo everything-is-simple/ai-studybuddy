@@ -475,7 +475,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 18 | Phase 1-T08：本机配置中心与连接验收 | ✅ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；已完成 DPAPI 加密存储、连接测试、运行时热切换、设置页与验证 |
 | 19 | Phase 1-T09A：学期创建、选择与切换 | ✅ | 已创建/列表/当前选择与切换/刷新恢复、课表预览确认、跨学期隔离及移除手输 UUID；已 fast-forward 合入并推送 `origin/master`，主线 type-check、build、全量测试与 E2E 均通过。课表创建后的查看编辑仍归入 T09C |
 | 20 | Phase 1-M01：前端 Markmap 按需加载与构建 chunk 治理 | ✅ | 已通过动态导入使无导图笔记不下载渲染器，并在有导图时提供加载/中文降级；Markmap 物理 chunk 均低于 500 kB，未提高警告阈值、未改 API/数据格式。任务分支已 fast-forward 合入并推送 `origin/master`，主线复验通过；KaTeX 535.51 kB warning 为独立遗留项 |
-| 21 | Phase 1-T09B：每日学习首页 | ⏳ | 今日待办任务、临近考试倒计时、待质检资料、错题复习提醒、下一步行动建议；必须先有独立计划、审查和用户批准 |
+| 21 | Phase 1-T09B：每日学习首页 | ⏳ | 今日待办任务、临近考试倒计时、待质检资料、错题复习提醒、下一步行动建议；独立计划已创建并通过复审，等待用户明确批准；实现未启动 |
 | 22 | Phase 1-T09C：课程课表与考试目标完善 | ⏳ | 已创建学期的课表查看、人工编辑与修改、完整课表视图、考试目标设定与倒计时、状态反馈与空状态引导；必须先有独立计划、审查和用户批准 |
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ⏳ | 全局侧栏/底栏导航、加载/错误/空状态统一处理、响应式适配、新用户到日常使用完整旅程验收；必须先有独立计划、审查和用户批准 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ⏳ | 练习历史列表与筛选、学期归档与只读查看；可后置于产品化核心完成后；必须先有独立计划、审查和用户批准 |
@@ -490,7 +490,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T08 | `.plans/phase1-t08-config-center-plan.md` | v6 已批准、已实施并完成 |
 | T09A | `.plans/phase1-t09a-semester-selector-plan.md` | 已完成：任务分支 `codex/phase1-t09a-semester-selector` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验通过。T09B–T09E 仍未启动 |
 | M01 | `.plans/phase1-m01-markmap-chunk-optimization-plan.md` | 已完成：v2 经独立复审并于 2026-07-18 获用户批准；任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`，主线复验通过。T09B–T09E 仍未启动 |
-| T09B | 尚未创建 | 仅登记路线；T09A 完成后再进入独立门禁 |
+| T09B | `.plans/phase1-t09b-daily-study-home-plan.md` | 独立计划已创建并通过复审，等待用户明确批准；未批准不得创建实现分支或实施 |
 | T09C | 尚未创建 | 仅登记路线；不得与 T09A 混写实现 |
 | T09D | 尚未创建 | 仅登记路线；学生端可交付 MVP 收尾任务 |
 | T09E | 尚未创建 | 可后置增强，不阻塞 T09D 完成口径 |
