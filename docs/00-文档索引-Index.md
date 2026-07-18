@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.35
+**版本**：v2.36
 **日期**：2026-07-19
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -135,8 +135,8 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B 与 T09C 已完成；T09D 已在任务分支完成实现、独立复审修复与分支复验，待 fast-forward 合入、主线复验和推送后登记完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A、T09B、T09C 已完成并已推送 `origin/master`；T09D 已完成全局导航与学生旅程 E2E、独立复审修复、fast-forward 主线集成与主线复验；T09E 尚未创建计划、尚未启动，后续进入前必须重新完成独立计划、审查和用户明确批准。S5/S7 继续按各自门禁等待。S3 Worker 不属于当前 MVP，仍未开始。
-5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成与主线复验已完成；T09E 尚未创建计划。
+4. T09A、T09B、T09C 已完成并已推送 `origin/master`；T09D 已完成全局导航与学生旅程 E2E、独立复审修复、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 尚未创建计划、尚未启动，后续进入前必须重新完成独立计划、审查和用户明确批准。S5/S7 继续按各自门禁等待。S3 Worker 不属于当前 MVP，仍未开始。
+5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 尚未创建计划。
 
 ---
 
@@ -169,6 +169,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.36 | 2026-07-19 | 确认 Phase 1-T09D 已推送 `origin/master`：计划提交 `0d2127e`、实现提交 `0a054f8` 与主线收尾提交 `e1034e7` 均进入远端主线；T09E 尚未创建计划，是下一计划门禁 |
 | v2.35 | 2026-07-19 | Phase 1-T09D 已完成 fast-forward 主线集成与主线复验：计划提交 `0d2127e`、实现提交 `0a054f8` 进入 master；主线验证通过 docs governance、diff check、type-check、后端/前端 build、隔离 `pnpm test`（后端 220/220、前端 87/87）与全量 E2E 12/12；T09E 尚未创建计划，是下一计划门禁 |
 | v2.34 | 2026-07-19 | 登记 Phase 1-T09D 独立复审修复与分支复验：修复时间线跨页锚点、学期切换卸载边界、current 读取失败重试、E2E 动态日期与 Playwright 隔离根守卫；此条记录分支复验节点，主线集成与复验证据见 v2.35，T09E 尚未创建计划 |
 | v2.33 | 2026-07-19 | 登记 Phase 1-T09D 全局导航与学生旅程 E2E 分支实现与验证：统一全局导航、考试上下文导航、PageState 与真实 Express/SQLite 学生旅程 E2E；此条为实现分支节点，后续复审与主线证据见 v2.34/v2.35，T09E 尚未创建计划 |
