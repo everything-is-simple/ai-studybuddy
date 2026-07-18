@@ -751,3 +751,219 @@ test('rejects invalid timeline limit', async (t) => {
   assert.equal(huge.status, 400);
   assert.equal(huge.json.error.code, 'TIMELINE_QUERY_INVALID');
 });
+
+// ── T09C：课程、课表与考试目标编辑 ────────────────────────────
+
+async function updateCourse(port, semesterId, courseId, data) {
+  return requestJson(port, 'PATCH', `/api/courses/${courseId}`, { semesterId, ...data });
+}
+
+async function getScheduleEntries(port, semesterId) {
+  return requestJson(port, 'GET', `/api/schedule-entries?semesterId=${semesterId}`);
+}
+
+async function createScheduleEntry(port, data) {
+  return requestJson(port, 'POST', '/api/schedule-entries', data);
+}
+
+async function updateScheduleEntry(port, semesterId, entryId, data) {
+  return requestJson(port, 'PATCH', `/api/schedule-entries/${entryId}`, { semesterId, ...data });
+}
+
+async function deleteScheduleEntry(port, semesterId, entryId) {
+  return requestJson(port, 'DELETE', `/api/schedule-entries/${entryId}`, { semesterId });
+}
+
+async function updateExam(port, semesterId, examId, data) {
+  return requestJson(port, 'PATCH', `/api/exams/${examId}`, { semesterId, ...data });
+}
+
+test('T09C edits courses and keeps schedule entry reads and writes isolated by ready semester', async (t) => {
+  const backend = await startBackend(t);
+  const semesterA = await initializeReadySemester(backend.port);
+  const semesterB = await initializeReadySemester(backend.port);
+  const courseA = await createCourse(backend.port, semesterA, '化学');
+  const courseB = await createCourse(backend.port, semesterB, '生物');
+  assert.equal(courseA.status, 201);
+  assert.equal(courseB.status, 201);
+
+  const renamed = await updateCourse(backend.port, semesterA, courseA.json.data.id, { name: '有机化学' });
+  assert.equal(renamed.status, 200);
+  assert.equal(renamed.json.success, true);
+  assert.equal(renamed.json.data.name, '有机化学');
+
+  const crossCourse = await updateCourse(backend.port, semesterB, courseA.json.data.id, { name: '不应跨学期改名' });
+  assert.equal(crossCourse.status, 404);
+  assert.equal(crossCourse.json.success, false);
+  assert.equal((await requestJson(backend.port, 'GET', `/api/courses?semesterId=${semesterA}`)).json.data[0].name, '有机化学');
+
+  const empty = await getScheduleEntries(backend.port, semesterA);
+  assert.equal(empty.status, 200);
+  assert.deepEqual(empty.json.data, []);
+
+  const created = await createScheduleEntry(backend.port, {
+    semesterId: semesterA,
+    courseInstanceId: courseA.json.data.id,
+    weekday: 1,
+    startTime: '08:00',
+    endTime: '09:30',
+    location: 'A101',
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.json.success, true);
+  assert.deepEqual(created.json.data, {
+    id: created.json.data.id,
+    semesterId: semesterA,
+    courseInstanceId: courseA.json.data.id,
+    courseName: '有机化学',
+    weekday: 1,
+    startTime: '08:00',
+    endTime: '09:30',
+    location: 'A101',
+    source: 'student_confirmed',
+    createdAt: created.json.data.createdAt,
+    updatedAt: created.json.data.updatedAt,
+  });
+
+  const entriesA = await getScheduleEntries(backend.port, semesterA);
+  assert.equal(entriesA.status, 200);
+  assert.equal(entriesA.json.data.length, 1);
+  assert.equal(entriesA.json.data[0].id, created.json.data.id);
+  assert.deepEqual((await getScheduleEntries(backend.port, semesterB)).json.data, []);
+
+  for (const invalid of [
+    { weekday: -1, startTime: '10:00', endTime: '11:00', location: 'A101' },
+    { weekday: 7, startTime: '10:00', endTime: '11:00', location: 'A101' },
+    { weekday: 2, startTime: '25:00', endTime: '26:00', location: 'A101' },
+    { weekday: 2, startTime: '12:00', endTime: '11:00', location: 'A101' },
+    { weekday: 2, startTime: '10:00', endTime: '11:00', location: '' },
+    { weekday: 2, startTime: '10:00', endTime: '11:00', location: 'x'.repeat(201) },
+  ]) {
+    const invalidResult = await createScheduleEntry(backend.port, {
+      semesterId: semesterA,
+      courseInstanceId: courseA.json.data.id,
+      ...invalid,
+    });
+    assert.equal(invalidResult.status, 400);
+    assert.equal(invalidResult.json.success, false);
+  }
+
+  const duplicate = await createScheduleEntry(backend.port, {
+    semesterId: semesterA,
+    courseInstanceId: courseA.json.data.id,
+    weekday: 1,
+    startTime: '08:00',
+    endTime: '09:30',
+    location: '另一教室',
+  });
+  assert.equal(duplicate.status, 409);
+  assert.equal(duplicate.json.success, false);
+
+  const crossCreate = await createScheduleEntry(backend.port, {
+    semesterId: semesterB,
+    courseInstanceId: courseA.json.data.id,
+    weekday: 2,
+    startTime: '10:00',
+    endTime: '11:00',
+    location: 'B202',
+  });
+  assert.equal(crossCreate.status, 404);
+  assert.equal(crossCreate.json.success, false);
+
+  const updated = await updateScheduleEntry(backend.port, semesterA, created.json.data.id, {
+    courseInstanceId: courseA.json.data.id,
+    weekday: 3,
+    startTime: '13:00',
+    endTime: '14:30',
+    location: 'B202',
+  });
+  assert.equal(updated.status, 200);
+  assert.equal(updated.json.data.weekday, 3);
+  assert.equal(updated.json.data.location, 'B202');
+  assert.equal(updated.json.data.source, 'student_confirmed');
+
+  const crossUpdate = await updateScheduleEntry(backend.port, semesterB, created.json.data.id, {
+    courseInstanceId: courseB.json.data.id,
+    weekday: 3,
+    startTime: '13:00',
+    endTime: '14:30',
+    location: '不应写入',
+  });
+  assert.equal(crossUpdate.status, 404);
+  assert.equal(crossUpdate.json.success, false);
+  const crossDelete = await deleteScheduleEntry(backend.port, semesterB, created.json.data.id);
+  assert.equal(crossDelete.status, 404);
+  assert.equal(crossDelete.json.success, false);
+
+  const removed = await deleteScheduleEntry(backend.port, semesterA, created.json.data.id);
+  assert.equal(removed.status, 200);
+  assert.equal(removed.json.success, true);
+  assert.equal(removed.json.data.id, created.json.data.id);
+  assert.deepEqual((await getScheduleEntries(backend.port, semesterA)).json.data, []);
+});
+
+test('T09C records confirmed exam date changes atomically, requires reconfirmation, and preserves confirmation for goal-only edits', async (t) => {
+  const backend = await startBackend(t);
+  const semesterA = await initializeReadySemester(backend.port);
+  const semesterB = await initializeReadySemester(backend.port);
+  const courseA = await createCourse(backend.port, semesterA, '历史');
+  const courseB = await createCourse(backend.port, semesterB, '地理');
+  const originalExamAt = '2026-05-10T08:00:00.000Z';
+  const exam = await createExam(backend.port, semesterA, courseA.json.data.id, {
+    name: '期中考试',
+    examAt: originalExamAt,
+    confirmationStatus: 'confirmed',
+    goal: '掌握中国近代史',
+  });
+  assert.equal(exam.status, 201);
+  assert.equal(exam.json.data.confirmationStatus, 'confirmed');
+  assert.ok(exam.json.data.confirmedAt);
+  const originalConfirmedAt = exam.json.data.confirmedAt;
+
+  const historyBeforeUpdate = openSemesterDb(backend.dataRoot, semesterA);
+  assert.equal(historyBeforeUpdate.prepare('SELECT COUNT(*) AS count FROM assessment_date_changes').get().count, 0);
+  historyBeforeUpdate.close();
+
+  const crossExam = await updateExam(backend.port, semesterB, exam.json.data.id, { goal: '不应跨学期修改' });
+  assert.equal(crossExam.status, 404);
+  assert.equal(crossExam.json.success, false);
+  assert.equal((await getExam(backend.port, semesterA, exam.json.data.id)).json.data.goal, '掌握中国近代史');
+
+  const invalidName = await updateExam(backend.port, semesterA, exam.json.data.id, { name: '  ' });
+  assert.equal(invalidName.status, 400);
+  const invalidDate = await updateExam(backend.port, semesterA, exam.json.data.id, { examAt: 'not-an-iso-date' });
+  assert.equal(invalidDate.status, 400);
+
+  const changedAt = '2026-05-15T08:00:00.000Z';
+  const changed = await updateExam(backend.port, semesterA, exam.json.data.id, {
+    name: '期中统考',
+    examAt: changedAt,
+    goal: '掌握中国近代史与世界史',
+  });
+  assert.equal(changed.status, 200);
+  assert.equal(changed.json.data.name, '期中统考');
+  assert.equal(changed.json.data.examAt, changedAt);
+  assert.equal(changed.json.data.goal, '掌握中国近代史与世界史');
+  assert.equal(changed.json.data.confirmationStatus, 'pending');
+  assert.equal(changed.json.data.confirmedAt, undefined);
+  const historyAfterUpdate = openSemesterDb(backend.dataRoot, semesterA);
+  const changes = historyAfterUpdate
+    .prepare('SELECT previous_exam_at, next_exam_at FROM assessment_date_changes WHERE assessment_attempt_id = ?')
+    .all(exam.json.data.id);
+  assert.deepEqual(changes, [{ previous_exam_at: originalExamAt, next_exam_at: changedAt }]);
+  historyAfterUpdate.close();
+
+  const reconfirmed = await confirmExam(backend.port, semesterA, exam.json.data.id);
+  assert.equal(reconfirmed.status, 200);
+  assert.equal(reconfirmed.json.data.confirmationStatus, 'confirmed');
+  assert.ok(reconfirmed.json.data.confirmedAt);
+
+  const goalOnly = await updateExam(backend.port, semesterA, exam.json.data.id, { goal: '只调整目标，不改日期' });
+  assert.equal(goalOnly.status, 200);
+  assert.equal(goalOnly.json.data.confirmationStatus, 'confirmed');
+  assert.equal(goalOnly.json.data.confirmedAt, reconfirmed.json.data.confirmedAt);
+  assert.equal(goalOnly.json.data.goal, '只调整目标，不改日期');
+  const finalHistory = openSemesterDb(backend.dataRoot, semesterA);
+  assert.equal(finalHistory.prepare('SELECT COUNT(*) AS count FROM assessment_date_changes').get().count, 1);
+  finalHistory.close();
+});

@@ -37,6 +37,21 @@ const CONFIRMED_EXAM = {
   confirmedAt: '2026-07-15T12:00:00.000Z',
 };
 
+const STUB_SCHEDULE_ENTRY = {
+  id: fixtureUuid('3'),
+  semesterId: 'sem-1',
+  courseInstanceId: STUB_COURSE.id,
+  courseName: STUB_COURSE.name,
+  weekday: 1 as const,
+  startTime: '08:00',
+  endTime: '09:30',
+  location: 'A101',
+  source: 'student_confirmed',
+  createdAt: '2026-07-01T00:00:00.000Z',
+  updatedAt: '2026-07-01T00:00:00.000Z',
+};
+
+let mockScheduleEntries: typeof STUB_SCHEDULE_ENTRY[] = [];
 let mockExams: Array<typeof PENDING_EXAM | typeof CONFIRMED_EXAM> = [];
 
 vi.mock('../src/api/study-rhythm-api', () => ({
@@ -49,6 +64,15 @@ vi.mock('../src/api/study-rhythm-api', () => ({
     return CONFIRMED_EXAM;
   }),
   getStudyTasks: vi.fn(async () => []),
+  getScheduleEntries: vi.fn(async () => mockScheduleEntries),
+  updateCourse: vi.fn(async () => STUB_COURSE),
+  createScheduleEntry: vi.fn(async () => {
+    mockScheduleEntries = [STUB_SCHEDULE_ENTRY];
+    return STUB_SCHEDULE_ENTRY;
+  }),
+  updateScheduleEntry: vi.fn(async () => STUB_SCHEDULE_ENTRY),
+  deleteScheduleEntry: vi.fn(async () => STUB_SCHEDULE_ENTRY),
+  updateExam: vi.fn(async () => PENDING_EXAM),
   getTimeline: vi.fn(async () => ({ items: [], pagination: { total: 0 } })),
 }));
 
@@ -62,6 +86,7 @@ let root: Root;
 
 beforeEach(() => {
   mockExams = [];
+  mockScheduleEntries = [];
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
@@ -201,5 +226,204 @@ describe('CoursePage 考试确认入口', () => {
 
     expect(container.textContent).toContain('当前考试状态不允许确认');
     expect(confirmButton!.disabled).toBe(false);
+  });
+});
+
+
+describe('CoursePage T09C 课程、课表与考试编辑', () => {
+  it('展示周日到周六的完整课表，并只为已确认考试展示正式倒计时', async () => {
+    mockScheduleEntries = [STUB_SCHEDULE_ENTRY];
+    mockExams = [CONFIRMED_EXAM];
+    await renderPage();
+
+    for (const weekday of ['周日', '周一', '周二', '周三', '周四', '周五', '周六']) {
+      expect(container.textContent).toContain(weekday);
+    }
+    expect(container.textContent).toContain('线性代数');
+    expect(container.textContent).toContain('08:00–09:30');
+    expect(container.textContent).toContain('正式倒计时：');
+  });
+
+  it('提供课程名和考试目标编辑入口，并把学期边界带入更新请求', async () => {
+    mockExams = [CONFIRMED_EXAM];
+    await renderPage();
+
+    const courseEdit = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '编辑课程名称');
+    expect(courseEdit).not.toBeNull();
+    await act(async () => { courseEdit!.click(); });
+    const courseInput = container.querySelector<HTMLInputElement>('input[aria-label="编辑课程名称"]');
+    expect(courseInput).not.toBeNull();
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    await act(async () => {
+      nativeSetter.call(courseInput!, '高等代数');
+      courseInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const saveCourse = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '保存课程名称');
+    await act(async () => { saveCourse!.click(); });
+    await flush();
+    const { updateCourse } = await import('../src/api/study-rhythm-api');
+    expect(updateCourse).toHaveBeenCalledWith('sem-1', STUB_COURSE.id, { name: '高等代数' });
+
+    const examEdit = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '编辑考试');
+    expect(examEdit).not.toBeNull();
+  });
+});
+
+  it('可新增、编辑和移除课表条目，并在服务端失败时显示可重试错误', async () => {
+    await renderPage();
+
+    const courseSelect = container.querySelector<HTMLSelectElement>('select[aria-label="课表课程"]');
+    const weekdaySelect = container.querySelector<HTMLSelectElement>('select[aria-label="星期"]');
+    const startInput = container.querySelector<HTMLInputElement>('input[aria-label="开始时间"]');
+    const endInput = container.querySelector<HTMLInputElement>('input[aria-label="结束时间"]');
+    const locationInput = container.querySelector<HTMLInputElement>('input[aria-label="上课地点"]');
+    expect(courseSelect).not.toBeNull();
+    expect(weekdaySelect).not.toBeNull();
+    expect(startInput).not.toBeNull();
+    expect(endInput).not.toBeNull();
+    expect(locationInput).not.toBeNull();
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    await act(async () => {
+      weekdaySelect!.value = '2';
+      weekdaySelect!.dispatchEvent(new Event('change', { bubbles: true }));
+      nativeSetter.call(startInput!, '10:00');
+      startInput!.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeSetter.call(endInput!, '11:30');
+      endInput!.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeSetter.call(locationInput!, 'B202');
+      locationInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '添加课表条目');
+    await act(async () => { addButton!.click(); });
+    await flush();
+    const { createScheduleEntry } = await import('../src/api/study-rhythm-api');
+    expect(createScheduleEntry).toHaveBeenCalledWith({
+      semesterId: 'sem-1',
+      courseInstanceId: STUB_COURSE.id,
+      weekday: 2,
+      startTime: '10:00',
+      endTime: '11:30',
+      location: 'B202',
+    });
+
+    await flush();
+    const editButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '编辑课表条目');
+    await act(async () => { editButton!.click(); });
+    const { updateScheduleEntry, deleteScheduleEntry } = await import('../src/api/study-rhythm-api');
+    const saveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '保存课表条目');
+    await act(async () => { saveButton!.click(); });
+    await flush();
+    expect(updateScheduleEntry).toHaveBeenCalledWith('sem-1', STUB_SCHEDULE_ENTRY.id, expect.objectContaining({
+      courseInstanceId: STUB_COURSE.id,
+      weekday: 1,
+      startTime: '08:00',
+      endTime: '09:30',
+      location: 'A101',
+    }));
+    const removeButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '移除课表条目');
+    await act(async () => { removeButton!.click(); });
+    await flush();
+    expect(deleteScheduleEntry).toHaveBeenCalledWith('sem-1', STUB_SCHEDULE_ENTRY.id);
+  });
+
+  it('编辑已确认考试日期后显示等待重新确认，单独修改目标仍保留确认态', async () => {
+    mockExams = [CONFIRMED_EXAM];
+    const { updateExam } = await import('../src/api/study-rhythm-api');
+    (updateExam as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+      mockExams = [{ ...CONFIRMED_EXAM, examAt: '2026-05-21T09:00:00.000Z', confirmationStatus: 'pending', confirmedAt: undefined }];
+      return mockExams[0];
+    });
+    await renderPage();
+
+    const editButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '编辑考试');
+    await act(async () => { editButton!.click(); });
+    const dateInput = container.querySelector<HTMLInputElement>('input[aria-label="编辑考试日期"]');
+    expect(dateInput).not.toBeNull();
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    await act(async () => {
+      nativeSetter.call(dateInput!, '2026-05-21T09:00');
+      dateInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const saveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '保存考试');
+    await act(async () => { saveButton!.click(); });
+    await flush();
+    expect(updateExam).toHaveBeenCalledWith('sem-1', CONFIRMED_EXAM.id, expect.objectContaining({ examAt: expect.stringMatching(/^2026-05-21T/) }));
+    expect(container.textContent).toContain('等待重新确认');
+    expect(container.textContent).not.toContain('正式倒计时：');
+    expect(container.textContent).toContain('确认考试日期');
+  });
+
+
+describe('CoursePage T09C 状态反馈与确认态保护', () => {
+  it('课表保存失败后显示错误，保留输入并允许再次提交', async () => {
+    const { createScheduleEntry } = await import('../src/api/study-rhythm-api');
+    (createScheduleEntry as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('课表时段重复'));
+    await renderPage();
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    const startInput = container.querySelector<HTMLInputElement>('input[aria-label="开始时间"]');
+    const endInput = container.querySelector<HTMLInputElement>('input[aria-label="结束时间"]');
+    await act(async () => {
+      nativeSetter.call(startInput!, '10:00');
+      startInput!.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeSetter.call(endInput!, '11:00');
+      endInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '添加课表条目');
+    await act(async () => { addButton!.click(); });
+    await flush();
+    expect(container.textContent).toContain('课表时段重复');
+    expect(startInput!.value).toBe('10:00');
+    expect(addButton!.disabled).toBe(false);
+    await act(async () => { addButton!.click(); });
+    await flush();
+    expect(createScheduleEntry).toHaveBeenCalledTimes(2);
+  });
+
+  it('清空考试目标时将空字符串提交给 updateExam', async () => {
+    mockExams = [{ ...CONFIRMED_EXAM, goal: '旧目标' }];
+    const { updateExam } = await import('../src/api/study-rhythm-api');
+    await renderPage();
+    const editButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '编辑考试');
+    await act(async () => { editButton!.click(); });
+    const goalInput = container.querySelector<HTMLInputElement>('input[aria-label="编辑考试目标"]');
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    await act(async () => {
+      nativeSetter.call(goalInput!, '');
+      goalInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const saveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '保存考试');
+    await act(async () => { saveButton!.click(); });
+    await flush();
+    expect(updateExam).toHaveBeenCalledWith('sem-1', CONFIRMED_EXAM.id, expect.objectContaining({ goal: '' }));
+  });
+  it('仅修改考试目标后仍显示已确认状态和正式倒计时', async () => {
+    mockExams = [CONFIRMED_EXAM];
+    const { updateExam } = await import('../src/api/study-rhythm-api');
+    (updateExam as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+      mockExams = [{ ...CONFIRMED_EXAM, goal: '掌握矩阵运算' }];
+      return mockExams[0];
+    });
+    await renderPage();
+    const editButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '编辑考试');
+    await act(async () => { editButton!.click(); });
+    const goalInput = container.querySelector<HTMLInputElement>('input[aria-label="编辑考试目标"]');
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    await act(async () => {
+      nativeSetter.call(goalInput!, '掌握矩阵运算');
+      goalInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const saveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '保存考试');
+    await act(async () => { saveButton!.click(); });
+    await flush();
+    expect(container.textContent).toContain('已确认');
+    expect(container.textContent).toContain('正式倒计时：');
+  });
+
+  it('semesterId 缺失时给出创建和选择学期的引导', async () => {
+    await act(async () => {
+      root.render(<MemoryRouter><CoursePage semesterId={null} /></MemoryRouter>);
+    });
+    expect(container.textContent).toContain('请先创建并选择当前学期');
   });
 });

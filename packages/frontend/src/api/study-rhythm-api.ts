@@ -5,6 +5,10 @@ import type {
   StudyTaskDto,
   StudyTaskStatus,
   StudyTaskType,
+  ScheduleEntryDto,
+  UpdateCourseRequest,
+  UpsertScheduleEntryRequest,
+  UpdateExamRequest,
 } from '@ai-studybuddy/shared';
 import { request } from './api-client';
 
@@ -26,6 +30,67 @@ export function createCourse(
   });
 }
 
+export function updateCourse(
+  semesterId: string,
+  courseId: string,
+  data: Pick<UpdateCourseRequest, 'name'>,
+  signal?: AbortSignal
+): Promise<CourseInstanceDto> {
+  return request<CourseInstanceDto>('/courses/' + encodeURIComponent(courseId), {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ semesterId, ...data }),
+    signal,
+  });
+}
+
+export function getScheduleEntries(semesterId: string, signal?: AbortSignal): Promise<ScheduleEntryDto[]> {
+  return request<ScheduleEntryDto[]>('/schedule-entries?semesterId=' + encodeURIComponent(semesterId), { signal });
+}
+
+export function createScheduleEntry(data: UpsertScheduleEntryRequest, signal?: AbortSignal): Promise<ScheduleEntryDto> {
+  return request<ScheduleEntryDto>('/schedule-entries', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data),
+    signal,
+  });
+}
+
+export function updateScheduleEntry(
+  semesterId: string,
+  entryId: string,
+  data: Omit<UpsertScheduleEntryRequest, 'semesterId'>,
+  signal?: AbortSignal
+): Promise<ScheduleEntryDto> {
+  return request<ScheduleEntryDto>('/schedule-entries/' + encodeURIComponent(entryId), {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ semesterId, ...data }),
+    signal,
+  });
+}
+
+export function deleteScheduleEntry(semesterId: string, entryId: string, signal?: AbortSignal): Promise<ScheduleEntryDto> {
+  return request<ScheduleEntryDto>('/schedule-entries/' + encodeURIComponent(entryId) + '?semesterId=' + encodeURIComponent(semesterId), {
+    method: 'DELETE',
+    signal,
+  });
+}
+
+export function updateExam(
+  semesterId: string,
+  examId: string,
+  data: Omit<UpdateExamRequest, 'semesterId'>,
+  signal?: AbortSignal
+): Promise<AssessmentAttemptDto> {
+  return request<AssessmentAttemptDto>('/exams/' + encodeURIComponent(examId), {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ semesterId, ...data }),
+    signal,
+  });
+}
 export function getExams(
   semesterId: string,
   courseInstanceId?: string,

@@ -18,6 +18,7 @@ import type {
   StudyTaskDto,
   StudyTaskStatus,
   StudyTaskType,
+  ScheduleEntryDto,
 } from '@ai-studybuddy/shared';
 
 export class StudyRhythmError extends Error {
@@ -49,6 +50,13 @@ function isIsoDatetime(value: unknown): value is string {
   return !Number.isNaN(Date.parse(value));
 }
 
+function isScheduleTime(value: unknown): value is string {
+  return typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function normalizeIsoDatetime(value: string): string {
+  return new Date(value).toISOString();
+}
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0;
 }
@@ -205,6 +213,82 @@ export class StudyRhythmService {
     };
   }
 
+  private requireScheduleEntry(db: DatabaseType, semesterId: string, scheduleEntryId: string) {
+    if (!isUuid(scheduleEntryId)) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_NOT_FOUND', 404, '课表条目不存在');
+    }
+    const row = db
+      .prepare(
+        `SELECT s.*, c.semester_id, c.name AS course_name
+         FROM schedule_entries s
+         JOIN course_instances c ON c.id = s.course_instance_id
+         WHERE s.id = ? AND c.semester_id = ?`
+      )
+      .get(scheduleEntryId, semesterId) as Record<string, unknown> | undefined;
+    if (!row) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_NOT_FOUND', 404, '课表条目不存在');
+    }
+    return row;
+  }
+
+  private toScheduleEntryDto(row: Record<string, unknown>): ScheduleEntryDto {
+    return {
+      id: String(row.id),
+      semesterId: String(row.semester_id),
+      courseInstanceId: String(row.course_instance_id),
+      courseName: String(row.course_name),
+      weekday: Number(row.weekday) as ScheduleEntryDto['weekday'],
+      startTime: String(row.start_time),
+      endTime: String(row.end_time),
+      location: row.location === null || row.location === undefined ? undefined : String(row.location),
+      source: row.source === null || row.source === undefined ? undefined : String(row.source),
+      sourceConfidence:
+        row.source_confidence === null || row.source_confidence === undefined
+          ? undefined
+          : Number(row.source_confidence),
+      createdAt: String(row.created_at),
+      updatedAt: String(row.updated_at),
+    };
+  }
+
+  private validateScheduleEntryInput(input: {
+    courseInstanceId: unknown;
+    weekday: unknown;
+    startTime: unknown;
+    endTime: unknown;
+    location?: unknown;
+  }): { courseInstanceId: string; weekday: number; startTime: string; endTime: string; location: string | null } {
+    if (!isUuid(input.courseInstanceId)) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_INPUT_INVALID', 400, '课程必须是有效的 UUID');
+    }
+    if (!Number.isInteger(input.weekday) || Number(input.weekday) < 0 || Number(input.weekday) > 6) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_INPUT_INVALID', 400, 'weekday 必须在 0 到 6 之间');
+    }
+    if (!isScheduleTime(input.startTime) || !isScheduleTime(input.endTime)) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_INPUT_INVALID', 400, '课表时间必须为 HH:mm 格式');
+    }
+    if (input.startTime >= input.endTime) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_INPUT_INVALID', 400, '结束时间必须晚于开始时间');
+    }
+    if (input.location !== undefined && (!isNonEmptyString(input.location) || input.location.trim().length > 200)) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_INPUT_INVALID', 400, '上课地点必须为非空字符串且不超过 200 字符');
+    }
+    return {
+      courseInstanceId: input.courseInstanceId,
+      weekday: Number(input.weekday),
+      startTime: input.startTime,
+      endTime: input.endTime,
+      location: input.location === undefined ? null : input.location.trim(),
+    };
+  }
+
+  private rethrowScheduleWriteError(error: unknown): never {
+    if (error instanceof StudyRhythmError) throw error;
+    if (error instanceof Error && error.message.includes('UNIQUE constraint failed: schedule_entries')) {
+      throw new StudyRhythmError('SCHEDULE_ENTRY_DUPLICATE', 409, '同一课程已有相同时间的课表条目');
+    }
+    throw error;
+  }
   private hasActiveFeedbackPriority(db: DatabaseType, row: Record<string, unknown>): boolean {
     if (row.type !== 'error_review') return false;
     if (row.knowledge_module_id === null || row.knowledge_module_id === undefined) return false;
@@ -311,6 +395,114 @@ export class StudyRhythmService {
     };
   }
 
+  updateCourse(input: { semesterId: unknown; courseInstanceId: unknown; name: unknown }): CourseInstanceDto {
+    if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    if (!isNonEmptyString(input.name) || input.name.trim().length > 200) {
+      throw new StudyRhythmError('COURSE_INPUT_INVALID', 400, '课程名称必须为非空字符串且不超过 200 字符');
+    }
+    const db = this.openReadySemesterDb(input.semesterId);
+    try {
+      const course = this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
+      const now = new Date().toISOString();
+      const name = input.name.trim();
+      db.prepare('UPDATE course_instances SET name = ?, updated_at = ? WHERE id = ?').run(name, now, input.courseInstanceId);
+      return this.toCourseDto({ ...course, name, updated_at: now });
+    } finally { db.close(); }
+  }
+
+  listScheduleEntries(semesterId: unknown): ScheduleEntryDto[] {
+    if (!isUuid(semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      const rows = db.prepare(
+        `SELECT s.*, c.semester_id, c.name AS course_name
+         FROM schedule_entries s JOIN course_instances c ON c.id = s.course_instance_id
+         WHERE c.semester_id = ?
+         ORDER BY s.weekday ASC, s.start_time ASC, s.end_time ASC, s.id ASC`
+      ).all(semesterId) as Record<string, unknown>[];
+      return rows.map((row) => this.toScheduleEntryDto(row));
+    } finally { db.close(); }
+  }
+
+  createScheduleEntry(input: { semesterId: unknown; courseInstanceId: unknown; weekday: unknown; startTime: unknown; endTime: unknown; location?: unknown }): ScheduleEntryDto {
+    if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    const data = this.validateScheduleEntryInput(input);
+    const db = this.openReadySemesterDb(input.semesterId);
+    try {
+      this.requireCourse(db, input.semesterId, data.courseInstanceId);
+      const now = new Date().toISOString(); const id = crypto.randomUUID();
+      try {
+        db.prepare(`INSERT INTO schedule_entries (id, course_instance_id, weekday, start_time, end_time, location, source, source_confidence, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'student_confirmed', NULL, ?, ?)`).run(id, data.courseInstanceId, data.weekday, data.startTime, data.endTime, data.location, now, now);
+      } catch (error) { this.rethrowScheduleWriteError(error); }
+      return this.toScheduleEntryDto(this.requireScheduleEntry(db, input.semesterId, id));
+    } finally { db.close(); }
+  }
+
+  updateScheduleEntry(input: { semesterId: unknown; scheduleEntryId: unknown; courseInstanceId: unknown; weekday: unknown; startTime: unknown; endTime: unknown; location?: unknown }): ScheduleEntryDto {
+    if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    const data = this.validateScheduleEntryInput(input);
+    const db = this.openReadySemesterDb(input.semesterId);
+    try {
+      this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId));
+      this.requireCourse(db, input.semesterId, data.courseInstanceId);
+      const now = new Date().toISOString();
+      try {
+        db.prepare(`UPDATE schedule_entries
+                    SET course_instance_id = ?, weekday = ?, start_time = ?, end_time = ?, location = ?, source = 'student_confirmed', source_confidence = NULL, updated_at = ?
+                    WHERE id = ?`).run(data.courseInstanceId, data.weekday, data.startTime, data.endTime, data.location, now, input.scheduleEntryId);
+      } catch (error) { this.rethrowScheduleWriteError(error); }
+      return this.toScheduleEntryDto(this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId)));
+    } finally { db.close(); }
+  }
+
+  deleteScheduleEntry(input: { semesterId: unknown; scheduleEntryId: unknown }): ScheduleEntryDto {
+    if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    const db = this.openReadySemesterDb(input.semesterId);
+    try {
+      const entry = this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId));
+      db.prepare('DELETE FROM schedule_entries WHERE id = ?').run(input.scheduleEntryId);
+      return this.toScheduleEntryDto(entry);
+    } finally { db.close(); }
+  }
+
+  updateExam(input: { semesterId: unknown; assessmentAttemptId: unknown; name?: unknown; examAt?: unknown; goal?: unknown }): AssessmentAttemptDto {
+    if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    if (input.name === undefined && input.examAt === undefined && input.goal === undefined) {
+      throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, '至少需要提供一个可编辑字段');
+    }
+    if (input.name !== undefined && (!isNonEmptyString(input.name) || input.name.trim().length > 200)) {
+      throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, '考试名称必须为非空字符串且不超过 200 字符');
+    }
+    if (input.examAt !== undefined && !isIsoDatetime(input.examAt)) {
+      throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, 'examAt 必须是有效的 ISO 日期时间');
+    }
+    if (input.goal !== undefined && (typeof input.goal !== 'string' || input.goal.trim().length > 1000)) {
+      throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, '考试目标必须是字符串且不超过 1000 字符');
+    }
+    const db = this.openReadySemesterDb(input.semesterId);
+    try {
+      const existing = this.requireExam(db, input.semesterId, String(input.assessmentAttemptId));
+      const name = input.name === undefined ? String(existing.name) : input.name.trim();
+      const examAt = input.examAt === undefined ? String(existing.exam_at) : normalizeIsoDatetime(input.examAt);
+      const goal = input.goal === undefined ? existing.goal : input.goal.trim() || null;
+      const dateChanged = input.examAt !== undefined && normalizeIsoDatetime(String(existing.exam_at)) !== examAt;
+      const resetConfirmation = dateChanged && existing.confirmation_status === 'confirmed';
+      const confirmationStatus = resetConfirmation ? 'pending' : String(existing.confirmation_status);
+      const confirmedAt = resetConfirmation ? null : existing.confirmed_at ?? null;
+      const now = new Date().toISOString();
+      const update = db.transaction(() => {
+        if (resetConfirmation) {
+          db.prepare(`INSERT INTO assessment_date_changes (id, assessment_attempt_id, previous_exam_at, next_exam_at, source, changed_at)
+                      VALUES (?, ?, ?, ?, 'student_confirmed', ?)`).run(crypto.randomUUID(), input.assessmentAttemptId, existing.exam_at, examAt, now);
+        }
+        db.prepare(`UPDATE assessment_attempts SET name = ?, exam_at = ?, goal = ?, confirmation_status = ?, confirmed_at = ? WHERE id = ?`)
+          .run(name, examAt, goal, confirmationStatus, confirmedAt, input.assessmentAttemptId);
+        return db.prepare('SELECT * FROM assessment_attempts WHERE id = ?').get(input.assessmentAttemptId) as Record<string, unknown>;
+      });
+      return this.toExamDto(update());
+    } finally { db.close(); }
+  }
   createCourse(input: { semesterId: unknown; name: unknown; retakeOfCourseInstanceId?: unknown }): CourseInstanceDto {
     if (!isNonEmptyString(input.name) || input.name.trim().length > 200) {
       throw new StudyRhythmError('COURSE_INPUT_INVALID', 400, '课程名称必须为非空字符串且不超过 200 字符');

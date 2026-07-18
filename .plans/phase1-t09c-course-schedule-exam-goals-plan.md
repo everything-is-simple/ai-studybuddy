@@ -387,3 +387,8 @@ export interface UpdateExamRequest {
 | 隐私与外部依赖 | 不新增真实 Provider/渠道测试；测试使用隔离根与合成数据，响应、日志、截图和提交不含敏感资料或秘密。 |
 
 **复审后的停点：** 本计划已通过独立复审，但未获用户明确实施批准。因此不创建 `codex/phase1-t09c-course-schedule-exam-goals`，不执行任何业务实现步骤。
+---
+
+## 6. 实施批准与启动记录（2026-07-18）
+
+用户已于 **2026-07-18** 在本任务对话中明确回复“批准”。因此计划门禁解除；已从 `origin/master@1da776ff2b0e6bb025559130893ec78414327131` 创建隔离实现分支 `codex/phase1-t09c-course-schedule-exam-goals`（worktree：`I:\ai-studybuddy\.worktrees\phase1-t09c-course-schedule-exam-goals`）。实施现已启动，但尚未完成、尚未合入 `master`、尚未推送 `origin/master`。后续仍严格受本计划范围、TDD、独立复审和主线复验约束。

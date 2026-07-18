@@ -47,6 +47,58 @@ router.get('/courses', (req: Request, res: Response) => {
   }
 });
 
+// ── PATCH /api/courses/:id ───────────────────────────────────
+router.patch('/courses/:id', (req: Request, res: Response) => {
+  try {
+    const course = service.updateCourse({
+      semesterId: req.body.semesterId,
+      courseInstanceId: req.params.id,
+      name: req.body.name,
+    });
+    return res.json(okResponse(course));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
+// ── GET /api/schedule-entries ─────────────────────────────────
+router.get('/schedule-entries', (req: Request, res: Response) => {
+  try {
+    return res.json(okResponse(service.listScheduleEntries(req.query.semesterId)));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
+// ── POST /api/schedule-entries ────────────────────────────────
+router.post('/schedule-entries', (req: Request, res: Response) => {
+  try {
+    return res.status(201).json(okResponse(service.createScheduleEntry(req.body)));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
+// ── PATCH /api/schedule-entries/:id ───────────────────────────
+router.patch('/schedule-entries/:id', (req: Request, res: Response) => {
+  try {
+    return res.json(okResponse(service.updateScheduleEntry({ ...req.body, scheduleEntryId: req.params.id })));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
+// ── DELETE /api/schedule-entries/:id ──────────────────────────
+router.delete('/schedule-entries/:id', (req: Request, res: Response) => {
+  try {
+    return res.json(okResponse(service.deleteScheduleEntry({
+      semesterId: req.query.semesterId ?? req.body?.semesterId,
+      scheduleEntryId: req.params.id,
+    })));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
 // ── POST /api/exams ─────────────────────────────────────────
 router.post('/exams', (req: Request, res: Response) => {
   try {
@@ -77,6 +129,14 @@ router.get('/exams/:id', (req: Request, res: Response) => {
   }
 });
 
+// ── PATCH /api/exams/:id ─────────────────────────────────────
+router.patch('/exams/:id', (req: Request, res: Response) => {
+  try {
+    return res.json(okResponse(service.updateExam({ ...req.body, assessmentAttemptId: req.params.id })));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
 // ── PATCH /api/exams/:id/confirmation ──────────────────────
 router.patch('/exams/:id/confirmation', (req: Request, res: Response) => {
   try {

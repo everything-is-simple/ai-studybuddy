@@ -113,6 +113,7 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
       return json(success({ semester, current: currentDto() }), 201);
     }
     if (request.method() === 'GET' && url.pathname === '/api/courses') return json(success(courses.get(url.searchParams.get('semesterId') ?? '') ?? []));
+    if (request.method() === 'GET' && url.pathname === '/api/schedule-entries') return json(success([]));
     if (request.method() === 'GET' && (url.pathname === '/api/exams' || url.pathname === '/api/study-tasks')) return json(success([]));
     if (request.method() === 'GET' && url.pathname === '/api/configuration/status') {
       return json(success({
@@ -142,12 +143,12 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
 
   await expect(page).toHaveURL(/\/courses$/);
   await expect(page.locator('.semester-status-card')).toContainText('2026 春季学期');
-  await expect(page.getByText('数学', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('课程列表').getByText('数学', { exact: true })).toBeVisible();
   await expect(page.getByText('输入 UUID 格式的学期 ID')).toHaveCount(0);
 
   await page.reload();
   await expect(page.locator('.semester-status-card')).toContainText('2026 春季学期');
-  await expect(page.getByText('数学', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('课程列表').getByText('数学', { exact: true })).toBeVisible();
 
   await page.getByRole('link', { name: '管理学期' }).click();
   await page.getByLabel('学期名称').fill('2026 秋季学期');
@@ -158,14 +159,14 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
   await page.getByRole('button', { name: '确认创建并切换' }).click();
 
   await expect(page.locator('.semester-status-card')).toContainText('2026 秋季学期');
-  await expect(page.getByText('英语', { exact: true })).toBeVisible();
-  await expect(page.getByText('数学', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('课程列表').getByText('英语', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('课程列表').getByText('数学', { exact: true })).toHaveCount(0);
 
   await page.getByRole('link', { name: '管理学期' }).click();
   const springItem = page.locator('.semester-list li').filter({ hasText: '2026 春季学期' });
   await springItem.getByRole('button', { name: '切换到此学期' }).click();
   await expect(page).toHaveURL(/\/courses$/);
   await expect(page.locator('.semester-status-card')).toContainText('2026 春季学期');
-  await expect(page.getByText('数学', { exact: true })).toBeVisible();
-  await expect(page.getByText('英语', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('课程列表').getByText('数学', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('课程列表').getByText('英语', { exact: true })).toHaveCount(0);
 });

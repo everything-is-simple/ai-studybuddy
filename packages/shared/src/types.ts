@@ -25,6 +25,41 @@ export interface CourseInstanceDto {
   updatedAt: string;
 }
 
+export interface ScheduleEntryDto {
+  id: string;
+  semesterId: string;
+  courseInstanceId: string;
+  courseName: string;
+  weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  source?: string;
+  sourceConfidence?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateCourseRequest {
+  semesterId: string;
+  name: string;
+}
+
+export interface UpsertScheduleEntryRequest {
+  semesterId: string;
+  courseInstanceId: string;
+  weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  startTime: string;
+  endTime: string;
+  location?: string;
+}
+
+export interface UpdateExamRequest {
+  semesterId: string;
+  name?: string;
+  examAt?: string;
+  goal?: string;
+}
 export type AttemptType = 'normal' | 'makeup' | 'other';
 export type ConfirmationStatus = 'pending' | 'confirmed' | 'rejected' | 'superseded';
 
