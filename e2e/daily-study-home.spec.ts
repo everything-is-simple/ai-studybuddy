@@ -10,12 +10,21 @@ async function postData<T>(request: APIRequestContext, pathName: string, data: o
   return body.data;
 }
 
+function addCalendarDays(date: string, days: number): string {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+}
+
 test('T09B 每日学习首页复用当前学期并展示只读聚合', async ({ page, request }) => {
+  const today = await page.evaluate(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  });
   const semester = await postData<{ semesterId: string }>(request, '/dev/init-semester', {
     studentName: 'T09B 浏览器验收学生',
     semesterCode: `t09b-${Date.now()}`,
-    teachingStartDate: '2026-02-20',
-    teachingEndDate: '2026-12-31',
+    teachingStartDate: addCalendarDays(today, -30),
+    teachingEndDate: addCalendarDays(today, 365),
   });
   const semesterId = semester.semesterId;
   const selected = await request.put(`${backendBaseUrl}/semesters/current`, { data: { semesterId } });
@@ -26,14 +35,14 @@ test('T09B 每日学习首页复用当前学期并展示只读聚合', async ({ 
     courseInstanceId: course.id,
     type: 'practice',
     title: 'T09B 今日函数练习',
-    deadlineAt: '2026-07-18T20:00:00.000Z',
+    deadlineAt: `${today}T20:00:00.000Z`,
   });
   const exam = await postData<{ id: string }>(request, '/exams', {
     semesterId,
     courseInstanceId: course.id,
     name: 'T09B 期中考试',
     attemptType: 'normal',
-    examAt: '2026-07-20T08:00:00.000Z',
+    examAt: `${addCalendarDays(today, 2)}T08:00:00.000Z`,
   });
   const confirmed = await request.patch(`${backendBaseUrl}/exams/${exam.id}/confirmation`, { data: { semesterId } });
   expect(confirmed.ok(), await confirmed.text()).toBe(true);
