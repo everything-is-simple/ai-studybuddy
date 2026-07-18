@@ -101,7 +101,7 @@ export function PracticeSessionPage({ semesterId, onSemesterError }: PracticeSes
     return (
       <div className="page">
         <AppNavigation />
-        <FeedbackMessage state="empty" message="请先设置当前学期 ID，才能继续作答。" />
+        <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能继续作答。" />
       </div>
     );
   }

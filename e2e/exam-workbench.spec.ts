@@ -24,10 +24,11 @@ test('学生完成多考试确认、切换、任务闭环并刷新读回', async
   expect(semesterResponse.ok()).toBe(true);
   const semesterBody = await semesterResponse.json();
   const semesterId = semesterBody.data.semesterId as string;
+  const selectResponse = await request.put(`${backendBaseUrl}/semesters/current`, { data: { semesterId } });
+  expect(selectResponse.ok()).toBe(true);
 
   await page.goto('/courses');
-  await page.getByLabel('当前学期 ID').fill(semesterId);
-  await page.getByRole('button', { name: '应用' }).click();
+  await expect(page.getByText('当前学期', { exact: true })).toBeVisible();
   await page.getByLabel('课程名称').fill('T11 合成课程');
   await page.getByRole('button', { name: '创建课程' }).click();
   await expect(page.getByText('课程已创建')).toBeVisible();

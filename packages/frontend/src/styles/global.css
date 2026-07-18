@@ -894,6 +894,104 @@ button:disabled {
   font-size: 1rem;
 }
 
+
+.semester-status-card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  flex: 1;
+  min-width: 280px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 0.875rem;
+}
+
+.semester-status-card a {
+  margin-left: auto;
+}
+
+.semester-status-label {
+  color: var(--color-text-muted);
+}
+
+.semester-warning {
+  width: 100%;
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.semester-page {
+  display: grid;
+  gap: 16px;
+}
+
+.current-semester-card {
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: #eff6ff;
+}
+
+.semester-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.semester-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.semester-list li > div {
+  display: grid;
+  gap: 4px;
+}
+
+.semester-form {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+}
+
+.semester-form label,
+.timetable-preview-row label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.field-help {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.timetable-preview-table {
+  display: grid;
+  gap: 10px;
+}
+
+.timetable-preview-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.5fr) 80px 100px 100px minmax(120px, 1fr) minmax(140px, auto);
+  gap: 8px;
+  align-items: end;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
 .practice-correct {
   border-left-color: var(--color-success);
 }
@@ -907,7 +1005,8 @@ button:disabled {
     align-items: stretch;
   }
 
-  .semester-bar {
+  .semester-bar,
+  .semester-status-card {
     width: 100%;
     min-width: 0;
     flex-basis: 100%;

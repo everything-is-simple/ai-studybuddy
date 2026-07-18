@@ -539,3 +539,60 @@ export interface WeakPointListItemDto {
 export interface WeakPointListResponse {
   items: WeakPointListItemDto[];
 }
+export type SemesterStatus = 'active' | 'archived';
+
+export interface SemesterSummaryDto {
+  id: string;
+  semesterCode: string;
+  studentName: string;
+  teachingStartDate: string;
+  teachingEndDate: string;
+  finalArchiveDate?: string | null;
+  status: SemesterStatus;
+  isCurrent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CurrentSemesterDto {
+  semester: SemesterSummaryDto | null;
+  recoveredFromStaleCurrent: boolean;
+}
+
+export interface TimetablePreviewEntryDto {
+  clientId: string;
+  courseName: string;
+  weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  startTime: string;
+  endTime: string;
+  location?: string | null;
+  parserConfidence?: number | null;
+  warnings?: string[];
+}
+
+export interface SemesterPreviewDto {
+  previewId: string;
+  expiresAt: string;
+  semesterCode: string;
+  teachingStartDate: string;
+  teachingEndDate: string;
+  finalArchiveDate?: string | null;
+  requiresStudentName: boolean;
+  entries: TimetablePreviewEntryDto[];
+  warnings: string[];
+}
+
+export interface ConfirmSemesterRequest {
+  previewId: string;
+  semesterCode: string;
+  teachingStartDate: string;
+  teachingEndDate: string;
+  finalArchiveDate?: string | null;
+  studentName?: string | null;
+  entries: TimetablePreviewEntryDto[];
+}
+
+export interface CreateSemesterResponseDto {
+  semester: SemesterSummaryDto;
+  current: CurrentSemesterDto;
+}

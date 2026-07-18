@@ -17,6 +17,7 @@ import { SEMESTER_V4_SQL } from './sql/migration-semester-v4';
 import { SEMESTER_V5_SQL } from './sql/migration-semester-v5';
 import { SEMESTER_V6_SQL } from './sql/migration-semester-v6';
 import { migrateSemesterV7 } from './sql/migration-semester-v7';
+import { migrateSemesterV8 } from './sql/migration-semester-v8';
 
 export interface Migration {
   version: number;
@@ -34,6 +35,7 @@ const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 5, sql: SEMESTER_V5_SQL },
   { version: 6, sql: SEMESTER_V6_SQL },
   { version: 7, apply: migrateSemesterV7 },
+  { version: 8, apply: migrateSemesterV8 },
 ];
 
 const CURRENT_JOBS_TABLE_SQL = `

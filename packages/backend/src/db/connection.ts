@@ -38,6 +38,19 @@ export function openExistingDbAtPath(dbPath: string): DatabaseType {
   return db;
 }
 
+
+/**
+ * 只读打开已存在数据库，禁止创建文件、目录或 WAL 副作用。
+ */
+export function openReadOnlyExistingDbAtPath(dbPath: string): DatabaseType {
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(`DB_NOT_FOUND ${dbPath}`);
+  }
+  const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+  db.pragma('foreign_keys = ON');
+  return db;
+}
+
 /**
  * 打开全局库 studybuddy.db。
  */

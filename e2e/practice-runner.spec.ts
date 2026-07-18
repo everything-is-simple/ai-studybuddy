@@ -56,12 +56,40 @@ function success(data: unknown) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(([key, value]) => localStorage.setItem(key, value), ['ai-studybuddy:semesterId', semesterId]);
   await page.route('http://127.0.0.1:4311/api/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     const pathName = url.pathname;
     const json = (body: unknown, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+    if (request.method() === 'GET' && pathName === '/api/semesters/current')
+      return json(success({
+        semester: {
+          id: semesterId,
+          semesterCode: 'E2E 合成学期',
+          studentName: 'E2E 合成学生',
+          teachingStartDate: '2026-02-16',
+          teachingEndDate: '2026-06-30',
+          finalArchiveDate: null,
+          status: 'active',
+          isCurrent: true,
+          createdAt: '2026-07-18T00:00:00.000Z',
+          updatedAt: '2026-07-18T00:00:00.000Z',
+        },
+        recoveredFromStaleCurrent: false,
+      }));
+    if (request.method() === 'GET' && pathName === '/api/semesters')
+      return json(success([{
+        id: semesterId,
+        semesterCode: 'E2E 合成学期',
+        studentName: 'E2E 合成学生',
+        teachingStartDate: '2026-02-16',
+        teachingEndDate: '2026-06-30',
+        finalArchiveDate: null,
+        status: 'active',
+        isCurrent: true,
+        createdAt: '2026-07-18T00:00:00.000Z',
+        updatedAt: '2026-07-18T00:00:00.000Z',
+      }]));
 
     if (request.method() === 'GET' && pathName === `/api/exams/${examId}`)
       return json(success({ id: examId, courseInstanceId: courseId, name: 'T03D 合成考试', attemptType: 'normal', examAt: '2026-08-01T09:00:00.000Z', confirmationStatus: 'confirmed' }));

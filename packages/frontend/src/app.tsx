@@ -1,9 +1,12 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import type { CurrentSemesterDto, SemesterSummaryDto } from '@ai-studybuddy/shared';
 import { AppNavigation } from './components/app-navigation';
 import { getConfigurationStatus, type ConfigurationStatus } from './api/configuration-api';
+import { getCurrentSemester } from './api/semester-api';
 import { CoursePage } from './pages/course-page';
 import { MaterialUploadPage } from './pages/material-upload-page';
+import { SemesterPage } from './pages/semester-page';
 
 const NotePage = lazy(() => import('./pages/note-page'));
 const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
@@ -14,22 +17,48 @@ const MistakeListPage = lazy(() => import('./pages/mistake-list-page'));
 const MistakeDetailPage = lazy(() => import('./pages/mistake-detail-page'));
 const SettingsPage = lazy(() => import('./pages/settings-page'));
 
-const SEMESTER_ID_KEY = 'ai-studybuddy:semesterId';
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+type CurrentSemesterState =
+  | { status: 'loading'; semester: null; message: null }
+  | { status: 'ready'; semester: SemesterSummaryDto; message: string | null }
+  | { status: 'none'; semester: null; message: string | null }
+  | { status: 'error'; semester: null; message: string };
+
+const loadingCurrentState: CurrentSemesterState = { status: 'loading', semester: null, message: null };
 
 export function App() {
-  const [semesterId, setSemesterId] = useState<string>('');
-  const [inputValue, setInputValue] = useState('');
-  const [inputError, setInputError] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentState, setCurrentState] = useState<CurrentSemesterState>(loadingCurrentState);
   const [configurationStatus, setConfigurationStatus] = useState<ConfigurationStatus | null>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(SEMESTER_ID_KEY);
-    if (saved && UUID_RE.test(saved)) {
-      setSemesterId(saved);
-      setInputValue(saved);
+  const applyCurrent = useCallback((current: CurrentSemesterDto) => {
+    if (current.semester) {
+      setCurrentState({ status: 'ready', semester: current.semester, message: null });
+      return;
     }
+    setCurrentState({
+      status: 'none',
+      semester: null,
+      message: current.recoveredFromStaleCurrent ? '已清理失效的当前学期，请重新选择或创建学期。' : null,
+    });
   }, []);
+
+  const refreshCurrentSemester = useCallback(async () => {
+    setCurrentState(loadingCurrentState);
+    try {
+      applyCurrent(await getCurrentSemester());
+    } catch (error) {
+      setCurrentState({
+        status: 'error',
+        semester: null,
+        message: error instanceof Error ? error.message : '当前学期恢复失败',
+      });
+    }
+  }, [applyCurrent]);
+
+  useEffect(() => {
+    void refreshCurrentSemester();
+  }, [refreshCurrentSemester]);
 
   useEffect(() => {
     void getConfigurationStatus()
@@ -37,67 +66,56 @@ export function App() {
       .catch(() => setConfigurationStatus(null));
   }, []);
 
+  useEffect(() => {
+    if (currentState.status === 'loading') return;
+    const publicPath = location.pathname.startsWith('/semesters') || location.pathname.startsWith('/settings');
+    if (!currentState.semester && !publicPath) {
+      navigate('/semesters', { replace: true });
+    }
+  }, [currentState.semester, currentState.status, location.pathname, navigate]);
+
   const showFirstRunGuide =
     configurationStatus !== null &&
     configurationStatus.ai.status === 'unconfigured' &&
     configurationStatus.smtp.status === 'unconfigured' &&
     configurationStatus.feishu.status === 'unconfigured';
 
-  const handleApply = useCallback(() => {
-    const value = inputValue.trim();
-    if (!value) {
-      setSemesterId('');
-      localStorage.removeItem(SEMESTER_ID_KEY);
-      setInputError(null);
-      return;
-    }
-    if (!UUID_RE.test(value)) {
-      setInputError('请输入有效的学期 ID（UUID 格式）');
-      return;
-    }
-    setSemesterId(value);
-    localStorage.setItem(SEMESTER_ID_KEY, value);
-    setInputError(null);
-  }, [inputValue]);
-
-  const handleClear = useCallback(() => {
-    setInputValue('');
-    setSemesterId('');
-    localStorage.removeItem(SEMESTER_ID_KEY);
-    setInputError(null);
-  }, []);
-
   const handleSemesterError = useCallback(() => {
-    setSemesterId('');
-    localStorage.removeItem(SEMESTER_ID_KEY);
-    setInputError('学期不存在，请重新输入');
-  }, []);
+    void refreshCurrentSemester().finally(() => navigate('/semesters', { replace: true }));
+  }, [navigate, refreshCurrentSemester]);
+
+  const handleCurrentChange = useCallback(
+    (current: CurrentSemesterDto) => {
+      applyCurrent(current);
+    },
+    [applyCurrent]
+  );
+
+  const currentSemester = currentState.semester;
+  const semesterId = currentSemester?.id ?? null;
 
   return (
     <div className="app">
       <header className="app-header">
         <div className="app-title">AI StudyBuddy</div>
-        <div className="semester-bar">
-          <label htmlFor="semesterId">当前学期 ID</label>
-          <input
-            id="semesterId"
-            type="text"
-            value={inputValue}
-            onChange={(event) => setInputValue(event.target.value)}
-            placeholder="输入 UUID 格式的学期 ID"
-            aria-describedby="semesterId-help"
-          />
-          <button type="button" onClick={handleApply}>
-            应用
-          </button>
-          <button type="button" onClick={handleClear} className="button-secondary">
-            清除
-          </button>
-          {semesterId && <span className="semester-active">已设置</span>}
+        <div className="semester-status-card" aria-live="polite">
+          {currentState.status === 'loading' && <span>正在恢复当前学期…</span>}
+          {currentState.status === 'ready' && currentSemester && (
+            <>
+              <span className="semester-status-label">当前学期</span>
+              <strong>{currentSemester.semesterCode}</strong>
+              <span>
+                {currentSemester.teachingStartDate} 至 {currentSemester.teachingEndDate}
+              </span>
+            </>
+          )}
+          {currentState.status === 'none' && <span>尚未选择当前学期</span>}
+          {currentState.status === 'error' && <span>当前学期状态读取失败</span>}
+          <Link to="/semesters">管理学期</Link>
         </div>
-        {inputError && (
-          <p id="semesterId-help" className="semester-error">
-            {inputError}
+        {currentState.message && (
+          <p className={currentState.status === 'error' ? 'semester-error' : 'semester-warning'} role="status">
+            {currentState.message}
           </p>
         )}
         <AppNavigation />
@@ -112,68 +130,127 @@ export function App() {
           </aside>
         )}
         <Routes>
+          <Route path="/semesters" element={<SemesterPage current={currentSemester} onCurrentChange={handleCurrentChange} />} />
           <Route
             path="/courses"
-            element={<CoursePage semesterId={semesterId} onSemesterError={handleSemesterError} />}
+            element={
+              semesterId ? (
+                <CoursePage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
+            }
           />
           <Route
             path="/materials"
-            element={<MaterialUploadPage semesterId={semesterId} onSemesterError={handleSemesterError} />}
+            element={
+              semesterId ? (
+                <MaterialUploadPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
+            }
           />
           <Route
             path="/notes/:noteId"
             element={
-              <Suspense fallback={<div className="page">正在加载笔记…</div>}>
-                <NotePage semesterId={semesterId} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载笔记…</div>}>
+                  <NotePage semesterId={semesterId} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
             path="/exams/:examId"
             element={
-              <Suspense fallback={<div className="page">正在加载考试项目…</div>}>
-                <ExamWorkbenchPage semesterId={semesterId} onSemesterError={handleSemesterError} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载考试项目…</div>}>
+                  <ExamWorkbenchPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
             path="/exams/:examId/practice"
             element={
-              <Suspense fallback={<div className="page">正在加载练习发起页…</div>}>
-                <PracticeStartPage semesterId={semesterId} onSemesterError={handleSemesterError} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载练习发起页…</div>}>
+                  <PracticeStartPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
             path="/practice-sessions/:sessionId"
             element={
-              <Suspense fallback={<div className="page">正在加载练习…</div>}>
-                <PracticeSessionPage semesterId={semesterId} onSemesterError={handleSemesterError} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载练习…</div>}>
+                  <PracticeSessionPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
             path="/practice-sessions/:sessionId/result"
             element={
-              <Suspense fallback={<div className="page">正在加载练习结果…</div>}>
-                <PracticeResultPage semesterId={semesterId} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载练习结果…</div>}>
+                  <PracticeResultPage semesterId={semesterId} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
             path="/exams/:examId/mistakes"
             element={
-              <Suspense fallback={<div className="page">正在加载错题本…</div>}>
-                <MistakeListPage semesterId={semesterId} onSemesterError={handleSemesterError} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载错题本…</div>}>
+                  <MistakeListPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
             path="/mistakes/:mistakeId"
             element={
-              <Suspense fallback={<div className="page">正在加载错题详情…</div>}>
-                <MistakeDetailPage semesterId={semesterId} onSemesterError={handleSemesterError} />
-              </Suspense>
+              semesterId ? (
+                <Suspense fallback={<div className="page">正在加载错题详情…</div>}>
+                  <MistakeDetailPage semesterId={semesterId} onSemesterError={handleSemesterError} />
+                </Suspense>
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
             }
           />
           <Route
@@ -184,8 +261,8 @@ export function App() {
               </Suspense>
             }
           />
-          <Route path="/" element={<Navigate to="/courses" replace />} />
-          <Route path="*" element={<Navigate to="/courses" replace />} />
+          <Route path="/" element={<Navigate to={semesterId ? '/courses' : '/semesters'} replace />} />
+          <Route path="*" element={<Navigate to={semesterId ? '/courses' : '/semesters'} replace />} />
         </Routes>
       </main>
     </div>

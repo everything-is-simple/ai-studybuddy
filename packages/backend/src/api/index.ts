@@ -2,6 +2,7 @@
 //
 // POST /api/courses          创建课程
 // GET  /api/courses          获取课程列表
+// GET  /api/semesters/current 学期 current selector
 // POST /api/study-tasks      创建学习任务
 // POST /api/materials/upload 上传资料
 // GET  /api/notes/:id        获取笔记

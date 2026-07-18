@@ -252,7 +252,7 @@ async function openFreshSemester(t, prefix) {
 test('fresh semester database applies current migrations with S4 tables, indexes, and triggers exactly once', async (t) => {
   const { db, migrations } = await openFreshSemester(t, 'studybuddy-t04a-fresh-');
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 7);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 8);
   assert.deepEqual(columnNames(db, 'mistakes'), [
     'id',
     'course_instance_id',
@@ -362,7 +362,7 @@ test('v4 semester database upgrades through current migrations without losing ex
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 7);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 8);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM practice_answers').get().count, 1);
   for (const table of ['mistakes', 'mistake_evidence', 'weak_points']) {
     assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
@@ -454,7 +454,7 @@ test('v5 semester database upgrades through current migrations preserving mistak
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 7);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 8);
   // 既有数据保留
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM mistake_evidence').get().count, 1);
   assert.equal(

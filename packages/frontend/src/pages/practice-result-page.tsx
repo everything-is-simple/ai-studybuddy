@@ -39,7 +39,7 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
     return (
       <div className="page">
         <AppNavigation />
-        <FeedbackMessage state="empty" message="请先设置当前学期 ID，才能查看练习结果。" />
+        <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能查看练习结果。" />
       </div>
     );
   }

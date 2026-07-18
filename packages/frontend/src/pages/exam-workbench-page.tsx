@@ -211,7 +211,7 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
     return (
       <div className="page">
         <AppNavigation />
-        <FeedbackMessage state="empty" message="请先设置当前学期 ID，才能打开考试项目。" />
+        <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能打开考试项目。" />
       </div>
     );
   }

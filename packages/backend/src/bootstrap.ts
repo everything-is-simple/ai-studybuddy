@@ -2,6 +2,7 @@ import type { Express } from 'express';
 import type { Server } from 'http';
 import type { ConfigurationService } from './config/configuration-service';
 import type { MaterialJobWorker } from './services/material-job-worker';
+import { SemesterSelectorService } from './services/semester-selector-service';
 
 export interface BackendController {
   server: Server;
@@ -17,6 +18,7 @@ export async function bootstrapBackend(options: {
   log?: (message: string) => void;
 }): Promise<BackendController> {
   const configurationService = await options.initializeConfiguration();
+  new SemesterSelectorService().migrateReadySemesters();
   const app = options.createApplication(configurationService);
   const worker = options.createWorker();
   let workerTimer: NodeJS.Timeout | undefined;

@@ -164,12 +164,12 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
     new Set(['material_note_completed', 'mistake_reviewed'])
   );
   expect(filteredBody.data.every((event) => event.courseInstanceId === courseA.id)).toBe(true);
+  const selectResponse = await request.put(`${backendBaseUrl}/semesters/current`, { data: { semesterId } });
+  expect(selectResponse.ok()).toBe(true);
 
   await page.goto('/courses');
-  const semesterInput = page.getByLabel('当前学期 ID');
-  await semesterInput.fill(semesterId);
-  await page.getByRole('button', { name: '应用' }).click();
-  await expect(page.getByText('已设置', { exact: true })).toBeVisible();
+  const semesterStatus = page.locator('.semester-status-card');
+  await expect(semesterStatus).toContainText('当前学期');
   await page.goto(`/exams/${examA.id}`);
 
   await expect(page.getByRole('heading', { name: 'T07 课程 A 期末考试', level: 1 })).toBeVisible();
@@ -249,7 +249,7 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
   await page.screenshot({
     path: path.join(evidenceRoot, 'timeline-mobile.png'),
     fullPage: true,
-    mask: [semesterInput],
+    mask: [semesterStatus],
   });
 
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -258,6 +258,6 @@ test('T07 时间线按课程展示固定文案、保护隐私并适配移动端'
   await page.screenshot({
     path: path.join(evidenceRoot, 'timeline-desktop.png'),
     fullPage: true,
-    mask: [semesterInput],
+    mask: [semesterStatus],
   });
 });

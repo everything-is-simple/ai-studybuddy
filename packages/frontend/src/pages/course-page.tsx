@@ -134,7 +134,7 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
     return (
       <div className="page">
         <AppNavigation />
-        <FeedbackMessage state="empty" message="请先在本页顶部输入有效的学期 ID，才能管理课程和考试目标。" />
+        <FeedbackMessage state="empty" message="请先在学期管理中创建或选择当前学期，才能管理课程和考试目标。" />
       </div>
     );
   }
