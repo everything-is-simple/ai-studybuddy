@@ -1,6 +1,6 @@
-# Phase 1-T09A 学期创建、选择与切换实施计划（v4，待用户批准）
+# Phase 1-T09A 学期创建、选择与切换实施计划（v4，已批准；任务分支实施/验证完成，待合入 master）
 
-> **给实施 Agent：** 获得用户明确批准后，必须按本计划逐项使用 `superpowers:subagent-driven-development` 或 `superpowers:executing-plans` 执行；每个复选框是可追踪步骤。本计划本身不授权创建任务分支或改动业务代码。
+> **实施状态：** 用户已于 2026-07-18 明确批准。本计划已在任务分支完成实现与验证；原始 v4 复选框和独立审查记录保留用于追溯，实际交付、验证与范围差异见文末“实施记录”。在固定 fast-forward 合入并由 `master` 复验、推送 `origin/master` 前，不得报告 T09A 已完成。
 
 **目标：** 以正式、可恢复的学期入口替代学生端手输 UUID：支持创建、OCR/规则预览与确认、列表、当前选择与切换，并使刷新及既有课程/考试/任务/时间线始终处于受控当前学期。
 
@@ -14,9 +14,9 @@
 
 ### 0.1 当前门禁
 
-- `docs/04-开发任务清单-Todo-List.md` 已登记 T09A；当前仅允许“计划 → 独立审查 → 用户明确批准”。
-- 在用户明确批准本计划前：**不得创建** `codex/phase1-t09a-semester-selector`，不得新建任何业务 migration/API/UI/test，不得改写 S2/S3/S4/S6 行为。
-- 批准后实施必须从最新 `origin/master` 创建推荐任务分支；实施收尾按 `docs/12` 的固定 fast-forward 流程合入，并只在 `origin/master` 含提交后报告完成。
+- `docs/04-开发任务清单-Todo-List.md` 已登记 T09A；用户已于 2026-07-18 明确批准 v4。
+- 任务分支 `codex/phase1-t09a-semester-selector` 已完成本计划范围内实现、自动化验证和隔离 E2E；尚未合入 `master`。
+- 下一门禁是按 `docs/12` 固定 fast-forward 流程合入、在 `master` 复验并推送 `origin/master`；在此之前不得报告 T09A 已完成，也不得启动 T09B–T09E。
 
 ### 0.2 T09A 做与不做
 
@@ -313,3 +313,14 @@
 | v2 | 2026-07-18 | 不通过 | 已修正 v1 P0，但复审发现历史 ready 学期未升级、只读 API/DTO/E2E harness/日志与文档收尾不完整。不得据此实施。 |
 | v3 | 2026-07-18 | 不通过 | 已解决 v2 主要问题，但复审发现 Playwright backend `webServer.command` 裸 `tsx` 在仓库根目录不可执行。不得据此实施。 |
 | v4 | 2026-07-18 | 复审通过 | 独立复审确认 v2/v3 阻塞项均已关闭，允许进入“计划已创建并待用户批准”状态；用户明确批准前不得实施。 |
+
+---
+
+## 7. 实施记录（2026-07-18）
+
+- **批准与分支：** 用户已明确批准 v4；实施分支为 `codex/phase1-t09a-semester-selector`，基线为最新 `origin/master` 加已登记的 T09A 计划提交。
+- **已交付：** semester selector API（列表、读取/设置 current、图片预览、确认创建）、全局 `app_meta.current_semester_id` 恢复、学期库 migration v8、staging/ready/promote/current 创建流程、`/semesters` 首次使用/创建/预览编辑/错误/切换页面、学生端移除 UUID 输入及 `localStorage` 依赖、既有学生端页面 current 守卫、更新既有 E2E 前置条件和新增跨学期隔离/刷新 E2E。
+- **实际结构差异：** 前端采用 `semester-page.tsx` 直接承载页面和 header current 状态，而非计划中的独立 `semester-selector-page.tsx`/`current-semester-control.tsx`；E2E 使用受控 API mock 验证 selector，不新建生产 server 的测试注入入口。差异不扩大任务范围，且不影响 T09A 验收边界。
+- **验证已通过：** 隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t09a-semester-selector` 下：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；`pnpm test`（后端 215/215、前端 61/61）；`pnpm exec playwright test e2e/semester-selector.spec.ts`（1/1）；`pnpm test:e2e`（6/6）；`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`；`git diff --check`。
+- **未实现边界：** T09B–T09E、每日学习首页、课表的已建后查看/编辑、全局导航重构、练习历史/归档、S5、S7、家长 Web 面板、云同步和多用户均未实现。
+- **交付状态：** 实现提交 `965ee4f` 已创建；文档证据已随本提交登记；远端分支推送、fast-forward 合入 `master`、master 复验与 `origin/master` 推送尚待后续固定步骤；本计划不将任务分支完成误记为主线完成。
