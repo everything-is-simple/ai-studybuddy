@@ -662,6 +662,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T08 完成证据（2026-07-17）**：任务分支 `codex/phase1-t08-config-center` 按 `.plans/phase1-t08-config-center-plan.md` v6 实施。关键提交：`4cbc54c` DPAPI 安全配置存储，`dfb1f71` 配置状态与连接测试，`4a6b5fc` 配置 API、loopback Origin 策略、启动门禁与运行时热切换，`45ce9e2` 前端设置中心。Node 22 DPAPI roundtrip 证据：Node `v22.23.1`、win32 x64、`isPlatformSupported=true`、`roundtrip=true`；`DpapiProtector` 包装器 roundtrip 也通过。验证：隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t08-full` 下 `pnpm -r --filter @ai-studybuddy/backend run build` 通过、`pnpm -r --filter @ai-studybuddy/backend run test` 212/212 通过；前端 `pnpm -r --filter @ai-studybuddy/frontend test` 10 files / 52 tests 通过，`pnpm -r --filter @ai-studybuddy/frontend run build` 通过；根级 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t08-root` 下 `pnpm type-check` 与 `pnpm test` 通过；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t08-browser` 下启动 backend `start` 与 frontend `preview`，Playwright 访问 `http://127.0.0.1:4173/settings` 验证“本机配置中心 / 运行状态 / AI Provider / QQ SMTP / 飞书 Webhook”可见且密钥字段为 `password`，访问 `/courses` 验证首次配置提示可见，未点击真实测试激活按钮。测试覆盖候选配置不落盘、DPAPI 不可用降级、active/prev 恢复、唯一 tmp 清理、同 channel 串行锁、跨 channel 并行、逐 Provider 全通过才激活、API 输入上限、非 JSON 拒绝、loopback Origin 策略、配置初始化先于 listen/Worker、AI Router 引用热切换保留熔断、SMTP/飞书快照隔离、前端密钥成功后清空且不写 localStorage、失败只显示固定错误码。未运行真实 AI/SMTP/飞书 smoke；未实现 T09A–T09E 学生端产品化界面、学期向导、每日首页、S5、S7 或家长 Web 面板。
 
+
+
+> **Phase 1 Pre-T09 端到端验收登记（2026-07-18，验证任务，非 T09 实施）**：已从最新 `origin/master` 创建验证分支 `codex/pre-t09-e2e-validation`，计划为 `.plans/pre-t09-e2e-validation-plan.md`。本轮范围是对 T00/T10/T11/T02/T03/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08 的后端、前端、API 和浏览器主路径进行隔离回归；不实现 T09A–T09E，不触发 S5/S7/Phase 3，不运行真实 AI/SMTP/飞书 smoke。
+>
+> **验收证据（2026-07-18）**：治理检查 `scripts/check-docs-governance.ps1` 通过，`git diff --check` 通过；`pnpm type-check` 通过；后端 build 通过、后端测试 `212/212` 通过；前端 build 通过（仅有 Vite chunk 大于 500 kB 的非阻塞警告）、前端测试 `10 files / 52 tests` 通过；根级 `pnpm test` 通过（同样汇总后端 `212/212`、前端 `10 files / 52 tests`）。隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\pre-t09-e2e-validation` 下，Playwright `pnpm test:e2e` 最终 `5 passed`：S4 错题改错、T11 多考试/任务闭环、S3 限时练习（含超时提交/刷新恢复）、不存在练习错误态、T07 时间线/移动端。一次性真实浏览器脚本进一步通过 `/settings` 配置中心与 password 密钥字段、`/courses` 课程入口、`/materials` 合成文本上传与处理刷新、`/notes/:noteId` Markdown/思维导图/知识模块展示；API envelope 合成检查通过。S6 规则生成/隔离/去重/重试边界由现有自动化测试覆盖，未发送真实 QQ SMTP 或飞书消息。
+>
+> **验收中发现并修复的 P1 回归**：浏览器点击“确认考试日期”时，后端 loopback Origin 策略的 `Access-Control-Allow-Methods` 仅声明 `GET,POST,OPTIONS`，导致 PATCH 预检失败并显示“网络连接失败”，同时阻断任务状态和错题 PATCH 路径。已在 `packages/backend/src/middleware/api-origin-policy.ts` 补充 `PATCH,DELETE`，并在 `packages/backend/test/api-origin-policy.test.mjs` 增加 PATCH 预检回归断言；修复后受影响 E2E 及全量 E2E 均通过。当前无 P0/P1 未修复问题。
+>
+> **可接受的 T09A 前已知缺口 / 边界**：`/courses` 顶部仍使用开发期手输 `semesterId`，属于 T09A 学期创建、选择与切换范围，不在本轮实现；未运行真实 AI Provider、QQ SMTP、飞书 Webhook 或正式 Windows Task Scheduler smoke；未实现 T09B–T09E、每日首页、家长 Web 面板、S5、S7 和 Phase 3。验收分支尚未合入或推送 `master`，在完成固定 Git 流程前不得称为主线完成。
 ---
 
 ## Phase 1.5：课堂 ASR（S7）

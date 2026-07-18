@@ -41,12 +41,13 @@ test('Origin policy validates preflight before returning CORS headers', async (t
     method: 'OPTIONS',
     headers: {
       Origin: 'http://localhost:4173',
-      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Method': 'PATCH',
       'Access-Control-Request-Headers': 'content-type',
     },
   });
   assert.equal(accepted.status, 204);
   assert.equal(accepted.headers.get('access-control-allow-origin'), 'http://localhost:4173');
+  assert.match(accepted.headers.get('access-control-allow-methods') ?? '', /(?:^|,)PATCH(?:,|$)/);
 
   const rejected = await fetch(url, {
     method: 'OPTIONS',
