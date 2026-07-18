@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.38
+**版本**：v1.39
 **日期**：2026-07-18
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展和 T08 本机配置中心与连接验收。T09A 已 fast-forward 合入并推送 `origin/master`，且已完成主线复验；T09B–T09E 仍未启动，未经新的独立计划、审查和用户明确批准不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展和 T08 本机配置中心与连接验收。T09A 已 fast-forward 合入并推送 `origin/master`，且已完成主线复验。针对前端 Markmap 构建 chunk 警告，维护任务 M01 的独立计划 v2 已通过独立复审，当前待用户明确批准；在批准前不得改动前端业务代码。T09B–T09E 仍未启动，未经新的独立计划、审查和用户明确批准不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B–T09E、每日首页与家长 Web 面板均未启动。
 
@@ -474,10 +474,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 17 | Phase 1-T07：S1 时间线扩展 | ✅ | 已读回 S2/S3/S4 正式 StudyEvent，支持事件类型精确过滤并在考试工作台展示当前课程近期活动 |
 | 18 | Phase 1-T08：本机配置中心与连接验收 | ✅ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；已完成 DPAPI 加密存储、连接测试、运行时热切换、设置页与验证 |
 | 19 | Phase 1-T09A：学期创建、选择与切换 | ✅ | 已创建/列表/当前选择与切换/刷新恢复、课表预览确认、跨学期隔离及移除手输 UUID；已 fast-forward 合入并推送 `origin/master`，主线 type-check、build、全量测试与 E2E 均通过。课表创建后的查看编辑仍归入 T09C |
-| 20 | Phase 1-T09B：每日学习首页 | ⏳ | 今日待办任务、临近考试倒计时、待质检资料、错题复习提醒、下一步行动建议；必须先有独立计划、审查和用户批准 |
-| 21 | Phase 1-T09C：课程课表与考试目标完善 | ⏳ | 已创建学期的课表查看、人工编辑与修改、完整课表视图、考试目标设定与倒计时、状态反馈与空状态引导；必须先有独立计划、审查和用户批准 |
-| 22 | Phase 1-T09D：全局导航与学生旅程 E2E | ⏳ | 全局侧栏/底栏导航、加载/错误/空状态统一处理、响应式适配、新用户到日常使用完整旅程验收；必须先有独立计划、审查和用户批准 |
-| 23 | Phase 1-T09E：练习历史与学期归档 | ⏳ | 练习历史列表与筛选、学期归档与只读查看；可后置于产品化核心完成后；必须先有独立计划、审查和用户批准 |
+| 20 | Phase 1-M01：前端 Markmap 按需加载与构建 chunk 治理 | ⏳ | 消除 `markmap` 超过 500 kB 的构建警告：无思维导图笔记不下载渲染器，有思维导图时保持可用或中文降级；不提高警告阈值、不改 API/数据格式，必须先有独立计划、审查和用户批准 |
+| 21 | Phase 1-T09B：每日学习首页 | ⏳ | 今日待办任务、临近考试倒计时、待质检资料、错题复习提醒、下一步行动建议；必须先有独立计划、审查和用户批准 |
+| 22 | Phase 1-T09C：课程课表与考试目标完善 | ⏳ | 已创建学期的课表查看、人工编辑与修改、完整课表视图、考试目标设定与倒计时、状态反馈与空状态引导；必须先有独立计划、审查和用户批准 |
+| 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ⏳ | 全局侧栏/底栏导航、加载/错误/空状态统一处理、响应式适配、新用户到日常使用完整旅程验收；必须先有独立计划、审查和用户批准 |
+| 24 | Phase 1-T09E：练习历史与学期归档 | ⏳ | 练习历史列表与筛选、学期归档与只读查看；可后置于产品化核心完成后；必须先有独立计划、审查和用户批准 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -488,6 +489,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T07 | `.plans/phase1-t07-timeline-plan.md` | 已批准、已实施并完成 |
 | T08 | `.plans/phase1-t08-config-center-plan.md` | v6 已批准、已实施并完成 |
 | T09A | `.plans/phase1-t09a-semester-selector-plan.md` | 已完成：任务分支 `codex/phase1-t09a-semester-selector` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验通过。T09B–T09E 仍未启动 |
+| M01 | `.plans/phase1-m01-markmap-chunk-optimization-plan.md` | v2 已通过独立复审，待用户明确批准；未批准不得改动前端业务代码或创建实现分支 |
 | T09B | 尚未创建 | 仅登记路线；T09A 完成后再进入独立门禁 |
 | T09C | 尚未创建 | 仅登记路线；不得与 T09A 混写实现 |
 | T09D | 尚未创建 | 仅登记路线；学生端可交付 MVP 收尾任务 |
@@ -495,6 +497,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
+> **M01 计划登记（2026-07-18，尚未实施）**：针对前端构建中 `markmap` 独立 chunk 为 655.40 kB、触发 Vite 默认 500 kB 警告的问题，已创建 `.plans/phase1-m01-markmap-chunk-optimization-plan.md`。计划范围限定为笔记页中思维导图组件的条件式动态导入、加载/失败中文反馈与相关测试/真实浏览器验收；不得仅提高 `chunkSizeWarningLimit` 隐藏告警，不升级依赖、不改后端 API 或 MindMap 数据格式，不实施 T09B–T09E、每日首页、S5、S7、家长 Web 面板或 Phase 2/3。任务登记、计划创建及 v2 独立复审均已完成，当前只待用户明确批准。
+>
 > **T09A 主线交付证据（2026-07-18，已合入并推送）**：用户已明确批准 v4 计划。任务分支 `codex/phase1-t09a-semester-selector` 实现提交 `965ee4f`、文档证据提交 `c796439` 已 fast-forward 合入 `master`；主线复验中发现课程列表无顺序契约导致的新测试断言不稳定，已以最小测试修复提交 `1649fab` 消除该波动。正式交付包括 `/semesters` 入口与 `GET /api/semesters`、`GET /api/semesters/current`、`PUT /api/semesters/current`、`POST /api/semesters/preview`、`POST /api/semesters`；current 仅由全局 `app_meta.current_semester_id` 保存，学期库升级至 migration v8，创建采用 staging/ready/promote/current 流程。学生端已移除手输 UUID 与浏览器 `localStorage` 学期依赖；切换和刷新均由后端 current 恢复，课程、考试、任务和时间线保持学期隔离。主线验证通过：`pnpm type-check`、后端/前端 build、`pnpm test`（后端 215/215、前端 61/61）、`pnpm exec playwright test e2e/semester-selector.spec.ts`（1/1）、`pnpm test:e2e`（6/6）、`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check`；验证数据使用隔离目录 `I:\ai-studybuddy-tmp\runs\phase1-t09a-semester-selector`。上述提交已包含于 `origin/master`；T09B–T09E、每日首页、S5、S7、家长 Web 面板均未开始。
 
 > **T00 收尾证据（2026-07-15）**：创建 `docs/12-开发规范-Dev-Rules.md`，重写 `CLAUDE.md`/`AGENTS.md` 为入口引用 docs/12，更新 `docs/00`/`docs/04`/`docs/07`/`docs/09` 状态。8 文件变更，700+ / 459−。commit `ec536df`。
