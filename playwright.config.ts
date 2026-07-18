@@ -6,6 +6,11 @@ if (!appDataRoot) {
   throw new Error('APP_DATA_ROOT is required for Playwright runs');
 }
 
+const normalizedAppDataRoot = path.resolve(appDataRoot).toLowerCase();
+if (!normalizedAppDataRoot.includes(`${path.sep}ai-studybuddy-tmp${path.sep}runs${path.sep}`)) {
+  throw new Error('Playwright APP_DATA_ROOT must be an isolated path under ai-studybuddy-tmp/runs');
+}
+
 const evidenceRoot = path.join(appDataRoot, 'playwright');
 
 export default defineConfig({
@@ -28,7 +33,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'pnpm --filter @ai-studybuddy/backend run build && pnpm --filter @ai-studybuddy/backend run start',
+      command: 'pnpm --filter @ai-studybuddy/backend exec tsx test/e2e-server.ts',
       url: 'http://127.0.0.1:4311/api/health',
       reuseExistingServer: false,
       timeout: 120_000,

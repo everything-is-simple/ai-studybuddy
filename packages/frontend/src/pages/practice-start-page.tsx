@@ -4,7 +4,7 @@ import type { KnowledgeModuleDto, PracticeDifficultyPreference } from '@ai-study
 import { createPracticeSession } from '../api/practice-runner-api';
 import { getKnowledgeModules } from '../api/note-builder-api';
 import { getExam } from '../api/study-rhythm-api';
-import { AppNavigation } from '../components/app-navigation';
+import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { useApiRequest } from '../hooks/use-api-request';
 
@@ -94,7 +94,6 @@ export function PracticeStartPage({ semesterId, onSemesterError }: PracticeStart
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能发起练习。" />
       </div>
     );
@@ -103,13 +102,13 @@ export function PracticeStartPage({ semesterId, onSemesterError }: PracticeStart
   const workbenchPath = examId ? `/exams/${encodeURIComponent(examId)}` : '/courses';
   return (
     <div className="page practice-start-page">
-      <AppNavigation />
       <Link to={workbenchPath}>返回考试项目</Link>
       {loading && !data && <FeedbackMessage state="loading" message="正在加载可练知识模块…" />}
       {error && <FeedbackMessage state="error" message={error} onRetry={refetch} />}
       {actionError && <FeedbackMessage state="error" message={actionError} />}
       {data && (
         <>
+          <ExamContextNav examId={data.exam.id} courseInstanceId={data.exam.courseInstanceId} active="practice" />
           <header className="card">
             <p className="workbench-eyebrow">练习发起</p>
             <h1>{data.exam.name}</h1>

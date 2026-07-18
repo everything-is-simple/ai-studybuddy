@@ -14,7 +14,7 @@ let nextPortOffset = 0;
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t09b-api-'));
-  const port = 51000 + (nextPortOffset % 2000);
+  const port = 56000 + (nextPortOffset % 2000);
   nextPortOffset += 1;
   const processHandle = spawn(process.execPath, ['dist/server.js'], {
     cwd: backendDir,

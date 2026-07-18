@@ -18,7 +18,7 @@ import {
   getTimeline,
   updateStudyTaskStatus,
 } from '../api/study-rhythm-api';
-import { AppNavigation } from '../components/app-navigation';
+import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { StudyEventList } from '../components/study-event-list';
 import { useApiRequest } from '../hooks/use-api-request';
@@ -210,7 +210,6 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能打开考试项目。" />
       </div>
     );
@@ -218,7 +217,6 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
 
   return (
     <div className="page exam-workbench">
-      <AppNavigation />
       {loading && !data && <FeedbackMessage state="loading" message="正在加载考试项目…" />}
       {error && <FeedbackMessage state="error" message={error} onRetry={refetch} />}
       {actionMessage && <FeedbackMessage state="success" message={actionMessage} />}
@@ -226,6 +224,7 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
 
       {data && (
         <>
+          <ExamContextNav examId={data.exam.id} courseInstanceId={data.exam.courseInstanceId} active="overview" />
           <header className="workbench-header card">
             <div>
               <p className="workbench-eyebrow">考试项目</p>

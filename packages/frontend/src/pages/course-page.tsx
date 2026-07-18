@@ -16,7 +16,6 @@ import {
   updateExam,
   updateScheduleEntry,
 } from '../api/study-rhythm-api';
-import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import { formatExamCountdown } from './exam-workbench-date';
 import type { CourseWithExams } from '../types/view-models';
@@ -321,7 +320,6 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
 
   return (
     <div className="page course-page">
-      <AppNavigation />
       <h1>课程与考试目标</h1>
       <p className="text-muted">当前学期内维护课程、完整周课表和考试目标；切换学期后会重新加载对应数据。</p>
       {successMessage && <FeedbackMessage state="success" message={successMessage} />}

@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import type { MistakeStatus } from '@ai-studybuddy/shared';
 import { getMistakes, getWeakPoints } from '../api/error-fixer-api';
 import { getExam } from '../api/study-rhythm-api';
-import { AppNavigation } from '../components/app-navigation';
+import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { useApiRequest } from '../hooks/use-api-request';
 
@@ -69,7 +69,6 @@ export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPage
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能查看错题本。" />
       </div>
     );
@@ -85,8 +84,8 @@ export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPage
 
   return (
     <div className="page mistake-list-page">
-      <AppNavigation />
       <Link to={`/exams/${examId}`}>返回考试工作台</Link>
+      {data && <ExamContextNav examId={data.exam.id} courseInstanceId={data.exam.courseInstanceId} active="mistakes" />}
       <header className="card">
         <p className="workbench-eyebrow">查漏补缺 · 错题本</p>
         <h1>{data ? `${data.exam.name} 的错题` : '错题本'}</h1>

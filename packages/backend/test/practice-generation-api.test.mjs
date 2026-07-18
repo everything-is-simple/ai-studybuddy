@@ -11,8 +11,8 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const Database = require('better-sqlite3');
 const backendDir = path.resolve(import.meta.dirname, '..');
-let nextBackendPort = 50000;
-let nextAiPort = 53000;
+let nextBackendPort = 57800;
+let nextAiPort = 57900;
 
 function jsonBody(request) {
   return new Promise((resolve) => {

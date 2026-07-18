@@ -136,6 +136,29 @@ describe('App current semester shell', () => {
     expect(container.textContent).toContain('学期管理');
   });
 
+  it('keeps protected routes on current semester read failure and supports retry', async () => {
+    mocks.getCurrentSemester.mockRejectedValueOnce(new Error('接口不可用')).mockResolvedValueOnce({
+      semester: currentSemester,
+      recoveredFromStaleCurrent: false,
+    });
+    await renderApp('/courses');
+
+    expect(mocks.getCurrentSemester).toHaveBeenCalledTimes(1);
+    expect(container.textContent).toContain('当前学期恢复失败');
+    expect(container.textContent).toContain('接口不可用');
+    expect(mocks.courseSemesterIds).toHaveLength(0);
+
+    const retryButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('重新读取当前学期')
+    );
+    expect(retryButton).not.toBeNull();
+    await act(async () => retryButton!.click());
+    await flush();
+
+    expect(mocks.getCurrentSemester).toHaveBeenCalledTimes(2);
+    expect(container.textContent).toContain('课程页 semester=11111111-1111-4111-8111-111111111111');
+  });
+
   it('updates current semester after semester page selects or creates one', async () => {
     mocks.getCurrentSemester.mockResolvedValue({ semester: null, recoveredFromStaleCurrent: false });
     await renderApp('/semesters');

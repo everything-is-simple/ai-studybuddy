@@ -4,7 +4,6 @@ import { useApiRequest } from '../hooks/use-api-request';
 import { useMaterialPolling } from '../hooks/use-material-polling';
 import { getCourses } from '../api/study-rhythm-api';
 import { replaceText, retryAiGeneration, retryConversion, uploadMaterial } from '../api/note-builder-api';
-import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import { FileDropzone } from '../components/file-dropzone';
 import { MaterialStatus } from '../components/material-status';
@@ -160,7 +159,6 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先在本页顶部输入有效的学期 ID，才能上传和管理资料。" />
       </div>
     );
@@ -168,7 +166,6 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
 
   return (
     <div className="page">
-      <AppNavigation />
       <h1>资料上传</h1>
 
       {successMessage && <FeedbackMessage state="success" message={successMessage} />}

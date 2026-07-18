@@ -6,6 +6,7 @@ import { confirmSemester, listSemesters, previewSemesterTimetable, selectCurrent
 
 interface SemesterPageProps {
   current: SemesterSummaryDto | null;
+  currentMessage?: string | null;
   onCurrentChange: (current: CurrentSemesterDto) => void;
 }
 
@@ -27,7 +28,7 @@ const emptyForm: FormState = {
   file: null,
 };
 
-export function SemesterPage({ current, onCurrentChange }: SemesterPageProps) {
+export function SemesterPage({ current, currentMessage = null, onCurrentChange }: SemesterPageProps) {
   const navigate = useNavigate();
   const [semesters, setSemesters] = useState<SemesterSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +139,7 @@ export function SemesterPage({ current, onCurrentChange }: SemesterPageProps) {
 
       {!current && <div className="empty-state">还没有可用学期。请先创建第一个学期，之后系统会自动恢复当前学期。</div>}
       {current && <div className="current-semester-card">当前学期：<strong>{current.semesterCode}</strong>（{current.teachingStartDate} 至 {current.teachingEndDate}）</div>}
+      {currentMessage && <p className="feedback warning" role="status">{currentMessage}</p>}
       {listError && <p className="feedback error">{listError}</p>}
       {error && <p className="feedback error" role="alert">{error}</p>}
 

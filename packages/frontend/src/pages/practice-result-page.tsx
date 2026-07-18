@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { getPracticeSession } from '../api/practice-runner-api';
 import { getKnowledgeModules } from '../api/note-builder-api';
-import { AppNavigation } from '../components/app-navigation';
+import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { PracticeResultItem } from '../components/practice-result-item';
 import { usePracticeDraft } from '../hooks/use-practice-draft';
@@ -23,6 +23,7 @@ function formatDuration(seconds: number): string {
 
 export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
   const { sessionId = '' } = useParams();
+  const [searchParams] = useSearchParams();
   const { draft } = usePracticeDraft(semesterId ?? '', sessionId);
   const fetcher = useCallback(
     async (signal: AbortSignal) => {
@@ -38,7 +39,6 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能查看练习结果。" />
       </div>
     );
@@ -47,7 +47,6 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
   if (!draft.result) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="未找到本次练习结果。结果仅在同一浏览器会话内可恢复。" />
         <Link className="button-link" to="/courses">
           返回课程与考试
@@ -57,12 +56,15 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
   }
 
   const result = draft.result;
+  const contextExamId = data?.session.assessmentAttemptId ?? searchParams.get('examId') ?? null;
   const answerByQuestionId = new Map(result.answers.map((answer) => [answer.questionId, answer]));
   const moduleById = new Map((data?.modules ?? []).map((module) => [module.id, module]));
   return (
     <div className="page practice-result-page">
-      <AppNavigation />
       <Link to="/courses">返回课程与考试</Link>
+      {contextExamId && (
+        <ExamContextNav examId={contextExamId} courseInstanceId={data?.session.courseInstanceId ?? null} active="practice" />
+      )}
       <header className="card practice-result-summary">
         <p className="workbench-eyebrow">练习结果</p>
         <h1>

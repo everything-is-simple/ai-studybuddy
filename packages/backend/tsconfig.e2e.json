@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "baseUrl": ".",
+    "paths": {
+      "@ai-studybuddy/shared": ["../shared/src/index.ts"]
+    }
+  },
+  "include": ["src", "../shared/src", "test/e2e-server.ts", "test/e2e-stale-current.ts"]
+}

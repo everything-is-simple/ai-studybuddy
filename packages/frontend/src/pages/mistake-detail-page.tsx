@@ -8,7 +8,7 @@ import {
   updateMistakeStatus,
 } from '../api/error-fixer-api';
 import { ApiClientError } from '../api/api-client';
-import { AppNavigation } from '../components/app-navigation';
+import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { useApiRequest } from '../hooks/use-api-request';
 
@@ -81,7 +81,6 @@ export function MistakeDetailPage({ semesterId, onSemesterError }: MistakeDetail
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能查看错题。" />
       </div>
     );
@@ -150,11 +149,14 @@ export function MistakeDetailPage({ semesterId, onSemesterError }: MistakeDetail
 
   return (
     <div className="page mistake-detail-page">
-      <AppNavigation />
       {backExamId ? (
         <Link to={`/exams/${backExamId}/mistakes`}>返回错题本</Link>
       ) : (
         <Link to="/courses">返回课程与考试</Link>
+      )}
+
+      {data && backExamId && (
+        <ExamContextNav examId={backExamId} courseInstanceId={data.courseInstanceId} active="mistakes" />
       )}
 
       {loading && <FeedbackMessage state="loading" message="正在加载错题详情…" />}

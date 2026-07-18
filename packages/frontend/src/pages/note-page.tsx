@@ -4,7 +4,6 @@ import { useApiRequest } from '../hooks/use-api-request';
 import { getKnowledgeModules, getNote } from '../api/note-builder-api';
 import { getStudyTasks } from '../api/study-rhythm-api';
 import type { KnowledgeModuleDto, StudyTaskDto } from '@ai-studybuddy/shared';
-import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import { MarkdownNote } from '../components/markdown-note';
 import { LazyMindMapSection } from '../components/lazy-mind-map';
@@ -66,7 +65,6 @@ export function NotePage({ semesterId }: NotePageProps) {
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先在本页顶部输入有效的学期 ID，才能查看笔记。" />
       </div>
     );
@@ -75,7 +73,6 @@ export function NotePage({ semesterId }: NotePageProps) {
   if (!noteId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage
           state="error"
           message="笔记 ID 缺失，请从资料页面的“查看笔记”入口进入。"
@@ -87,7 +84,6 @@ export function NotePage({ semesterId }: NotePageProps) {
 
   return (
     <div className="page">
-      <AppNavigation />
       <h1>笔记</h1>
 
       {noteLoading && <FeedbackMessage state="loading" />}

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { PracticeSessionDetailDto } from '@ai-studybuddy/shared';
 import { getPracticeSession, submitPracticeSession } from '../api/practice-runner-api';
-import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import { PracticeQuestion } from '../components/practice-question';
 import { usePracticeDraft } from '../hooks/use-practice-draft';
@@ -100,7 +99,6 @@ export function PracticeSessionPage({ semesterId, onSemesterError }: PracticeSes
   if (!semesterId) {
     return (
       <div className="page">
-        <AppNavigation />
         <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能继续作答。" />
       </div>
     );
@@ -108,7 +106,6 @@ export function PracticeSessionPage({ semesterId, onSemesterError }: PracticeSes
 
   return (
     <div className="page practice-session-page">
-      <AppNavigation />
       <Link to="/courses">返回课程与考试</Link>
       {loading && !data && <FeedbackMessage state="loading" message="正在读取练习题目…" />}
       {error && <FeedbackMessage state="error" message={error} onRetry={refetch} />}
