@@ -7,7 +7,7 @@ import type { KnowledgeModuleDto, StudyTaskDto } from '@ai-studybuddy/shared';
 import { AppNavigation } from '../components/app-navigation';
 import { FeedbackMessage } from '../components/feedback-message';
 import { MarkdownNote } from '../components/markdown-note';
-import { MindMap } from '../components/mind-map';
+import { LazyMindMapSection } from '../components/lazy-mind-map';
 import { KnowledgeModuleList } from '../components/knowledge-module-list';
 
 interface NotePageProps {
@@ -102,7 +102,7 @@ export function NotePage({ semesterId }: NotePageProps) {
           {note.mindMap && (
             <section className="card">
               <h2>思维导图</h2>
-              <MindMap data={note.mindMap.data} />
+              <LazyMindMapSection data={note.mindMap.data} />
             </section>
           )}
 
