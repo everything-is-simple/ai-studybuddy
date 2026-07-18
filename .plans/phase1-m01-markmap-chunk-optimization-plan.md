@@ -2,7 +2,7 @@
 
 **版本**：v2
 **日期**：2026-07-18
-**状态**：v2 已通过独立复审，并于 2026-07-18 获用户明确批准；实施提交 `57b8612`、专项 E2E、全量验证与实现复审均已通过，等待主线快进合入/主线复验。
+**状态**：已完成。v2 已通过独立复审，并于 2026-07-18 获用户明确批准；实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`，主线复验已通过。
 **任务登记**：`docs/04-开发任务清单-Todo-List.md` 的 Phase 1-M01 与“Phase 1 行动计划索引”。
 
 ---
@@ -179,4 +179,4 @@ pnpm exec playwright test <M01 相关笔记页 spec>
 - `manualChunks` 已改为公开包族分组：`markmap-lib`/`markmap-html-parser`/`markmap-common` 为 `markmap-transformer`，`markmap-view` 与 `d3`/`d3-*` 为 `markmap-runtime`；未提高 `chunkSizeWarningLimit`，未升级依赖，未改后端 API、SQLite、MindMap 数据格式或学期逻辑。
 - 生产构建结果：`mind-map` 0.86 kB、`markmap-runtime` 72.44 kB、`markmap-transformer` 320.81 kB，均低于 500 kB。构建仍出现通用 warning 的唯一来源为 `katex` 535.51 kB；该问题不属于 M01，未被掩盖，也未在本任务中提前优化。
 - 验证已通过：`pnpm type-check`；`pnpm --filter @ai-studybuddy/frontend run type-check`；`pnpm --filter @ai-studybuddy/frontend run test -- lazy-mind-map.test.tsx`（3/3）；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-m01-markmap-chunk-optimization` 下 `pnpm exec playwright test e2e/markmap-lazy-load.spec.ts`（2/2）；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-m01-markmap-full-test` 下 `pnpm test`（前端 64/64、后端 215/215）。
-- 实现复审已通过：变更仅限 M01 的笔记页动态边界、局部中文降级、Vite chunk 分组和对应单元/E2E 测试。实现提交 `57b8612` 已创建，当前未合入 `master`、未推送 `origin/master`；后续仍必须依序完成文档治理、diff 检查、提交、rebase/fast-forward、主线复验和主线推送，才可报告 M01 主线完成。
+- 实现复审已通过：变更仅限 M01 的笔记页动态边界、局部中文降级、Vite chunk 分组和对应单元/E2E 测试。实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验再次通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和隔离专项 Playwright E2E（2/2），因此 M01 已完成。

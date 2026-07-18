@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.31
+**版本**：v2.32
 **日期**：2026-07-18
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -136,7 +136,7 @@ git diff --check
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08 与 T09A 已完成；T09A 已 fast-forward 合入并推送 `origin/master`，且完成主线复验；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
 4. T09A 已完成并已推送 `origin/master`；T09B–T09E 仍均未启动，后续任何一个任务都必须重新完成独立计划、审查和用户明确批准，当前不自动进入实施。S5/S7 继续按各自门禁等待。S3 Worker 不属于当前 MVP，仍未开始。
-5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 的独立计划 v2 已通过独立复审并于 2026-07-18 获用户明确批准，实施分支已从最新 `origin/master` 创建；M01 的实现提交 `57b8612`、专项 E2E、全量验证与实现复审均已通过，当前等待主线快进与主线复验，不进入 T09B–T09E；T09B–T09E 仍仅登记路线、计划尚未创建。
+5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B–T09E 仍仅登记路线、计划尚未创建。
 
 ---
 
@@ -169,6 +169,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.32 | 2026-07-18 | 补齐 Phase 1-M01 主线完成事实：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 和验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验通过文档治理、`git diff --check`、type-check、后端/前端 build、隔离全量测试（前端 64/64、后端 215/215）与专项 E2E（2/2）。Markmap 物理 chunk 为 0.86 kB / 72.44 kB / 320.81 kB；KaTeX 535.51 kB warning 保留为独立遗留，T09B–T09E 未启动 |
 | v2.31 | 2026-07-18 | Phase 1-M01 实现、专项 E2E、全量验证与实现复审已通过：笔记页仅在存在导图时动态加载，Markmap 拆为 0.86 kB / 72.44 kB / 320.81 kB 物理 chunk；KaTeX 535.51 kB warning 如实保留为独立遗留；实现提交 `57b8612` 已创建，当前待主线快进与主线复验 |
 | v2.28 | 2026-07-18 | T09A 已 fast-forward 合入 `master` 并推送 `origin/master`：实现提交 `965ee4f`、交付证据 `c796439`、测试稳定性修复 `1649fab`；主线复验通过 type-check、后端/前端 build、全量测试（后端 215/215、前端 61/61）及 E2E（专项 1/1、全量 6/6），T09B–T09E 未启动 |
 | v2.30 | 2026-07-18 | Phase 1-M01 v2 已通过独立复审并获用户明确批准；实施分支 `codex/phase1-m01-markmap-chunk-optimization` 已从最新 `origin/master` 创建，当前仅实施该维护任务 |
