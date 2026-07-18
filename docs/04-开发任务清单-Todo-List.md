@@ -1,12 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.41
+**版本**：v1.42
 **日期**：2026-07-18
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；M01 的实现提交为 `57b8612`、验证证据提交为 `6f5abcb`，Markmap 相关物理 chunk 均低于 500 kB，KaTeX 535.51 kB warning 作为独立遗留保留。T09B 已 fast-forward 合入 `master` 并完成主线复验；实现提交 `562a633`、验证证据提交 `29c878f` 与本次主线收尾记录已一并推送 `origin/master`。T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 均已包含于远端主线。T09D–T09E 仍未启动，未经各自新的独立计划、审查和用户明确批准不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；M01 的实现提交为 `57b8612`、验证证据提交为 `6f5abcb`，Markmap 相关物理 chunk 均低于 500 kB，KaTeX 535.51 kB warning 作为独立遗留保留。T09B 已 fast-forward 合入 `master` 并完成主线复验；实现提交 `562a633`、验证证据提交 `29c878f` 与本次主线收尾记录已一并推送 `origin/master`。T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 均已包含于远端主线。T09D 独立计划已创建、已独立复审、等待用户明确批准；实现未启动；T09E 尚未创建计划、尚未启动。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
-> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B 已完成主线集成与主线复验；T09C 已完成主线集成、主线复验并推送 `origin/master`；T09D–T09E、家长 Web 面板均未启动。
+> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B 已完成主线集成与主线复验；T09C 已完成主线集成、主线复验并推送 `origin/master`；T09D 独立计划已创建、已独立复审、等待用户明确批准；实现未启动；T09E 与家长 Web 面板均未启动。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -22,7 +22,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08/T09A/T09B/T09C ✅；T09D–T09E 未启动） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08/T09A/T09B/T09C ✅；T09D 📝 独立计划已创建、已独立复审、等待用户明确批准；实现未启动；T09E 未启动） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -447,7 +447,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：在不扩大架构的前提下，跑通 S1 + S2 + S3 + S4 + S6 简版；主界面逐步围绕”一个考试项目”组织，而不是围绕数据库对象组织。
 
-**前置条件**：Phase 0.8 T09 已通过。S1/S2/S3/S4/S6 PRD 与 Phase 1-T00–T09A 对应范围已完成；S5/S7 仍未触发。T09B 已 fast-forward 合入 `master` 并完成主线复验；T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；T09D–T09E 仍未开始，进入任一后续任务前必须重新完成各自的独立计划、审查和用户明确批准。
+**前置条件**：Phase 0.8 T09 已通过。S1/S2/S3/S4/S6 PRD 与 Phase 1-T00–T09A 对应范围已完成；S5/S7 仍未触发。T09B 已 fast-forward 合入 `master` 并完成主线复验；T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；T09D 独立计划已创建、已独立复审、等待用户明确批准；实现未启动；T09E 尚未创建计划、尚未启动，进入后续任务前仍须完成独立计划、审查和用户明确批准。
 
 ### Phase 1 真实执行顺序
 
@@ -477,7 +477,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 20 | Phase 1-M01：前端 Markmap 按需加载与构建 chunk 治理 | ✅ | 已通过动态导入使无导图笔记不下载渲染器，并在有导图时提供加载/中文降级；Markmap 物理 chunk 均低于 500 kB，未提高警告阈值、未改 API/数据格式。任务分支已 fast-forward 合入并推送 `origin/master`，主线复验通过；KaTeX 535.51 kB warning 为独立遗留项 |
 | 21 | Phase 1-T09B：每日学习首页 | ✅ | 已交付当前已选择单学期的只读每日首页：今日/明日任务、明日课程、已确认考试、待处理资料、错题复习和确定性下一步；复用 T09A current semester，主线复验通过。实现提交 `562a633`、验证证据 `29c878f` 已 fast-forward 合入 `master`，本次收尾记录已一并推送 `origin/master` |
 | 22 | Phase 1-T09C：课程课表与考试目标完善 | ✅ | 已交付当前学期课程名称编辑、完整周课表条目维护、考试名称/日期/目标编辑及已确认倒计时；计划 `b14b718`、实现 `082be70`、日期验收稳定 `51de979` 和主线验证证据 `735bd36` 已推送 `origin/master`。不含 T09D/T09E |
-| 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ⏳ | 全局侧栏/底栏导航、加载/错误/空状态统一处理、响应式适配、新用户到日常使用完整旅程验收；必须先有独立计划、审查和用户批准 |
+| 23 | Phase 1-T09D：全局导航与学生旅程 E2E | 📝 | 独立计划已创建、已独立复审、等待用户明确批准；实现未启动。 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ⏳ | 练习历史列表与筛选、学期归档与只读查看；可后置于产品化核心完成后；必须先有独立计划、审查和用户批准 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
@@ -491,11 +491,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T09A | `.plans/phase1-t09a-semester-selector-plan.md` | 已完成：任务分支 `codex/phase1-t09a-semester-selector` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验通过。T09B–T09E 仍未启动 |
 | M01 | `.plans/phase1-m01-markmap-chunk-optimization-plan.md` | 已完成：v2 经独立复审并于 2026-07-18 获用户批准；任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`，主线复验通过。T09B–T09E 仍未启动 |
 | T09B | `.plans/phase1-t09b-daily-study-home-plan.md` | 已完成：独立计划、复审、实施、fast-forward 主线集成与主线复验均通过；实现提交 `562a633`、验证证据提交 `29c878f` 与本次收尾记录已一并推送 `origin/master`。T09C–T09E 仍未启动 |
-| T09C | `.plans/phase1-t09c-course-schedule-exam-goals-plan.md` | 已完成：独立计划、复审、用户批准、实施、fast-forward 主线集成与主线复验均通过；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 已推送 `origin/master`。T09D/T09E 仍未启动 |
-| T09D | 尚未创建 | 仅登记路线；学生端可交付 MVP 收尾任务 |
-| T09E | 尚未创建 | 可后置增强，不阻塞 T09D 完成口径 |
+| T09C | `.plans/phase1-t09c-course-schedule-exam-goals-plan.md` | 已完成：独立计划、复审、用户批准、实施、fast-forward 主线集成与主线复验均通过；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 已推送 `origin/master`。 |
+| T09D | `.plans/phase1-t09d-global-navigation-student-journey-plan.md` | 独立计划已创建、已独立复审、等待用户明确批准；实现未启动。 |
+| T09E | 尚未创建 | 尚未创建计划、尚未启动；可后置增强，不阻塞 T09D 完成口径 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
+
+> **T09D 计划门禁（2026-07-18，等待用户明确批准）**：以 `origin/master` @ `07a2b0fc880fcfeb48448565f4de8fd8ca4c29b5` 为基线，在计划分支 `codex/phase1-t09d-global-navigation-student-journey-plan` 创建 `.plans/phase1-t09d-global-navigation-student-journey-plan.md`，初次至第三次独立 fresh-pass 复审发现的计划表达缺口均已修订；第四次独立 fresh-pass 复审按 12 项检查确认无 P0/P1/P2，结论为“通过，等待用户明确批准”。计划仅覆盖统一全局/考试上下文导航、桌面/窄屏/移动响应式、加载/无 current/stale/错误/重试/空/安全 404 状态，以及真实后端、真实 SQLite、隔离数据根下的导航专项和完整学生旅程 E2E；原则上不新增数据库 schema、migration 或业务 API，不重做 T09A/T09B/T09C/T11 业务能力。状态为“独立计划已创建、已独立复审、等待用户明确批准；实现未启动。”；未创建实施分支，未修改业务代码，T09E 尚未创建计划、尚未启动。
 
 > **M01 主线交付证据（2026-07-18，已合入并推送）**：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 已按 `.plans/phase1-m01-markmap-chunk-optimization-plan.md` v2 完成实现、独立复审、fast-forward 主线集成和主线复验。`NotePage` 仅在存在 `mindMap` 时通过 `LazyMindMapSection` 动态加载实际 `MindMap`，局部加载态为“正在加载思维导图…”，动态导入或渲染失败降级为“暂无法展示思维导图”。Vite 按公开包族拆分为 `markmap-transformer` 与 `markmap-runtime`，未提高 `chunkSizeWarningLimit`、未升级依赖、未改后端/API/SQLite/MindMap 数据格式或学期逻辑。构建产物：`mind-map` 0.86 kB、`markmap-runtime` 72.44 kB、`markmap-transformer` 320.81 kB，均低于 500 kB；通用 warning 唯一来自独立遗留的 `katex` 535.51 kB，未在 M01 中掩盖或提前优化。实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）及隔离专项 Playwright E2E 2/2。T09B–T09E、每日首页、S5、S7、家长 Web 面板和 Phase 2/3 仍未启动。
 >
