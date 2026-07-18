@@ -178,6 +178,6 @@ pnpm exec playwright test e2e/daily-study-home.spec.ts
 ## 9. 主线交付验证记录（2026-07-18，已合入并推送）
 
 - 计划提交：`d324dab docs(phase1): 登记 T09B 每日学习首页实施计划`；实现提交：`562a633 feat(phase1): 实现 T09B 每日学习首页`；分支验证证据提交：`29c878f docs(phase1): 登记 T09B 每日学习首页验证证据`。
-- 任务分支 `codex/phase1-t09b-daily-study-home` 已 rebase 到最新 `origin/master` @ `5e9ee57`，并以 fast-forward 合入本地 `master`；本次主线收尾提交将与其一起推送 `origin/master`。
+- 任务分支 `codex/phase1-t09b-daily-study-home` 已 rebase 到最新 `origin/master` @ `5e9ee57`，并以 fast-forward 合入本地 `master`；本次主线收尾提交已与其一起推送 `origin/master`。
 - 主线复验：`pnpm type-check`、后端/前端 build、`pnpm test`（前端 69/69、后端 218/218）、隔离 `pnpm exec playwright test e2e/daily-study-home.spec.ts`（1/1）、`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check` 均通过。
 - 既有 KaTeX 535.51 kB 构建 warning 仅如实保留，未在本任务处理；T09C–T09E、S5、S7、家长 Web 面板和 Phase 2/3 未实施。

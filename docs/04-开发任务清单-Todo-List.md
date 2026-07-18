@@ -4,7 +4,7 @@
 **日期**：2026-07-18
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；M01 的实现提交为 `57b8612`、验证证据提交为 `6f5abcb`，Markmap 相关物理 chunk 均低于 500 kB，KaTeX 535.51 kB warning 作为独立遗留保留。T09B 已 fast-forward 合入 `master` 并完成主线复验；实现提交 `562a633`、验证证据提交 `29c878f` 与本次主线收尾记录将一并推送 `origin/master`。T09C–T09E 仍未启动，未经各自新的独立计划、审查和用户明确批准不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；M01 的实现提交为 `57b8612`、验证证据提交为 `6f5abcb`，Markmap 相关物理 chunk 均低于 500 kB，KaTeX 535.51 kB warning 作为独立遗留保留。T09B 已 fast-forward 合入 `master` 并完成主线复验；实现提交 `562a633`、验证证据提交 `29c878f` 与本次主线收尾记录已一并推送 `origin/master`。T09C–T09E 仍未启动，未经各自新的独立计划、审查和用户明确批准不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B 已完成主线集成与主线复验；T09C–T09E、家长 Web 面板均未启动。
 
@@ -475,7 +475,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 18 | Phase 1-T08：本机配置中心与连接验收 | ✅ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；已完成 DPAPI 加密存储、连接测试、运行时热切换、设置页与验证 |
 | 19 | Phase 1-T09A：学期创建、选择与切换 | ✅ | 已创建/列表/当前选择与切换/刷新恢复、课表预览确认、跨学期隔离及移除手输 UUID；已 fast-forward 合入并推送 `origin/master`，主线 type-check、build、全量测试与 E2E 均通过。课表创建后的查看编辑仍归入 T09C |
 | 20 | Phase 1-M01：前端 Markmap 按需加载与构建 chunk 治理 | ✅ | 已通过动态导入使无导图笔记不下载渲染器，并在有导图时提供加载/中文降级；Markmap 物理 chunk 均低于 500 kB，未提高警告阈值、未改 API/数据格式。任务分支已 fast-forward 合入并推送 `origin/master`，主线复验通过；KaTeX 535.51 kB warning 为独立遗留项 |
-| 21 | Phase 1-T09B：每日学习首页 | ✅ | 已交付当前已选择单学期的只读每日首页：今日/明日任务、明日课程、已确认考试、待处理资料、错题复习和确定性下一步；复用 T09A current semester，主线复验通过。实现提交 `562a633`、验证证据 `29c878f` 已 fast-forward 合入 `master`，本次收尾记录将一并推送 `origin/master` |
+| 21 | Phase 1-T09B：每日学习首页 | ✅ | 已交付当前已选择单学期的只读每日首页：今日/明日任务、明日课程、已确认考试、待处理资料、错题复习和确定性下一步；复用 T09A current semester，主线复验通过。实现提交 `562a633`、验证证据 `29c878f` 已 fast-forward 合入 `master`，本次收尾记录已一并推送 `origin/master` |
 | 22 | Phase 1-T09C：课程课表与考试目标完善 | ⏳ | 已创建学期的课表查看、人工编辑与修改、完整课表视图、考试目标设定与倒计时、状态反馈与空状态引导；必须先有独立计划、审查和用户批准 |
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ⏳ | 全局侧栏/底栏导航、加载/错误/空状态统一处理、响应式适配、新用户到日常使用完整旅程验收；必须先有独立计划、审查和用户批准 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ⏳ | 练习历史列表与筛选、学期归档与只读查看；可后置于产品化核心完成后；必须先有独立计划、审查和用户批准 |
@@ -490,7 +490,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T08 | `.plans/phase1-t08-config-center-plan.md` | v6 已批准、已实施并完成 |
 | T09A | `.plans/phase1-t09a-semester-selector-plan.md` | 已完成：任务分支 `codex/phase1-t09a-semester-selector` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验通过。T09B–T09E 仍未启动 |
 | M01 | `.plans/phase1-m01-markmap-chunk-optimization-plan.md` | 已完成：v2 经独立复审并于 2026-07-18 获用户批准；任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`，主线复验通过。T09B–T09E 仍未启动 |
-| T09B | `.plans/phase1-t09b-daily-study-home-plan.md` | 已完成：独立计划、复审、实施、fast-forward 主线集成与主线复验均通过；实现提交 `562a633`、验证证据提交 `29c878f` 与本次收尾记录将一并推送 `origin/master`。T09C–T09E 仍未启动 |
+| T09B | `.plans/phase1-t09b-daily-study-home-plan.md` | 已完成：独立计划、复审、实施、fast-forward 主线集成与主线复验均通过；实现提交 `562a633`、验证证据提交 `29c878f` 与本次收尾记录已一并推送 `origin/master`。T09C–T09E 仍未启动 |
 | T09C | 尚未创建 | 仅登记路线；不得与 T09A 混写实现 |
 | T09D | 尚未创建 | 仅登记路线；学生端可交付 MVP 收尾任务 |
 | T09E | 尚未创建 | 可后置增强，不阻塞 T09D 完成口径 |
