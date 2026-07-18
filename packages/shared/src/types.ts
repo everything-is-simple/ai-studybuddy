@@ -596,3 +596,53 @@ export interface CreateSemesterResponseDto {
   semester: SemesterSummaryDto;
   current: CurrentSemesterDto;
 }
+export interface DailyStudyHomeTaskDto {
+  id: string;
+  title: string;
+  courseName: string;
+  deadlineAt?: string;
+  type: StudyTaskType;
+}
+
+export interface DailyStudyHomeExamDto {
+  id: string;
+  name: string;
+  courseName: string;
+  examAt: string;
+  daysUntil: number;
+}
+
+export interface DailyStudyHomeScheduleDto {
+  id: string;
+  courseInstanceId: string;
+  courseName: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+}
+
+export interface DailyStudyHomeMaterialDto {
+  id: string;
+  courseInstanceId: string;
+  courseName: string;
+  title: string;
+  status: 'pending_quality_check' | 'conversion_failed';
+}
+
+export interface DailyStudyHomeNextActionDto {
+  kind: 'quality_material' | 'today_task' | 'tomorrow_task' | 'error_review' | 'upcoming_exam';
+  title: string;
+  path: string;
+}
+
+export interface DailyStudyHomeDto {
+  semesterId: string;
+  date: string;
+  todayTasks: DailyStudyHomeTaskDto[];
+  tomorrowTasks: DailyStudyHomeTaskDto[];
+  tomorrowSchedule: DailyStudyHomeScheduleDto[];
+  upcomingExams: DailyStudyHomeExamDto[];
+  pendingQualityMaterials: DailyStudyHomeMaterialDto[];
+  errorReviews: DailyStudyHomeTaskDto[];
+  nextAction: DailyStudyHomeNextActionDto | null;
+}

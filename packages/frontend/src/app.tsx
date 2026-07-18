@@ -5,6 +5,7 @@ import { AppNavigation } from './components/app-navigation';
 import { getConfigurationStatus, type ConfigurationStatus } from './api/configuration-api';
 import { getCurrentSemester } from './api/semester-api';
 import { CoursePage } from './pages/course-page';
+import { DailyStudyHomePage } from './pages/daily-study-home-page';
 import { MaterialUploadPage } from './pages/material-upload-page';
 import { SemesterPage } from './pages/semester-page';
 
@@ -261,7 +262,18 @@ export function App() {
               </Suspense>
             }
           />
-          <Route path="/" element={<Navigate to={semesterId ? '/courses' : '/semesters'} replace />} />
+          <Route
+            path="/"
+            element={
+              semesterId ? (
+                <DailyStudyHomePage semesterId={semesterId} onSemesterError={handleSemesterError} />
+              ) : currentState.status === 'loading' ? (
+                <div className="page">正在恢复当前学期…</div>
+              ) : (
+                <Navigate to="/semesters" replace />
+              )
+            }
+          />
           <Route path="*" element={<Navigate to={semesterId ? '/courses' : '/semesters'} replace />} />
         </Routes>
       </main>

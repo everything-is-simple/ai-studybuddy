@@ -4,6 +4,7 @@ import aiDevRouter from './api/dev-ai';
 import converterDevRouter from './api/dev-converter';
 import storageDevRouter from './api/dev-storage';
 import devRouter from './api/dev';
+import dailyStudyHomeRouter from './api/daily-study-home';
 import errorFixerRouter from './api/error-fixer';
 import noteBuilderRouter from './api/note-builder';
 import practiceRunnerRouter from './api/practice-runner';
@@ -38,6 +39,7 @@ export function createApp(options: {
   app.use('/api/dev/ai', aiDevRouter);
   app.use('/api', createSemesterSelectorRouter({ recognizer: options.timetableRecognizer }));
   app.use('/api', studyRhythmRouter);
+  app.use('/api', dailyStudyHomeRouter);
   app.use('/api', noteBuilderRouter);
   app.use('/api', practiceRunnerRouter);
   app.use('/api', errorFixerRouter);
