@@ -670,7 +670,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 >
 > **验收中发现并修复的 P1 回归**：浏览器点击“确认考试日期”时，后端 loopback Origin 策略的 `Access-Control-Allow-Methods` 仅声明 `GET,POST,OPTIONS`，导致 PATCH 预检失败并显示“网络连接失败”，同时阻断任务状态和错题 PATCH 路径。已在 `packages/backend/src/middleware/api-origin-policy.ts` 补充 `PATCH,DELETE`，并在 `packages/backend/test/api-origin-policy.test.mjs` 增加 PATCH 预检回归断言；修复后受影响 E2E 及全量 E2E 均通过。当前无 P0/P1 未修复问题。
 >
-> **可接受的 T09A 前已知缺口 / 边界**：`/courses` 顶部仍使用开发期手输 `semesterId`，属于 T09A 学期创建、选择与切换范围，不在本轮实现；未运行真实 AI Provider、QQ SMTP、飞书 Webhook 或正式 Windows Task Scheduler smoke；未实现 T09B–T09E、每日首页、家长 Web 面板、S5、S7 和 Phase 3。验收分支尚未合入或推送 `master`，在完成固定 Git 流程前不得称为主线完成。
+> **可接受的 T09A 前已知缺口 / 边界**：`/courses` 顶部仍使用开发期手输 `semesterId`，属于 T09A 学期创建、选择与切换范围，不在本轮实现；未运行真实 AI Provider、QQ SMTP、飞书 Webhook 或正式 Windows Task Scheduler smoke；未实现 T09B–T09E、每日首页、家长 Web 面板、S5、S7 和 Phase 3。验收提交已按固定 Git 流程快进合入 `master`；推送状态见本次交付记录。
 ---
 
 ## Phase 1.5：课堂 ASR（S7）
