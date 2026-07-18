@@ -1,6 +1,6 @@
 # Phase 1-T09B：每日学习首页实施计划
 
-**状态**：实施与独立复审已完成；待主线集成与主线复验（2026-07-18）
+**状态**：已完成；已 fast-forward 合入 `master` 并完成主线复验（2026-07-18）
 **任务**：`Phase 1-T09B：每日学习首页`
 **计划分支**：`codex/phase1-t09b-daily-study-home-plan`（已推送）
 **实施分支**：`codex/phase1-t09b-daily-study-home`
@@ -175,10 +175,9 @@ pnpm exec playwright test e2e/daily-study-home.spec.ts
 - 实施工作区使用 `codex/phase1-t09b-daily-study-home`；基线验证已通过（前端 64/64、后端 215/215）。
 - 本记录仅确认门禁已解除，不构成完成声明；T09C–T09E、S5、S7、家长 Web 面板和 Phase 2/3 继续不在实施范围内。
 
-## 8. 实施验证记录（2026-07-18，待主线集成）
+## 9. 主线交付验证记录（2026-07-18，已合入并推送）
 
-- 实现提交：`562a633 feat(phase1): 实现 T09B 每日学习首页`；计划提交：`d324dab docs(phase1): 登记 T09B 每日学习首页实施计划`。
-- 已实现且仅实现本计划的当前单学期只读首页：复用 T09A current semester，展示今日/明日任务、明日课程、已确认考试、待处理资料、错题复习和确定性下一步；未新增 migration、写 API、全局导航、课表编辑、练习历史或其他后续任务。
-- 分支验证：`pnpm type-check`、后端/前端 build、T09B 后端真实 SQLite 集成测试 3/3、前端页面测试 4/4、前端根级测试 69/69、后端全量测试 218/218、隔离 Playwright E2E 1/1、文档治理与差异检查均通过。首次全量运行的一次既有 S4 子进程启动失败已以单文件 6/6 和后端全量 218/218 重跑确认未复现，未改动 S4。
-- 既有 KaTeX 535.51 kB 构建 warning 仅如实保留，未在本任务处理。
-- 当前任务分支已推送，但尚未 fast-forward 合入 `master`、尚未推送 `origin/master`；不得据此报告 T09B 已在主线完成。
+- 计划提交：`d324dab docs(phase1): 登记 T09B 每日学习首页实施计划`；实现提交：`562a633 feat(phase1): 实现 T09B 每日学习首页`；分支验证证据提交：`29c878f docs(phase1): 登记 T09B 每日学习首页验证证据`。
+- 任务分支 `codex/phase1-t09b-daily-study-home` 已 rebase 到最新 `origin/master` @ `5e9ee57`，并以 fast-forward 合入本地 `master`；本次主线收尾提交将与其一起推送 `origin/master`。
+- 主线复验：`pnpm type-check`、后端/前端 build、`pnpm test`（前端 69/69、后端 218/218）、隔离 `pnpm exec playwright test e2e/daily-study-home.spec.ts`（1/1）、`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check` 均通过。
+- 既有 KaTeX 535.51 kB 构建 warning 仅如实保留，未在本任务处理；T09C–T09E、S5、S7、家长 Web 面板和 Phase 2/3 未实施。
