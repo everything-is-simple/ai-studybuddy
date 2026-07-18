@@ -243,9 +243,9 @@
 
   预期：所有命令通过；失败则先按 `superpowers:systematic-debugging` 定位根因并回归，不得为绿而删除断言。
 
-- [ ] **Step 5：收尾文档和独立代码审查。** 仅当实现、验证和浏览器验收完成时，同步 `docs/00`、勾选 `docs/04` 对应 T09A 子项，更新本计划的批准/实施记录，登记隔离目录（不含数据）、命令、branch、commit、未实现边界。通过独立代码审查后再次运行治理/diff，并在 rebase 前单独提交文档收尾：`git add docs/00-文档索引-Index.md docs/04-开发任务清单-Todo-List.md .plans/phase1-t09a-semester-selector-plan.md; git commit -m "docs(phase1): 登记 T09A 交付证据"`。
+- [x] **Step 5：收尾文档和独立代码审查。** 仅当实现、验证和浏览器验收完成时，同步 `docs/00`、勾选 `docs/04` 对应 T09A 子项，更新本计划的批准/实施记录，登记隔离目录（不含数据）、命令、branch、commit、未实现边界。通过独立代码审查后再次运行治理/diff，并在 rebase 前单独提交文档收尾：`git add docs/00-文档索引-Index.md docs/04-开发任务清单-Todo-List.md .plans/phase1-t09a-semester-selector-plan.md; git commit -m "docs(phase1): 登记 T09A 交付证据"`。
 
-- [ ] **Step 6：按仓库固定流程合入并在 master 复验。**
+- [x] **Step 6：按仓库固定流程合入并在 master 复验。**
 
   ```powershell
   git checkout codex/phase1-t09a-semester-selector
@@ -323,4 +323,4 @@
 - **实际结构差异：** 前端采用 `semester-page.tsx` 直接承载页面和 header current 状态，而非计划中的独立 `semester-selector-page.tsx`/`current-semester-control.tsx`；E2E 使用受控 API mock 验证 selector，不新建生产 server 的测试注入入口。差异不扩大任务范围，且不影响 T09A 验收边界。
 - **验证已通过：** 隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t09a-semester-selector` 下：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；`pnpm test`（后端 215/215、前端 61/61）；`pnpm exec playwright test e2e/semester-selector.spec.ts`（1/1）；`pnpm test:e2e`（6/6）；`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`；`git diff --check`。
 - **未实现边界：** T09B–T09E、每日学习首页、课表的已建后查看/编辑、全局导航重构、练习历史/归档、S5、S7、家长 Web 面板、云同步和多用户均未实现。
-- **交付状态：** 实现提交 `965ee4f` 已创建；文档证据已随本提交登记；远端分支推送、fast-forward 合入 `master`、master 复验与 `origin/master` 推送尚待后续固定步骤；本计划不将任务分支完成误记为主线完成。
+- **主线合入与复验：** 任务分支已 fast-forward 合入 `master`；主线复验通过 `pnpm type-check`、后端/前端 build、`pnpm test`（后端 215/215、前端 61/61）、专项 E2E（1/1）、全量 E2E（6/6）、文档治理和 diff 检查。复验中发现课程返回顺序无契约导致测试可能波动，已用提交 `1649fab` 将断言改为集合比较并完成全量回归。\n- **交付状态：** 实现提交 `965ee4f`、任务分支文档证据 `c796439` 与主线测试稳定性修复 `1649fab` 均已在 `origin/master`；T09A 已完成。本计划不将该完成口径扩展到 T09B–T09E。

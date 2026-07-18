@@ -1,12 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.37
+**版本**：v1.38
 **日期**：2026-07-18
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展和 T08 本机配置中心与连接验收。T09A 已在任务分支完成实现与隔离验证；当前门禁为按固定流程合入 `master` 并在 `master` 复验，完成前不得启动 T09B–T09E。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展和 T08 本机配置中心与连接验收。T09A 已 fast-forward 合入并推送 `origin/master`，且已完成主线复验；T09B–T09E 仍未启动，未经新的独立计划、审查和用户明确批准不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
-> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已完成任务分支实现与验证；当前仍须合入 `master` 并复验，T09B–T09E、每日首页与家长 Web 面板均未启动。
+> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B–T09E、每日首页与家长 Web 面板均未启动。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -22,7 +22,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08 ✅；T09A 任务分支实现/验证完成，待合入 `master` 复验） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08/T09A ✅；T09B–T09E 均未启动） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -447,7 +447,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：在不扩大架构的前提下，跑通 S1 + S2 + S3 + S4 + S6 简版；主界面逐步围绕”一个考试项目”组织，而不是围绕数据库对象组织。
 
-**前置条件**：Phase 0.8 T09 已通过。S1/S2/S3/S4/S6 PRD 与 Phase 1-T00–T08 对应范围已完成；S5/S7 仍未触发。下一门禁为 T09A。
+**前置条件**：Phase 0.8 T09 已通过。S1/S2/S3/S4/S6 PRD 与 Phase 1-T00–T09A 对应范围已完成；S5/S7 仍未触发。T09B–T09E 仍未开始，进入任一后续任务前必须重新完成独立计划、审查和用户明确批准。
 
 ### Phase 1 真实执行顺序
 
@@ -473,7 +473,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 16 | Phase 1-T06B：S6 报告推送渠道 | ✅ | QQ SMTP HTML + 飞书 Webhook 卡片、冻结脱敏快照、渠道级去重/重试与失败隔离已完成；真实渠道 smoke 非常规验证 |
 | 17 | Phase 1-T07：S1 时间线扩展 | ✅ | 已读回 S2/S3/S4 正式 StudyEvent，支持事件类型精确过滤并在考试工作台展示当前课程近期活动 |
 | 18 | Phase 1-T08：本机配置中心与连接验收 | ✅ | 首次启动配置向导、后端安全保存、AI/SMTP/飞书分别测试；已完成 DPAPI 加密存储、连接测试、运行时热切换、设置页与验证 |
-| 19 | Phase 1-T09A：学期创建、选择与切换 | 🔄 | 已获批准并在任务分支实现：创建向导、列表、当前选择/切换、刷新恢复、课表预览确认、跨学期隔离与移除手输 UUID；完整验证通过，待按固定流程合入 `master` 后复验。课表创建后的查看编辑仍归入 T09C |
+| 19 | Phase 1-T09A：学期创建、选择与切换 | ✅ | 已创建/列表/当前选择与切换/刷新恢复、课表预览确认、跨学期隔离及移除手输 UUID；已 fast-forward 合入并推送 `origin/master`，主线 type-check、build、全量测试与 E2E 均通过。课表创建后的查看编辑仍归入 T09C |
 | 20 | Phase 1-T09B：每日学习首页 | ⏳ | 今日待办任务、临近考试倒计时、待质检资料、错题复习提醒、下一步行动建议；必须先有独立计划、审查和用户批准 |
 | 21 | Phase 1-T09C：课程课表与考试目标完善 | ⏳ | 已创建学期的课表查看、人工编辑与修改、完整课表视图、考试目标设定与倒计时、状态反馈与空状态引导；必须先有独立计划、审查和用户批准 |
 | 22 | Phase 1-T09D：全局导航与学生旅程 E2E | ⏳ | 全局侧栏/底栏导航、加载/错误/空状态统一处理、响应式适配、新用户到日常使用完整旅程验收；必须先有独立计划、审查和用户批准 |
@@ -487,7 +487,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ---- | -------- | ------------- |
 | T07 | `.plans/phase1-t07-timeline-plan.md` | 已批准、已实施并完成 |
 | T08 | `.plans/phase1-t08-config-center-plan.md` | v6 已批准、已实施并完成 |
-| T09A | `.plans/phase1-t09a-semester-selector-plan.md` | 用户已批准；任务分支 `codex/phase1-t09a-semester-selector` 实现与验证完成，待提交、推送、fast-forward 合入 `master` 并复验；不得据此启动 T09B–T09E |
+| T09A | `.plans/phase1-t09a-semester-selector-plan.md` | 已完成：任务分支 `codex/phase1-t09a-semester-selector` 已 fast-forward 合入 `master` 并推送 `origin/master`；主线复验通过。T09B–T09E 仍未启动 |
 | T09B | 尚未创建 | 仅登记路线；T09A 完成后再进入独立门禁 |
 | T09C | 尚未创建 | 仅登记路线；不得与 T09A 混写实现 |
 | T09D | 尚未创建 | 仅登记路线；学生端可交付 MVP 收尾任务 |
@@ -495,7 +495,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
-> **T09A 任务分支交付证据（2026-07-18，待合入 master）**：用户已明确批准 v4 计划。分支 `codex/phase1-t09a-semester-selector` 已实现正式 `/semesters` 入口与 `GET /api/semesters`、`GET /api/semesters/current`、`PUT /api/semesters/current`、`POST /api/semesters/preview`、`POST /api/semesters`；current 仅由全局 `app_meta.current_semester_id` 保存，学期库升级至 migration v8，创建采用 staging/ready/promote/current 流程。学生端已移除手输 UUID 与浏览器 `localStorage` 学期依赖；切换和刷新均由后端 current 恢复，课程、考试、任务和时间线保持学期隔离。验证通过：`pnpm type-check`、后端/前端 build、`pnpm test`（后端 215/215、前端 61/61）、`pnpm test:e2e`（6/6）、`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check`；验证数据使用隔离目录 `I:\ai-studybuddy-tmp\runs\phase1-t09a-semester-selector`。实现提交 `965ee4f` 已创建；文档证据随本提交登记，任务分支远端推送、合入/推送 `origin/master` 尚待后续固定流程；T09B–T09E、每日首页、S5、S7、家长 Web 面板均未开始。
+> **T09A 主线交付证据（2026-07-18，已合入并推送）**：用户已明确批准 v4 计划。任务分支 `codex/phase1-t09a-semester-selector` 实现提交 `965ee4f`、文档证据提交 `c796439` 已 fast-forward 合入 `master`；主线复验中发现课程列表无顺序契约导致的新测试断言不稳定，已以最小测试修复提交 `1649fab` 消除该波动。正式交付包括 `/semesters` 入口与 `GET /api/semesters`、`GET /api/semesters/current`、`PUT /api/semesters/current`、`POST /api/semesters/preview`、`POST /api/semesters`；current 仅由全局 `app_meta.current_semester_id` 保存，学期库升级至 migration v8，创建采用 staging/ready/promote/current 流程。学生端已移除手输 UUID 与浏览器 `localStorage` 学期依赖；切换和刷新均由后端 current 恢复，课程、考试、任务和时间线保持学期隔离。主线验证通过：`pnpm type-check`、后端/前端 build、`pnpm test`（后端 215/215、前端 61/61）、`pnpm exec playwright test e2e/semester-selector.spec.ts`（1/1）、`pnpm test:e2e`（6/6）、`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check`；验证数据使用隔离目录 `I:\ai-studybuddy-tmp\runs\phase1-t09a-semester-selector`。上述提交已包含于 `origin/master`；T09B–T09E、每日首页、S5、S7、家长 Web 面板均未开始。
 
 > **T00 收尾证据（2026-07-15）**：创建 `docs/12-开发规范-Dev-Rules.md`，重写 `CLAUDE.md`/`AGENTS.md` 为入口引用 docs/12，更新 `docs/00`/`docs/04`/`docs/07`/`docs/09` 状态。8 文件变更，700+ / 459−。commit `ec536df`。
 
