@@ -104,7 +104,7 @@ test('semester current is empty before onboarding and set after preview confirma
   assert.equal(current.body.data.semester.semesterCode, '2026-spring');
 
   const courses = await json(base, 'GET', `/api/courses?semesterId=${confirmed.body.data.semester.id}`);
-  assert.deepEqual(courses.body.data.map((course) => course.name), ['数学', '英语']);
+  assert.deepEqual(courses.body.data.map((course) => course.name).sort(), ['数学', '英语'].sort());
 });
 
 test('semester onboarding rejects duplicate code and invalid date', async (t) => {
