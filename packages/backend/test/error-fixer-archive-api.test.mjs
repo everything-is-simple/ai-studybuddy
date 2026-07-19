@@ -10,7 +10,7 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const Database = require('better-sqlite3');
 const backendDir = path.resolve(import.meta.dirname, '..');
-let nextBackendPort = 55000;
+let nextBackendPort = 56200;
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t04a-api-'));

@@ -720,3 +720,11 @@ pnpm exec playwright test e2e/practice-history-archive.spec.ts
 - 非目标保持不变：未改 T09D 全局导航范围，未实施 S5/S7、家长 Web 面板或真实外部渠道 smoke。
 - 分支验证：后端专项 3/3、前端专项 12/12、`pnpm type-check`、T09E E2E 1/1、学期选择回归 E2E 1/1、隔离 `pnpm test`（后端 223/223、前端 20 files / 92 tests）均通过；KaTeX 大 chunk warning 为既有非阻塞遗留。
 - 合入状态：尚未 fast-forward 合入 `master`，不得把分支状态报告为主线完成。
+
+## 10. 主线收尾记录（2026-07-19）
+
+- Fast-forward 合入：在 `I:\ai-studybuddy-tmp\worktrees\m01-master-integration` 的 `master` 执行 `git pull --ff-only origin master`（Already up to date），确认 `master` 是任务分支祖先后执行 `git merge --ff-only codex/phase1-t09e-practice-history-archive`，实现提交 `de5c41e` 已进入 `master`。
+- 主线验证隔离根：`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
+- 主线验证通过：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`；`git diff --check`；`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`（仅既有 KaTeX 大 chunk warning）；`pnpm test`（后端 223/223、前端 20 files / 92 tests）；`pnpm test:e2e e2e/practice-history-archive.spec.ts e2e/semester-selector.spec.ts`（2/2）。
+- 主线验证暴露两个既有测试端口与本机 Windows TCP excluded ranges 冲突：`54904-55003` 影响旧 T04A 错题归档 API 测试的 `55000+`，`56986-57085` 影响 dev converter 随机 `56700-57699`。本轮仅做 test-only 最小稳定性修复：`error-fixer-archive-api.test.mjs` 改用 `56200+`，`dev-converter-api.test.mjs` 改用确定性 `57200+`；未修改 T09E 业务代码。
+- 文档证据：`docs/04-开发任务清单-Todo-List.md`、`docs/00-文档索引-Index.md` 与本计划文件已登记 T09E 主线收尾；主线收尾提交 `本主线收尾提交` 推送 `origin/master` 后，T09E 才可报告为主线完成。

@@ -7,10 +7,11 @@ import test from 'node:test';
 import JSZip from 'jszip';
 
 const backendDir = path.resolve(import.meta.dirname, '..');
+let nextBackendPort = 57200;
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t04-api-'));
-  const port = 56700 + Math.floor(Math.random() * 1000);
+  const port = nextBackendPort++;
   const processHandle = spawn(process.execPath, ['dist/server.js'], {
     cwd: backendDir,
     env: {
