@@ -196,7 +196,7 @@ describe('settings page', () => {
     await renderSettingsPage();
 
     expect(container.querySelector('details[data-testid="custom-provider-advanced"]')).not.toBeNull();
-    expect((container.querySelector('details[data-testid="custom-provider-advanced"]') as HTMLDetailsElement).open).toBe(false);
+    expect((container.querySelector('details[data-testid="custom-provider-advanced"]') as HTMLDetailsElement).open).toBe(true);
     expect(container.querySelector('details[data-testid="smtp-advanced"]')).not.toBeNull();
     expect((container.querySelector('details[data-testid="smtp-advanced"]') as HTMLDetailsElement).open).toBe(false);
     expect(container.querySelector('[data-testid="smtp-host"]')?.closest('details')).toBe(container.querySelector('details[data-testid="smtp-advanced"]'));

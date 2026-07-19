@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.52
+**版本**：v1.54
 **日期**：2026-07-19
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `本主线收尾提交`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `本主线收尾提交`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 设置中心配置可观测性与安全摘要已在任务分支完成隔离全量验证，尚待主线集成与复验。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -12,6 +12,7 @@
 
 > **DOCS-20260718 文档一致性任务（完成）**：任务分支 `codex/process-docs-sync`，行动计划 `.plans/process-docs-sync-plan.md`。已同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/01`、`docs/02`、`docs/05`、`docs/06`、`docs/07`、`docs/08`、`docs/09`、`docs/10`、`docs/11`、`docs/12`、`docs/15` 与 S1/S2/S3/S4/S6 PRD：统一 T08 已完成、下一门禁 T09A、T09A–T09E 仅登记未实施，以及“任务登记 → 独立计划 → 审查批准 → 实现验证 → docs/04 收尾 → 合入并推送”的强制链路。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 通过，`git diff --check` 通过；本轮不改业务代码，不创建 T09A 计划，不实施 T09A–T09E、S5、S7 或真实外部渠道 smoke。
 
+> **Phase 1-M03 设置中心配置可观测性与安全摘要（分支实现与隔离验证通过，待主线集成）**：方案 A 已在隔离任务分支 `codex/phase1-m03-settings-configuration-observability` 实现：环境 fallback 安全登记为“环境配置（待验证）”，AI/SMTP/飞书首屏展示白名单式脱敏摘要，已保存秘密始终不可回显且不进入浏览器存储；AI HTTP 429 与常见 SMTP 传输失败映射为固定、可行动且不泄密的错误码。已在新的隔离 `APP_DATA_ROOT` 下通过 type-check、后端/前端 build、全量测试（后端 227、前端 93）和真实本地 Express/SQLite 全量 Playwright（14）；仅保留既有 KaTeX chunk-size 非阻塞 warning。未读取、输出或持久化任何真实秘密，未自动触发 AI、QQ SMTP 或飞书外部请求；尚未合入 `master` 或推送 `origin/master`。
 ---
 
 ## 阶段总览
@@ -480,7 +481,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ✅ | 已交付全局导航、考试上下文导航、统一 PageState、响应式入口、stale/current/404 状态与真实 Express/SQLite 学生旅程 E2E；已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`。计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。不含 T09E 练习历史/学期归档。 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ✅ | 已获用户明确批准并在任务分支 `codex/phase1-t09e-practice-history-archive` 完成实现；实现提交 `de5c41e` 已 fast-forward 合入 `master`，主线复验通过并随主线收尾提交 `本主线收尾提交` 推送 `origin/master`。 |
 | 25 | Phase 1-T12：设置中心 Provider 预设与渠道配置 UX 改造 | ✅ | 已完成独立计划审查、分支验证、fast-forward 主线集成、主线复验并推送 `origin/master`；任务分支 `codex/phase1-t12-settings-provider-presets-impl`，实现提交 `73bafdb`。 |
-| 26 | Phase 1-M02：错题详情一级标题语义回归修复 | ✅ | 方案 A 已 fast-forward 合入 `master`、完成主线全量复验并推送 `origin/master`；仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。实现提交 `80ea2ab`，验证证据 `e6c5df0`，主线复验登记 `6aa088e`。 |
+| 26 | Phase 1-M02：错题详情一级标题语义回归修复 | ✅ | 方案 A 已 fast-forward 合入 master、完成主线全量复验并推送 origin/master；仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。实现提交 80ea2ab，验证证据 6c5df0，主线复验登记 6aa088e。 |
+| 27 | Phase 1-M03：设置中心配置可观测性与安全摘要 | 🟡 | 方案 A 已获批准，任务分支实现与隔离全量验证通过；环境 fallback 显示安全摘要/待验证状态，秘密永不回显。尚未合入 master 或推送 origin/master。 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -497,7 +499,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T09D | `.plans/phase1-t09d-global-navigation-student-journey-plan.md` | 已完成：独立计划、四轮 fresh-pass 计划复审、用户继续实施授权、实现、独立复审修复、分支复验、fast-forward 主线集成、主线复验与 `origin/master` 推送均通过；计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。 |
 | T09E | `.plans/phase1-t09e-practice-history-archive-plan.md` | 已获用户明确批准并实施：任务分支 `codex/phase1-t09e-practice-history-archive` 已交付 global v2 归档状态、归档写保护、练习历史列表/结果 API、学期管理归档入口、历史页面与浏览器验收；尚未合入 `master` 或推送 `origin/master`，完成判定仍等待主线合入后复验。 |
 | T12 | `.plans/phase1-t12-settings-provider-presets-plan.md` | v5 已完成独立审查、用户实施批准、任务分支实现与隔离验证、fast-forward 主线集成、主线复验，并已于 2026-07-19 推送 `origin/master`。 |
-| M02 | `.plans/phase1-m02-mistake-detail-heading-regression-plan.md` | 已完成独立审查、任务分支提交、fast-forward 主线集成、主线全量复验与 `origin/master` 推送；仅恢复错题详情页面的可见一级标题语义并添加前端/E2E 回归验证。 |
+| M02 | .plans/phase1-m02-mistake-detail-heading-regression-plan.md | 已完成独立审查、任务分支提交、fast-forward 主线集成、主线全量复验与 origin/master 推送；仅恢复错题详情页面的可见一级标题语义并添加前端/E2E 回归验证。 |
+| M03 | .plans/phase1-m03-settings-configuration-observability-plan.md | 方案 A 已获用户批准；任务分支 codex/phase1-m03-settings-configuration-observability 已完成实现与隔离全量验证，待主线集成、主线复验和推送。 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
@@ -548,6 +551,18 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 分支提交：`80ea2ab`（`fix(frontend): 修复错题详情一级标题语义`）与验证证据 `e6c5df0` 已由任务分支 fast-forward 合入 `master`，并已包含于 `origin/master`。
 - [x] 本地主线集成：已从 `origin/master` @ `60f03f8` rebase 并 fast-forward 到本地 `master` @ `e6c5df0`；主线复验通过。
 - [x] 远端收尾：已在确认 `origin/master` 仍为 `60f03f8` 后成功推送至 `6aa088e`；远端包含本任务实现、验证与主线复验证据。
+
+#### M03：设置中心配置可观测性与安全摘要（任务分支验证通过，待主线集成）
+
+> **问题、方案与实现证据（2026-07-19）**：T08 原有运行时会装载 `.env.local` fallback 到 AI Router、SMTP Registry 与飞书 Registry，但 `ConfigurationService` 未登记其来源、安全摘要或状态，导致 `/api/config/status` 与 `/settings` 错误显示“未配置 / 降级”。用户明确批准方案 A：已保存 API Key、SMTP 授权码和飞书 Webhook 绝不回传浏览器或提供明文显示开关。M03 在 `codex/phase1-m03-settings-configuration-observability` 中将 fallback 登记为 `environment_fallback`，显示“环境配置（待验证）”与白名单脱敏摘要；环境来源不写入 DPAPI 存储、不伪装为已验证，已有 DPAPI active 配置仍优先。AI 429 映射为额度/配额/速率受限，SMTP 常见连接失败映射为固定安全错误码；不返回上游异常正文。
+
+> **分支验证证据（2026-07-19）**：在隔离 worktree `I:\ai-studybuddy-tmp\worktrees\phase1-m03-settings-configuration-observability` 与新的运行目录 `I:\ai-studybuddy-tmp\runs\phase1-m03-settings-configuration-observability-final-r3`，通过 `pnpm type-check`、后端和前端 build、`pnpm test`（后端 227/227、前端 20 files / 93 tests）、`pnpm test:e2e`（真实本地 Express/SQLite 14/14）、文档治理和 `git diff --check`。其中追加的 fallback 状态 DTO 深拷贝回归用例已随该轮编译产物复验通过。前端 build 仅保留既有 KaTeX 大 chunk warning（退出码 0）；未触发真实 AI、QQ SMTP、飞书或其它外部渠道。分支尚未 rebase、合入 `master`、在主线复验或推送。
+
+- [x] 后端：环境 fallback 仅以内存安全状态登记，并为 AI/SMTP/飞书提供白名单脱敏摘要；不写入 SecureStore、DPAPI 或浏览器。
+- [x] 前端：设置卡片显示“已验证 / 环境配置（待验证） / 未配置”、秘密不可回显说明、安全摘要和默认可见的高级自定义 Provider / 中转站入口；秘密控件仍为 `password`。
+- [x] 测试：覆盖 fallback 状态、DPAPI 优先级、secret 缺失、429 / SMTP 固定错误码、页面状态与窄屏 Playwright；全部使用 fake secret/本地服务。
+- [x] 样式完整性：补齐待验证状态徽章与安全摘要自适应布局，避免窄屏摘要溢出。
+- [ ] 主线集成：待确认最新 `origin/master` 后 rebase、fast-forward 合入干净主线 worktree，并重新完成主线验证与推送。
 
 ### Phase 1 产品组织原则
 

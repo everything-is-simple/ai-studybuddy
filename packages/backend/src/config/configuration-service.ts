@@ -11,12 +11,21 @@ import type {
   ConnectionTestResult,
 } from './configuration-types';
 
-export type PersistedChannelStatus = 'unconfigured' | 'verified_pass';
+export type PersistedChannelStatus =
+  | 'unconfigured'
+  | 'verified_pass'
+  | 'environment_fallback';
+
+export interface SafeConfigurationDetail {
+  label: string;
+  value: string;
+}
 
 export interface ChannelStatus {
   status: PersistedChannelStatus;
   lastVerified: string | null;
   summary: string | null;
+  details: SafeConfigurationDetail[];
   errorCode: string | null;
 }
 
@@ -93,6 +102,7 @@ export class ConfigurationService {
           status: 'verified_pass',
           lastVerified: metadata[channel]?.lastVerifiedAt ?? null,
           summary: summarize(channel, result.data),
+          details: summarizeDetails(channel, result.data),
           errorCode: result.recoveredFromPrev ? 'CONFIG_RECOVERED_FROM_PREV' : null,
         });
       } catch (error) {
@@ -107,7 +117,8 @@ export class ConfigurationService {
   }
 
   getChannelStatus(channel: ConfigChannel): ChannelStatus {
-    return { ...this.statuses.get(channel)! };
+    const status = this.statuses.get(channel)!;
+    return { ...status, details: status.details.map((detail) => ({ ...detail })) };
   }
 
   getAllStatus(): ConfigurationStatus {
@@ -147,6 +158,22 @@ export class ConfigurationService {
     return () => this.listeners.delete(listener);
   }
 
+  registerEnvironmentFallback<C extends ConfigChannel>(
+    channel: C,
+    candidate: ChannelConfigMap[C]
+  ): boolean {
+    if (this.getActiveSnapshot(channel)) return false;
+    this.setSnapshot(channel, candidate);
+    this.statuses.set(channel, {
+      status: 'environment_fallback',
+      lastVerified: null,
+      summary: summarize(channel, candidate),
+      details: summarizeDetails(channel, candidate),
+      errorCode: null,
+    });
+    return true;
+  }
+
   async testAndActivate<C extends ConfigChannel>(
     channel: C,
     candidate: ChannelConfigMap[C],
@@ -165,6 +192,14 @@ export class ConfigurationService {
       const snapshot = this.getActiveSnapshot(channel);
       if (!snapshot) return null;
       const result = await this.runTest(channel, snapshot as never, options);
+      if (result.pass) {
+        const current = this.statuses.get(channel)!;
+        this.statuses.set(channel, {
+          ...current,
+          lastVerified: this.now(),
+          errorCode: null,
+        });
+      }
       return { activated: false, test: result };
     });
   }
@@ -201,6 +236,7 @@ export class ConfigurationService {
       status: 'verified_pass',
       lastVerified,
       summary: summarize(channel, immutableCandidate),
+      details: summarizeDetails(channel, immutableCandidate),
       errorCode: null,
     });
     await this.writeStateMetadata().catch(() => undefined);
@@ -242,6 +278,7 @@ export class ConfigurationService {
       status: 'unconfigured',
       lastVerified: null,
       summary: null,
+      details: [],
       errorCode,
     });
   }
@@ -282,6 +319,38 @@ function summarize<C extends ConfigChannel>(channel: C, value: ChannelConfigMap[
     return `${providers.length} 个 Provider：${providers.map((provider) => provider.model).join('、')}`;
   }
   return channel === 'smtp' ? 'QQ SMTP 已激活' : '飞书 Webhook 已激活';
+}
+
+function summarizeDetails<C extends ConfigChannel>(
+  channel: C,
+  value: ChannelConfigMap[C]
+): SafeConfigurationDetail[] {
+  if (channel === 'ai') {
+    return (value as ChannelConfigMap['ai']).providers
+      .slice()
+      .sort((left, right) => left.priority - right.priority)
+      .map((provider) => ({
+        label: provider.name,
+        value: `${provider.model} · 优先级 ${provider.priority}`,
+      }));
+  }
+  if (channel === 'smtp') {
+    const smtp = value as ChannelConfigMap['smtp'];
+    return [
+      { label: '账号', value: maskEmail(smtp.user) },
+      { label: '收件邮箱', value: maskEmail(smtp.to) },
+      { label: 'SMTP 授权码', value: '•••••••• 已保存，不可回显' },
+    ];
+  }
+  return [{ label: '飞书 Webhook', value: '•••••••• 已保存，不可回显' }];
+}
+
+function maskEmail(value: string): string {
+  const atIndex = value.indexOf('@');
+  if (atIndex <= 0) return '•••••••• 已保存';
+  const local = value.slice(0, atIndex);
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${'•'.repeat(Math.max(4, local.length - visible.length))}${value.slice(atIndex)}`;
 }
 
 function deepFreeze<T>(value: T): Readonly<T> {

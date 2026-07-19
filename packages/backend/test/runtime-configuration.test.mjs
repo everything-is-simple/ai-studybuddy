@@ -30,8 +30,14 @@ test('runtime initialization uses env fallbacks without pretending they are encr
   assert.notEqual(getAiRouter(), null);
   assert.equal(getCurrentSmtpConfig().authCode, 'env-smtp-secret');
   assert.equal(getCurrentFeishuConfig().webhookUrl, 'https://example.invalid/env-hook');
-  assert.equal(service.getChannelStatus('ai').status, 'unconfigured');
-  assert.equal(service.getChannelStatus('smtp').status, 'unconfigured');
+  assert.equal(service.getChannelStatus('ai').status, 'environment_fallback');
+  assert.equal(service.getChannelStatus('smtp').status, 'environment_fallback');
+  assert.equal(service.getChannelStatus('feishu').status, 'environment_fallback');
+  assert.deepEqual(service.getChannelStatus('ai').details, [
+    { label: 'env-provider', value: 'env-model · 优先级 1' },
+  ]);
+  assert.equal(service.getChannelStatus('smtp').details[0].value, 'se••••@example.test');
+  assert.doesNotMatch(JSON.stringify(service.getAllStatus()), /env-ai-secret|env-smtp-secret|env-hook/);
   assert.deepEqual(
     {
       ai: service.getAllStatus().runtime.aiAvailable,

@@ -92,8 +92,17 @@ export class ConnectionTester {
       if (code === 'EAUTH') {
         return fixedFailure('SMTP_AUTH_FAILED', 'SMTP 身份验证失败');
       }
-      if (code === 'ECONNREFUSED') {
+      if (code === 'ECONNREFUSED' || code === 'ECONNRESET') {
         return fixedFailure('SMTP_CONNECTION_REFUSED', 'SMTP 连接被拒绝');
+      }
+      if (code === 'ETIMEDOUT') {
+        return fixedFailure('SMTP_CONNECTION_TIMEOUT', 'SMTP 连接超时');
+      }
+      if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') {
+        return fixedFailure('SMTP_DNS_FAILED', 'SMTP 服务器地址无法解析');
+      }
+      if (code === 'ESOCKET' || code?.startsWith('ERR_TLS_')) {
+        return fixedFailure('SMTP_TLS_FAILED', 'SMTP TLS 安全连接失败');
       }
       return fixedFailure('SMTP_UNKNOWN', 'SMTP 连接测试失败');
     }
@@ -148,6 +157,9 @@ export class ConnectionTester {
       const status = getErrorStatus(error);
       if (status === 401 || status === 403) {
         return { name: provider.name, ...fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败') };
+      }
+      if (status === 429) {
+        return { name: provider.name, ...fixedFailure('AI_QUOTA_OR_RATE_LIMITED', 'AI Provider 额度、配额或速率受限') };
       }
       return { name: provider.name, ...fixedFailure('AI_UNKNOWN', 'AI Provider 连接测试失败') };
     }

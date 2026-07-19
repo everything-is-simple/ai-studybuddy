@@ -1,7 +1,11 @@
 import { request } from './api-client';
 
-export type ConfigState = 'unconfigured' | 'verified_pass';
-export interface ChannelStatus { status: ConfigState; lastVerified: string | null; summary: string | null; errorCode: string | null; }
+export type ConfigState = 'unconfigured' | 'verified_pass' | 'environment_fallback';
+export interface SafeConfigurationDetail { label: string; value: string; }
+export interface ChannelStatus {
+  status: ConfigState; lastVerified: string | null; summary: string | null;
+  details: SafeConfigurationDetail[]; errorCode: string | null;
+}
 export interface ConfigurationStatus {
   ai: ChannelStatus; smtp: ChannelStatus; feishu: ChannelStatus;
   runtime: { dataDir: boolean; aiAvailable: boolean; smtpAvailable: boolean; feishuAvailable: boolean; uptime: number; nodeVersion: string };

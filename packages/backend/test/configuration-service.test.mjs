@@ -42,7 +42,7 @@ test('ConfigurationService initializes all channels as unconfigured without cras
   await service.initialize();
 
   assert.deepEqual(service.getChannelStatus('ai'), {
-    status: 'unconfigured', lastVerified: null, summary: null, errorCode: null,
+    status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: null,
   });
   assert.equal(service.getActiveSnapshot('smtp'), null);
   assert.deepEqual(service.getAllStatus(), {
@@ -186,7 +186,7 @@ test('initialize recovers prev, preserves safe metadata, and degrades on double 
   });
   await degraded.initialize();
   assert.deepEqual(degraded.getChannelStatus('ai'), {
-    status: 'unconfigured', lastVerified: null, summary: null, errorCode: 'CONFIG_CORRUPT_DEGRADED',
+    status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: 'CONFIG_CORRUPT_DEGRADED',
   });
 });
 
@@ -234,4 +234,33 @@ test('retest uses only the active snapshot and never rewrites or deactivates it'
   assert.deepEqual(service.getActiveSnapshot('ai'), ai('active-secret'));
   assert.equal(service.getChannelStatus('ai').status, 'verified_pass');
   assert.equal(events, 0);
+});
+
+
+test('environment fallback is observable without persistence or secret disclosure', async (t) => {
+  const { service, store } = await createService(t);
+  await service.initialize();
+  const candidate = ai('environment-secret');
+
+  assert.equal(service.registerEnvironmentFallback('ai', candidate), true);
+  assert.equal(service.registerEnvironmentFallback('ai', ai('ignored')), false);
+  assert.deepEqual(service.getChannelStatus('ai'), {
+    status: 'environment_fallback',
+    lastVerified: null,
+    summary: '1 个 Provider：m1',
+    details: [{ label: 'primary', value: 'm1 · 优先级 1' }],
+    errorCode: null,
+  });
+  assert.deepEqual(service.getActiveSnapshot('ai'), candidate);
+  const exposedStatus = service.getChannelStatus('ai');
+  exposedStatus.details[0].value = 'tampered';
+  exposedStatus.details.push({ label: 'unexpected', value: 'unexpected' });
+  assert.deepEqual(service.getChannelStatus('ai').details, [{ label: 'primary', value: 'm1 · 优先级 1' }]);
+  await assert.rejects(store.read('ai'));
+  assert.doesNotMatch(JSON.stringify(service.getAllStatus()), /environment-secret|provider\.invalid/);
+
+  const retest = await service.retest('ai');
+  assert.equal(retest.test.pass, true);
+  assert.equal(service.getChannelStatus('ai').status, 'environment_fallback');
+  assert.equal(service.getChannelStatus('ai').lastVerified, '2026-07-17T01:02:03.000Z');
 });

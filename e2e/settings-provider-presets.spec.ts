@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 const status = {
-  ai: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
-  smtp: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
-  feishu: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
+  ai: { status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: null },
+  smtp: { status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: null },
+  feishu: { status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: null },
   runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 1, nodeVersion: 'v-e2e' },
 };
 
@@ -25,12 +25,13 @@ function success(data: unknown) {
 test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互', async ({ page }) => {
   let aiActivationCount = 0;
   let receivedAiPayload: unknown;
+  let currentStatus = status;
 
   await page.route('**/api/config/**', async (route) => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
     if (request.method() === 'GET' && pathname === '/api/config/status') {
-      await route.fulfill({ json: success(status) });
+      await route.fulfill({ json: success(currentStatus) });
       return;
     }
     if (request.method() === 'GET' && pathname === '/api/config/presets') {
@@ -61,6 +62,7 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
   await expect(page.getByText('按优先级失败切换 + 冷却，不是成功请求轮询。')).toBeVisible();
   await expect(page.getByRole('button', { name: /Claude \/ Anthropic.*后续适配/ })).toBeDisabled();
 
+  await expect(page.getByTestId('custom-provider-advanced')).toHaveAttribute('open', '');
   const kimiCard = page.locator('.provider-preset-card', { has: page.getByRole('heading', { name: 'Kimi / Moonshot', level: 4 }) });
   await kimiCard.getByLabel('API Key').fill('FAKE_E2E_KIMI_KEY');
   await kimiCard.getByRole('button', { name: '加入 fallback' }).click();
@@ -77,9 +79,36 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
   await expect(page.locator('body')).not.toContainText('FAKE_E2E_KIMI_KEY');
   await expect(page.locator('body')).not.toContainText('FAKE_E2E_FAIL_KEY');
 
+  currentStatus = {
+    ...status,
+    ai: {
+      status: 'environment_fallback',
+      lastVerified: null,
+      summary: '2 个 Provider：model-primary、model-backup',
+      details: [
+        { label: '本机中转站', value: 'model-primary · 优先级 1' },
+        { label: 'Kimi / Moonshot', value: 'model-backup · 优先级 2' },
+      ],
+      errorCode: null,
+    },
+    smtp: {
+      status: 'environment_fallback', lastVerified: null, summary: 'QQ SMTP 已激活',
+      details: [{ label: '账号', value: 'se••••••@example.test' }, { label: 'SMTP 授权码', value: '•••••••• 已保存，不可回显' }], errorCode: null,
+    },
+    feishu: {
+      status: 'environment_fallback', lastVerified: null, summary: '飞书 Webhook 已激活',
+      details: [{ label: '飞书 Webhook', value: '•••••••• 已保存，不可回显' }], errorCode: null,
+    },
+  };
   await page.reload();
+  await expect(page.getByText('环境配置（待验证）', { exact: true }).first()).toBeVisible();
+  await expect(page.getByLabel('AI Provider 已有配置摘要')).toContainText('本机中转站');
+  await expect(page.getByRole('button', { name: '测试现有配置' }).first()).toBeVisible();
+  await expect(page.locator('body')).toContainText('•••••••• 已保存，不可回显');
   await expect(page.locator('body')).not.toContainText('FAKE_E2E_KIMI_KEY');
   await expect(kimiCard.getByLabel('API Key')).toHaveValue('');
+  const browserStorage = await page.evaluate(() => ({ local: JSON.stringify(localStorage), session: JSON.stringify(sessionStorage) }));
+  expect(JSON.stringify(browserStorage)).not.toMatch(/FAKE_E2E_KIMI_KEY/);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('heading', { name: '本机配置中心', level: 1 })).toBeVisible();

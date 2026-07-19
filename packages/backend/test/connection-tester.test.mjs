@@ -148,3 +148,39 @@ test('Feishu connection test accepts a successful fixed-card response', async ()
     { pass: true }
   );
 });
+
+
+test('AI 429 and common SMTP transport failures use fixed actionable sanitized codes', async () => {
+  const secret = 'DO-NOT-LEAK-M03';
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          throw Object.assign(new Error(secret), { status: 429 });
+        },
+      };
+    },
+    createSmtpTransport() {
+      return {
+        async verify() {
+          throw Object.assign(new Error(secret), { code: 'ETIMEDOUT' });
+        },
+        async sendMail() {},
+      };
+    },
+  });
+
+  const aiResult = await tester.testAi({ providers: [aiCandidate.providers[0]] });
+  const smtpResult = await tester.testSmtp({
+    host: 'smtp.invalid', port: 465, secure: true, user: 'sender@example.test', authCode: secret, to: 'receiver@example.test',
+  }, false);
+
+  assert.equal(aiResult.providers[0].errorCode, 'AI_QUOTA_OR_RATE_LIMITED');
+  assert.deepEqual(smtpResult, {
+    pass: false,
+    errorCode: 'SMTP_CONNECTION_TIMEOUT',
+    sanitizedMessage: 'SMTP 连接超时',
+  });
+  assert.doesNotMatch(JSON.stringify({ aiResult, smtpResult }), new RegExp(secret));
+});

@@ -61,13 +61,21 @@ export async function initializeRuntimeConfiguration(): Promise<ConfigurationSer
 
   for (const channel of ['ai', 'smtp', 'feishu'] as const) {
     const active = service.getActiveSnapshot(channel);
-    if (active) applyRuntimeSnapshot(channel, active);
-    else applyEnvironmentFallback(channel);
+    if (active) {
+      applyRuntimeSnapshot(channel, active);
+      continue;
+    }
+    const fallback = getEnvironmentFallback(channel);
+    if (fallback && service.registerEnvironmentFallback(channel, fallback)) {
+      applyRuntimeSnapshot(channel, fallback);
+    }
   }
   return service;
 }
 
-function applyEnvironmentFallback(channel: ConfigChannel): void {
+function getEnvironmentFallback<C extends ConfigChannel>(
+  channel: C
+): ChannelConfigMap[C] | null {
   if (channel === 'ai') {
     const providers =
       config.aiProviders.length > 0
@@ -83,23 +91,19 @@ function applyEnvironmentFallback(channel: ConfigChannel): void {
               },
             ]
           : [];
-    if (providers.length > 0) applyRuntimeSnapshot('ai', { providers });
-    return;
+    return (providers.length > 0 ? { providers } : null) as ChannelConfigMap[C] | null;
   }
   if (channel === 'smtp') {
-    if (config.smtpHost && config.smtpUser && config.smtpAuthCode && config.smtpTo) {
-      applyRuntimeSnapshot('smtp', {
-        host: config.smtpHost,
-        port: config.smtpPort,
-        secure: config.smtpSecure,
-        user: config.smtpUser,
-        authCode: config.smtpAuthCode,
-        to: config.smtpTo,
-      });
-    }
-    return;
+    return (config.smtpHost && config.smtpUser && config.smtpAuthCode && config.smtpTo
+      ? {
+          host: config.smtpHost,
+          port: config.smtpPort,
+          secure: config.smtpSecure,
+          user: config.smtpUser,
+          authCode: config.smtpAuthCode,
+          to: config.smtpTo,
+        }
+      : null) as ChannelConfigMap[C] | null;
   }
-  if (config.feishuWebhookUrl) {
-    applyRuntimeSnapshot('feishu', { webhookUrl: config.feishuWebhookUrl });
-  }
+  return (config.feishuWebhookUrl ? { webhookUrl: config.feishuWebhookUrl } : null) as ChannelConfigMap[C] | null;
 }

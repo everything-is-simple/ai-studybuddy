@@ -177,6 +177,17 @@ export default function SettingsPage() {
 
       <ConfigCard headingId="ai-config-title" title={channelLabels.ai} state={status?.ai} busy={busy === 'ai'} message={message.ai} onRetest={() => void retest('ai')}>
         <p className="settings-note">按优先级失败切换 + 冷却，不是成功请求轮询。</p>
+        <details className="advanced-config" data-testid="custom-provider-advanced" open>
+          <summary>高级自定义 Provider / 中转站（添加或替换）</summary>
+          <p className="settings-note">{presets.customProviderHint}</p>
+          <div className="settings-form">
+            <TextInput label="名称" testId="custom-provider-name" value={customProvider.name} onChange={(name) => setCustomProvider((current) => ({ ...current, name }))} />
+            <TextInput label="API 地址" testId="custom-provider-base-url" value={customProvider.baseUrl} onChange={(baseUrl) => setCustomProvider((current) => ({ ...current, baseUrl }))} />
+            <TextInput label="API Key" type="password" placeholder="已保存的 Key 不会回显；输入新值才替换" testId="custom-provider-api-key" value={customProvider.apiKey} onChange={(apiKey) => setCustomProvider((current) => ({ ...current, apiKey }))} />
+            <TextInput label="模型" testId="custom-provider-model" value={customProvider.model} onChange={(model) => setCustomProvider((current) => ({ ...current, model }))} />
+          </div>
+          <button type="button" className="button-secondary" onClick={addCustomProvider}>加入自定义 Provider</button>
+        </details>
         {providerGroupOrder.map((group) => {
           const providers = presets.ai.filter((preset) => preset.group === group);
           if (!providers.length) return null;
@@ -188,17 +199,6 @@ export default function SettingsPage() {
           </section>;
         })}
         <FallbackList providers={fallbackProviders} presets={presets.ai} onMove={(from, to) => setFallbackProviders((current) => moveItem(current, from, to))} onRemove={(index) => setFallbackProviders((current) => current.filter((_, currentIndex) => currentIndex !== index))} />
-        <details className="advanced-config" data-testid="custom-provider-advanced">
-          <summary>高级自定义 Provider / 中转站</summary>
-          <p className="settings-note">{presets.customProviderHint}</p>
-          <div className="settings-form">
-            <TextInput label="名称" testId="custom-provider-name" value={customProvider.name} onChange={(name) => setCustomProvider((current) => ({ ...current, name }))} />
-            <TextInput label="API 地址" testId="custom-provider-base-url" value={customProvider.baseUrl} onChange={(baseUrl) => setCustomProvider((current) => ({ ...current, baseUrl }))} />
-            <TextInput label="API Key" type="password" testId="custom-provider-api-key" value={customProvider.apiKey} onChange={(apiKey) => setCustomProvider((current) => ({ ...current, apiKey }))} />
-            <TextInput label="模型" testId="custom-provider-model" value={customProvider.model} onChange={(model) => setCustomProvider((current) => ({ ...current, model }))} />
-          </div>
-          <button type="button" className="button-secondary" onClick={addCustomProvider}>加入自定义 Provider</button>
-        </details>
         <div className="settings-actions">
           <button type="button" disabled={busy === 'ai' || fallbackProviders.length === 0} onClick={activateAi}>测试并激活 AI</button>
         </div>
@@ -206,9 +206,9 @@ export default function SettingsPage() {
 
       <ConfigCard headingId="smtp-config-title" title={channelLabels.smtp} state={status?.smtp} busy={busy === 'smtp'} message={message.smtp} onRetest={() => void retest('smtp')}>
         <div className="settings-form">
-          <TextInput label="QQ 邮箱账号" testId="smtp-user" value={smtp.user} onChange={(user) => setSmtp((current) => ({ ...current, user }))} />
-          <TextInput label="SMTP 授权码" type="password" testId="smtp-auth-code" value={smtp.authCode} onChange={(authCode) => setSmtp((current) => ({ ...current, authCode }))} />
-          <TextInput label="收件邮箱" testId="smtp-to" value={smtp.to} onChange={(to) => setSmtp((current) => ({ ...current, to }))} />
+          <TextInput label="QQ 邮箱账号" placeholder="已有账号请见上方脱敏摘要；输入新值才替换" testId="smtp-user" value={smtp.user} onChange={(user) => setSmtp((current) => ({ ...current, user }))} />
+          <TextInput label="SMTP 授权码" type="password" placeholder="•••••••• 已保存，不可回显；输入新值才替换" testId="smtp-auth-code" value={smtp.authCode} onChange={(authCode) => setSmtp((current) => ({ ...current, authCode }))} />
+          <TextInput label="收件邮箱" placeholder="已有邮箱请见上方脱敏摘要；输入新值才替换" testId="smtp-to" value={smtp.to} onChange={(to) => setSmtp((current) => ({ ...current, to }))} />
         </div>
         <p className="settings-note">SMTP 授权码不是 QQ 登录密码。</p>
         <details className="advanced-config" data-testid="smtp-advanced">
@@ -223,7 +223,7 @@ export default function SettingsPage() {
       </ConfigCard>
 
       <ConfigCard headingId="feishu-config-title" title={channelLabels.feishu} state={status?.feishu} busy={busy === 'feishu'} message={message.feishu} onRetest={() => void retest('feishu')}>
-        <TextInput label="飞书群机器人 Webhook URL" type="password" testId="feishu-webhook-url" value={feishu.webhookUrl} onChange={(webhookUrl) => setFeishu({ webhookUrl })} />
+        <TextInput label="飞书群机器人 Webhook URL" type="password" placeholder="•••••••• 已保存，不可回显；输入新值才替换" testId="feishu-webhook-url" value={feishu.webhookUrl} onChange={(webhookUrl) => setFeishu({ webhookUrl })} />
         <p className="settings-note">{presets.feishu.securityHint || 'Webhook 会加密保存在本机、页面不回显、不要复制到截图或提交到 Git。'}</p>
         <button type="button" disabled={busy === 'feishu'} onClick={() => void activate('feishu', feishu)}>测试并激活飞书</button>
       </ConfigCard>
@@ -239,7 +239,7 @@ function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProv
     <p className="provider-base-url"><span>官方 API 地址</span><code>{preset.baseUrl}</code></p>
     {unavailable ? <button type="button" disabled>{preset.displayName}（后续适配）</button> : <>
       <label>模型<select data-testid={`official-${preset.id}-model`} value={draft.model} onChange={(event) => onChange({ model: event.target.value })}>{preset.modelSuggestions.map((model) => <option key={model} value={model}>{model}</option>)}</select></label>
-      <TextInput label="API Key" type="password" testId={`official-${preset.id}-api-key`} value={draft.apiKey} onChange={(apiKey) => onChange({ apiKey })} />
+      <TextInput label="API Key" type="password" placeholder="已保存的 Key 不会回显；输入新值才替换" testId={`official-${preset.id}-api-key`} value={draft.apiKey} onChange={(apiKey) => onChange({ apiKey })} />
       <button type="button" className="button-secondary" onClick={onAdd}>加入 fallback</button>
     </>}
   </article>;
@@ -263,17 +263,22 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
 
 function Status({ label, ok }: { label: string; ok: boolean }) { return <span><strong>{label}</strong>：{ok ? '可用' : '未配置 / 降级'}</span>; }
 
-function TextInput({ label, value, onChange, testId, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; testId: string; type?: 'text' | 'password' }) {
-  return <label>{label}<input data-testid={testId} type={type} value={value} onChange={(event) => onChange(event.target.value)} /></label>;
+function TextInput({ label, value, onChange, testId, type = 'text', placeholder }: { label: string; value: string; onChange: (value: string) => void; testId: string; type?: 'text' | 'password'; placeholder?: string }) {
+  return <label>{label}<input data-testid={testId} type={type} placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} /></label>;
 }
 
 function ConfigCard({ headingId, title, state, busy, message, onRetest, children }: { headingId: string; title: string; state?: ChannelStatus; busy: boolean; message?: string; onRetest: () => void; children: ReactNode }) {
+  const configured = state?.status && state.status !== 'unconfigured';
   const verified = state?.status === 'verified_pass';
+  const environmentFallback = state?.status === 'environment_fallback';
+  const badge = verified ? '已验证' : environmentFallback ? '环境配置（待验证）' : '未配置';
   return <section className="settings-card" aria-labelledby={headingId}>
-    <div className="settings-card-head"><h2 id={headingId}>{title}</h2><span className={`status-badge ${verified ? 'status-success' : ''}`}>{verified ? '已通过' : '未配置'}</span></div>
-    {state?.summary && <p>{state.summary} · {state.lastVerified ?? '验证时间未知'}</p>}
+    <div className="settings-card-head"><h2 id={headingId}>{title}</h2><span className={`status-badge ${verified ? 'status-success' : environmentFallback ? 'status-warning' : ''}`}>{badge}</span></div>
+    {state?.summary && <p>{state.summary} · {state.lastVerified ?? (environmentFallback ? '尚未在本机配置中心验证' : '验证时间未知')}</p>}
+    {configured && <p className="settings-note">敏感凭据：•••••••• 已保存，不可回显。填写新值并测试激活才会替换。</p>}
+    {!!state?.details?.length && <dl className="settings-summary" aria-label={`${title} 已有配置摘要`}>{state.details.map((detail) => <div key={`${detail.label}-${detail.value}`}><dt>{detail.label}</dt><dd>{detail.value}</dd></div>)}</dl>}
     {state?.errorCode && <p className="semester-error">{state.errorCode}</p>}
     {children}
-    <div className="settings-actions">{verified && <button type="button" className="button-secondary" disabled={busy} onClick={onRetest}>重新测试</button>}{message && <span role="status">{message}</span>}</div>
+    <div className="settings-actions">{configured && <button type="button" className="button-secondary" disabled={busy} onClick={onRetest}>{environmentFallback ? '测试现有配置' : '重新测试'}</button>}{message && <span role="status">{message}</span>}</div>
   </section>;
 }

@@ -5,7 +5,7 @@ import express from 'express';
 
 import { createConfigRouter } from '../dist/routes/config-routes.js';
 
-const unconfigured = { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null };
+const unconfigured = { status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: null };
 
 async function createApi(t, overrides = {}) {
   const calls = [];
@@ -39,6 +39,7 @@ test('config status is returned without secret fields or paths', async (t) => {
   assert.equal(response.status, 200);
   assert.equal(body.success, true);
   assert.equal(body.data.runtime.dataDir, true);
+  assert.deepEqual(body.data.ai.details, []);
   assert.doesNotMatch(JSON.stringify(body), /apiKey|authCode|webhookUrl|APP_DATA_ROOT/);
 });
 
