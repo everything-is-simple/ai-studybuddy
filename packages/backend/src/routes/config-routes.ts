@@ -1,6 +1,7 @@
 import { Router, type RequestHandler } from 'express';
 import type { ConfigurationStatus, TestAndActivateResult } from '../config/configuration-service';
 import type { ChannelConfigMap } from '../config/configuration-types';
+import { findProviderPreset, getConfigurationPresets } from '../config/provider-presets';
 import type { ConfigChannel } from '../config/secure-store';
 
 interface ConfigurationServicePort {
@@ -27,6 +28,9 @@ export function createConfigRouter(service: ConfigurationServicePort): Router {
   const router = Router();
   router.get('/status', (_req, res) => {
     res.json({ success: true, data: service.getAllStatus() });
+  });
+  router.get('/presets', (_req, res) => {
+    res.json({ success: true, data: getConfigurationPresets() });
   });
 
   const jsonOnly: RequestHandler = (req, res, next) => {
@@ -114,54 +118,86 @@ function validateAi(body: Record<string, unknown>): ChannelConfigMap['ai'] {
   if (!Array.isArray(body.providers) || body.providers.length < 1 || body.providers.length > 10) {
     throw new ValidationError('CONFIG_PROVIDER_COUNT_INVALID');
   }
-  const providers = body.providers.map((raw, index) => {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-      throw new ValidationError('CONFIG_FIELD_INVALID');
-    }
-    const value = raw as Record<string, unknown>;
-    const priority = value.priority;
-    if (!Number.isInteger(priority) || (priority as number) < 1 || (priority as number) > 100) {
-      throw new ValidationError('CONFIG_PRIORITY_INVALID');
-    }
-    return {
-      index,
-      name: cleanString(value.name, 50),
-      baseUrl: validateProviderUrl(cleanString(value.baseUrl, 200)),
-      apiKey: cleanString(value.apiKey, 200, false),
-      model: cleanString(value.model, 100),
-      priority: priority as number,
-    };
-  });
+  const providers = body.providers.map((raw, index) => ({ index, ...validateAiProvider(raw) }));
   providers.sort((left, right) => left.priority - right.priority || left.index - right.index);
   return { providers: providers.map(({ index: _index, ...provider }) => provider) };
 }
 
+function validateAiProvider(raw: unknown): ChannelConfigMap['ai']['providers'][number] {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new ValidationError('CONFIG_FIELD_INVALID');
+  }
+  const value = raw as Record<string, unknown>;
+  if (value.kind === undefined) return validateCustomAiProvider(value, false);
+  if (value.kind === 'official') return validateOfficialAiProvider(value);
+  if (value.kind === 'custom') return validateCustomAiProvider(value, true);
+  throw new ValidationError('CONFIG_FIELD_INVALID');
+}
+
+function validateOfficialAiProvider(value: Record<string, unknown>): ChannelConfigMap['ai']['providers'][number] {
+  assertOnlyFields(value, ['kind', 'presetId', 'apiKey', 'model', 'priority']);
+  const presetId = cleanString(value.presetId, 50);
+  const preset = findProviderPreset(presetId);
+  if (!preset) throw new ValidationError('CONFIG_PRESET_INVALID');
+  if (preset.availability !== 'available' || preset.protocol !== 'openai-compatible') {
+    throw new ValidationError('CONFIG_PRESET_UNAVAILABLE');
+  }
+  const model = cleanString(value.model, 100);
+  if (!preset.modelSuggestions.includes(model)) throw new ValidationError('CONFIG_MODEL_INVALID');
+  return {
+    name: preset.displayName,
+    baseUrl: preset.baseUrl,
+    apiKey: cleanString(value.apiKey, 200, false),
+    model,
+    priority: validatePriority(value.priority),
+  };
+}
+
+function validateCustomAiProvider(
+  value: Record<string, unknown>,
+  hasKind: boolean,
+): ChannelConfigMap['ai']['providers'][number] {
+  if (hasKind) assertOnlyFields(value, ['kind', 'name', 'baseUrl', 'apiKey', 'model', 'priority']);
+  return {
+    name: cleanString(value.name, 50),
+    baseUrl: validateProviderUrl(cleanString(value.baseUrl, 200)),
+    apiKey: cleanString(value.apiKey, 200, false),
+    model: cleanString(value.model, 100),
+    priority: validatePriority(value.priority),
+  };
+}
+
+function assertOnlyFields(value: Record<string, unknown>, allowed: readonly string[]): void {
+  if (Object.keys(value).some((key) => !allowed.includes(key))) throw new ValidationError('CONFIG_FIELD_INVALID');
+}
+
+function validatePriority(value: unknown): number {
+  if (!Number.isInteger(value) || (value as number) < 1 || (value as number) > 100) {
+    throw new ValidationError('CONFIG_PRIORITY_INVALID');
+  }
+  return value as number;
+}
+
 function validateSmtp(body: Record<string, unknown>): ChannelConfigMap['smtp'] {
+  const host = cleanString(body.host, 100);
   const port = body.port;
-  if (!Number.isInteger(port) || (port as number) < 1 || (port as number) > 65_535) {
+  if (!Number.isInteger(port) || (port as number) < 1 || (port as number) > 65535) {
     throw new ValidationError('CONFIG_SMTP_PORT_INVALID');
   }
   if (typeof body.secure !== 'boolean') throw new ValidationError('CONFIG_FIELD_INVALID');
-  const to = cleanString(body.to, 200);
-  if (!to.includes('@')) throw new ValidationError('CONFIG_EMAIL_INVALID');
   return {
-    host: cleanString(body.host, 253),
+    host,
     port: port as number,
     secure: body.secure,
     user: cleanString(body.user, 200),
     authCode: cleanString(body.authCode, 200, false),
-    to,
+    to: cleanString(body.to, 200),
   };
 }
 
 function validateFeishu(body: Record<string, unknown>): ChannelConfigMap['feishu'] {
-  const webhookUrl = cleanString(body.webhookUrl, 500);
-  try {
-    const parsed = new URL(webhookUrl);
-    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error();
-  } catch {
-    throw new ValidationError('CONFIG_URL_INVALID');
-  }
+  const webhookUrl = validateProviderUrl(cleanString(body.webhookUrl, 500));
+  if (!webhookUrl.startsWith('https://')) throw new ValidationError('CONFIG_URL_INVALID');
   return { webhookUrl };
 }
 

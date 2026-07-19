@@ -1597,3 +1597,135 @@ button:disabled {
 .practice-history-answer-list {
   padding-left: 20px;
 }
+
+/* ===== T12 设置中心 Provider 预设 ===== */
+.settings-note {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.provider-preset-group {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.provider-preset-group h3,
+.fallback-list h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.provider-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  gap: 12px;
+}
+
+.provider-preset-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.provider-preset-card h4,
+.provider-preset-card p {
+  margin: 0;
+}
+
+.provider-preset-card > p {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.provider-base-url {
+  display: grid;
+  gap: 4px;
+}
+
+.provider-base-url code {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+}
+
+.provider-preset-card label,
+.advanced-config label {
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.advanced-config {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.advanced-config summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.advanced-config[open] summary {
+  margin-bottom: 12px;
+}
+
+.fallback-list {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.fallback-list ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 24px;
+}
+
+.fallback-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.fallback-list li > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.fallback-list li span {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 390px) {
+  .provider-preset-grid,
+  .settings-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fallback-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fallback-actions > button {
+    flex: 1 1 auto;
+  }
+}

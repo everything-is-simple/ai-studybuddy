@@ -112,3 +112,95 @@ test('failed activation is returned sanitized and retest without active is 404',
   assert.equal(retest.status, 404);
   assert.equal((await retest.json()).error.code, 'CONFIG_NOT_FOUND');
 });
+
+test('configuration presets expose only approved non-secret official metadata', async (t) => {
+  const { base } = await createApi(t);
+  const response = await fetch(`${base}/presets`);
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.success, true);
+  assert.equal(body.error, undefined);
+  assert.equal(body.data.ai.length, 10);
+  assert.deepEqual(body.data.ai.map((preset) => preset.id), [
+    'openai', 'claude', 'gemini', 'grok', 'glm', 'kimi', 'deepseek', 'minimax', 'qwen', 'stepfun',
+  ]);
+
+  const openai = body.data.ai.find((preset) => preset.id === 'openai');
+  assert.deepEqual(openai.modelSuggestions, ['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna']);
+  assert.equal(openai.defaultModel, 'gpt-5.5');
+
+  const kimi = body.data.ai.find((preset) => preset.id === 'kimi');
+  assert.equal(kimi.baseUrl, 'https://api.moonshot.cn/v1');
+  assert.deepEqual(kimi.modelSuggestions, ['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6']);
+  assert.equal(kimi.defaultModel, 'kimi-k2.7-code');
+  assert.doesNotMatch(JSON.stringify(body), new RegExp(`kimi-k${'3'}`, 'i'));
+
+  const grok = body.data.ai.find((preset) => preset.id === 'grok');
+  assert.equal(grok.baseUrl, 'https://api.x.ai/v1');
+  assert.equal(grok.defaultModel, 'grok-4.3');
+  assert.deepEqual(grok.modelSuggestions, ['grok-4.3']);
+  const deepseek = body.data.ai.find((preset) => preset.id === 'deepseek');
+  assert.equal(deepseek.baseUrl, 'https://api.deepseek.com');
+  assert.equal(deepseek.defaultModel, 'deepseek-v4-flash');
+  assert.deepEqual(deepseek.modelSuggestions, ['deepseek-v4-flash']);
+
+  const stepfun = body.data.ai.find((preset) => preset.id === 'stepfun');
+  assert.equal(stepfun.baseUrl, 'https://api.stepfun.com/v1');
+  assert.equal(stepfun.defaultModel, 'step-3.5-flash');
+  assert.deepEqual(stepfun.modelSuggestions, ['step-3.5-flash']);
+  const claude = body.data.ai.find((preset) => preset.id === 'claude');
+  assert.equal(claude.protocol, 'anthropic-native');
+  assert.equal(claude.availability, 'coming-soon');
+
+  assert.deepEqual(body.data.smtp, {
+    host: 'smtp.qq.com',
+    port: 465,
+    secure: true,
+    userHint: '填写 QQ 邮箱账号',
+    authCodeHint: '填写 SMTP 授权码，不是 QQ 登录密码',
+    recipientHint: '填写收件邮箱',
+  });
+  assert.match(body.data.feishu.webhookHint, /Webhook/);
+  assert.match(body.data.feishu.securityHint, /加密保存在本机/);
+  assert.doesNotMatch(JSON.stringify(body), /apiKey|authCode"|webhookUrl|FAKE_T12/i);
+});
+
+test('official AI candidates resolve fixed presets and reject unavailable or altered fields', async (t) => {
+  const { base, calls } = await createApi(t);
+  const activate = async (providers) => fetch(`${base}/ai/test-and-activate`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ providers }),
+  });
+
+  const accepted = await activate([{
+    kind: 'official',
+    presetId: 'kimi',
+    apiKey: 'FAKE_T12_KIMI_KEY',
+    model: 'kimi-k2.7-code',
+    priority: 1,
+  }]);
+  assert.equal(accepted.status, 200);
+  assert.deepEqual(calls[0].candidate, {
+    providers: [{
+      name: 'Kimi / Moonshot',
+      baseUrl: 'https://api.moonshot.cn/v1',
+      apiKey: 'FAKE_T12_KIMI_KEY',
+      model: 'kimi-k2.7-code',
+      priority: 1,
+    }],
+  });
+
+  for (const [provider, code] of [
+    [{ kind: 'official', presetId: 'unknown', apiKey: 'FAKE', model: 'x', priority: 1 }, 'CONFIG_PRESET_INVALID'],
+    [{ kind: 'official', presetId: 'claude', apiKey: 'FAKE', model: 'x', priority: 1 }, 'CONFIG_PRESET_UNAVAILABLE'],
+    [{ kind: 'official', presetId: 'kimi', apiKey: 'FAKE', model: 'other', priority: 1 }, 'CONFIG_MODEL_INVALID'],
+    [{ kind: 'official', presetId: 'kimi', baseUrl: 'https://attacker.invalid', apiKey: 'FAKE', model: 'kimi-k2.7-code', priority: 1 }, 'CONFIG_FIELD_INVALID'],
+    [{ kind: 'unsupported-kind', name: 'x', baseUrl: 'https://x.invalid', apiKey: 'FAKE', model: 'm', priority: 1 }, 'CONFIG_FIELD_INVALID'],
+  ]) {
+    const rejected = await activate([provider]);
+    assert.equal(rejected.status, 400);
+    assert.equal((await rejected.json()).error.code, code);
+  }
+});
