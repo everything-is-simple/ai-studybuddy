@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.48
+**版本**：v1.49
 **日期**：2026-07-19
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `本主线收尾提交`。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `本主线收尾提交`。T12 已获用户批准并在独立干净分支实施中，尚未合入 `master`。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -479,6 +479,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 22 | Phase 1-T09C：课程课表与考试目标完善 | ✅ | 已交付当前学期课程名称编辑、完整周课表条目维护、考试名称/日期/目标编辑及已确认倒计时；计划 `b14b718`、实现 `082be70`、日期验收稳定 `51de979` 和主线验证证据 `735bd36` 已推送 `origin/master`。不含 T09D/T09E |
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ✅ | 已交付全局导航、考试上下文导航、统一 PageState、响应式入口、stale/current/404 状态与真实 Express/SQLite 学生旅程 E2E；已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`。计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。不含 T09E 练习历史/学期归档。 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ✅ | 已获用户明确批准并在任务分支 `codex/phase1-t09e-practice-history-archive` 完成实现；实现提交 `de5c41e` 已 fast-forward 合入 `master`，主线复验通过并随主线收尾提交 `本主线收尾提交` 推送 `origin/master`。 |
+| 25 | Phase 1-T12：设置中心 Provider 预设与渠道配置 UX 改造 | 🔄 | 已完成独立计划审查并于 2026-07-19 获用户实施批准；当前仅在干净任务分支 `codex/phase1-t12-settings-provider-presets-impl` 实施，尚未合入 `master` 或推送 `origin/master`。 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -494,6 +495,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T09C | `.plans/phase1-t09c-course-schedule-exam-goals-plan.md` | 已完成：独立计划、复审、用户批准、实施、fast-forward 主线集成与主线复验均通过；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 已推送 `origin/master`。 |
 | T09D | `.plans/phase1-t09d-global-navigation-student-journey-plan.md` | 已完成：独立计划、四轮 fresh-pass 计划复审、用户继续实施授权、实现、独立复审修复、分支复验、fast-forward 主线集成、主线复验与 `origin/master` 推送均通过；计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。 |
 | T09E | `.plans/phase1-t09e-practice-history-archive-plan.md` | 已获用户明确批准并实施：任务分支 `codex/phase1-t09e-practice-history-archive` 已交付 global v2 归档状态、归档写保护、练习历史列表/结果 API、学期管理归档入口、历史页面与浏览器验收；尚未合入 `master` 或推送 `origin/master`，完成判定仍等待主线合入后复验。 |
+| T12 | `.plans/phase1-t12-settings-provider-presets-plan.md` | v5 已完成独立审查并于 2026-07-19 获用户实施批准；在干净分支 `codex/phase1-t12-settings-provider-presets-impl` 按 TDD 实施中，尚未合入 `master`。 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
@@ -518,6 +520,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **T11 收尾证据（2026-07-15）**：新增单考试查询与 pending 确认 API，确认事务写入固定 S1 证据事件并立即驱动任务优先级；课程页提供确认入口，confirmed 考试可进入 `/exams/:examId` 工作台。工作台展示日期、倒计时、当前考试任务进度和任务闭环，支持 confirmed 考试切换、近期最多 5 场概览、pending 待确认边界及前后 7 天只读提示；资料导航通过白名单校验的 `courseInstanceId` 保持课程上下文。验证通过：`pnpm type-check`、后端 build、前端 build、隔离全量测试（后端 109/109、前端 32/32）及 Playwright Chromium 1/1；浏览器证据保存在仓库外 `I:\ai-studybuddy-tmp\runs\phase1-t11-20260715-master-final-e2e-retry\playwright`。实现提交 `ff6322e`、`57a94ca`、`78619fa`，已快进合并到 `master`，最终 HEAD 为 `04e6f37`；当前本地 `master` 尚未 push。未实现跨考试自动排程、智能任务平衡、模拟考、临考速背或 S3 业务代码。
 
+#### T12：设置中心 Provider 预设与渠道配置 UX 改造（已批准，实施中）
+
+> **实施门禁（2026-07-19）**：用户已明确批准 v5 计划。仅允许在从 `origin/master` @ `af37bd5` 建立的干净分支 `codex/phase1-t12-settings-provider-presets-impl` 实施；原 `m01-master-integration` 的未提交草稿不是实现证据，禁止带入提交。完成前不得把本任务说成已合入 `master`。
+
+- [ ] 后端：以唯一非秘密官方 catalog 和 `GET /api/config/presets` 提供十张 Provider 卡片；官方激活由服务端根据 `presetId` 固定 Base URL，Claude 保持“后续适配”。
+- [ ] 后端：官方候选模型受 catalog 约束，未知/后续适配 preset 被拒绝；旧 OpenAI-compatible 自定义 payload 保持兼容，不修改 DPAPI、存储 schema 或 Router fallback 语义。
+- [ ] 前端：官方卡片、高级自定义 Provider、优先级失败切换说明、QQ SMTP 首屏简化和飞书 Webhook 安全提示；秘密不回显、不写浏览器 Storage。
+- [ ] 测试与验收：后端 API、前端设置页和 mock API Playwright 覆盖；使用隔离 `APP_DATA_ROOT`，不运行真实 AI、QQ SMTP 或飞书 smoke。
+- [ ] 收尾：独立审查、完整验证、同步本任务的提交/证据/主线集成状态；未 fast-forward 合入并推送前不得勾选完成。
 ### Phase 1 产品组织原则
 
 - 借鉴 KaoBuddy 的信息架构，但不复制源码、视觉、文案或资产。
