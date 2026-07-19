@@ -533,7 +533,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 本地主线收尾：独立审查无 P0/P1，已 rebase、fast-forward 合入本地 `master` 并重新完成完整验证。
 - [x] 远端收尾：已获用户授权并于 2026-07-19 推送 `origin/master`；推送前的主线复验已完成。
 
-#### M02：错题详情一级标题语义回归修复（测试/构建/E2E 通过，待最终收尾）
+#### M02：错题详情一级标题语义回归修复（分支已提交，待主线集成）
 
 > **计划与问题证据（2026-07-19）**：post-T12 隔离全量验收基于 `origin/master` @ `60f03f8` 执行 `pnpm test:e2e` 时，14 条 Playwright 用例中 13 条通过、`e2e/student-journey.spec.ts` 1 条失败。失败断言要求“错题详情”为 level 1 heading，页面实际输出 `<p className="workbench-eyebrow">错题详情</p>`；页面内容、错因确认控件、路由和真实 Express/SQLite 数据均已正常加载。用户已明确选择方案 A：把可见主标题改为 `<h1>`，保留严格 E2E 语义断言，不放宽为普通文本匹配。行动计划为 `.plans/phase1-m02-mistake-detail-heading-regression-plan.md`；本任务不改 S4 API、Schema、数据或业务规则，也不运行真实外部渠道 smoke。
 
@@ -543,7 +543,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 测试：增加错题详情主标题 `h1`/文案前端回归断言；保留并跑通现有真实 Express/SQLite 学生旅程 E2E。
 - [x] 验收：在新的隔离数据目录下完成前端/全量测试和完整 E2E；最终文档治理与 `git diff --check` 均已通过。
 - [x] 独立审查：无 P0/P1；已修正 P2 的 Playwright 验证目录复用风险。
-- [ ] 提交与集成：登记提交、主线复验和 `origin/master` 推送事实；在完成前不得声称已合入或已推送。
+- [x] 分支提交：`80ea2ab`（`fix(frontend): 修复错题详情一级标题语义`）已在本任务分支提交；尚未合入 `master`，尚未推送。
+- [ ] 主线集成：在新的干净主线 worktree 中 rebase、fast-forward、主线复验，并在获得明确授权后推送 `origin/master`。
 
 ### Phase 1 产品组织原则
 
