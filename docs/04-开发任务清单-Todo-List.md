@@ -1,12 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.46
+**版本**：v1.47
 **日期**：2026-07-19
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；M01 的实现提交为 `57b8612`、验证证据提交为 `6f5abcb`，Markmap 相关物理 chunk 均低于 500 kB，KaTeX 535.51 kB warning 作为独立遗留保留。T09B 已 fast-forward 合入 `master` 并完成主线复验；实现提交 `562a633`、验证证据提交 `29c878f` 与本次主线收尾记录已一并推送 `origin/master`。T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 均已包含于远端主线。T09D 已完成全局导航与学生旅程 E2E，已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；计划提交 `0d2127e`、实现提交 `0a054f8` 与主线收尾提交 `e1034e7` 均已包含于远端主线。T09E 尚未创建计划、尚未启动，是下一计划门禁。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；M01 的实现提交为 `57b8612`、验证证据提交为 `6f5abcb`，Markmap 相关物理 chunk 均低于 500 kB，KaTeX 535.51 kB warning 作为独立遗留保留。T09B 已 fast-forward 合入 `master` 并完成主线复验；实现提交 `562a633`、验证证据提交 `29c878f` 与本次主线收尾记录已一并推送 `origin/master`。T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 均已包含于远端主线。T09D 已完成全局导航与学生旅程 E2E，已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；计划提交 `0d2127e`、实现提交 `0a054f8` 与主线收尾提交 `e1034e7` 均已包含于远端主线。T09E 已创建独立实施计划并完成计划审查，当前为计划待批；未获用户明确批准前不得实施。S3 Worker 仍未开始，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
-> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B 已完成主线集成与主线复验；T09C 已完成主线集成、主线复验并推送 `origin/master`；T09D 已完成全局导航、考试上下文导航、统一页面状态与真实后端学生旅程 E2E，并完成独立复审修复、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 与家长 Web 面板均未启动。
+> **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B 已完成主线集成与主线复验；T09C 已完成主线集成、主线复验并推送 `origin/master`；T09D 已完成全局导航、考试上下文导航、统一页面状态与真实后端学生旅程 E2E，并完成独立复审修复、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 已进入计划待批但未实施，家长 Web 面板未启动。
 
 > **系统文档同步证据（2026-07-17）**：同步 `AGENTS.md`、`CLAUDE.md`、`docs/00`、`docs/08`、`docs/12` 与本文件的当前进度表述，统一为 T05 已完成、下一门禁 T06；同时将 S6 PRD 目标命名校准为“家长观察 / ParentReport”，避免误解为家长 Web 面板。本轮不创建 S6 PRD，不实现 T06A/T06B、S5 或 S7。
 
@@ -447,7 +447,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：在不扩大架构的前提下，跑通 S1 + S2 + S3 + S4 + S6 简版；主界面逐步围绕”一个考试项目”组织，而不是围绕数据库对象组织。
 
-**前置条件**：Phase 0.8 T09 已通过。S1/S2/S3/S4/S6 PRD 与 Phase 1-T00–T09A 对应范围已完成；S5/S7 仍未触发。T09B 已 fast-forward 合入 `master` 并完成主线复验；T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；T09D 已完成实现、分支验证、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 尚未创建计划、尚未启动，进入后续任务前仍须完成独立计划、审查和用户明确批准。
+**前置条件**：Phase 0.8 T09 已通过。S1/S2/S3/S4/S6 PRD 与 Phase 1-T00–T09A 对应范围已完成；S5/S7 仍未触发。T09B 已 fast-forward 合入 `master` 并完成主线复验；T09C 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；T09D 已完成实现、分支验证、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 已创建独立实施计划并完成计划审查，当前计划待批，进入实现前仍须获得用户明确批准。
 
 ### Phase 1 真实执行顺序
 
@@ -478,7 +478,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 21 | Phase 1-T09B：每日学习首页 | ✅ | 已交付当前已选择单学期的只读每日首页：今日/明日任务、明日课程、已确认考试、待处理资料、错题复习和确定性下一步；复用 T09A current semester，主线复验通过。实现提交 `562a633`、验证证据 `29c878f` 已 fast-forward 合入 `master`，本次收尾记录已一并推送 `origin/master` |
 | 22 | Phase 1-T09C：课程课表与考试目标完善 | ✅ | 已交付当前学期课程名称编辑、完整周课表条目维护、考试名称/日期/目标编辑及已确认倒计时；计划 `b14b718`、实现 `082be70`、日期验收稳定 `51de979` 和主线验证证据 `735bd36` 已推送 `origin/master`。不含 T09D/T09E |
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ✅ | 已交付全局导航、考试上下文导航、统一 PageState、响应式入口、stale/current/404 状态与真实 Express/SQLite 学生旅程 E2E；已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`。计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。不含 T09E 练习历史/学期归档。 |
-| 24 | Phase 1-T09E：练习历史与学期归档 | ⏳ | 练习历史列表与筛选、学期归档与只读查看；可后置于产品化核心完成后；必须先有独立计划、审查和用户批准 |
+| 24 | Phase 1-T09E：练习历史与学期归档 | 📝 | 独立实施计划已创建并完成计划审查，当前计划待批；实现未启动，必须等待用户明确批准后才能实施 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -493,9 +493,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T09B | `.plans/phase1-t09b-daily-study-home-plan.md` | 已完成：独立计划、复审、实施、fast-forward 主线集成与主线复验均通过；实现提交 `562a633`、验证证据提交 `29c878f` 与本次收尾记录已一并推送 `origin/master`。T09C–T09E 仍未启动 |
 | T09C | `.plans/phase1-t09c-course-schedule-exam-goals-plan.md` | 已完成：独立计划、复审、用户批准、实施、fast-forward 主线集成与主线复验均通过；计划提交 `b14b718`、实现提交 `082be70`、日期验收稳定提交 `51de979` 与主线验证证据提交 `735bd36` 已推送 `origin/master`。 |
 | T09D | `.plans/phase1-t09d-global-navigation-student-journey-plan.md` | 已完成：独立计划、四轮 fresh-pass 计划复审、用户继续实施授权、实现、独立复审修复、分支复验、fast-forward 主线集成、主线复验与 `origin/master` 推送均通过；计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。 |
-| T09E | 尚未创建 | 尚未创建计划、尚未启动；下一步只能先创建独立实施计划、审查并等待用户明确批准 |
+| T09E | `.plans/phase1-t09e-practice-history-archive-plan.md` | 计划待批：独立实施计划已创建并完成计划审查；仅登记计划，不代表实现完成；未获用户明确批准不得创建实现分支或实施 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
+
+> **T09E 计划门禁（2026-07-19，计划待批，未实施）**：以 `origin/master` @ `e267a17` 为基线，在计划分支 `codex/phase1-t09e-practice-history-archive-plan` 创建 `.plans/phase1-t09e-practice-history-archive-plan.md`。计划范围限定为练习历史列表与筛选、持久化练习结果只读查看、非当前学期归档、归档学期只读查看和后端 archived 写保护；明确不做 S5/S7、家长 Web 面板、真实外部渠道 smoke、学期删除/迁移/恢复，也不改 T09D 已完成全局导航范围。计划内审查已覆盖范围越界、未来 PRD 触发、归档误做删除/迁移、current semester 语义、schema/migration 必要性和历史/归档测试覆盖；当前结论为计划可提交等待用户批准，T09E 实现未启动。
 
 > **T09D 计划门禁（2026-07-18，已通过并进入实施）**：以 `origin/master` @ `07a2b0fc880fcfeb48448565f4de8fd8ca4c29b5` 为基线，在计划分支 `codex/phase1-t09d-global-navigation-student-journey-plan` 创建 `.plans/phase1-t09d-global-navigation-student-journey-plan.md`；经四轮独立 fresh-pass 计划复审后无 P0/P1/P2，用户随后以“继续”授权进入实施。计划范围限定为全局/考试上下文导航、桌面/窄屏/移动响应式入口、关键页面 loading/stale/空/错误/成功/安全 404 状态，以及真实后端、真实 SQLite、隔离数据根的导航专项和学生旅程 E2E；原则上不新增数据库 schema、migration 或生产业务 API，不启动 T09E。
 >
