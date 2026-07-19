@@ -188,6 +188,9 @@ describe('S4 错题本前端交互', () => {
     });
     await renderDetailPage();
 
+    const detailHeading = container.querySelector('h1.workbench-eyebrow');
+    expect(detailHeading?.textContent).toBe('错题详情');
+
     expect(container.textContent).toContain('我的答案');
     expect(container.textContent).toContain('B');
     expect(container.textContent).toContain('正确答案');

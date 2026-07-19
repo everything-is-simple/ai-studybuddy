@@ -165,7 +165,7 @@ export function MistakeDetailPage({ semesterId, onSemesterError }: MistakeDetail
       {data && (
         <>
           <header className="card">
-            <p className="workbench-eyebrow">错题详情</p>
+            <h1 className="workbench-eyebrow">错题详情</h1>
             <div className="mistake-item-head">
               <span className={`status-badge status-${data.status}`}>{STATUS_LABELS[data.status]}</span>
               <span className="text-muted">
