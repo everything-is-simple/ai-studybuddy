@@ -4,6 +4,7 @@ import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
 import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
+import { assertSemesterWritable, SemesterAccessError } from './semester-access-service';
 import { StorageAdapter } from '../adapters/storage';
 import type {
   KnowledgeDifficulty,
@@ -117,6 +118,18 @@ export class NoteBuilderService {
     }
   }
 
+
+  private assertWritableSemester(semesterId: unknown): void {
+    try {
+      assertSemesterWritable(semesterId);
+    } catch (error) {
+      if (error instanceof SemesterAccessError) {
+        throw new NoteBuilderError(error.code, error.status, error.message);
+      }
+      throw error;
+    }
+  }
+
   private requireCourse(db: DatabaseType, semesterId: string, courseInstanceId: string): void {
     requiredUuid(courseInstanceId, 'COURSE_INSTANCE_NOT_FOUND', '课程不存在');
     const row = db
@@ -200,6 +213,7 @@ export class NoteBuilderService {
     const materialFileType = fileType(input.file.originalname, input.file.mimetype);
     const title = string(input.title);
     if (title.length > 200) throw new NoteBuilderError('INVALID_TITLE', 400, 'title 不能超过 200 字符');
+    this.assertWritableSemester(semesterId);
     const db = this.openReadySemesterDb(semesterId);
     let storageKey: string | undefined;
     try {
@@ -326,6 +340,7 @@ export class NoteBuilderService {
     const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
     const materialId = requiredUuid(materialIdValue, 'MATERIAL_NOT_FOUND', '资料不存在');
     const expected = type === 'material_convert' ? 'conversion_failed' : 'pending_quality_check';
+    this.assertWritableSemester(semesterId);
     const db = this.openReadySemesterDb(semesterId);
     try {
       const material = db.prepare('SELECT status FROM materials WHERE id = ?').get(materialId) as
@@ -362,6 +377,7 @@ export class NoteBuilderService {
     const text = string(textValue);
     if (!text || text.length > 1048576)
       throw new NoteBuilderError('INVALID_TEXT', 400, 'text 长度必须为 1-1048576 字符');
+    this.assertWritableSemester(semesterId);
     const db = this.openReadySemesterDb(semesterId);
     try {
       const material = db.prepare('SELECT status FROM materials WHERE id = ?').get(materialId) as
@@ -502,6 +518,7 @@ export class NoteBuilderService {
   }) {
     const semesterId = requiredUuid(input.semesterId, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
     const moduleId = requiredUuid(input.id, 'KNOWLEDGE_MODULE_NOT_FOUND', '知识模块不存在');
+    this.assertWritableSemester(semesterId);
     const db = this.openReadySemesterDb(semesterId);
     try {
       const module = db.prepare('SELECT * FROM knowledge_modules WHERE id = ?').get(moduleId) as

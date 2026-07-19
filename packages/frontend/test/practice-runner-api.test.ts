@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createPracticeSession, getPracticeSession, submitPracticeSession } from '../src/api/practice-runner-api';
+import {
+  createPracticeSession,
+  getPracticeHistory,
+  getPracticeHistoryResult,
+  getPracticeSession,
+  submitPracticeSession,
+} from '../src/api/practice-runner-api';
 
 const baseUrl = 'http://127.0.0.1:3000/api';
 
@@ -67,6 +73,23 @@ describe('practice-runner API client', () => {
           totalDurationSeconds: 8,
         }),
       })
+    );
+  });
+
+  it('loads practice history with explicit semester and filter query', async () => {
+    mockSuccess({ items: [], pagination: { page: 1, pageSize: 20, total: 0, hasMore: false } });
+    await getPracticeHistory('semester id', { courseInstanceId: 'course/1', status: 'graded', page: 2, pageSize: 10 });
+    await getPracticeHistoryResult('semester id', 'session/1');
+
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      1,
+      `${baseUrl}/practice-sessions/history?semesterId=semester+id&courseInstanceId=course%2F1&status=graded&page=2&pageSize=10`,
+      expect.any(Object)
+    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      `${baseUrl}/practice-sessions/session%2F1/history-result?semesterId=semester%20id`,
+      expect.any(Object)
     );
   });
 });

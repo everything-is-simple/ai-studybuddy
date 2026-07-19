@@ -10,6 +10,7 @@ import fs from 'fs';
 import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
+import { assertSemesterWritable, SemesterAccessError } from './semester-access-service';
 import type {
   AssessmentAttemptDto,
   ConfirmationStatus,
@@ -115,6 +116,18 @@ export class StudyRhythmService {
       throw new StudyRhythmError('SEMESTER_DB_NOT_FOUND', 500, '学期数据库不存在');
     }
     return openExistingDbAtPath(dbPath);
+  }
+
+
+  private assertWritableSemester(semesterId: unknown): void {
+    try {
+      assertSemesterWritable(semesterId);
+    } catch (error) {
+      if (error instanceof SemesterAccessError) {
+        throw new StudyRhythmError(error.code, error.status, error.message);
+      }
+      throw error;
+    }
   }
 
   private requireCourse(db: DatabaseType, semesterId: string, courseInstanceId: string) {
@@ -400,6 +413,7 @@ export class StudyRhythmService {
     if (!isNonEmptyString(input.name) || input.name.trim().length > 200) {
       throw new StudyRhythmError('COURSE_INPUT_INVALID', 400, '课程名称必须为非空字符串且不超过 200 字符');
     }
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       const course = this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
@@ -427,6 +441,7 @@ export class StudyRhythmService {
   createScheduleEntry(input: { semesterId: unknown; courseInstanceId: unknown; weekday: unknown; startTime: unknown; endTime: unknown; location?: unknown }): ScheduleEntryDto {
     if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     const data = this.validateScheduleEntryInput(input);
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       this.requireCourse(db, input.semesterId, data.courseInstanceId);
@@ -442,6 +457,7 @@ export class StudyRhythmService {
   updateScheduleEntry(input: { semesterId: unknown; scheduleEntryId: unknown; courseInstanceId: unknown; weekday: unknown; startTime: unknown; endTime: unknown; location?: unknown }): ScheduleEntryDto {
     if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     const data = this.validateScheduleEntryInput(input);
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId));
@@ -458,6 +474,7 @@ export class StudyRhythmService {
 
   deleteScheduleEntry(input: { semesterId: unknown; scheduleEntryId: unknown }): ScheduleEntryDto {
     if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       const entry = this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId));
@@ -480,6 +497,7 @@ export class StudyRhythmService {
     if (input.goal !== undefined && (typeof input.goal !== 'string' || input.goal.trim().length > 1000)) {
       throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, '考试目标必须是字符串且不超过 1000 字符');
     }
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       const existing = this.requireExam(db, input.semesterId, String(input.assessmentAttemptId));
@@ -514,6 +532,7 @@ export class StudyRhythmService {
       throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     }
 
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       const now = new Date().toISOString();
@@ -599,6 +618,7 @@ export class StudyRhythmService {
       throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, 'sourceConfidence 必须在 0 到 1 之间');
     }
 
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
@@ -806,6 +826,7 @@ export class StudyRhythmService {
       throw new StudyRhythmError('TASK_INPUT_INVALID', 400, 'knowledgeModuleId 必须是有效的 UUID');
     }
 
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
@@ -873,6 +894,7 @@ export class StudyRhythmService {
     const newStatus = String(input.status) as StudyTaskStatus;
     const occurredAt = input.occurredAt === undefined ? new Date().toISOString() : String(input.occurredAt);
 
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       const row = this.requireTask(db, input.taskId);
@@ -955,6 +977,7 @@ export class StudyRhythmService {
       throw new StudyRhythmError('EVENT_INPUT_INVALID', 400, 'occurredAt 必须是有效的 ISO 日期时间');
     }
 
+    this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       let courseInstanceId: string | undefined;

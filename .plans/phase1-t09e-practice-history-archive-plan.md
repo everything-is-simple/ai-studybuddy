@@ -16,7 +16,7 @@
 - **计划分支**：`codex/phase1-t09e-practice-history-archive-plan`。
 - **计划文件**：`.plans/phase1-t09e-practice-history-archive-plan.md`。
 - **基线事实**：T09D 已 fast-forward 合入 `master`，主线复验通过并推送 `origin/master`；T09E 尚未实施。
-- **本计划状态**：独立实施计划已创建并完成计划级审查，等待用户明确批准。未批准前不得创建实现分支、不得写业务代码、不得新增 schema/migration/API/前端逻辑/测试实现。
+- **本计划状态**：独立实施计划已创建、完成计划级审查并于 2026-07-19 获用户明确批准；已在任务分支 `codex/phase1-t09e-practice-history-archive` 执行实现与分支验证。此状态不代表 `master` 已完成，主线完成仍需后续 fast-forward 合入、主线复验与 `origin/master` 推送。
 - **文档映射说明**：当前仓库索引中的 `docs/10` 与 `docs/11` 分别为后端/前端开发规范；用户提示中的旧式“数据库设计/API设计”名称不在当前索引中，本计划以 `docs/00` 当前索引为准。
 
 ## 1. 产品目标与范围
@@ -710,3 +710,13 @@ pnpm exec playwright test e2e/practice-history-archive.spec.ts
 - 运行实现级 type-check/build/test/E2E；
 - 更新 docs/04 为实现完成状态；
 - 合入 `master` 并推送 `origin/master`。
+
+
+## 9. 分支实施记录（2026-07-19）
+
+- 用户已明确批准进入 T09E 实施阶段。
+- 实现分支：`codex/phase1-t09e-practice-history-archive`。
+- 分支范围：global v2 `archived_at`、归档列表/归档动作、归档学期业务写保护、练习历史列表与评分结果只读 API、学期管理归档/历史入口、历史列表与结果页面、T09E Playwright 验收。
+- 非目标保持不变：未改 T09D 全局导航范围，未实施 S5/S7、家长 Web 面板或真实外部渠道 smoke。
+- 分支验证：后端专项 3/3、前端专项 12/12、`pnpm type-check`、T09E E2E 1/1、学期选择回归 E2E 1/1、隔离 `pnpm test`（后端 223/223、前端 20 files / 92 tests）均通过；KaTeX 大 chunk warning 为既有非阻塞遗留。
+- 合入状态：尚未 fast-forward 合入 `master`，不得把分支状态报告为主线完成。

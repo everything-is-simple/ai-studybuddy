@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  archiveSemester,
   confirmSemester,
   getCurrentSemester,
+  listArchivedSemesters,
   listSemesters,
   previewSemesterTimetable,
   selectCurrentSemester,
@@ -68,6 +70,19 @@ describe('semester-api', () => {
       2,
       'http://127.0.0.1:3000/api/semesters',
       expect.objectContaining({ method: 'POST', body: expect.stringContaining('preview-1') })
+    );
+  });
+
+  it('loads archived semesters and posts explicit archive action', async () => {
+    const fetchMock = mockFetchJson([]);
+    await listArchivedSemesters();
+    await archiveSemester('11111111-1111-4111-8111-111111111111');
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, 'http://127.0.0.1:3000/api/semesters/archived', expect.any(Object));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'http://127.0.0.1:3000/api/semesters/11111111-1111-4111-8111-111111111111/archive',
+      expect.objectContaining({ method: 'POST' })
     );
   });
 });

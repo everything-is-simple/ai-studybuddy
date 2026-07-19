@@ -4,6 +4,8 @@ import type {
   ApiError,
   ApiSuccess,
   CreatePracticeSessionResponse,
+  PracticeHistoryListResponseDto,
+  PracticeHistoryResultDto,
   SubmitPracticeSessionResponse,
 } from '@ai-studybuddy/shared';
 import { PracticeRunnerError, PracticeRunnerService } from '../services/practice-runner-service';
@@ -28,6 +30,33 @@ router.post('/practice-sessions', async (req: Request, res: Response) => {
   try {
     const result: CreatePracticeSessionResponse = await service.createPracticeSession(req.body);
     return res.status(201).json(ok(result));
+  } catch (error) {
+    return handle(error, res);
+  }
+});
+
+
+router.get('/practice-sessions/history', (req: Request, res: Response) => {
+  try {
+    const result: PracticeHistoryListResponseDto = service.listPracticeHistory({
+      semesterId: req.query.semesterId,
+      courseInstanceId: req.query.courseInstanceId,
+      status: req.query.status,
+      dateFrom: req.query.dateFrom,
+      dateTo: req.query.dateTo,
+      page: req.query.page,
+      pageSize: req.query.pageSize,
+    });
+    return res.json(ok(result));
+  } catch (error) {
+    return handle(error, res);
+  }
+});
+
+router.get('/practice-sessions/:id/history-result', (req: Request, res: Response) => {
+  try {
+    const result: PracticeHistoryResultDto = service.getPracticeHistoryResult(req.query.semesterId, req.params.id);
+    return res.json(ok(result));
   } catch (error) {
     return handle(error, res);
   }

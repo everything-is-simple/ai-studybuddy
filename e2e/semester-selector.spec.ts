@@ -46,6 +46,7 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
     if (request.method() === 'GET' && url.pathname === '/api/semesters') {
       return json(success(semesters.map((semester) => ({ ...semester, isCurrent: semester.id === currentSemesterId }))));
     }
+    if (request.method() === 'GET' && url.pathname === '/api/semesters/archived') return json(success([]));
     if (request.method() === 'PUT' && url.pathname === '/api/semesters/current') {
       const body = request.postDataJSON() as { semesterId?: string };
       if (!body.semesterId || !semesters.some((semester) => semester.id === body.semesterId)) {

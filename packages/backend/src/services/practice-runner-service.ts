@@ -5,6 +5,7 @@ import { openExistingDbAtPath } from '../db/connection';
 import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
 import { ErrorFixerService } from './error-fixer-service';
+import { assertSemesterWritable, SemesterAccessError } from './semester-access-service';
 import {
   AiProviderError,
   AiRouterProxy,
@@ -20,7 +21,10 @@ import type {
   PracticeAnswerResultDto,
   PracticeQuestionForStudentDto,
   PracticeQuestionType,
+  PracticeHistoryListResponseDto,
+  PracticeHistoryResultDto,
   PracticeSessionDetailDto,
+  PracticeSessionStatus,
   SubmitPracticeSessionRequest,
   SubmitPracticeSessionResponse,
 } from '@ai-studybuddy/shared';
@@ -28,6 +32,7 @@ import type {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const QUESTION_TYPES: readonly PracticeQuestionType[] = ['single_choice', 'multiple_choice', 'fill_blank'];
 const DIFFICULTIES: readonly PracticeDifficulty[] = ['easy', 'medium', 'hard'];
+const PRACTICE_STATUSES: readonly PracticeSessionStatus[] = ['in_progress', 'submitted', 'graded'];
 const DIFFICULTY_PREFERENCES: readonly PracticeDifficultyPreference[] = ['easy', 'medium', 'hard', 'mixed'];
 const PROMPT_VERSION = 's3-practice-v1.0';
 const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E'];
@@ -84,6 +89,46 @@ interface PracticeSessionRow {
   time_limit_seconds: number | null;
   session_kind: 'practice' | 'mistake_redo';
   origin_mistake_id: string | null;
+}
+
+
+interface PracticeHistoryRow {
+  id: string;
+  semester_id: string;
+  course_instance_id: string;
+  course_name: string;
+  assessment_attempt_id: string | null;
+  assessment_name: string | null;
+  status: PracticeSessionStatus;
+  session_kind: 'practice' | 'mistake_redo';
+  origin_mistake_id: string | null;
+  question_count: number;
+  total_score: number | null;
+  correct_rate: number | null;
+  overtime: number;
+  total_duration_seconds: number | null;
+  time_limit_seconds: number | null;
+  started_at: string;
+  submitted_at: string | null;
+  graded_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PracticeHistoryAnswerRow {
+  question_id: string;
+  type: PracticeQuestionType;
+  stem: string;
+  correct_answer: string;
+  difficulty: PracticeDifficulty;
+  explanation: string | null;
+  source_evidence: string | null;
+  knowledge_module_id: string;
+  knowledge_module_title: string;
+  student_answer: string | null;
+  is_correct: number | null;
+  time_spent_seconds: number | null;
+  answer_order: number;
 }
 
 interface PracticeQuestionRow {
@@ -157,6 +202,29 @@ function positiveIntegerOrNull(value: unknown): number | null {
 
 function delay(ms: number): Promise<void> {
   return ms <= 0 ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+
+function pageNumber(value: unknown): number {
+  const parsed = Number(value ?? 1);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function pageSizeNumber(value: unknown): number {
+  const parsed = Number(value ?? 20);
+  if (!Number.isInteger(parsed) || parsed < 1) return 20;
+  return Math.min(100, parsed);
+}
+
+function isIsoDateTimeLike(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}(?:T.+)?$/.test(value);
+}
+
+function normalizeDateBoundary(value: string, boundary: 'start' | 'end'): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return boundary === 'start' ? `${value}T00:00:00.000Z` : `${value}T23:59:59.999Z`;
+  }
+  return value;
 }
 
 function nonNegativeInteger(value: unknown, code: string, message: string): number {
@@ -260,6 +328,18 @@ export class PracticeRunnerService {
       return db;
     } catch (error) {
       db.close();
+      throw error;
+    }
+  }
+
+
+  private assertWritableSemester(semesterId: string): void {
+    try {
+      assertSemesterWritable(semesterId);
+    } catch (error) {
+      if (error instanceof SemesterAccessError) {
+        throw new PracticeRunnerError(error.code, error.status, error.message);
+      }
       throw error;
     }
   }
@@ -646,6 +726,8 @@ export class PracticeRunnerService {
   }
 
   async createPracticeSession(input: CreatePracticeSessionRequest): Promise<CreatePracticeSessionResponse> {
+    const requestedSemesterId = requiredUuid(input?.semesterId, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    this.assertWritableSemester(requestedSemesterId);
     const valid = this.validateInput(input);
     const db = this.openReadySemesterDb(valid.semesterId);
     try {
@@ -730,6 +812,7 @@ export class PracticeRunnerService {
   ): SubmitPracticeSessionResponse {
     const sessionId = requiredUuid(sessionIdValue, 'PRACTICE_SESSION_NOT_FOUND', '练习不存在');
     const valid = this.validateSubmitInput(input);
+    this.assertWritableSemester(valid.semesterId);
     const db = this.openReadySemesterDb(valid.semesterId);
     try {
       return db.transaction(() => {
@@ -858,6 +941,167 @@ export class PracticeRunnerService {
     } finally {
       db.close();
     }
+  }
+
+
+  listPracticeHistory(input: {
+    semesterId: unknown;
+    courseInstanceId?: unknown;
+    status?: unknown;
+    dateFrom?: unknown;
+    dateTo?: unknown;
+    page?: unknown;
+    pageSize?: unknown;
+  }): PracticeHistoryListResponseDto {
+    const semesterId = requiredUuid(input.semesterId, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    const courseInstanceId = input.courseInstanceId === undefined || input.courseInstanceId === ''
+      ? null
+      : requiredUuid(input.courseInstanceId, 'COURSE_INSTANCE_NOT_FOUND', '课程不存在');
+    const status = input.status === undefined || input.status === '' ? null : String(input.status);
+    if (status !== null && !PRACTICE_STATUSES.includes(status as PracticeSessionStatus)) {
+      throw new PracticeRunnerError('PRACTICE_HISTORY_FILTER_INVALID', 400, '练习状态筛选不合法');
+    }
+    const dateFrom = input.dateFrom === undefined || input.dateFrom === '' ? null : String(input.dateFrom);
+    const dateTo = input.dateTo === undefined || input.dateTo === '' ? null : String(input.dateTo);
+    if ((dateFrom !== null && !isIsoDateTimeLike(dateFrom)) || (dateTo !== null && !isIsoDateTimeLike(dateTo))) {
+      throw new PracticeRunnerError('PRACTICE_HISTORY_FILTER_INVALID', 400, '日期筛选必须是 ISO 日期或时间');
+    }
+    const page = pageNumber(input.page);
+    const pageSize = pageSizeNumber(input.pageSize);
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      const { where, params } = this.buildPracticeHistoryWhere({ semesterId, courseInstanceId, status, dateFrom, dateTo });
+      const total = Number((db.prepare(`SELECT count(*) AS total FROM practice_sessions ps JOIN course_instances c ON c.id = ps.course_instance_id LEFT JOIN assessment_attempts a ON a.id = ps.assessment_attempt_id ${where}`).get(...params) as { total: number }).total);
+      const rows = db.prepare(
+        `SELECT ps.id, c.semester_id, ps.course_instance_id, c.name AS course_name,
+                ps.assessment_attempt_id, a.name AS assessment_name, ps.status,
+                ps.session_kind, ps.origin_mistake_id, ps.question_count,
+                ps.total_score, ps.correct_rate, ps.overtime, ps.total_duration_seconds,
+                ps.time_limit_seconds, ps.started_at, ps.submitted_at, ps.graded_at,
+                ps.created_at, ps.updated_at
+         FROM practice_sessions ps
+         JOIN course_instances c ON c.id = ps.course_instance_id
+         LEFT JOIN assessment_attempts a ON a.id = ps.assessment_attempt_id
+         ${where}
+         ORDER BY COALESCE(ps.graded_at, ps.submitted_at, ps.started_at, ps.created_at) DESC, ps.id DESC
+         LIMIT ? OFFSET ?`
+      ).all(...params, pageSize, (page - 1) * pageSize) as PracticeHistoryRow[];
+      return {
+        items: rows.map((row) => this.toPracticeHistoryItem(row)),
+        pagination: { page, pageSize, total, hasMore: page * pageSize < total },
+      };
+    } finally {
+      db.close();
+    }
+  }
+
+  getPracticeHistoryResult(semesterIdValue: unknown, sessionIdValue: unknown): PracticeHistoryResultDto {
+    const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    const sessionId = requiredUuid(sessionIdValue, 'PRACTICE_SESSION_NOT_FOUND', '练习不存在');
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      const row = db.prepare(
+        `SELECT ps.id, c.semester_id, ps.course_instance_id, c.name AS course_name,
+                ps.assessment_attempt_id, a.name AS assessment_name, ps.status,
+                ps.session_kind, ps.origin_mistake_id, ps.question_count,
+                ps.total_score, ps.correct_rate, ps.overtime, ps.total_duration_seconds,
+                ps.time_limit_seconds, ps.started_at, ps.submitted_at, ps.graded_at,
+                ps.created_at, ps.updated_at
+         FROM practice_sessions ps
+         JOIN course_instances c ON c.id = ps.course_instance_id
+         LEFT JOIN assessment_attempts a ON a.id = ps.assessment_attempt_id
+         WHERE ps.id = ? AND c.semester_id = ?`
+      ).get(sessionId, semesterId) as PracticeHistoryRow | undefined;
+      if (!row) throw new PracticeRunnerError('PRACTICE_SESSION_NOT_FOUND', 404, '练习不存在');
+      if (row.status !== 'graded') {
+        throw new PracticeRunnerError('PRACTICE_SESSION_NOT_GRADED', 409, '练习尚未批改，不能查看结果');
+      }
+      const answers = db.prepare(
+        `SELECT q.id AS question_id, q.type, q.stem, q.correct_answer, q.difficulty,
+                q.explanation, q.source_evidence, q.knowledge_module_id,
+                km.title AS knowledge_module_title, a.student_answer, a.is_correct,
+                a.time_spent_seconds, a.answer_order
+         FROM questions q
+         JOIN knowledge_modules km ON km.id = q.knowledge_module_id
+         LEFT JOIN practice_answers a ON a.question_id = q.id AND a.session_id = q.practice_session_id
+         WHERE q.practice_session_id = ?
+         ORDER BY q.question_order ASC, a.answer_order ASC`
+      ).all(sessionId) as PracticeHistoryAnswerRow[];
+      return {
+        ...this.toPracticeHistoryItem(row),
+        correctRate: Number(row.correct_rate ?? 0),
+        answers: answers.map((answer) => ({
+          questionId: answer.question_id,
+          studentAnswer: answer.student_answer ?? null,
+          correctAnswer: answer.correct_answer,
+          isCorrect: answer.is_correct === 1,
+          explanation: answer.explanation,
+          answerOrder: Number(answer.answer_order),
+          timeSpentSeconds: answer.time_spent_seconds === null ? null : Number(answer.time_spent_seconds),
+          knowledgeModuleId: answer.knowledge_module_id,
+          knowledgeModuleTitle: answer.knowledge_module_title,
+          stem: answer.stem,
+          type: answer.type,
+          difficulty: answer.difficulty,
+          sourceEvidence: answer.source_evidence,
+        })),
+      };
+    } finally {
+      db.close();
+    }
+  }
+
+  private buildPracticeHistoryWhere(input: {
+    semesterId: string;
+    courseInstanceId: string | null;
+    status: string | null;
+    dateFrom: string | null;
+    dateTo: string | null;
+  }): { where: string; params: Array<string> } {
+    const clauses = ['c.semester_id = ?'];
+    const params: string[] = [input.semesterId];
+    if (input.courseInstanceId) {
+      clauses.push('ps.course_instance_id = ?');
+      params.push(input.courseInstanceId);
+    }
+    if (input.status) {
+      clauses.push('ps.status = ?');
+      params.push(input.status);
+    }
+    if (input.dateFrom) {
+      clauses.push('ps.started_at >= ?');
+      params.push(normalizeDateBoundary(input.dateFrom, 'start'));
+    }
+    if (input.dateTo) {
+      clauses.push('ps.started_at <= ?');
+      params.push(normalizeDateBoundary(input.dateTo, 'end'));
+    }
+    return { where: `WHERE ${clauses.join(' AND ')}`, params };
+  }
+
+  private toPracticeHistoryItem(row: PracticeHistoryRow) {
+    return {
+      id: row.id,
+      semesterId: row.semester_id,
+      courseInstanceId: row.course_instance_id,
+      courseName: row.course_name,
+      assessmentAttemptId: row.assessment_attempt_id,
+      assessmentName: row.assessment_name,
+      status: row.status,
+      sessionKind: row.session_kind,
+      originMistakeId: row.origin_mistake_id,
+      questionCount: Number(row.question_count),
+      totalScore: row.total_score === null ? null : Number(row.total_score),
+      correctRate: row.correct_rate === null ? null : Number(row.correct_rate),
+      overtime: row.overtime === 1,
+      totalDurationSeconds: row.total_duration_seconds === null ? null : Number(row.total_duration_seconds),
+      timeLimitSeconds: row.time_limit_seconds === null ? null : Number(row.time_limit_seconds),
+      startedAt: row.started_at,
+      submittedAt: row.submitted_at,
+      gradedAt: row.graded_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
   }
 
   getPracticeSession(semesterIdValue: unknown, sessionIdValue: unknown): PracticeSessionDetailDto {

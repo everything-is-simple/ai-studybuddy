@@ -1,6 +1,8 @@
 import type {
   CreatePracticeSessionRequest,
   CreatePracticeSessionResponse,
+  PracticeHistoryListResponseDto,
+  PracticeHistoryResultDto,
   PracticeSessionDetailDto,
   SubmitPracticeSessionRequest,
   SubmitPracticeSessionResponse,
@@ -41,4 +43,36 @@ export function submitPracticeSession(
     body: JSON.stringify(data),
     signal,
   });
+}
+
+export interface PracticeHistoryFilters {
+  courseInstanceId?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function getPracticeHistory(
+  semesterId: string,
+  filters: PracticeHistoryFilters = {},
+  signal?: AbortSignal
+): Promise<PracticeHistoryListResponseDto> {
+  const params = new URLSearchParams({ semesterId });
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== null && value !== '') params.set(key, String(value));
+  }
+  return request<PracticeHistoryListResponseDto>(`/practice-sessions/history?${params.toString()}`, { signal });
+}
+
+export function getPracticeHistoryResult(
+  semesterId: string,
+  sessionId: string,
+  signal?: AbortSignal
+): Promise<PracticeHistoryResultDto> {
+  return request<PracticeHistoryResultDto>(
+    `/practice-sessions/${encodeURIComponent(sessionId)}/history-result?semesterId=${encodeURIComponent(semesterId)}`,
+    { signal }
+  );
 }

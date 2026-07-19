@@ -15,6 +15,8 @@ const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
 const PracticeStartPage = lazy(() => import('./pages/practice-start-page'));
 const PracticeSessionPage = lazy(() => import('./pages/practice-session-page'));
 const PracticeResultPage = lazy(() => import('./pages/practice-result-page'));
+const PracticeHistoryPage = lazy(() => import('./pages/practice-history-page'));
+const PracticeHistoryResultPage = lazy(() => import('./pages/practice-history-result-page'));
 const MistakeListPage = lazy(() => import('./pages/mistake-list-page'));
 const MistakeDetailPage = lazy(() => import('./pages/mistake-detail-page'));
 const SettingsPage = lazy(() => import('./pages/settings-page'));
@@ -161,6 +163,22 @@ export function App() {
         )}
         <Routes>
           <Route path="/semesters" element={<SemesterPage current={currentSemester} currentMessage={currentState.message} onCurrentChange={handleCurrentChange} />} />
+          <Route
+            path="/semesters/:semesterId/practice-history"
+            element={
+              <Suspense fallback={<PageState state="loading" title="正在加载练习历史" />}>
+                <PracticeHistoryPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/semesters/:semesterId/practice-history/:sessionId"
+            element={
+              <Suspense fallback={<PageState state="loading" title="正在加载练习结果" />}>
+                <PracticeHistoryResultPage />
+              </Suspense>
+            }
+          />
           <Route
             path="/courses"
             element={

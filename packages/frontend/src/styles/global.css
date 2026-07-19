@@ -1549,3 +1549,51 @@ button:disabled {
   background: #eff6ff;
   font-weight: 700;
 }
+
+
+/* ===== T09E 练习历史与学期归档 ===== */
+.semester-actions,
+.practice-history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.semester-actions a,
+.practice-history-item a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.archived-semester-list li,
+.practice-history-list li,
+.practice-history-answer-list li {
+  border-bottom: 1px solid var(--color-secondary);
+  padding: 10px 0;
+}
+
+.archived-semester-list li:last-child,
+.practice-history-list li:last-child,
+.practice-history-answer-list li:last-child {
+  border-bottom: 0;
+}
+
+.history-filter-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.history-filter-form label,
+.practice-history-item > div,
+.archived-semester-list li > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.practice-history-list,
+.practice-history-answer-list {
+  padding-left: 20px;
+}

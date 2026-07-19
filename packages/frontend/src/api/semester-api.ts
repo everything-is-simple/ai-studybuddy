@@ -11,6 +11,18 @@ export function listSemesters(signal?: AbortSignal): Promise<SemesterSummaryDto[
   return request<SemesterSummaryDto[]>('/semesters', { signal });
 }
 
+
+export function listArchivedSemesters(signal?: AbortSignal): Promise<SemesterSummaryDto[]> {
+  return request<SemesterSummaryDto[]>('/semesters/archived', { signal });
+}
+
+export function archiveSemester(semesterId: string, signal?: AbortSignal): Promise<SemesterSummaryDto> {
+  return request<SemesterSummaryDto>(`/semesters/${encodeURIComponent(semesterId)}/archive`, {
+    method: 'POST',
+    signal,
+  });
+}
+
 export function getCurrentSemester(signal?: AbortSignal): Promise<CurrentSemesterDto> {
   return request<CurrentSemesterDto>('/semesters/current', { signal });
 }

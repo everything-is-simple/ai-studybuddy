@@ -9,6 +9,7 @@ import fs from 'fs';
 import type { DatabaseType } from './connection';
 import { openDbAtPath, openGlobalDb, openSemesterDb } from './connection';
 import { getSemesterDbPath, getSemesterFilesDir, getSemesterTmpDir } from './paths';
+import { migrateGlobalV2 } from './sql/migration-global-v2';
 import { SCHEMA_GLOBAL_SQL } from './sql/schema-global';
 import { SCHEMA_SEMESTER_SQL } from './sql/schema-semester';
 import { SEMESTER_V2_SQL } from './sql/migration-semester-v2';
@@ -25,7 +26,10 @@ export interface Migration {
   apply?: (db: DatabaseType) => void;
 }
 
-const GLOBAL_MIGRATIONS: readonly Migration[] = [{ version: 1, sql: SCHEMA_GLOBAL_SQL }];
+const GLOBAL_MIGRATIONS: readonly Migration[] = [
+  { version: 1, sql: SCHEMA_GLOBAL_SQL },
+  { version: 2, apply: migrateGlobalV2 },
+];
 
 const SEMESTER_MIGRATIONS: readonly Migration[] = [
   { version: 1, sql: SCHEMA_SEMESTER_SQL },

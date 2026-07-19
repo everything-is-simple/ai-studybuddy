@@ -59,6 +59,22 @@ export function createSemesterSelectorRouter(options: { recognizer?: TimetableRe
     }
   });
 
+  router.get('/semesters/archived', (_req, res) => {
+    try {
+      res.json(ok(service.listArchivedSemesters()));
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  router.post('/semesters/:id/archive', (req: Request, res: Response) => {
+    try {
+      res.json(ok(service.archiveSemester(req.params.id)));
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
   router.get('/semesters/current', (_req, res) => {
     try {
       res.json(ok(service.getCurrentSemester()));

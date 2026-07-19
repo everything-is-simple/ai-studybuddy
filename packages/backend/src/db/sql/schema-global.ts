@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS semesters (
   teaching_start_date TEXT NOT NULL,
   teaching_end_date TEXT NOT NULL,
   final_archive_date TEXT,
+  archived_at TEXT,
   status TEXT NOT NULL DEFAULT 'active',
   db_relative_path TEXT NOT NULL,
   ready INTEGER NOT NULL DEFAULT 0,

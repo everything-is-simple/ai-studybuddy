@@ -71,6 +71,7 @@ interface SemesterRow {
   teaching_start_date: string;
   teaching_end_date: string;
   final_archive_date: string | null;
+  archived_at: string | null;
   status: 'active' | 'archived';
   db_relative_path: string;
   ready: number;
@@ -122,6 +123,59 @@ export class SemesterSelectorService {
       return rows
         .filter((row) => this.isSelectable(row))
         .map((row) => this.toSummary(row, row.id === currentId));
+    } finally {
+      db.close();
+    }
+  }
+
+  listArchivedSemesters(): SemesterSummaryDto[] {
+    this.cleanupExpiredPreviews();
+    const db = initGlobalDb();
+    try {
+      const currentId = this.readCurrentId(db);
+      const rows = db
+        .prepare(
+          `SELECT s.*, st.name AS student_name
+           FROM semesters s
+           JOIN students st ON st.id = s.student_id
+           WHERE s.ready = 1 AND s.status = 'archived'
+           ORDER BY s.archived_at DESC, s.updated_at DESC, s.id DESC`
+        )
+        .all() as SemesterRow[];
+      return rows
+        .filter((row) => this.isReadable(row))
+        .map((row) => this.toSummary(row, row.id === currentId));
+    } finally {
+      db.close();
+    }
+  }
+
+  archiveSemester(semesterId: unknown): SemesterSummaryDto {
+    if (!isUuid(semesterId)) {
+      throw new SemesterSelectorError('SEMESTER_NOT_FOUND', 404, '学期不存在或不可归档');
+    }
+    const db = initGlobalDb();
+    try {
+      const currentId = this.readCurrentId(db);
+      const row = this.getSemesterRow(db, semesterId);
+      if (!row || !this.isReadable(row)) {
+        throw new SemesterSelectorError('SEMESTER_NOT_FOUND', 404, '学期不存在或不可归档');
+      }
+      if (row.id === currentId) {
+        throw new SemesterSelectorError('CURRENT_SEMESTER_CANNOT_ARCHIVE', 409, '当前学期不能归档，请先切换到其他学期');
+      }
+      if (row.status === 'archived') {
+        return this.toSummary(row, false);
+      }
+      const now = new Date().toISOString();
+      db.prepare(
+        `UPDATE semesters
+         SET status = 'archived', archived_at = COALESCE(archived_at, ?), updated_at = ?
+         WHERE id = ?`
+      ).run(now, now, row.id);
+      const updated = this.getSemesterRow(db, row.id);
+      if (!updated) throw new SemesterSelectorError('SEMESTER_NOT_FOUND', 404, '学期不存在或不可归档');
+      return this.toSummary(updated, false);
     } finally {
       db.close();
     }
@@ -590,7 +644,12 @@ export class SemesterSelectorService {
   }
 
   private isSelectable(row: SemesterRow): boolean {
-    if (row.ready !== 1 || row.status !== 'active') return false;
+    if (row.status !== 'active') return false;
+    return this.isReadable(row);
+  }
+
+  private isReadable(row: SemesterRow): boolean {
+    if (row.ready !== 1) return false;
     if (!isUuid(row.id)) return false;
     if (row.db_relative_path !== `semesters/${row.id}/semester.db`) return false;
     const dbPath = getSemesterDbPath(row.id);
@@ -615,6 +674,7 @@ export class SemesterSelectorService {
       teachingStartDate: row.teaching_start_date,
       teachingEndDate: row.teaching_end_date,
       finalArchiveDate: row.final_archive_date,
+      archivedAt: row.archived_at,
       status: row.status,
       isCurrent,
       createdAt: row.created_at,

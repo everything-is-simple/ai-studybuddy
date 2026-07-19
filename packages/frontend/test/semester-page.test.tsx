@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CurrentSemesterDto, SemesterSummaryDto } from '@ai-studybuddy/shared';
 
@@ -9,6 +9,8 @@ import type { CurrentSemesterDto, SemesterSummaryDto } from '@ai-studybuddy/shar
 
 const mocks = vi.hoisted(() => ({
   listSemesters: vi.fn(),
+  listArchivedSemesters: vi.fn(),
+  archiveSemester: vi.fn(),
   selectCurrentSemester: vi.fn(),
   previewSemesterTimetable: vi.fn(),
   confirmSemester: vi.fn(),
@@ -36,8 +38,21 @@ const secondSemester: SemesterSummaryDto = {
   isCurrent: false,
 };
 
+const archivedSemester: SemesterSummaryDto = {
+  ...firstSemester,
+  id: '33333333-3333-4333-8333-333333333333',
+  semesterCode: '2025 秋季学期',
+  teachingStartDate: '2025-09-01',
+  teachingEndDate: '2026-01-20',
+  status: 'archived',
+  isCurrent: false,
+  archivedAt: '2026-02-01T00:00:00.000Z',
+};
+
 vi.mock('../src/api/semester-api', () => ({
   listSemesters: mocks.listSemesters,
+  listArchivedSemesters: mocks.listArchivedSemesters,
+  archiveSemester: mocks.archiveSemester,
   selectCurrentSemester: mocks.selectCurrentSemester,
   previewSemesterTimetable: mocks.previewSemesterTimetable,
   confirmSemester: mocks.confirmSemester,
@@ -49,6 +64,8 @@ let onCurrentChange: ReturnType<typeof vi.fn<(current: CurrentSemesterDto) => vo
 
 beforeEach(() => {
   mocks.listSemesters.mockResolvedValue([]);
+  mocks.listArchivedSemesters.mockResolvedValue([]);
+  mocks.archiveSemester.mockResolvedValue(archivedSemester);
   mocks.selectCurrentSemester.mockResolvedValue({ semester: secondSemester, recoveredFromStaleCurrent: false });
   mocks.previewSemesterTimetable.mockResolvedValue({
     previewId: 'preview-1',
@@ -98,8 +115,11 @@ async function renderPage(current: SemesterSummaryDto | null = null) {
   const { SemesterPage } = await import('../src/pages/semester-page');
   await act(async () => {
     root.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <SemesterPage current={current} onCurrentChange={onCurrentChange} />
+      <MemoryRouter initialEntries={['/semesters']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
+          <Route path="/semesters" element={<SemesterPage current={current} onCurrentChange={onCurrentChange} />} />
+          <Route path="/semesters/:semesterId/practice-history" element={<p>练习历史占位</p>} />
+        </Routes>
       </MemoryRouter>
     );
   });
@@ -176,6 +196,39 @@ describe('SemesterPage', () => {
       })
     );
     expect(onCurrentChange).toHaveBeenCalledWith({ semester: firstSemester, recoveredFromStaleCurrent: false });
+  });
+
+
+
+  it('shows archived semesters, history links, and archives only non-current active semesters', async () => {
+    mocks.listSemesters.mockResolvedValue([firstSemester, secondSemester]);
+    mocks.listArchivedSemesters.mockResolvedValue([archivedSemester]);
+    const confirmMock = vi.fn(() => true);
+    vi.stubGlobal('confirm', confirmMock);
+
+    await renderPage(firstSemester);
+
+    expect(container.textContent).toContain('归档学期');
+    expect(container.textContent).toContain('2025 秋季学期');
+    expect([...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) => item.href.endsWith(`/semesters/${firstSemester.id}/practice-history`))).toBe(true);
+    expect([...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) => item.href.endsWith(`/semesters/${archivedSemester.id}/practice-history`))).toBe(true);
+
+    const currentItem = [...container.querySelectorAll('li')].find((item) => item.textContent?.includes(firstSemester.semesterCode));
+    expect(currentItem?.textContent).not.toContain('归档此学期');
+
+    const archivedItem = [...container.querySelectorAll('li')].find((item) => item.textContent?.includes(archivedSemester.semesterCode));
+    expect(archivedItem?.textContent).toContain('只读');
+    expect(archivedItem?.textContent).not.toContain('切换到此学期');
+
+    const archiveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('归档此学期'));
+    expect(archiveButton).not.toBeNull();
+    await act(async () => archiveButton!.click());
+    await flush();
+
+    expect(confirmMock).toHaveBeenCalled();
+    expect(mocks.archiveSemester).toHaveBeenCalledWith(secondSemester.id);
+    expect(mocks.listArchivedSemesters).toHaveBeenCalledTimes(2);
+    vi.unstubAllGlobals();
   });
 
   it('lists semesters and switches current semester without asking for student name again', async () => {

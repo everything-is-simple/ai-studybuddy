@@ -447,6 +447,51 @@ export interface PracticeSessionDetailDto {
 
 export type CreatePracticeSessionResponse = PracticeSessionDetailDto;
 
+
+export interface PracticeHistoryListItemDto {
+  id: string;
+  semesterId: string;
+  courseInstanceId: string;
+  courseName: string;
+  assessmentAttemptId?: string | null;
+  assessmentName?: string | null;
+  status: PracticeSessionStatus;
+  sessionKind?: 'practice' | 'mistake_redo';
+  originMistakeId?: string | null;
+  questionCount: number;
+  totalScore?: number | null;
+  correctRate?: number | null;
+  overtime: boolean;
+  totalDurationSeconds?: number | null;
+  timeLimitSeconds?: number | null;
+  startedAt: string;
+  submittedAt?: string | null;
+  gradedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PracticeHistoryListResponseDto {
+  items: PracticeHistoryListItemDto[];
+  pagination: { page: number; pageSize: number; total: number; hasMore: boolean };
+}
+
+export interface PracticeHistoryAnswerResultDto extends PracticeAnswerResultDto {
+  answerOrder: number;
+  timeSpentSeconds?: number | null;
+  knowledgeModuleId: string;
+  knowledgeModuleTitle: string;
+  stem: string;
+  type: PracticeQuestionType;
+  difficulty: PracticeDifficulty;
+  sourceEvidence?: string | null;
+}
+
+export interface PracticeHistoryResultDto extends Omit<PracticeHistoryListItemDto, 'correctRate'> {
+  correctRate: number;
+  answers: PracticeHistoryAnswerResultDto[];
+}
+
 export interface SubmitPracticeAnswerInputDto {
   questionId: string;
   answer?: string | null;
@@ -583,6 +628,7 @@ export interface SemesterSummaryDto {
   teachingStartDate: string;
   teachingEndDate: string;
   finalArchiveDate?: string | null;
+  archivedAt?: string | null;
   status: SemesterStatus;
   isCurrent: boolean;
   createdAt: string;

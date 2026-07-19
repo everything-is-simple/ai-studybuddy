@@ -10,6 +10,7 @@ import type { DatabaseType } from '../db/connection';
 import { openExistingDbAtPath } from '../db/connection';
 import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
+import { assertSemesterWritable, SemesterAccessError } from './semester-access-service';
 import { FeedbackRulesService } from './feedback-rules-service';
 import type {
   ConfirmMistakeErrorCauseRequest,
@@ -139,6 +140,18 @@ export class ErrorFixerQueryService {
     const db = openExistingDbAtPath(getSemesterDbPath(semesterId));
     migrateSemesterDb(db);
     return db;
+  }
+
+
+  private assertWritableSemester(semesterId: unknown): void {
+    try {
+      assertSemesterWritable(semesterId);
+    } catch (error) {
+      if (error instanceof SemesterAccessError) {
+        throw new ErrorFixerApiError(error.code, error.status, error.message);
+      }
+      throw error;
+    }
   }
 
   private requireCourse(db: DatabaseType, courseInstanceIdValue: unknown): string {
@@ -293,6 +306,7 @@ export class ErrorFixerQueryService {
     if (note !== null && (note.length < 1 || note.length > 500))
       throw new ErrorFixerApiError('MISTAKE_CAUSE_INVALID', 400, '错因备注长度必须在 1-500 字之间');
 
+    this.assertWritableSemester(input?.semesterId);
     const db = this.openReadySemesterDb(input?.semesterId);
     try {
       const timestamp = this.now();
@@ -328,6 +342,7 @@ export class ErrorFixerQueryService {
     if (input?.status !== 'mastered' && input?.status !== 'needs_review')
       throw new ErrorFixerApiError('MISTAKE_STATUS_INVALID', 400, '目标状态只能是 mastered 或 needs_review');
 
+    this.assertWritableSemester(input?.semesterId);
     const db = this.openReadySemesterDb(input?.semesterId);
     try {
       const timestamp = this.now();
@@ -375,6 +390,7 @@ export class ErrorFixerQueryService {
 
   createRedoSession(mistakeIdValue: unknown, input: CreateMistakeRedoRequest): PracticeSessionDetailDto {
     const mistakeId = requiredUuid(mistakeIdValue, 'MISTAKE_NOT_FOUND', '错题不存在');
+    this.assertWritableSemester(input?.semesterId);
     const db = this.openReadySemesterDb(input?.semesterId);
     try {
       const timestamp = this.now();
