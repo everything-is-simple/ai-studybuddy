@@ -1,6 +1,6 @@
 # Phase 1-M02：错题详情一级标题语义回归修复计划
 
-**状态**：实现、隔离验证、独立审查和任务分支提交已完成；待主线集成
+**状态**：实现、隔离验证、独立审查、任务分支提交、本地主线集成与主线复验已完成；待远端推送
 
 **任务登记**：`docs/04-开发任务清单-Todo-List.md` 的 Phase 1-M02。
 
@@ -94,4 +94,4 @@ git diff --check
 - **全量验证**：`pnpm test` 通过（后端 225/225、前端 93/93）；在新的隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-m02-mistake-detail-heading-regression-full-e2e` 执行 `pnpm test:e2e` 通过（14/14）。先前一次全量 E2E 使用了已经执行过定向 Playwright 的同一数据目录，T09C 在已有 current semester 条件下预期空系统重定向而失败（13/14）；新目录复跑通过，说明这是验证数据目录复用导致的前置条件污染，不是本次语义修复导致的产品回归。
 - **安全与隔离**：所有数据与 Playwright 产物均在 `I:\ai-studybuddy-tmp\runs\...`；未读取 `.env.local`、未输出或持久化真实秘密、未执行真实 AI、QQ SMTP、飞书或其他外部渠道 smoke。
 
-独立审查已完成并发现一个 P2 文档可复现性问题：验证矩阵原先在同一目录先跑定向 Playwright、再跑完整 Playwright，可能重现既有数据污染；现已拆分为两个明确的隔离目录。治理/diff 收尾检查已重新通过；任务分支实现提交为 `80ea2ab`（`fix(frontend): 修复错题详情一级标题语义`）。下一步仅是在另建干净主线 worktree 中进行（如获授权的）rebase、fast-forward 主线集成、主线复验与推送；在此之前本任务不是 `master` 或 `origin/master` 的完成事实。
+独立审查已完成并发现一个 P2 文档可复现性问题：验证矩阵原先在同一目录先跑定向 Playwright、再跑完整 Playwright，可能重现既有数据污染；现已拆分为两个明确的隔离目录。治理/diff 收尾检查已重新通过；任务分支实现提交为 `80ea2ab`（`fix(frontend): 修复错题详情一级标题语义`），验证证据提交为 `e6c5df0`。该分支已 rebase `origin/master` @ `60f03f8` 并 fast-forward 到新的干净本地 `master` worktree；主线复验重新通过 type-check、后端/前端 build、`pnpm test`（225/225、93/93）与隔离 `pnpm test:e2e`（14/14）。下一步仅是推送前确认远端未前进，再推送 `origin/master`；在推送成功前本任务不是远端主线的完成事实。

@@ -480,7 +480,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ✅ | 已交付全局导航、考试上下文导航、统一 PageState、响应式入口、stale/current/404 状态与真实 Express/SQLite 学生旅程 E2E；已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`。计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。不含 T09E 练习历史/学期归档。 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ✅ | 已获用户明确批准并在任务分支 `codex/phase1-t09e-practice-history-archive` 完成实现；实现提交 `de5c41e` 已 fast-forward 合入 `master`，主线复验通过并随主线收尾提交 `本主线收尾提交` 推送 `origin/master`。 |
 | 25 | Phase 1-T12：设置中心 Provider 预设与渠道配置 UX 改造 | ✅ | 已完成独立计划审查、分支验证、fast-forward 主线集成、主线复验并推送 `origin/master`；任务分支 `codex/phase1-t12-settings-provider-presets-impl`，实现提交 `73bafdb`。 |
-| 26 | Phase 1-M02：错题详情一级标题语义回归修复 | 🔄 | 方案 A 的实现、测试/构建/E2E 验证和独立审查已完成，待最终治理/diff 收尾、提交与主线集成。仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。 |
+| 26 | Phase 1-M02：错题详情一级标题语义回归修复 | 🔄 | 方案 A 已 fast-forward 合入本地 `master` 并完成主线全量复验；待远端推送。仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -497,7 +497,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T09D | `.plans/phase1-t09d-global-navigation-student-journey-plan.md` | 已完成：独立计划、四轮 fresh-pass 计划复审、用户继续实施授权、实现、独立复审修复、分支复验、fast-forward 主线集成、主线复验与 `origin/master` 推送均通过；计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。 |
 | T09E | `.plans/phase1-t09e-practice-history-archive-plan.md` | 已获用户明确批准并实施：任务分支 `codex/phase1-t09e-practice-history-archive` 已交付 global v2 归档状态、归档写保护、练习历史列表/结果 API、学期管理归档入口、历史页面与浏览器验收；尚未合入 `master` 或推送 `origin/master`，完成判定仍等待主线合入后复验。 |
 | T12 | `.plans/phase1-t12-settings-provider-presets-plan.md` | v5 已完成独立审查、用户实施批准、任务分支实现与隔离验证、fast-forward 主线集成、主线复验，并已于 2026-07-19 推送 `origin/master`。 |
-| M02 | `.plans/phase1-m02-mistake-detail-heading-regression-plan.md` | 方案 A 的实现、测试/构建/E2E 验证和独立审查已完成；待最终治理/diff 收尾、提交和主线集成。仅恢复错题详情页面的可见一级标题语义并添加前端/E2E 回归验证。 |
+| M02 | `.plans/phase1-m02-mistake-detail-heading-regression-plan.md` | 方案 A 已完成独立审查、任务分支提交、fast-forward 本地主线集成与主线全量复验；待远端推送。仅恢复错题详情页面的可见一级标题语义并添加前端/E2E 回归验证。 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
@@ -533,18 +533,21 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 - [x] 本地主线收尾：独立审查无 P0/P1，已 rebase、fast-forward 合入本地 `master` 并重新完成完整验证。
 - [x] 远端收尾：已获用户授权并于 2026-07-19 推送 `origin/master`；推送前的主线复验已完成。
 
-#### M02：错题详情一级标题语义回归修复（分支已提交，待主线集成）
+#### M02：错题详情一级标题语义回归修复（本地主线已验证，待推送）
 
 > **计划与问题证据（2026-07-19）**：post-T12 隔离全量验收基于 `origin/master` @ `60f03f8` 执行 `pnpm test:e2e` 时，14 条 Playwright 用例中 13 条通过、`e2e/student-journey.spec.ts` 1 条失败。失败断言要求“错题详情”为 level 1 heading，页面实际输出 `<p className="workbench-eyebrow">错题详情</p>`；页面内容、错因确认控件、路由和真实 Express/SQLite 数据均已正常加载。用户已明确选择方案 A：把可见主标题改为 `<h1>`，保留严格 E2E 语义断言，不放宽为普通文本匹配。行动计划为 `.plans/phase1-m02-mistake-detail-heading-regression-plan.md`；本任务不改 S4 API、Schema、数据或业务规则，也不运行真实外部渠道 smoke。
 
 > **实现与隔离验证证据（2026-07-19）**：在分支 `codex/post-t12-mistake-detail-heading-regression` 的干净 worktree `I:\ai-studybuddy-tmp\worktrees\post-t12-mistake-detail-heading-regression`，仅将错题详情可见标题替换为 `<h1 className="workbench-eyebrow">`，并在前端错题页组件测试锁定 `h1`/文案；未改 CSS、API、数据库、路由或现有 Playwright 标题契约。通过 `pnpm --filter @ai-studybuddy/frontend exec vitest run test/mistake-pages.test.tsx`（4/4）、`pnpm type-check`、前端 build（唯一既有非阻塞 KaTeX 535.51 kB chunk warning）、真实 Express/SQLite `student-journey`（1/1）、`pnpm test`（后端 225/225、前端 93/93）和全量 `pnpm test:e2e`（14/14）。第一次全量 E2E 在复用了已运行定向 Playwright 的数据目录时，T09C 的空系统前提被既有学期数据破坏而 13/14；改用新的隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-m02-mistake-detail-heading-regression-full-e2e` 后 14/14，故该失败是验证目录复用造成的前置条件污染，不是本次页面修改引入的产品缺陷。未运行真实 AI、QQ SMTP、飞书或其他外部渠道 smoke，未读取或输出秘密。
+
+> **本地主线集成与复验证据（2026-07-19）**：任务分支已 rebase origin/master @ 60f03f8 并 fast-forward 合入新的干净 master worktree I:\ai-studybuddy-tmp\worktrees\post-t12-m02-master-integration，当前本地 master 为 6c5df0。在新的隔离目录 I:\ai-studybuddy-tmp\runs\phase1-m02-master-revalidation 和 I:\ai-studybuddy-tmp\runs\phase1-m02-master-revalidation-full-e2e 重新通过 pnpm type-check、后端/前端 build（唯一非阻塞 KaTeX 535.51 kB chunk warning）、pnpm test（后端 225/225、前端 93/93）与 pnpm test:e2e（14/14）。治理与 diff 检查将在本次登记提交前再次执行；尚未推送 origin/master。
 
 - [x] 前端：将错题详情的可见页面主标题恢复为语义化 `<h1>`，保留既有文案和样式 class。
 - [x] 测试：增加错题详情主标题 `h1`/文案前端回归断言；保留并跑通现有真实 Express/SQLite 学生旅程 E2E。
 - [x] 验收：在新的隔离数据目录下完成前端/全量测试和完整 E2E；最终文档治理与 `git diff --check` 均已通过。
 - [x] 独立审查：无 P0/P1；已修正 P2 的 Playwright 验证目录复用风险。
 - [x] 分支提交：`80ea2ab`（`fix(frontend): 修复错题详情一级标题语义`）已在本任务分支提交；尚未合入 `master`，尚未推送。
-- [ ] 主线集成：在新的干净主线 worktree 中 rebase、fast-forward、主线复验，并在获得明确授权后推送 `origin/master`。
+- [x] 本地主线集成：已从 `origin/master` @ `60f03f8` rebase 并 fast-forward 到本地 `master` @ `e6c5df0`；主线复验通过。
+- [ ] 远端收尾：推送前再次确认远端未前进；确认后推送 `origin/master` 并登记事实。
 
 ### Phase 1 产品组织原则
 
