@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.39
-**日期**：2026-07-19
+**版本**：v2.40
+**日期**：2026-07-20
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -135,7 +135,7 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B、T09C、T09D 与 T09E 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环、练习历史与归档学期只读查看，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A、T09B、T09C 已完成并已推送 `origin/master`；T09D 已完成全局导航与学生旅程 E2E、独立复审修复、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 已完成练习历史与学期归档实现、fast-forward 主线集成、主线复验与 `origin/master` 推送：实现提交 `de5c41e`，主线收尾提交 `本主线收尾提交`。S5/S7 继续按各自门禁等待。S3 Worker 不属于当前 MVP，仍未开始。
+4. T09A、T09B、T09C 已完成并已推送 `origin/master`；T09D 已完成全局导航与学生旅程 E2E、独立复审修复、fast-forward 主线集成、主线复验与 `origin/master` 推送；T09E 已完成练习历史与学期归档实现、fast-forward 主线集成、主线复验与 `origin/master` 推送：实现提交 `de5c41e`，主线收尾提交 `af37bd5`。T12、M01、M02、M03 与 Post-M03 维护任务也已完成并进入远端主线；当前没有新的已批准业务实施任务。S5/S7 继续按各自门禁等待，S3 Worker 不属于当前 MVP。
 5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 计划、实现、主线集成、主线复验与 `origin/master` 推送已完成，验证隔离根 `I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
 
 ---
@@ -169,7 +169,8 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
-| v2.39 | 2026-07-19 | 确认 Phase 1-T09E 主线收尾：任务分支 `codex/phase1-t09e-practice-history-archive` 的实现提交 `de5c41e` 已 fast-forward 合入 `master`；主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（后端 223/223、前端 20 files / 92 tests）与专项 Playwright E2E（T09E 练习历史归档 1/1、学期选择回归 1/1）；主线收尾提交 `本主线收尾提交` 推送 `origin/master`；仅做主线收尾、文档证据和测试端口稳定性最小修复，未扩大业务范围 |
+| v2.40 | 2026-07-20 | 同步系统文档当前状态：确认 T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成主线集成、复验并推送 `origin/master`；补齐 T09E 收尾提交 `af37bd5`、M03 收尾提交 `6ddd9fa` 与 Post-M03 收尾提交 `eac469b`，更新前端 14 路由事实基线，并明确当前没有新的已批准业务实施任务 |
+| v2.39 | 2026-07-19 | 确认 Phase 1-T09E 主线收尾：任务分支 `codex/phase1-t09e-practice-history-archive` 的实现提交 `de5c41e` 已 fast-forward 合入 `master`；主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（后端 223/223、前端 20 files / 92 tests）与专项 Playwright E2E（T09E 练习历史归档 1/1、学期选择回归 1/1）；主线收尾提交 `af37bd5` 推送 `origin/master`；仅做主线收尾、文档证据和测试端口稳定性最小修复，未扩大业务范围 |
 | v2.38 | 2026-07-19 | 登记 Phase 1-T09E：练习历史与学期归档已获用户明确批准并在任务分支 `codex/phase1-t09e-practice-history-archive` 完成分支实现与验证：练习历史、学期归档、归档只读写保护和 Playwright 验收通过；尚未合入 `master` 或推送 `origin/master`，主线完成仍待后续合入复验 |
 | v2.37 | 2026-07-19 | 登记 Phase 1-T09E：练习历史与学期归档独立实施计划 `.plans/phase1-t09e-practice-history-archive-plan.md` 已创建并完成计划审查；当前计划待批，未获用户明确批准不得实施 |
 | v2.36 | 2026-07-19 | 确认 Phase 1-T09D 已推送 `origin/master`：计划提交 `0d2127e`、实现提交 `0a054f8` 与主线收尾提交 `e1034e7` 均进入远端主线；T09E 尚未创建计划，是下一计划门禁 |

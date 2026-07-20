@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-**Version**: v1.7
-**Updated**: 2026-07-18
+**Version**: v1.8
+**Updated**: 2026-07-20
 
 This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
 
@@ -10,7 +10,7 @@ This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete to
 AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七个场景子系统（S1–S7）”。当前事实：
 
 - Phase 0.8 已完成，S1 基础与 S2 核心已在主仓库实现并通过 T09 隔离复验。
-- S1、S2、S3、S4、S6 PRD 已存在；Phase 1 已完成 T03A–T03D（S3 练习闭环）、T04/T04A/T04B（S4 错题归档、Schema 与错题改错前端闭环，含 migration v6 与 S4 API）、T05 回流规则、T06 S6 家长观察 PRD、T06A 家长报告生成、T06B 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页和 T09C 课程课表与考试目标完善。T09D 全局导航与学生旅程 E2E 已完成、通过主线复验并推送 `origin/master`；T09E 尚未创建计划、尚未启动，是下一计划门禁，S5/S7 仍按各自门禁等待。
+- S1、S2、S3、S4、S6 PRD 已存在；Phase 1 已完成 T03A–T03D（S3 练习闭环）、T04/T04A/T04B（S4 错题归档、Schema 与错题改错前端闭环，含 migration v6 与 S4 API）、T05 回流规则、T06 S6 家长观察 PRD、T06A 家长报告生成、T06B 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页和 T09C 课程课表与考试目标完善。T09A–T09E 学生端产品化均已完成、通过主线复验并推送 `origin/master`；T12、M01、M02、M03 与 Post-M03 维护任务也已完成。当前没有新的已批准业务实施任务；S3 Worker 不属于当前 MVP，S5/S7 仍按各自门禁等待。
 - 后端、前端、shared 三个 workspace 包已存在；不要再按“无业务代码”处理。
 - AI Provider Router 已支持多 Provider 优先级故障转移，并已在 Phase 1-T02 完成连续失败熔断、10 分钟冷却、恢复探测和脱敏日志。
 - KaoBuddy 只可作为产品组织方式参考，不复制源码、视觉、文案或资产。
@@ -72,7 +72,7 @@ pnpm -r --filter backend run dev
 - S6：PRD、T06A 家长报告生成和 T06B 推送渠道均已完成；采用冻结脱敏快照、渠道级去重/重试与失败隔离，真实渠道 smoke 不作为常规验证依赖。
 - S1 时间线：T07 已完成，考试工作台可读取当前课程近期活动。
 - 本机配置中心：T08 已完成，支持 DPAPI 加密存储、AI/SMTP/飞书连接测试、运行时热切换、loopback API 防护和前端设置页；真实渠道 smoke 不作为常规验证依赖。
-- 学生端产品化：T09A 学期创建/选择/切换、T09B 每日首页和 T09C 课程课表/考试目标已完成；T09D 全局导航与学生旅程 E2E 已完成、通过主线复验并推送 `origin/master`；T09E 练习历史与学期归档尚未创建计划、尚未启动；T09D 完成 = 学生端可交付 MVP。
+- 学生端产品化：T09A 学期创建/选择/切换、T09B 每日首页、T09C 课程课表/考试目标、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档均已完成、通过主线复验并推送 `origin/master`；Phase 1 学生端可交付 MVP 已形成。
 - S7：Phase 1.5 触发。
 
 ## 精简 16 步流程
