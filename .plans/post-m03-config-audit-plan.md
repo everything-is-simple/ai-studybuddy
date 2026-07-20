@@ -42,8 +42,8 @@
 
 ### Task 4: 提交、推送与主线集成
 
-- [ ] 使用 `fix(settings): 完善配置来源审计与敏感信息展示` 提交任务分支。
-- [ ] 推送 `codex/post-m03-config-audit`。
-- [ ] 在另一个独立干净 master 集成 worktree 中 `pull --ff-only`、rebase 任务分支并 `merge --ff-only`；不操作主仓工作区。
-- [ ] 在 master 集成 worktree 重跑验证矩阵，确认远端未漂移后推送 `origin/master`。
-- [ ] 记录最终提交哈希、退出码、截图/报告路径和安全确认。
+- [x] 使用 `fix(settings): 完善配置来源审计与敏感信息展示` 提交任务分支。
+- [x] 推送 `codex/post-m03-config-audit`。
+- [x] 在独立干净 master 集成 clone 中 `pull --ff-only`，确认远端无漂移后 `merge --ff-only`；不操作主仓工作区。
+- [x] 在 master 集成 clone 重跑验证矩阵，确认远端未漂移后推送 `origin/master`。
+- [x] 记录最终提交哈希、退出码、截图/报告路径和安全确认。

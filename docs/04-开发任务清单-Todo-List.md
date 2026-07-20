@@ -483,7 +483,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 25 | Phase 1-T12：设置中心 Provider 预设与渠道配置 UX 改造 | ✅ | 已完成独立计划审查、分支验证、fast-forward 主线集成、主线复验并推送 `origin/master`；任务分支 `codex/phase1-t12-settings-provider-presets-impl`，实现提交 `73bafdb`。 |
 | 26 | Phase 1-M02：错题详情一级标题语义回归修复 | ✅ | 方案 A 已 fast-forward 合入 master、完成主线全量复验并推送 origin/master；仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。实现提交 80ea2ab，验证证据 6c5df0，主线复验登记 6aa088e。 |
 | 27 | Phase 1-M03：设置中心配置可观测性与安全摘要 | ✅ | 已 fast-forward 合入并随主线收尾推送 `origin/master`；环境 fallback 显示安全摘要/待验证状态，秘密永不由后端回显。 |
-| 28 | Post-M03：配置来源审计与设置页敏感输入显隐 | 🟡 | 任务分支已完成实现、独立审查及两项 Important 修复与隔离全量验证：type-check、前后端 build、`pnpm test`、`pnpm test:e2e`、文档治理及 `git diff --check` 均为 exit 0；Playwright 14/14，通过仓库外截图/HTML 报告验收。全程未读取真实秘密、未运行外部调用；待提交推送、主线集成与主线复验。 |
+| 28 | Post-M03：配置来源审计与设置页敏感输入显隐 | ✅ | 实现提交 `e08ab36` 已推送任务分支并 fast-forward 合入本地 `master`；分支与主线均通过 type-check、前后端 build、前端 94/94、后端 228/228、Playwright 14/14、文档治理及 diff 检查。浏览器证据保存在仓库外；全程未读取真实秘密、未运行外部调用，随本收尾提交推送 `origin/master`。 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -502,7 +502,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T12 | `.plans/phase1-t12-settings-provider-presets-plan.md` | v5 已完成独立审查、用户实施批准、任务分支实现与隔离验证、fast-forward 主线集成、主线复验，并已于 2026-07-19 推送 `origin/master`。 |
 | M02 | .plans/phase1-m02-mistake-detail-heading-regression-plan.md | 已完成独立审查、任务分支提交、fast-forward 主线集成、主线全量复验与 origin/master 推送；仅恢复错题详情页面的可见一级标题语义并添加前端/E2E 回归验证。 |
 | M03 | .plans/phase1-m03-settings-configuration-observability-plan.md | 方案 A 已获用户批准；已完成实现、主线集成、主线复验并推送 `origin/master`。 |
-| Post-M03 | .plans/post-m03-config-audit-plan.md | 用户于 2026-07-20 明确批准；任务分支实现与隔离验证已通过，浏览器证据保存在仓库外运行目录，待提交推送、主线集成和主线复验。 |
+| Post-M03 | .plans/post-m03-config-audit-plan.md | 用户于 2026-07-20 明确批准；实现提交 `e08ab36` 已推送任务分支并 fast-forward 合入本地 `master`，分支与主线全量验证、浏览器验收和独立审查修复均已完成，随本收尾提交推送 `origin/master`。 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
