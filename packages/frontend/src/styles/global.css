@@ -236,6 +236,22 @@ body {
   color: var(--color-text);
 }
 
+.secret-input-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.secret-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.secret-input-row .button-secondary {
+  white-space: nowrap;
+}
+
 .settings-card .checkbox {
   display: flex;
   align-items: center;

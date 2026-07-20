@@ -29,7 +29,29 @@ function requireEnv(key: string): string {
   return value;
 }
 
-// AI Provider 配置项（多 Provider 轮询链）
+function readNumberEnv(key: string, fallback: number): number {
+  return Number(process.env[key] ?? fallback);
+}
+
+export function getDocxZipLimits() {
+  return {
+    maxEntries: readNumberEnv('DOCX_ZIP_MAX_ENTRIES', 10000),
+    maxEntrySizeBytes: readNumberEnv('DOCX_ZIP_MAX_ENTRY_SIZE_BYTES', 50 * 1024 * 1024),
+    maxTotalSizeBytes: readNumberEnv('DOCX_ZIP_MAX_TOTAL_SIZE_BYTES', 100 * 1024 * 1024),
+    maxDocumentXmlSizeBytes: readNumberEnv('DOCX_ZIP_MAX_DOCUMENT_XML_SIZE_BYTES', 20 * 1024 * 1024),
+  };
+}
+
+export function getPptxZipLimits() {
+  return {
+    maxEntries: readNumberEnv('PPTX_ZIP_MAX_ENTRIES', 10000),
+    maxEntrySizeBytes: readNumberEnv('PPTX_ZIP_MAX_ENTRY_SIZE_BYTES', 50 * 1024 * 1024),
+    maxTotalSizeBytes: readNumberEnv('PPTX_ZIP_MAX_TOTAL_SIZE_BYTES', 100 * 1024 * 1024),
+    maxSlideXmlSizeBytes: readNumberEnv('PPTX_ZIP_MAX_SLIDE_XML_SIZE_BYTES', 20 * 1024 * 1024),
+  };
+}
+
+// AI Provider 配置项（按优先级失败切换 + 冷却）
 export interface ProviderConfig {
   name: string;
   baseUrl: string;

@@ -62,17 +62,30 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
   await expect(page.getByText('按优先级失败切换 + 冷却，不是成功请求轮询。')).toBeVisible();
   await expect(page.getByRole('button', { name: /Claude \/ Anthropic.*后续适配/ })).toBeDisabled();
 
+  const initialKimiKey = page.getByTestId('official-kimi-api-key');
+  await initialKimiKey.fill('SENTINEL_E2E_VISIBILITY');
+  await expect(initialKimiKey).toHaveAttribute('type', 'password');
+  await page.getByRole('button', { name: '显示 Kimi / Moonshot API Key' }).click();
+  await expect(initialKimiKey).toHaveAttribute('type', 'text');
+  await expect(initialKimiKey).toHaveValue('SENTINEL_E2E_VISIBILITY');
+  await page.getByRole('button', { name: '隐藏 Kimi / Moonshot API Key' }).click();
+  await expect(initialKimiKey).toHaveAttribute('type', 'password');
+  await page.reload();
+  await expect(page.getByTestId('official-kimi-api-key')).toHaveAttribute('type', 'password');
+  await expect(page.getByTestId('official-kimi-api-key')).toHaveValue('');
+  expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
+
   await expect(page.getByTestId('custom-provider-advanced')).toHaveAttribute('open', '');
   const kimiCard = page.locator('.provider-preset-card', { has: page.getByRole('heading', { name: 'Kimi / Moonshot', level: 4 }) });
-  await kimiCard.getByLabel('API Key').fill('FAKE_E2E_KIMI_KEY');
+  await kimiCard.getByTestId('official-kimi-api-key').fill('FAKE_E2E_KIMI_KEY');
   await kimiCard.getByRole('button', { name: '加入 fallback' }).click();
   await expect(page.getByLabel('Provider fallback 优先级')).toContainText('优先级 1');
   await page.getByRole('button', { name: '测试并激活 AI' }).click();
   await expect(page.getByText('连接通过，配置已激活', { exact: true })).toBeVisible();
   expect(receivedAiPayload).toEqual({ providers: [{ kind: 'official', presetId: 'kimi', apiKey: 'FAKE_E2E_KIMI_KEY', model: 'kimi-k2.7-code', priority: 1 }] });
-  await expect(kimiCard.getByLabel('API Key')).toHaveValue('');
+  await expect(kimiCard.getByTestId('official-kimi-api-key')).toHaveValue('');
 
-  await kimiCard.getByLabel('API Key').fill('FAKE_E2E_FAIL_KEY');
+  await kimiCard.getByTestId('official-kimi-api-key').fill('FAKE_E2E_FAIL_KEY');
   await kimiCard.getByRole('button', { name: '加入 fallback' }).click();
   await page.getByRole('button', { name: '测试并激活 AI' }).click();
   await expect(page.getByText('测试失败：CONFIG_CONNECTION_TEST_FAILED', { exact: true })).toBeVisible();
@@ -106,9 +119,13 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
   await expect(page.getByRole('button', { name: '测试现有配置' }).first()).toBeVisible();
   await expect(page.locator('body')).toContainText('•••••••• 已保存，不可回显');
   await expect(page.locator('body')).not.toContainText('FAKE_E2E_KIMI_KEY');
-  await expect(kimiCard.getByLabel('API Key')).toHaveValue('');
+  await expect(kimiCard.getByTestId('official-kimi-api-key')).toHaveValue('');
   const browserStorage = await page.evaluate(() => ({ local: JSON.stringify(localStorage), session: JSON.stringify(sessionStorage) }));
   expect(JSON.stringify(browserStorage)).not.toMatch(/FAKE_E2E_KIMI_KEY/);
+
+  const screenshotPath = test.info().outputPath('settings-config-audit.png');
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await test.info().attach('settings-config-audit', { path: screenshotPath, contentType: 'image/png' });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('heading', { name: '本机配置中心', level: 1 })).toBeVisible();

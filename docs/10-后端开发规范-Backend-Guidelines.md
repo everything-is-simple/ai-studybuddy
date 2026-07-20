@@ -1,7 +1,7 @@
 # AI StudyBuddy 后端开发规范 Backend Guidelines
 
-**版本**：v1.5
-**日期**：2026-07-18
+**版本**：v1.6
+**日期**：2026-07-20
 **状态**：有效
 **用途**：Phase 0.8 正式后端开发的目录结构、SQLite 约定、Adapter 输出、日志、环境变量和验证规则。写第一个后端服务 / Adapter / API / Worker 前必须读本文件。
 
@@ -189,35 +189,49 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 ### 8.1 文件管理
 
 - `.env.example` 列出所有变量名（不填真实值），提交到 Git。
-- `.env.local` 从 `.env.example` 复制后填真实值，`.gitignore` 已忽略。
-- `.env.*.local` 同样忽略。
+- 后端只自动加载名为 `.env.local` 的文件；`.env` 和 `.env.*.local` 不属于后端配置来源。
+- 根目录 `.env.local` 由 `.gitignore` 忽略；不得读取、记录或提交其中的真实值。
+- 前端由 Vite 5.4 读取 `packages/frontend` 下的 `.env`、`.env.local`、`.env.<mode>`、`.env.<mode>.local`；根目录 `.env.local` 不会被前端自动读取。
 
 ### 8.2 读取约定
 
-- 后端从 `process.env` 读取，通过 `src/config/env.ts` 集中管理。
-- 禁止在业务代码中直接调用 `process.env`。
+- 后端仅通过 `src/config/env.ts` 读取 `process.env`；业务代码禁止直接调用 `process.env`。
+- 后端依次检查 `process.cwd()/.env.local`、`process.cwd()/../../.env.local`、编译模块目录上溯三级的 `.env.local`，只加载第一个存在的候选文件。
+- dotenv 不覆盖已有进程环境，因此同名配置优先级为：进程环境变量 > 首个命中的后端 `.env.local` > 代码默认值。
+- 前端同名配置优先级遵循 Vite：启动进程中已有的 `VITE_*` > mode-specific env 文件 > 通用 env 文件；浏览器端仅暴露 `VITE_*`。
 - 启动时校验必需变量（如 `APP_DATA_ROOT`）必须存在且可写。
 
 ### 8.3 变量清单
 
-| 变量名               | 用途                                                                           | 必填                      |
-| -------------------- | ------------------------------------------------------------------------------ | ------------------------- |
-| `APP_DATA_ROOT`      | 运行数据根目录                                                                 | 是                        |
-| `BACKEND_PORT`       | 后端端口（默认 3000）                                                          | 否                        |
-| `BACKEND_HOST`       | 后端监听地址（默认 127.0.0.1）                                                 | 否                        |
-| `CONFIG_ALLOWED_ORIGINS` | 追加本机前端 Origin；只接受带显式端口的 `http://localhost`、`127.0.0.1` 或 `[::1]`，逗号分隔 | 否 |
-| `AI_PROVIDERS`       | 多 Provider JSON 数组；按 `priority` 升序 fallback                             | 否；推荐配置              |
-| `AI_TIMEOUT_MS`      | 单次 AI 请求超时毫秒数（默认 60000）                                           | 否                        |
-| `AI_BASE_URL`        | legacy 单 Provider 的 OpenAI-compatible Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否                        |
-| `AI_API_KEY`         | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用                       | 否                        |
-| `AI_MODEL`           | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用                        | 否                        |
-| `SMTP_HOST`          | QQ SMTP 主机；`.env.example` 已给出 `smtp.qq.com` 示例                         | 否；S6 正式发送报告时必填 |
-| `SMTP_PORT`          | QQ SMTP 端口；`.env.example` 已给出 `465` 示例                                 | 否；S6 正式发送报告时必填 |
-| `SMTP_SECURE`        | 是否 SSL；`.env.example` 已给出 `true` 示例                                    | 否；S6 正式发送报告时必填 |
-| `SMTP_USER`          | QQ 邮箱地址；只填入 `.env.local`                                               | 否；S6 正式发送报告时必填 |
-| `SMTP_AUTH_CODE`     | QQ SMTP 授权码；只填入 `.env.local`，不得进入日志或提交                        | 否；S6 正式发送报告时必填 |
-| `SMTP_TO`            | 家长收件邮箱；只填入 `.env.local`                                              | 否；S6 正式发送报告时必填 |
-| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL；只填入 `.env.local`，不得进入日志或提交                      | 否；S6 正式发送报告时必填 |
+| 变量名 | 用途 | 必填 |
+| --- | --- | --- |
+| `APP_DATA_ROOT` | 运行数据根目录 | 是 |
+| `BACKEND_PORT` | 后端端口（默认 3000） | 否 |
+| `BACKEND_HOST` | 后端监听地址（默认 127.0.0.1） | 否 |
+| `CONFIG_ALLOWED_ORIGINS` | 追加本机前端 Origin；仅允许带显式端口的 loopback HTTP Origin，逗号分隔 | 否 |
+| `PYTHON_PATH` | OCR 子进程 Python 可执行文件（默认 `python`） | 否 |
+| `OCR_TIMEOUT_MS` | OCR 子进程超时毫秒数（默认 60000） | 否 |
+| `DOCX_ZIP_MAX_ENTRIES` | DOCX ZIP 最大条目数（默认 10000） | 否 |
+| `DOCX_ZIP_MAX_ENTRY_SIZE_BYTES` | DOCX 单条目解压大小上限 | 否 |
+| `DOCX_ZIP_MAX_TOTAL_SIZE_BYTES` | DOCX 总解压大小上限 | 否 |
+| `DOCX_ZIP_MAX_DOCUMENT_XML_SIZE_BYTES` | DOCX 正文 XML 大小上限 | 否 |
+| `PPTX_ZIP_MAX_ENTRIES` | PPTX ZIP 最大条目数（默认 10000） | 否 |
+| `PPTX_ZIP_MAX_ENTRY_SIZE_BYTES` | PPTX 单条目解压大小上限 | 否 |
+| `PPTX_ZIP_MAX_TOTAL_SIZE_BYTES` | PPTX 总解压大小上限 | 否 |
+| `PPTX_ZIP_MAX_SLIDE_XML_SIZE_BYTES` | PPTX 单页 XML 大小上限 | 否 |
+| `AI_PROVIDERS` | OpenAI-compatible Provider JSON 数组；按 `priority` 升序失败切换并冷却 | 否；优先于 legacy 单 Provider |
+| `AI_TIMEOUT_MS` | 单次 AI 请求超时毫秒数（默认 60000） | 否 |
+| `AI_BASE_URL` | legacy 单 Provider Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否 |
+| `AI_API_KEY` | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用 | 否 |
+| `AI_MODEL` | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用 | 否 |
+| `SMTP_HOST` | QQ SMTP 主机（默认 `smtp.qq.com`） | 渠道启用时必填 |
+| `SMTP_PORT` | QQ SMTP 端口（默认 465） | 否 |
+| `SMTP_SECURE` | 是否启用 SSL/TLS | 否 |
+| `SMTP_USER` | QQ 邮箱账号 | 渠道启用时必填 |
+| `SMTP_AUTH_CODE` | QQ SMTP 授权码；不得进入日志或提交 | 渠道启用时必填 |
+| `SMTP_TO` | 收件邮箱 | 渠道启用时必填 |
+| `FEISHU_WEBHOOK_URL` | 飞书 Webhook；不得进入日志或提交 | 渠道启用时必填 |
+| `VITE_API_BASE_URL` | 前端 API/开发代理基础地址；仅来自前端进程环境或 `packages/frontend` env 文件 | 否 |
 
 所有 `/api` 路由统一执行 loopback Origin 校验。默认允许 Vite 开发端口 `5173` 与 preview/Playwright 端口 `4173`；无 `Origin` 的本机 CLI 请求允许通过。配置 POST 额外只接受 JSON。`CONFIG_ALLOWED_ORIGINS` 不接受远程 host、`*`、凭据、路径、查询或 fragment。
 
@@ -233,6 +247,9 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 - 已按 `.plans/phase1-t08-config-center-plan.md` v6 实现。后续修改仍必须独立登记任务和计划，不能绕过连接测试直接写 active 配置。
 - 配置初始化必须先于 Express listen、Material Worker 和家长报告投递；运行时消费者只从 `config-registry` 读取不可变快照。
 - API 全局执行 loopback Origin 策略，配置 POST 只接受 JSON；候选配置测试失败直接丢弃，不生成未验证磁盘状态。
+- 运行时配置优先级固定为：当前 Windows 用户 DPAPI 加密的 active 快照 > 环境变量 fallback > 未配置；加密快照位于 `APP_DATA_ROOT/config`，不写入 SQLite。
+- AI 环境 fallback 内部优先级为：非空 `AI_PROVIDERS` > legacy `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL`；QQ SMTP 仅在 host、账号、授权码、收件邮箱均存在时识别为已配置；飞书以 Webhook 是否存在判断。
+- 设置页只能展示后端生成的普通摘要与固定星号掩码；新输入秘密的显示/隐藏仅保存在当前 React 组件状态，刷新恢复遮挡，不写入 `localStorage` 或 `sessionStorage`。
 
 ---
 

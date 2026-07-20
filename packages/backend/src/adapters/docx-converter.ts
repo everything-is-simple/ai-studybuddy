@@ -8,19 +8,12 @@ import fs from 'fs';
 import mammoth from 'mammoth';
 import { JSDOM } from 'jsdom';
 import JSZip from 'jszip';
+import { getDocxZipLimits as getZipLimits } from '../config/env';
 
 // ── 安全限制 ────────────────────────────────────────────────
 // 可通过环境变量覆盖，便于测试使用较小阈值；生产环境保持较大默认值。
 // 每次调用时重新读取，确保测试可以在同进程内调整阈值。
 
-function getZipLimits() {
-  return {
-    maxEntries: Number(process.env.DOCX_ZIP_MAX_ENTRIES ?? 10000),
-    maxEntrySizeBytes: Number(process.env.DOCX_ZIP_MAX_ENTRY_SIZE_BYTES ?? 50 * 1024 * 1024),
-    maxTotalSizeBytes: Number(process.env.DOCX_ZIP_MAX_TOTAL_SIZE_BYTES ?? 100 * 1024 * 1024),
-    maxDocumentXmlSizeBytes: Number(process.env.DOCX_ZIP_MAX_DOCUMENT_XML_SIZE_BYTES ?? 20 * 1024 * 1024),
-  };
-}
 
 const VISUAL_TAGS = [
   'w:drawing', // 图片、图表、SmartArt

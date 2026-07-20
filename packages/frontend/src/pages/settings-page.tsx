@@ -157,7 +157,7 @@ export default function SettingsPage() {
       <header className="page-header">
         <div>
           <h1>本机配置中心</h1>
-          <p>连接信息只保存在当前 Windows 用户的加密存储中，密钥不会回显。</p>
+          <p>配置中心测试激活的连接信息使用当前 Windows 用户的 DPAPI 加密存储；环境 fallback 来自进程环境或命中的配置文件。页面只显示脱敏摘要，密钥不会回显。</p>
         </div>
       </header>
 
@@ -183,7 +183,7 @@ export default function SettingsPage() {
           <div className="settings-form">
             <TextInput label="名称" testId="custom-provider-name" value={customProvider.name} onChange={(name) => setCustomProvider((current) => ({ ...current, name }))} />
             <TextInput label="API 地址" testId="custom-provider-base-url" value={customProvider.baseUrl} onChange={(baseUrl) => setCustomProvider((current) => ({ ...current, baseUrl }))} />
-            <TextInput label="API Key" type="password" placeholder="已保存的 Key 不会回显；输入新值才替换" testId="custom-provider-api-key" value={customProvider.apiKey} onChange={(apiKey) => setCustomProvider((current) => ({ ...current, apiKey }))} />
+            <SecretInput label="API Key" visibilityLabel="自定义 Provider API Key" placeholder="已保存的 Key 不会回显；输入新值才替换" testId="custom-provider-api-key" value={customProvider.apiKey} onChange={(apiKey) => setCustomProvider((current) => ({ ...current, apiKey }))} />
             <TextInput label="模型" testId="custom-provider-model" value={customProvider.model} onChange={(model) => setCustomProvider((current) => ({ ...current, model }))} />
           </div>
           <button type="button" className="button-secondary" onClick={addCustomProvider}>加入自定义 Provider</button>
@@ -207,7 +207,7 @@ export default function SettingsPage() {
       <ConfigCard headingId="smtp-config-title" title={channelLabels.smtp} state={status?.smtp} busy={busy === 'smtp'} message={message.smtp} onRetest={() => void retest('smtp')}>
         <div className="settings-form">
           <TextInput label="QQ 邮箱账号" placeholder="已有账号请见上方脱敏摘要；输入新值才替换" testId="smtp-user" value={smtp.user} onChange={(user) => setSmtp((current) => ({ ...current, user }))} />
-          <TextInput label="SMTP 授权码" type="password" placeholder="•••••••• 已保存，不可回显；输入新值才替换" testId="smtp-auth-code" value={smtp.authCode} onChange={(authCode) => setSmtp((current) => ({ ...current, authCode }))} />
+          <SecretInput label="SMTP 授权码" visibilityLabel="SMTP 授权码" placeholder="•••••••• 已保存，不可回显；输入新值才替换" testId="smtp-auth-code" value={smtp.authCode} onChange={(authCode) => setSmtp((current) => ({ ...current, authCode }))} />
           <TextInput label="收件邮箱" placeholder="已有邮箱请见上方脱敏摘要；输入新值才替换" testId="smtp-to" value={smtp.to} onChange={(to) => setSmtp((current) => ({ ...current, to }))} />
         </div>
         <p className="settings-note">SMTP 授权码不是 QQ 登录密码。</p>
@@ -223,7 +223,7 @@ export default function SettingsPage() {
       </ConfigCard>
 
       <ConfigCard headingId="feishu-config-title" title={channelLabels.feishu} state={status?.feishu} busy={busy === 'feishu'} message={message.feishu} onRetest={() => void retest('feishu')}>
-        <TextInput label="飞书群机器人 Webhook URL" type="password" placeholder="•••••••• 已保存，不可回显；输入新值才替换" testId="feishu-webhook-url" value={feishu.webhookUrl} onChange={(webhookUrl) => setFeishu({ webhookUrl })} />
+        <SecretInput label="飞书群机器人 Webhook URL" visibilityLabel="飞书 Webhook" placeholder="•••••••• 已保存，不可回显；输入新值才替换" testId="feishu-webhook-url" value={feishu.webhookUrl} onChange={(webhookUrl) => setFeishu({ webhookUrl })} />
         <p className="settings-note">{presets.feishu.securityHint || 'Webhook 会加密保存在本机、页面不回显、不要复制到截图或提交到 Git。'}</p>
         <button type="button" disabled={busy === 'feishu'} onClick={() => void activate('feishu', feishu)}>测试并激活飞书</button>
       </ConfigCard>
@@ -239,7 +239,7 @@ function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProv
     <p className="provider-base-url"><span>官方 API 地址</span><code>{preset.baseUrl}</code></p>
     {unavailable ? <button type="button" disabled>{preset.displayName}（后续适配）</button> : <>
       <label>模型<select data-testid={`official-${preset.id}-model`} value={draft.model} onChange={(event) => onChange({ model: event.target.value })}>{preset.modelSuggestions.map((model) => <option key={model} value={model}>{model}</option>)}</select></label>
-      <TextInput label="API Key" type="password" placeholder="已保存的 Key 不会回显；输入新值才替换" testId={`official-${preset.id}-api-key`} value={draft.apiKey} onChange={(apiKey) => onChange({ apiKey })} />
+      <SecretInput label="API Key" visibilityLabel={`${preset.displayName} API Key`} placeholder="已保存的 Key 不会回显；输入新值才替换" testId={`official-${preset.id}-api-key`} value={draft.apiKey} onChange={(apiKey) => onChange({ apiKey })} />
       <button type="button" className="button-secondary" onClick={onAdd}>加入 fallback</button>
     </>}
   </article>;
@@ -262,6 +262,23 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
 }
 
 function Status({ label, ok }: { label: string; ok: boolean }) { return <span><strong>{label}</strong>：{ok ? '可用' : '未配置 / 降级'}</span>; }
+
+function SecretInput({ label, visibilityLabel, value, onChange, testId, placeholder }: { label: string; visibilityLabel: string; value: string; onChange: (value: string) => void; testId: string; placeholder?: string }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!value) setVisible(false);
+  }, [value]);
+
+  const action = visible ? '隐藏' : '显示';
+  return <div className="secret-input-field">
+    <label htmlFor={testId}>{label}</label>
+    <div className="secret-input-row">
+      <input id={testId} data-testid={testId} type={visible ? 'text' : 'password'} autoComplete="new-password" placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} />
+      <button type="button" className="button-secondary" aria-label={`${action} ${visibilityLabel}`} onClick={() => setVisible((current) => !current)}>{action}</button>
+    </div>
+  </div>;
+}
 
 function TextInput({ label, value, onChange, testId, type = 'text', placeholder }: { label: string; value: string; onChange: (value: string) => void; testId: string; type?: 'text' | 'password'; placeholder?: string }) {
   return <label>{label}<input data-testid={testId} type={type} placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} /></label>;

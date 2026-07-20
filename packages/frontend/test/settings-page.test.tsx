@@ -50,13 +50,19 @@ vi.mock('../src/api/configuration-api', async (importOriginal) => ({
 let container: HTMLDivElement;
 let root: Root;
 let localStorageShim: Storage;
+let sessionStorageShim: Storage;
 let setItemSpy: ReturnType<typeof vi.spyOn>;
+let sessionSetItemSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
-  localStorageShim = createLocalStorageShim();
+  localStorageShim = createStorageShim();
+  sessionStorageShim = createStorageShim();
   Object.defineProperty(globalThis, 'localStorage', { value: localStorageShim, configurable: true });
   Object.defineProperty(window, 'localStorage', { value: localStorageShim, configurable: true });
+  Object.defineProperty(globalThis, 'sessionStorage', { value: sessionStorageShim, configurable: true });
+  Object.defineProperty(window, 'sessionStorage', { value: sessionStorageShim, configurable: true });
   setItemSpy = vi.spyOn(localStorageShim, 'setItem');
+  sessionSetItemSpy = vi.spyOn(sessionStorageShim, 'setItem');
   mocks.statusFixture = {
     ai: { ...mocks.unconfigured }, smtp: { ...mocks.unconfigured }, feishu: { ...mocks.unconfigured },
     runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 5, nodeVersion: 'v22.test' },
@@ -76,7 +82,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function createLocalStorageShim(): Storage {
+function createStorageShim(): Storage {
   const store = new Map<string, string>();
   return {
     get length() { return store.size; },
@@ -122,6 +128,12 @@ function buttonContaining(label: string): HTMLButtonElement {
   return button!;
 }
 
+function buttonByAriaLabel(label: string): HTMLButtonElement {
+  const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+  expect(button, `应找到按钮：${label}`).not.toBeNull();
+  return button!;
+}
+
 function presetCard(name: string): HTMLElement {
   const card = [...container.querySelectorAll<HTMLElement>('.provider-preset-card')].find((item) => item.querySelector('h4')?.textContent === name);
   expect(card, `应找到预设卡：${name}`).not.toBeNull();
@@ -149,14 +161,58 @@ describe('settings page', () => {
     expect([...select('official-openai-model').options].map((option) => option.value)).toEqual(['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna']);
     expect([...select('official-kimi-model').options].map((option) => option.value)).toEqual(['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6']);
     expect(input('official-kimi-api-key').type).toBe('password');
+    expect(container.textContent).toContain('配置中心测试激活的连接信息使用当前 Windows 用户的 DPAPI 加密存储');
+    expect(container.textContent).toContain('环境 fallback 来自进程环境或命中的配置文件');
+  });
+
+
+  it('reveals only the current sentinel secret and resets masking after remount without browser storage', async () => {
+    await renderSettingsPage();
+
+    const secrets = [
+      { testId: 'official-kimi-api-key', label: 'Kimi / Moonshot API Key', sentinel: 'SENTINEL_AI_VISIBLE' },
+      { testId: 'custom-provider-api-key', label: '自定义 Provider API Key', sentinel: 'SENTINEL_RELAY_VISIBLE' },
+      { testId: 'smtp-auth-code', label: 'SMTP 授权码', sentinel: 'SENTINEL_SMTP_VISIBLE' },
+      { testId: 'feishu-webhook-url', label: '飞书 Webhook', sentinel: 'SENTINEL_FEISHU_VISIBLE' },
+    ];
+
+    for (const secret of secrets) {
+      const field = input(secret.testId);
+      await setInput(field, secret.sentinel);
+      expect(field.type).toBe('password');
+      await act(async () => buttonByAriaLabel('显示 ' + secret.label).click());
+      expect(field.type).toBe('text');
+      expect(field.value).toBe(secret.sentinel);
+      await act(async () => buttonByAriaLabel('隐藏 ' + secret.label).click());
+      expect(field.type).toBe('password');
+    }
+
+    expect(setItemSpy).not.toHaveBeenCalled();
+    expect(sessionSetItemSpy).not.toHaveBeenCalled();
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await renderSettingsPage();
+    for (const secret of secrets) {
+      expect(input(secret.testId).type).toBe('password');
+      expect(input(secret.testId).value).toBe('');
+    }
+    expect(setItemSpy).not.toHaveBeenCalled();
+    expect(sessionSetItemSpy).not.toHaveBeenCalled();
   });
 
   it('submits official fallback candidates by priority, then clears API keys without browser storage', async () => {
     await renderSettingsPage();
     await setInput(input('official-kimi-api-key'), 'FAKE_KIMI_SECRET');
+    await act(async () => buttonByAriaLabel('显示 Kimi / Moonshot API Key').click());
+    expect(input('official-kimi-api-key').type).toBe('text');
     await act(async () => [...presetCard('Kimi / Moonshot').querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('加入 fallback'))!.click());
     await flush();
 
+    expect(input('official-kimi-api-key').type).toBe('password');
+    await setInput(input('official-kimi-api-key'), 'SENTINEL_AFTER_CLEAR');
+    expect(input('official-kimi-api-key').type).toBe('password');
+    await setInput(input('official-kimi-api-key'), '');
     expect(container.textContent).toContain('优先级 1');
     await act(async () => buttonContaining('测试并激活 AI').click());
     await flush();

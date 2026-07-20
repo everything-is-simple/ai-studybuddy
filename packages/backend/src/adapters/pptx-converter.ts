@@ -6,17 +6,10 @@
 import type { ConverterResult } from '@ai-studybuddy/shared';
 import fs from 'fs';
 import JSZip from 'jszip';
+import { getPptxZipLimits as getZipLimits } from '../config/env';
 
 // ── 安全限制 ────────────────────────────────────────────────
 
-function getZipLimits() {
-  return {
-    maxEntries: Number(process.env.PPTX_ZIP_MAX_ENTRIES ?? 10000),
-    maxEntrySizeBytes: Number(process.env.PPTX_ZIP_MAX_ENTRY_SIZE_BYTES ?? 50 * 1024 * 1024),
-    maxTotalSizeBytes: Number(process.env.PPTX_ZIP_MAX_TOTAL_SIZE_BYTES ?? 100 * 1024 * 1024),
-    maxSlideXmlSizeBytes: Number(process.env.PPTX_ZIP_MAX_SLIDE_XML_SIZE_BYTES ?? 20 * 1024 * 1024),
-  };
-}
 
 // ── XML 工具 ────────────────────────────────────────────────
 
