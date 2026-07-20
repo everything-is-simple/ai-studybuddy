@@ -775,7 +775,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 5 | T05：冲刺计划生成 | ⏳ | 根据考试倒计时和薄弱点自动建议每日复习计划 |
 | 6 | T06：工作台”冲刺”区集成 | ⏳ | 考试前 N 天自动进入冲刺模式，工作台展示冲刺入口 |
 
-### Phase 2 行动计划索引
+### Phase 2 任务状态索引
 
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
@@ -783,7 +783,6 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已完成分支实现、fast-forward 合入 `master` 并完成主线复验；`origin/master` 已推送。 |
 | T03–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
 
-> **Phase 2-T01 计划门禁（2026-07-20，计划待批，未创建 S5 PRD）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t01-s5-prd-plan`，创建 `.plans/phase2-t01-s5-prd-plan.md` 并完成只读门禁审计。当前审计结论：S3 PRD 与 T03/T03A/T03B/T03C/T03D 均已完成，覆盖 Schema、练习生成 API、提交批改、前端闭环、练习历史/归档补强和验证证据；S4 PRD 与 T04/T04A/T04B/T05 均已完成，覆盖错题归档、薄弱点、错因确认/原题重做前端闭环、回流规则和验证证据。S3 Worker 仍未开始，但按当前 SoT 不属于 MVP，且不阻塞“创建 S5 PRD”文档门禁。本轮没有用户明确批准创建 S5 PRD，因此不创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，不更新 `docs/00` 为有效，不实现 T02–T06、Schema/API/Worker/前端，不启动 S7，不回到 T09B–T09E，不运行真实 AI/SMTP/飞书/中转站 smoke。
 
 > **Phase 2-T01 文档完成证据（2026-07-20，已获用户明确批准）**：用户在计划提交后明确要求创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，并同步 `docs/00` 与本文件的 Phase 2-T01 文档完成状态。本轮创建 S5 轻量 PRD，定义模拟考、临考速背、冲刺计划、考前工作台入口、AI/规则边界、概念数据对象、产品表面、验收标准和 T02–T06 独立门禁；同步 `docs/00` 将 S5 PRD 登记为有效文档。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 均通过。未实现 Phase 2-T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke；未读取、输出或持久化真实秘密。
 
