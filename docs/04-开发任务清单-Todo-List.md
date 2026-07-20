@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.56
+**版本**：v1.57
 **日期**：2026-07-20
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。Phase 2-T01 S5 PRD 已在用户明确批准后创建并登记；Phase 2-T02 模拟考 Schema 与生成已完成主线合入、复验并推送，当前下一门禁为 Phase 2-T03 模拟考前端独立计划。S3 Worker 不属于当前 MVP，S5 T03–T06/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。Phase 2-T01 S5 PRD 已在用户明确批准后创建并登记；Phase 2-T02 模拟考 Schema 与生成已完成主线合入、复验并推送。Phase 2-T03 模拟考前端已获用户明确批准，任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已完成分支实现和隔离验证，但尚未合入 `master`；T04–T06、S7 与 S3 Worker 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -770,7 +770,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ---- | ---- | ---- | -------- |
 | 1 | T01：S5 PRD 编写 | ✅ | 已按门禁审计和用户明确批准创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`；仅文档，不含 Schema/API/Worker/前端实现 |
 | 2 | T02：模拟考 Schema 与生成 | ✅ | 已完成并 fast-forward 合入 `master`；功能实现提交 `bb0caf5`，本次状态标记提交 `213ebb9`，均已推送 `origin/master`；AI 根据考试上下文和知识模块生成模拟卷，支持计时尝试、提交批改与模块分析 |
-| 3 | T03：模拟考前端 | 📝 | 行动计划已创建并完成自审，等待用户明确批准；T03 前端实现尚未开始。获批后浏览器可进行模拟考并查看成绩分析 |
+| 3 | T03：模拟考前端 | 🔄 | 用户已于 2026-07-20 明确批准实施；任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已完成模拟考入口、答题、刷新恢复、提交、结果与模块分析前端闭环及隔离验证，尚未合入 `master` |
 | 4 | T04：临考速背 | ⏳ | 按薄弱点和错题生成速背卡片，限时翻阅 |
 | 5 | T05：冲刺计划生成 | ⏳ | 根据考试倒计时和薄弱点自动建议每日复习计划 |
 | 6 | T06：工作台”冲刺”区集成 | ⏳ | 考试前 N 天自动进入冲刺模式，工作台展示冲刺入口 |
@@ -781,7 +781,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ---- | -------- | ------------- |
 | T01 | `.plans/phase2-t01-s5-prd-plan.md` | 已完成：计划已创建并完成门禁审计；用户于 2026-07-20 明确批准创建 S5 PRD；本文档任务已创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` 并同步 `docs/00`。 |
 | T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已完成分支实现、fast-forward 合入 `master` 并完成主线复验；`origin/master` 已推送。 |
-| T03 | `.plans/phase2-t03-s5-mock-exam-frontend-plan.md` | 行动计划已创建并完成自审，等待用户明确批准；T03 前端实现尚未开始。计划基于 `origin/master` 的 T02 API/DTO 契约，只覆盖模拟考入口、答题、提交、结果与模块分析；不实现 T02、T04–T06、S7 或 S3 Worker。 |
+| T03 | `.plans/phase2-t03-s5-mock-exam-frontend-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 基于 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf` 完成分支实现。已验证 T02 API/DTO 消费、入口/答题/提交/结果/模块分析、刷新恢复、失败和重复提交；尚未合入或推送 `origin/master`。不实现 T02、T04–T06、S7 或 S3 Worker。 |
 | T04–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
 
 
@@ -792,6 +792,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **Phase 2-T02 主线完成证据（2026-07-20，已 fast-forward 合入 master 并推送 origin/master）**：任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已 fast-forward 合入 master，当前主线提交 `bb0caf5`。主线复验在 master worktree 通过：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；`pnpm test`（backend 233/233，frontend 94/94）；`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`；`git diff --check`。本轮仅完成 T02；未扩展到 T03–T06、模拟考前端、临考速背、冲刺计划、工作台集成、S3 Worker、S7、真实 AI/QQ SMTP/飞书/中转站/Windows 计划任务 smoke；未读取、输出或持久化真实秘密。
 > **Phase 2-T03 门禁审计与行动计划证据（2026-07-20，计划待用户明确批准）**：已从最新 `origin/master`（`769840ee71ada882c3bcec4fdde6224735272daf`）创建任务分支 `codex/phase2-t03-s5-mock-exam-frontend-plan`，审计确认 S5 PRD 已登记、T01/T02 已进入主线，且 T02 已提供模拟卷生成/详情、尝试创建/详情与提交批改五个 API 及对应学生安全 DTO。已创建并完成自审 `.plans/phase2-t03-s5-mock-exam-frontend-plan.md`，计划只定义未来的模拟考入口、答题、刷新恢复、提交、结果和模块分析前端闭环，以及测试和隔离浏览器验收；未发现用户明确批准进入 T03 前端实现。当前仅允许计划任务，T03 React 页面、路由、Hook、API 客户端、测试业务代码、后端、Schema、Worker、T04–T06、S7 和 S3 Worker 均未开始；未读取、输出或持久化真实秘密，未运行真实 AI、QQ SMTP、飞书、中转站、Windows 计划任务或其他外部 smoke。
+> **Phase 2-T03 分支实施证据（2026-07-20，尚未合入主线）**：用户已明确批准进入 T03 前端实施。任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 基于 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf`，只修改 `packages/frontend`、`e2e/mock-exam.spec.ts` 与本文件：新增模拟考入口、模拟卷详情、作答、结果和模块分析页面，注册当前学期守卫路由并在考试上下文导航加入“模拟考”；仅消费 T02 的模拟卷/尝试/提交 DTO 和五个既有 API。作答前不渲染正确答案或解析；结果页同时要求服务端尝试状态与本次提交结果均为 `graded`；草稿仅以 `semesterId + attemptId` 保存在 sessionStorage；重复确认通过同步锁防止重复提交，`409 MOCK_EXAM_ATTEMPT_STATE_INVALID` 后重取尝试并锁定已提交状态。验证（退出码均为 0）：局部路由/T03 Vitest 31 项通过、`pnpm type-check`、`pnpm -r --filter @ai-studybuddy/frontend run build`、前端测试 118 项通过、隔离 `APP_DATA_ROOT` 的 `pnpm test`（前端 118 项、后端 233 项通过），以及本地 Chrome/Vite Playwright `e2e/mock-exam.spec.ts` 3 项通过，覆盖确认/未确认入口、生成、作答、刷新恢复、失败、重复提交/已提交、结果与模块分析、宽窄屏。未修改后端、Schema、DTO、Service、Worker、T04–T06、S7 或 S3 Worker；未读取或持久化真实秘密，未运行真实 AI、QQ SMTP、飞书、中转站、Windows 计划任务或其他外部 smoke。独立审查已完成，并已通过新增回归测试修复刷新后计时恢复、完成态清除答案/计时但保留合法结果缓存、以及开始尝试覆盖残留草稿的问题；仍须完成本轮最终文档治理、diff 检查、提交与任务分支推送。在完成规定快进合入与主线复验前，不得将 T03 称为 `master` 完成。
 ---
 
 ## Phase 3：打磨与安全

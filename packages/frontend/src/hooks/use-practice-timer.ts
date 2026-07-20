@@ -5,6 +5,7 @@ interface UsePracticeTimerOptions {
   initialTotalSeconds: number;
   initialQuestionSeconds: Record<string, number>;
   timeLimitSeconds: number | null;
+  restoreKey?: string | null;
 }
 
 export interface PracticeTimerState {
@@ -19,11 +20,19 @@ export function usePracticeTimer({
   initialTotalSeconds,
   initialQuestionSeconds,
   timeLimitSeconds,
+  restoreKey,
 }: UsePracticeTimerOptions): PracticeTimerState {
   const [totalDurationSeconds, setTotalDurationSeconds] = useState(initialTotalSeconds);
   const [questionSeconds, setQuestionSeconds] = useState(initialQuestionSeconds);
   const lastTickRef = useRef<number | null>(null);
   const activeQuestionRef = useRef(activeQuestionId);
+
+  useEffect(() => {
+    if (!restoreKey) return;
+    setTotalDurationSeconds(initialTotalSeconds);
+    setQuestionSeconds(initialQuestionSeconds);
+    lastTickRef.current = performance.now();
+  }, [restoreKey]);
 
   useEffect(() => {
     activeQuestionRef.current = activeQuestionId;

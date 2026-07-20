@@ -172,3 +172,28 @@ describe('App current semester shell', () => {
     expect(mocks.semesterPageProps.at(-1)?.current?.id).toBe(currentSemester.id);
   });
 });
+
+vi.mock('../src/pages/mock-exam-start-page', () => ({
+  default: ({ semesterId }: { semesterId: string }) => <div>模拟考入口 semester={semesterId}</div>,
+}));
+vi.mock('../src/pages/mock-exam-paper-page', () => ({
+  default: ({ semesterId }: { semesterId: string }) => <div>模拟卷详情 semester={semesterId}</div>,
+}));
+vi.mock('../src/pages/mock-exam-session-page', () => ({
+  default: ({ semesterId }: { semesterId: string }) => <div>模拟考作答 semester={semesterId}</div>,
+}));
+vi.mock('../src/pages/mock-exam-result-page', () => ({
+  default: ({ semesterId }: { semesterId: string }) => <div>模拟考结果 semester={semesterId}</div>,
+}));
+
+describe('App mock-exam routes', () => {
+  it.each([
+    ['/exams/exam-1/mock-exam', '模拟考入口'],
+    ['/mock-exam-papers/paper-1', '模拟卷详情'],
+    ['/mock-exam-attempts/attempt-1', '模拟考作答'],
+    ['/mock-exam-attempts/attempt-1/result', '模拟考结果'],
+  ])('passes the current semester to %s', async (path, pageLabel) => {
+    await renderApp(path);
+    expect(container.textContent).toContain(`${pageLabel} semester=${currentSemester.id}`);
+  });
+});

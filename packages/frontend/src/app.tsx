@@ -13,6 +13,10 @@ import { SemesterPage } from './pages/semester-page';
 const NotePage = lazy(() => import('./pages/note-page'));
 const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
 const PracticeStartPage = lazy(() => import('./pages/practice-start-page'));
+const MockExamStartPage = lazy(() => import('./pages/mock-exam-start-page'));
+const MockExamPaperPage = lazy(() => import('./pages/mock-exam-paper-page'));
+const MockExamSessionPage = lazy(() => import('./pages/mock-exam-session-page'));
+const MockExamResultPage = lazy(() => import('./pages/mock-exam-result-page'));
 const PracticeSessionPage = lazy(() => import('./pages/practice-session-page'));
 const PracticeResultPage = lazy(() => import('./pages/practice-result-page'));
 const PracticeHistoryPage = lazy(() => import('./pages/practice-history-page'));
@@ -230,6 +234,58 @@ export function App() {
                 (activeSemesterId) => (
                   <Suspense fallback={<PageState state="loading" title="正在加载练习发起页" />}>
                     <PracticeStartPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
+                  </Suspense>
+                ),
+                '正在恢复当前学期'
+              )
+            }
+          />
+          <Route
+            path="/exams/:examId/mock-exam"
+            element={
+              renderSemesterRoute(
+                (activeSemesterId) => (
+                  <Suspense fallback={<PageState state="loading" title="正在加载模拟考入口" />}>
+                    <MockExamStartPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
+                  </Suspense>
+                ),
+                '正在恢复当前学期'
+              )
+            }
+          />
+          <Route
+            path="/mock-exam-papers/:paperId"
+            element={
+              renderSemesterRoute(
+                (activeSemesterId) => (
+                  <Suspense fallback={<PageState state="loading" title="正在加载模拟卷" />}>
+                    <MockExamPaperPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
+                  </Suspense>
+                ),
+                '正在恢复当前学期'
+              )
+            }
+          />
+          <Route
+            path="/mock-exam-attempts/:attemptId"
+            element={
+              renderSemesterRoute(
+                (activeSemesterId) => (
+                  <Suspense fallback={<PageState state="loading" title="正在加载模拟考作答" />}>
+                    <MockExamSessionPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
+                  </Suspense>
+                ),
+                '正在恢复当前学期'
+              )
+            }
+          />
+          <Route
+            path="/mock-exam-attempts/:attemptId/result"
+            element={
+              renderSemesterRoute(
+                (activeSemesterId) => (
+                  <Suspense fallback={<PageState state="loading" title="正在加载模拟考结果" />}>
+                    <MockExamResultPage semesterId={activeSemesterId} />
                   </Suspense>
                 ),
                 '正在恢复当前学期'

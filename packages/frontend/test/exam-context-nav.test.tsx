@@ -43,6 +43,7 @@ describe('ExamContextNav', () => {
       ['总览', '/exams/exam-1'],
       ['资料', '/materials?courseInstanceId=course-1'],
       ['练习', '/exams/exam-1/practice'],
+      ['模拟考', '/exams/exam-1/mock-exam'],
       ['错题', '/exams/exam-1/mistakes'],
       ['时间线', '/exams/exam-1#recent-study-activity'],
     ] as const) {
@@ -52,10 +53,10 @@ describe('ExamContextNav', () => {
     }
   });
 
-  it('marks the active exam journey entry', () => {
-    renderContextNav('mistakes');
+  it('marks the active mock-exam entry', () => {
+    renderContextNav('mock_exam');
 
-    const mistakes = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '错题');
-    expect(mistakes?.getAttribute('aria-current')).toBe('page');
+    const mockExam = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '模拟考');
+    expect(mockExam?.getAttribute('aria-current')).toBe('page');
   });
 });
