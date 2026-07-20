@@ -780,12 +780,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
 | T01 | `.plans/phase2-t01-s5-prd-plan.md` | 已完成：计划已创建并完成门禁审计；用户于 2026-07-20 明确批准创建 S5 PRD；本文档任务已创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` 并同步 `docs/00`。 |
-| T02–T06 | 尚未创建 | 等待 Phase 2-T02 起逐项创建独立计划、独立审查并获用户明确批准；当前未启动。 |
+| T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 计划已创建：已完成门禁审计与行动计划登记；待独立审查与用户明确批准；未实现。 |
+| T03–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
 
 > **Phase 2-T01 计划门禁（2026-07-20，计划待批，未创建 S5 PRD）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t01-s5-prd-plan`，创建 `.plans/phase2-t01-s5-prd-plan.md` 并完成只读门禁审计。当前审计结论：S3 PRD 与 T03/T03A/T03B/T03C/T03D 均已完成，覆盖 Schema、练习生成 API、提交批改、前端闭环、练习历史/归档补强和验证证据；S4 PRD 与 T04/T04A/T04B/T05 均已完成，覆盖错题归档、薄弱点、错因确认/原题重做前端闭环、回流规则和验证证据。S3 Worker 仍未开始，但按当前 SoT 不属于 MVP，且不阻塞“创建 S5 PRD”文档门禁。本轮没有用户明确批准创建 S5 PRD，因此不创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，不更新 `docs/00` 为有效，不实现 T02–T06、Schema/API/Worker/前端，不启动 S7，不回到 T09B–T09E，不运行真实 AI/SMTP/飞书/中转站 smoke。
 
 > **Phase 2-T01 文档完成证据（2026-07-20，已获用户明确批准）**：用户在计划提交后明确要求创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，并同步 `docs/00` 与本文件的 Phase 2-T01 文档完成状态。本轮创建 S5 轻量 PRD，定义模拟考、临考速背、冲刺计划、考前工作台入口、AI/规则边界、概念数据对象、产品表面、验收标准和 T02–T06 独立门禁；同步 `docs/00` 将 S5 PRD 登记为有效文档。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 均通过。未实现 Phase 2-T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke；未读取、输出或持久化真实秘密。
 
+
+> **Phase 2-T02 门禁审计与行动计划证据（2026-07-20，计划已创建/待审查/待用户批准）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t02-s5-mock-exam-schema`，确认 S5 PRD 已存在，且 S3/S4 稳定运行门禁仍有效；当前仅登记 `.plans/phase2-t02-s5-mock-exam-schema-plan.md`。本轮只覆盖模拟卷、模拟考尝试、成绩统计、模块分析的概念边界、考试范围/知识模块/错题与薄弱点/考试上下文输入依赖、S3/S4 只读复用、隐私和真实 Provider 边界，以及与 T03–T06 的责任切分。未实现 T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未回到 T09B–T09E；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke。用户尚未批准 T02 业务实现，批准前停止。验证：待本分支提交前登记 `scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 退出码。
 ---
 
 ## Phase 3：打磨与安全
