@@ -14,7 +14,7 @@
 
 > **Phase 1-M03 设置中心配置可观测性与安全摘要（已合入并推送）**：方案 A 已在隔离任务分支 `codex/phase1-m03-settings-configuration-observability` 完成实现、主线集成与复验：环境 fallback 安全登记为“环境配置（待验证）”，AI/SMTP/飞书首屏展示白名单式脱敏摘要，已保存秘密始终不可回显且不进入浏览器存储；AI HTTP 429 与常见 SMTP 传输失败映射为固定、可行动且不泄密的错误码。隔离验证通过 type-check、后端/前端 build、全量测试（后端 227、前端 93）和真实本地 Express/SQLite 全量 Playwright（14）；仅保留既有 KaTeX chunk-size 非阻塞 warning。实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa` 已进入 `origin/master`；未读取、输出或持久化任何真实秘密，未自动触发 AI、QQ SMTP 或飞书外部请求。
 
-> **DOCS-20260720 系统文档当前状态同步（分支验证通过，待主线合入复验）**：用户明确要求将仍停留在 T09A/T09E 旧门禁和 M03/Post-M03 待推送状态的系统文档同步到当前 Git 事实。任务分支 `codex/system-docs-current-status-sync` 仅修订入口规范、文档索引、任务清单、共同架构、子系统状态与前端路由事实，不改业务代码，不创建或实施新的业务任务。分支验证已通过：定向当前态搜索无误报、`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 与 `git diff --check`。
+> **DOCS-20260720 系统文档当前状态同步（已完成）**：用户明确要求将仍停留在 T09A/T09E 旧门禁和 M03/Post-M03 待推送状态的系统文档同步到当前 Git 事实。任务分支 `codex/system-docs-current-status-sync` 仅修订入口规范、文档索引、任务清单、共同架构、子系统状态与前端路由事实，不改业务代码，不创建或实施新的业务任务；任务分支提交 `b9fb3e8` 已 fast-forward 合入 `master`，主线复验通过，并随本收尾提交推送 `origin/master`。
 ---
 
 ## 阶段总览
@@ -486,7 +486,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 26 | Phase 1-M02：错题详情一级标题语义回归修复 | ✅ | 方案 A 已 fast-forward 合入 master、完成主线全量复验并推送 origin/master；仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。实现提交 80ea2ab，验证证据 6c5df0，主线复验登记 6aa088e。 |
 | 27 | Phase 1-M03：设置中心配置可观测性与安全摘要 | ✅ | 已 fast-forward 合入并随主线收尾推送 `origin/master`；环境 fallback 显示安全摘要/待验证状态，秘密永不由后端回显。 |
 | 28 | Post-M03：配置来源审计与设置页敏感输入显隐 | ✅ | 实现提交 `e08ab36` 与主线收尾提交 `eac469b` 已进入 `origin/master`；分支与主线均通过 type-check、前后端 build、前端 94/94、后端 228/228、Playwright 14/14、文档治理及 diff 检查。浏览器证据保存在仓库外；全程未读取真实秘密、未运行外部调用。 |
-| 29 | DOCS-20260720：系统文档当前状态同步 | 🔄 | 已从最新 `origin/master` 建立独立任务分支，按 Git 历史同步 T09A–T09E、T12、M01–M03、Post-M03 与前端路由事实；分支验证通过，完成判定等待 fast-forward 主线集成、主线复验和 `origin/master` 推送。 |
+| 29 | DOCS-20260720：系统文档当前状态同步 | ✅ | 已从最新 `origin/master` 建立独立任务分支，按 Git 历史同步 T09A–T09E、T12、M01–M03、Post-M03 与前端路由事实；任务分支提交 `b9fb3e8` 已 fast-forward 合入 `master`，主线复验通过，并随本收尾提交推送 `origin/master`。 |
 
 > **执行纪律**：上表中的每一行是单一责任的工作包，不因列入路线图自动获得实施授权。未完成行开始前都必须有对应 `.plans/` 文件、独立审查和用户明确批准；下方复选项是该工作包的可验收责任，不可用来跳过门禁。
 
@@ -506,7 +506,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | M02 | .plans/phase1-m02-mistake-detail-heading-regression-plan.md | 已完成独立审查、任务分支提交、fast-forward 主线集成、主线全量复验与 origin/master 推送；仅恢复错题详情页面的可见一级标题语义并添加前端/E2E 回归验证。 |
 | M03 | .plans/phase1-m03-settings-configuration-observability-plan.md | 方案 A 已获用户批准；已完成实现、主线集成、主线复验并推送 `origin/master`。 |
 | Post-M03 | `.plans/post-m03-config-audit-plan.md` | 已完成：用户于 2026-07-20 明确批准；实现提交 `e08ab36`、主线收尾提交 `eac469b` 已进入 `origin/master`，分支与主线全量验证、浏览器验收和独立审查修复均已完成。 |
-| DOCS-20260720 | `.plans/process-system-docs-current-status-sync-plan.md` | 用户已明确要求实施；任务分支 `codex/system-docs-current-status-sync` 已按 Git 历史事实同步系统文档并通过分支验证，等待主线集成、主线复验和远端推送。 |
+| DOCS-20260720 | `.plans/process-system-docs-current-status-sync-plan.md` | 已完成：任务分支 `codex/system-docs-current-status-sync` 的文档同步提交 `b9fb3e8` 已 fast-forward 合入 `master`；主线复验通过，并随本收尾提交推送 `origin/master`。 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
