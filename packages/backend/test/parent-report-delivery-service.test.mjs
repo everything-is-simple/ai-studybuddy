@@ -245,7 +245,7 @@ test('T06B migration 从真实 v6 形态补齐缺失的快照与投递表及恢�
       INSERT INTO schema_migrations(scope, version, applied_at) VALUES ('semester', 6, '2026-06-01T00:00:00.000Z');
     `);
     migrateSemesterDb(db);
-    assert.equal(getAppliedVersion(db, 'semester'), 8);
+    assert.equal(getAppliedVersion(db, 'semester'), 9);
     assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'parent_reports'").get());
     const columns = db.pragma('table_info(report_deliveries)').map((column) => column.name);
     for (const column of ['report_key', 'channel', 'status', 'sent_at', 'error_summary', 'attempt_count', 'last_attempt_at', 'next_retry_at', 'updated_at', 'lease_expires_at', 'created_at']) assert.ok(columns.includes(column));

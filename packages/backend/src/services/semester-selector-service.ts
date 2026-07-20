@@ -25,7 +25,7 @@ import type {
 } from '@ai-studybuddy/shared';
 
 const CURRENT_SEMESTER_KEY = 'current_semester_id';
-const CURRENT_SEMESTER_VERSION = 8;
+const CURRENT_SEMESTER_VERSION = 9;
 const PREVIEW_TTL_MS = 15 * 60 * 1000;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_IMAGE_PIXELS = 24_000_000;

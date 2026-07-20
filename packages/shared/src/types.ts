@@ -524,6 +524,126 @@ export interface SubmitPracticeSessionResponse {
 }
 
 // ============================================================
+// S5 ExamCrammer T02 公开 API DTO
+// 模拟卷与模拟考独立于 S3 练习历史；作答前 DTO 不泄露答案与解析。
+// ============================================================
+
+export type MockExamDifficultyPreference = PracticeDifficultyPreference;
+export type MockExamPaperStatus = 'generated' | 'retired';
+export type MockExamAttemptStatus = 'in_progress' | 'submitted' | 'graded';
+
+export interface CreateMockExamPaperRequest {
+  semesterId: string;
+  courseInstanceId: string;
+  assessmentAttemptId: string;
+  knowledgeModuleIds?: string[] | null;
+  questionCount?: number;
+  difficultyPreference?: MockExamDifficultyPreference;
+  timeLimitSeconds?: number | null;
+}
+
+export interface MockExamQuestionForStudentDto {
+  id: string;
+  type: PracticeQuestionType;
+  stem: string;
+  options?: string[];
+  difficulty: PracticeDifficulty;
+  knowledgeModuleId: string;
+  questionOrder: number;
+  pointValue: number;
+}
+
+export interface MockExamPaperDetailDto {
+  id: string;
+  courseInstanceId: string;
+  assessmentAttemptId: string;
+  status: MockExamPaperStatus;
+  title: string;
+  questionCount: number;
+  timeLimitSeconds: number;
+  totalPoints: number;
+  difficultyPreference: MockExamDifficultyPreference;
+  sourceSummary: {
+    moduleCount: number;
+    weakPointCount: number;
+    activeMistakeCount: number;
+    assessmentName?: string | null;
+  };
+  generatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  questions: MockExamQuestionForStudentDto[];
+}
+
+export interface StartMockExamAttemptRequest {
+  semesterId: string;
+}
+
+export interface MockExamAttemptDetailDto {
+  id: string;
+  paperId: string;
+  courseInstanceId: string;
+  assessmentAttemptId: string;
+  status: MockExamAttemptStatus;
+  startedAt: string;
+  submittedAt?: string | null;
+  gradedAt?: string | null;
+  totalScore?: number | null;
+  totalPoints: number;
+  correctRate?: number | null;
+  overtime: boolean;
+  totalDurationSeconds?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  questions: MockExamQuestionForStudentDto[];
+}
+
+export interface SubmitMockExamAnswerInputDto {
+  questionId: string;
+  answer?: string | null;
+  timeSpentSeconds?: number | null;
+}
+
+export interface SubmitMockExamAttemptRequest {
+  semesterId: string;
+  answers: SubmitMockExamAnswerInputDto[];
+  totalDurationSeconds: number;
+}
+
+export interface MockExamAnswerResultDto {
+  questionId: string;
+  studentAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+  scoreAwarded: number;
+  pointValue: number;
+  explanation?: string | null;
+  knowledgeModuleId: string;
+}
+
+export interface MockExamModuleAnalysisDto {
+  knowledgeModuleId: string;
+  questionCount: number;
+  correctCount: number;
+  scoreAwarded: number;
+  totalPoints: number;
+  correctRate: number;
+  weakSignal: boolean;
+}
+
+export interface SubmitMockExamAttemptResponse {
+  attemptId: string;
+  status: 'graded';
+  totalScore: number;
+  totalPoints: number;
+  questionCount: number;
+  correctRate: number;
+  overtime: boolean;
+  totalDurationSeconds: number;
+  answers: MockExamAnswerResultDto[];
+  moduleAnalyses: MockExamModuleAnalysisDto[];
+}
+
 // S4 ErrorFixer 公开 API DTO（Phase 1-T04B）
 // 错题详情允许展示已批改事实（正确答案/解析）；
 // 重做作答前仍走 S3 作答前 DTO，不泄露答案。

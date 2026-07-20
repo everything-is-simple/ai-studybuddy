@@ -8,6 +8,7 @@ import dailyStudyHomeRouter from './api/daily-study-home';
 import errorFixerRouter from './api/error-fixer';
 import noteBuilderRouter from './api/note-builder';
 import practiceRunnerRouter from './api/practice-runner';
+import examCrammerRouter from './api/exam-crammer';
 import { createSemesterSelectorRouter } from './api/semester-selector';
 import studyRhythmRouter from './api/study-rhythm';
 import type { ConfigurationService } from './config/configuration-service';
@@ -42,6 +43,7 @@ export function createApp(options: {
   app.use('/api', dailyStudyHomeRouter);
   app.use('/api', noteBuilderRouter);
   app.use('/api', practiceRunnerRouter);
+  app.use('/api', examCrammerRouter);
   app.use('/api', errorFixerRouter);
   return app;
 }

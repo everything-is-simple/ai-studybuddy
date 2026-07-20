@@ -769,7 +769,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
 | 1 | T01：S5 PRD 编写 | ✅ | 已按门禁审计和用户明确批准创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`；仅文档，不含 Schema/API/Worker/前端实现 |
-| 2 | T02：模拟考 Schema 与生成 | ⏳ | AI 根据全部知识模块生成模拟卷，计时作答与批改 |
+| 2 | T02：模拟考 Schema 与生成 | ⏳ | 分支实现已验证：AI 根据考试上下文和知识模块生成模拟卷，支持计时尝试、提交批改与模块分析；待合入 `master` 后才可标记主线完成 |
 | 3 | T03：模拟考前端 | ⏳ | 浏览器可进行模拟考，查看成绩分析 |
 | 4 | T04：临考速背 | ⏳ | 按薄弱点和错题生成速背卡片，限时翻阅 |
 | 5 | T05：冲刺计划生成 | ⏳ | 根据考试倒计时和薄弱点自动建议每日复习计划 |
@@ -780,7 +780,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
 | T01 | `.plans/phase2-t01-s5-prd-plan.md` | 已完成：计划已创建并完成门禁审计；用户于 2026-07-20 明确批准创建 S5 PRD；本文档任务已创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` 并同步 `docs/00`。 |
-| T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 计划已创建：已完成门禁审计与行动计划登记；待独立审查与用户明确批准；未实现。 |
+| T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已完成分支实现与本地验证；待合并 `master` 并完成主线复验后才可标记主线完成。 |
 | T03–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
 
 > **Phase 2-T01 计划门禁（2026-07-20，计划待批，未创建 S5 PRD）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t01-s5-prd-plan`，创建 `.plans/phase2-t01-s5-prd-plan.md` 并完成只读门禁审计。当前审计结论：S3 PRD 与 T03/T03A/T03B/T03C/T03D 均已完成，覆盖 Schema、练习生成 API、提交批改、前端闭环、练习历史/归档补强和验证证据；S4 PRD 与 T04/T04A/T04B/T05 均已完成，覆盖错题归档、薄弱点、错因确认/原题重做前端闭环、回流规则和验证证据。S3 Worker 仍未开始，但按当前 SoT 不属于 MVP，且不阻塞“创建 S5 PRD”文档门禁。本轮没有用户明确批准创建 S5 PRD，因此不创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，不更新 `docs/00` 为有效，不实现 T02–T06、Schema/API/Worker/前端，不启动 S7，不回到 T09B–T09E，不运行真实 AI/SMTP/飞书/中转站 smoke。
@@ -788,7 +788,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 2-T01 文档完成证据（2026-07-20，已获用户明确批准）**：用户在计划提交后明确要求创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，并同步 `docs/00` 与本文件的 Phase 2-T01 文档完成状态。本轮创建 S5 轻量 PRD，定义模拟考、临考速背、冲刺计划、考前工作台入口、AI/规则边界、概念数据对象、产品表面、验收标准和 T02–T06 独立门禁；同步 `docs/00` 将 S5 PRD 登记为有效文档。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 均通过。未实现 Phase 2-T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke；未读取、输出或持久化真实秘密。
 
 
-> **Phase 2-T02 门禁审计与行动计划证据（2026-07-20，计划已创建/待审查/待用户批准）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t02-s5-mock-exam-schema`，确认 S5 PRD 已存在，且 S3/S4 稳定运行门禁仍有效；当前仅登记 `.plans/phase2-t02-s5-mock-exam-schema-plan.md`。本轮只覆盖模拟卷、模拟考尝试、成绩统计、模块分析的概念边界、考试范围/知识模块/错题与薄弱点/考试上下文输入依赖、S3/S4 只读复用、隐私和真实 Provider 边界，以及与 T03–T06 的责任切分。未实现 T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未回到 T09B–T09E；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke。用户尚未批准 T02 业务实现，批准前停止。验证：待本分支提交前登记 `scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 退出码。
+> **Phase 2-T02 门禁审计与行动计划证据（2026-07-20，计划已创建并获批）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t02-s5-mock-exam-schema`，确认 S5 PRD 已存在，且 S3/S4 稳定运行门禁仍有效；已登记 `.plans/phase2-t02-s5-mock-exam-schema-plan.md`。本计划覆盖模拟卷、模拟考尝试、成绩统计、模块分析的概念边界、考试范围/知识模块/错题与薄弱点/考试上下文输入依赖、S3/S4 只读复用、隐私和真实 Provider 边界，以及与 T03–T06 的责任切分。用户已于 2026-07-20 明确批准进入 T02 业务实现；执行期间用户要求所有长命令/关键命令前必须说明当前步骤和目的，本分支已同步到 `AGENTS.md` 与 `docs/12-开发规范-Dev-Rules.md`。
+
+> **Phase 2-T02 分支实现证据（2026-07-20，待合并 master）**：本分支实现 S5 模拟考 Schema 与生成的后端/共享底座能力：新增 semester v9 migration，定义 `mock_exam_papers`、`mock_exam_questions`、`mock_exam_attempts`、`mock_exam_answers`、`mock_exam_module_analyses` 及跨课程/考试/模块一致性约束；新增共享 DTO、模拟卷生成服务、模拟卷/尝试/提交 API，并以隔离学期库集成 confirmed 考试上下文、知识模块、S3/S4 摘要事实和 AI Router。模拟考提交采用确定性客观题批改，写入 S5 `study_events` 与模块分析，不反写 S3/S4 的 `mistakes`、`weak_points` 或历史作答事实。验证已通过：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；`node --test --test-concurrency=1 test/mock-exam-schema.test.mjs test/mock-exam-api.test.mjs`（5/5 通过）；`node --test --test-concurrency=1 test/semester-initialization.test.mjs test/practice-schema.test.mjs test/error-fixer-schema.test.mjs test/mock-exam-schema.test.mjs test/mock-exam-api.test.mjs`（26/26 通过）；`node --test --test-concurrency=1 test/parent-report-delivery-service.test.mjs`（7/7 通过）；修复本机端口碰撞后 `node --test --test-concurrency=1 test/practice-submit-api.test.mjs`（4/4 通过）；`pnpm test`（frontend 20 files/94 tests 通过，backend 233/233 通过）。本轮未实现 T03–T06、模拟考前端、临考速背、冲刺计划、工作台集成、S3 Worker、S7、真实 AI/QQ SMTP/飞书/中转站/Windows 计划任务 smoke；未读取、输出或持久化真实秘密。`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 通过；`git diff --check` 通过（仅提示 `packages/shared/src/types.ts` 工作区 CRLF 转换 warning，不影响退出码）。
 ---
 
 ## Phase 3：打磨与安全

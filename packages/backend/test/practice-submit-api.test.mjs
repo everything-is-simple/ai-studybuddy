@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -10,11 +11,23 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const Database = require('better-sqlite3');
 const backendDir = path.resolve(import.meta.dirname, '..');
-let nextBackendPort = 58000;
+
+async function getFreePort() {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  const port = typeof address === 'object' && address ? address.port : undefined;
+  await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  if (!port) throw new Error('failed to allocate a free backend port');
+  return port;
+}
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t03c-api-'));
-  const port = nextBackendPort++;
+  const port = await getFreePort();
   const child = spawn(process.execPath, ['dist/server.js'], {
     cwd: backendDir,
     env: {
