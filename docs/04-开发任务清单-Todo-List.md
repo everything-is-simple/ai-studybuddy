@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.55
+**版本**：v1.56
 **日期**：2026-07-20
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。当前没有新的已批准业务实施任务；S3 Worker 不属于当前 MVP，S5/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。Phase 2-T01 S5 PRD 已在用户明确批准后创建并登记；当前没有新的已批准业务实施任务，下一门禁为 Phase 2-T02 模拟考 Schema 与生成独立计划。S3 Worker 不属于当前 MVP，S5 T02–T06/S7 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -764,11 +764,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：模拟考 + 临考速背 + 冲刺计划；Phase 1 可以借鉴信息架构，但不提前实现。
 
-**前置条件**：Phase 1 中 S3 练习 + S4 错题稳定运行；S5 PRD 尚未创建，必须先由 T01 在门禁满足并获批后创建。
+**前置条件**：Phase 1 中 S3 练习 + S4 错题稳定运行；T01 已在门禁满足并获用户明确批准后创建 S5 PRD。后续 T02–T06 必须分别创建独立计划、完成审查并获批后才能实施。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
-| 1 | T01：S5 PRD 编写 | 📝 | 计划已创建，等待审查和用户明确批准后再创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` |
+| 1 | T01：S5 PRD 编写 | ✅ | 已按门禁审计和用户明确批准创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`；仅文档，不含 Schema/API/Worker/前端实现 |
 | 2 | T02：模拟考 Schema 与生成 | ⏳ | AI 根据全部知识模块生成模拟卷，计时作答与批改 |
 | 3 | T03：模拟考前端 | ⏳ | 浏览器可进行模拟考，查看成绩分析 |
 | 4 | T04：临考速背 | ⏳ | 按薄弱点和错题生成速背卡片，限时翻阅 |
@@ -779,10 +779,12 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
-| T01 | `.plans/phase2-t01-s5-prd-plan.md` | 计划已创建，待审查和用户明确批准；本轮仅完成 S3/S4 稳定运行门禁审计与 S5 PRD 创建计划，未创建 S5 PRD，未启动 T02–T06。 |
-| T02–T06 | 尚未创建 | 等待 T01 S5 PRD 创建并完成后，再按单一责任逐项创建独立计划；当前未启动。 |
+| T01 | `.plans/phase2-t01-s5-prd-plan.md` | 已完成：计划已创建并完成门禁审计；用户于 2026-07-20 明确批准创建 S5 PRD；本文档任务已创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` 并同步 `docs/00`。 |
+| T02–T06 | 尚未创建 | 等待 Phase 2-T02 起逐项创建独立计划、独立审查并获用户明确批准；当前未启动。 |
 
 > **Phase 2-T01 计划门禁（2026-07-20，计划待批，未创建 S5 PRD）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t01-s5-prd-plan`，创建 `.plans/phase2-t01-s5-prd-plan.md` 并完成只读门禁审计。当前审计结论：S3 PRD 与 T03/T03A/T03B/T03C/T03D 均已完成，覆盖 Schema、练习生成 API、提交批改、前端闭环、练习历史/归档补强和验证证据；S4 PRD 与 T04/T04A/T04B/T05 均已完成，覆盖错题归档、薄弱点、错因确认/原题重做前端闭环、回流规则和验证证据。S3 Worker 仍未开始，但按当前 SoT 不属于 MVP，且不阻塞“创建 S5 PRD”文档门禁。本轮没有用户明确批准创建 S5 PRD，因此不创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，不更新 `docs/00` 为有效，不实现 T02–T06、Schema/API/Worker/前端，不启动 S7，不回到 T09B–T09E，不运行真实 AI/SMTP/飞书/中转站 smoke。
+
+> **Phase 2-T01 文档完成证据（2026-07-20，已获用户明确批准）**：用户在计划提交后明确要求创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，并同步 `docs/00` 与本文件的 Phase 2-T01 文档完成状态。本轮创建 S5 轻量 PRD，定义模拟考、临考速背、冲刺计划、考前工作台入口、AI/规则边界、概念数据对象、产品表面、验收标准和 T02–T06 独立门禁；同步 `docs/00` 将 S5 PRD 登记为有效文档。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 均通过。未实现 Phase 2-T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke；未读取、输出或持久化真实秘密。
 
 ---
 
