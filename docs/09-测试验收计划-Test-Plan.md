@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.13
+**版本**：v1.14
 **日期**：2026-07-21
-**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1、Phase 2 与 POST-PHASE2 分支/主线全量自动化和完整 E2E 均已完成
+**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1、Phase 2 与 POST-PHASE2 已完成；Phase 1.5-T02 ASR composer smoke 已完成、结论 `PARTIAL`
 **用途**：定义组件验证、Windows 单机业务闭环、全量自动化、完整浏览器 E2E 与实机/外部渠道证据标准。
 
 ---
@@ -208,7 +208,26 @@ T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新
 
 ---
 
-## 十、文档治理检查
+## 十、Phase 1.5-T02 S7 ASR Composer Smoke
+
+| 验收项 | 实际证据 | 结果 |
+| ------ | -------- | ---- |
+| Windows CPU 安装与加载 | Python 3.10.19 独立 `.venv`；FunASR 1.3.22；torch/torchaudio 2.11.0+cpu；本地 SenseVoiceSmall | ✅ |
+| 官方来源与许可 | ModelScope 官方 `iic/SenseVoiceSmall`；API 与下载 README 均为 Apache License 2.0；FunASR MIT | ⚠️ 模型只有 `master`，无 immutable revision；逐文件哈希补强 |
+| 安全样例 | 本机 SAPI 合成中文/中英混合；程序生成静音、轻噪声、损坏 WAV 与非 WAV；无学生数据 | ✅ |
+| 正向短音频 | 两个语音样例各 3/3 非空、短哈希稳定；RTF 约 0.146–0.188 | ⚠️ 存在可见识别替换，不代表课堂准确率 |
+| 无语音/噪声 | 静音和轻噪声各 3/3 产生同一短误识别 | ❌ no-speech 门禁未关闭 |
+| 稳定错误 | 损坏 WAV → `AUDIO_DECODE_FAILED`；非 WAV → `AUDIO_FORMAT_UNSUPPORTED` | ✅ |
+| 结果契约 | 离线批次 14/14 通过 Draft 2020-12 JSON Schema；完整转写不进主仓库 | ✅ |
+| 性能资源 | 模型加载 3,342 ms；总进程 28,056 ms；峰值工作集约 3,125.5 MiB；CPU 64.109 s | ⚠️ 仅短音频开发机事实，16GB/长音频须重测 |
+| 离线与清理 | 显式本地模型 + offline 环境变量成功；100 ms 轮询无 TCP；退出后无候选 Python 残留 | ⚠️ 未做防火墙隔离，证据为辅助级 |
+| 执行边界 | 未修改 `packages/`，未执行 FFmpeg，未实现 Adapter/API/Worker/前端 | ✅ |
+
+**总判定：`PARTIAL`。** T02 执行完成并证明 Windows CPU 本地 ASR 的基本技术可行性；静音/轻噪声 false positive、immutable revision、离线证明强度、一次性 pip cache 偏差和首次树清单缺口阻止完整 `PASS`。下一步只能创建并审查 T03 FFmpeg 音频预处理计划；T04 产品装配前必须重验 no-speech、模型版本、许可/再分发、资源和课堂近似样例。
+
+---
+
+## 十一、文档治理检查
 
 每轮证据回填后运行：
 
@@ -217,4 +236,4 @@ powershell -ExecutionPolicy Bypass -File scripts\check-docs-governance.ps1
 git diff --check
 ```
 
-Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 0.8 T04A composer 试炼场证据与 T05 正式 AI Router 验收已同步回 `docs/04-*`、`docs/05-*`、`docs/08-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
+Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 1.5-T02 的 `PARTIAL` ASR 证据已同步回 `docs/04-*`、`docs/08-*`、composer README 与能力卡；不得将该结论描述为 S7 或 `AuralConverter` 已完成。Phase 0.8 T04A composer 试炼场证据与 T05 正式 AI Router 验收已同步回 `docs/04-*`、`docs/05-*`、`docs/08-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。

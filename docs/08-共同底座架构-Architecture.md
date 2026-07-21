@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.18
+**版本**：v1.19
 **日期**：2026-07-21
-**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 全系统验证/文档收口均已完成并推送；Phase 3 暂缓
+**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5-T02 ASR composer smoke 已完成、结论 `PARTIAL`；Phase 3 暂缓
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
@@ -177,3 +177,16 @@ HP 实机兼容复测（Windows 11、Ryzen 5 5625U、Node 22 LTS、16GB）在设
 - 磁盘持久态只有 `unconfigured` 与 `verified_pass`；`testing`/`test_failed` 是前端瞬时状态，不存在“保存但未验证”的候选文件。
 
 HP 实机兼容复测目标（待机会执行，不阻塞 Phase 0.8）：Docker Desktop 与 WSL2 未运行；学习服务可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出；重复同周期不重复发送。
+
+## 七、Phase 1.5 S7 ASR 候选架构证据
+
+Phase 1.5-T02 在独立 composer 中验证 FunASR 1.3.22 + `iic/SenseVoiceSmall` 可于 Windows CPU 从本地目录加载并处理标准 WAV；该事实只证明候选技术可行，不改变正式产品的 Adapter 边界：
+
+- 正式代码不得 import 或运行 composer；未来 `AuralConverter` 必须在主仓库独立装配，通过配置化可执行入口/模型目录与受控子进程边界调用本地 runtime。
+- ASR 输出只能映射为纯文本 `ConverterResult`，再进入 S2 `normalized_texts` 管道；不得由 ASR 直接生成笔记、导图、知识模块或学习事件。
+- 任意非空模型文本不等于成功。T02 的静音和轻噪声均稳定产生短误识别，因此未来契约必须在 Adapter 前后具备 no-speech/VAD/低能量门禁，并把“无语音”与推理失败、解码失败、格式不支持分开编码。
+- T02 短音频实测峰值工作集约 3.1 GiB；未来 Worker 仍应按需启动、串行或并发 1、设置超时与进程清理，并在 16GB 目标设备上重新做长音频资源验收。
+- 模型首次取得允许联网，但正式复跑必须使用显式本地路径和独立缓存；模型/runtime 版本需要 immutable revision 或可验证资产哈希，许可证和再分发结论须与软件包分开记录。
+- T03 负责 FFmpeg 格式标准化、切片与静音/噪声预处理事实；T04 才能定义正式 `AuralConverter`。T02 不授权 Schema、API、Job/Worker、前端或 S2 产品接入。
+
+当前结论为 `PARTIAL`：可进入 T03 计划门禁，但静音 false positive、模型 revision、离线证明强度和资源预算在 T04 前必须重新关闭。

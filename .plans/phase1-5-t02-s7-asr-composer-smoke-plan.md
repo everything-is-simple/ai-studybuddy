@@ -1,11 +1,11 @@
 # Phase 1.5-T02：S7 ASR Composer Smoke 行动计划
 
-**版本**：v1.1
+**版本**：v1.3
 **日期**：2026-07-21
 **任务分支**：`codex/phase1-5-t02-s7-asr-composer-plan`
 **任务 worktree**：`I:\ai-studybuddy-tmp\worktrees\phase1-5-t02-s7-asr-composer-plan`
-**任务类型**：门禁审计 + 纯计划任务
-**批准状态**：计划已创建并完成 fresh-pass 审查，等待用户明确批准；未获批准前不得执行任何 ASR smoke、安装、下载或 composer 修改。
+**任务类型**：已批准计划 + T02 composer smoke 证据回填
+**批准状态**：用户已于 2026-07-21 明确批准；T02 已按白名单执行完毕，最终判定 `PARTIAL`。该结论只证明 Windows CPU 本地 ASR 技术可行，不授权 T03–T06 或产品业务代码。
 
 ---
 
@@ -23,7 +23,7 @@ Phase 1.5-T02 的单一目标是在独立试炼场 `I:\ai-studybuddy-composer` �
   → T04 独立计划决定正式 AuralConverter 契约
 ```
 
-**本轮停止点**：只创建、审查、提交并推送本计划及 `docs/04` 登记。用户明确批准前，不进入以下任何执行步骤。
+**计划阶段停止点已解除并完成执行**：计划已创建、审查、提交、推送并于 2026-07-21 获用户明确批准；T02 已完成 composer smoke、能力卡和证据回填，最终结论为 `PARTIAL`。本任务在主线复验与推送后停止，不自动进入 T03–T06。
 
 ---
 
@@ -590,7 +590,7 @@ I:\ai-studybuddy-composer\asr\SenseVoice\output\**
 
 ---
 
-## 16. 本轮验证、提交与交付
+## 16. 计划创建阶段验证、提交与交付（历史检查点）
 
 本轮仅运行：
 
@@ -604,7 +604,7 @@ git diff --cached --check
 git -c core.quotepath=false diff --cached --name-only
 ```
 
-本轮不运行 type-check、build、业务测试、Python 脚本、ASR smoke、安装或模型下载。
+计划创建阶段不运行 type-check、build、业务测试、Python 脚本、ASR smoke、安装或模型下载；该历史检查点已于计划提交时完成，获批后的实际执行与验证见第 17 节。
 
 验证通过后提交：
 
@@ -612,10 +612,45 @@ git -c core.quotepath=false diff --cached --name-only
 docs(s7): 登记 ASR composer 调通行动计划
 ```
 
-只推送任务分支：
+计划创建阶段只推送任务分支：
 
 ```text
 codex/phase1-5-t02-s7-asr-composer-plan
 ```
 
-不得合入 `master`，不得推送 `origin/master`，不得把“计划已推送”报告为“T02 已完成”。下一步只能是用户审查并明确批准本计划。
+计划创建阶段不得合入 `master`、不得推送 `origin/master`，也不得把“计划已推送”报告为“T02 已完成”；该门禁已在用户于 2026-07-21 明确批准后解除。获批后的执行结论必须按第 17 节回填，并在分支验证通过后遵循仓库固定 rebase、fast-forward、主线复验和推送流程。
+
+## 17. 获批后实际执行记录（2026-07-21）
+
+### 17.1 实际候选与环境
+
+- 主候选：FunASR Python 1.3.22 + ModelScope 官方 `iic/SenseVoiceSmall`，本地文件、Windows CPU、`trust_remote_code=False`，未启用 VAD、流式、说话人、情绪或事件能力。
+- 隔离环境：Python 3.10.19；torch/torchaudio 2.11.0+cpu；ModelScope 1.38.1；psutil 7.2.2；jsonschema 4.25.1。
+- 开发机：Windows 10 Pro x64 build 19045；Ryzen 7 5800H，8 核 16 线程；约 29 GiB 内存。
+- 模型资产：20 个文件、940,019,376 bytes。ModelScope API 与下载 README 均标记 Apache License 2.0；FunASR 包元数据为 MIT。下载只固定到 `master`，未取得不可变 revision，因此以逐文件 SHA-256 manifest 补充追踪。
+- 候选 A 已形成明确结论，不触发 GGUF/SenseVoice.cpp、Paraformer 或第三候选，也未安装 FFmpeg。
+
+### 17.2 实际 smoke 证据
+
+- 首次加载被 harness 受控判为 `MODEL_LOAD_FAILED`：运行时缺少 `torchaudio`。安装与 torch 精确匹配的 CPU wheel 后恢复，保留失败日志。
+- 本地成功批次覆盖合成中文、中英混合、静音、损坏 WAV 与非 WAV；后续加入轻噪声。
+- 显式本地模型 + offline 环境变量三次复跑：模型加载 3,342 ms；总进程 28,056 ms；峰值工作集约 3,125.5 MiB；CPU 时间 64.109 s。
+- 合成中文与中英混合样例均 3/3 返回非空文本且短哈希稳定，单次 RTF 分别约 0.146–0.161 与 0.167–0.188；但均存在可见识别替换，不代表真实课堂准确率。
+- 静音与轻噪声均 3/3 产生同一短误识别，未满足 no-speech 硬验收；损坏 WAV 稳定返回 `AUDIO_DECODE_FAILED`，非 WAV 稳定返回 `AUDIO_FORMAT_UNSUPPORTED`。
+- 离线批次 14/14 结果通过共享 Draft 2020-12 JSON Schema；完整转写只保留在 composer 本机忽略目录。
+- 受监控离线复跑以 100 ms 轮询未观察到候选 Python TCP 连接，进程退出后无候选 `.venv` Python 残留；因未修改防火墙，离线证据仍按 `OFFLINE_EVIDENCE_PARTIAL` 处理。
+
+### 17.3 执行偏差与处置
+
+1. 首次依赖安装前未设置 `PIP_CACHE_DIR`，约 280.58 MiB 写入默认用户 pip cache。因无法安全区分历史缓存与本次缓存，未删除全局目录；后续 pip、ModelScope 与 Hugging Face cache 全部显式收口到 `FunASR/.cache`。
+2. 首次写入前未持久化完整 ASR 树清单；最终保留白名单检查、当前清单、模型逐文件哈希、fixture manifest 和 smoke summary，但该证据缺口不得隐藏。
+3. FunASR 原生日志会打印本机绝对路径；runner 已增加已知本机根路径替换，现有 stderr/jsonl 证据也完成脱敏。
+4. 执行中仅修改本计划授权的 composer 维护文件和可再生目录；未修改 `packages/`、S7 PRD、FFmpeg、`AuralConverter`、Schema/migration、API、Job/Worker 或前端。
+
+### 17.4 最终判定与下一门禁
+
+**T02 最终判定：`PARTIAL`。** Windows CPU 本地安装、模型加载、短 WAV 推理、重复性、受控错误与显式离线复跑技术可行；但静音/轻噪声 false positive、模型 immutable revision 缺失、离线证明强度和一次性缓存/基线证据偏差不满足完整 `PASS`。
+
+- 允许把本结果作为 T03 独立行动计划的输入，优先验证 FFmpeg 标准化、切片、静音/低能量过滤和噪声边界。
+- 不允许直接进入 T04 产品装配；T04 前必须重新关闭 no-speech 契约、资源预算、模型 revision、许可证/再分发与更接近课堂的安全样例门禁。
+- T03–T06 仍须分别创建计划、独立审查并获用户明确批准。
