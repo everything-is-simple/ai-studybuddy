@@ -772,7 +772,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 2 | T02：模拟考 Schema 与生成 | ✅ | 已完成并 fast-forward 合入 `master`；功能实现提交 `bb0caf5`，本次状态标记提交 `213ebb9`，均已推送 `origin/master`；AI 根据考试上下文和知识模块生成模拟卷，支持计时尝试、提交批改与模块分析 |
 | 3 | T03：模拟考前端 | ✅ | 已 rebase 至最新 `master` 并 fast-forward 合入；主线类型检查、构建、全量测试与本地浏览器验收通过，已随本轮文档收尾提交推送 `origin/master` |
 | 4 | T04：临考速背 | ✅ | 已 rebase 至最新 `origin/master` 并 fast-forward 合入；主线类型检查、构建、全量测试与本地浏览器验收通过，已随本轮文档收尾提交推送 `origin/master` |
-| 5 | T05：冲刺计划生成 | ⏳ | 根据考试倒计时和薄弱点自动建议每日复习计划 |
+| 5 | T05：冲刺计划生成 | 📝 | 行动计划已创建并完成 fresh-pass 审查，等待用户明确批准；业务实现、实现测试与浏览器验收均未开始 |
 | 6 | T06：工作台”冲刺”区集成 | ⏳ | 考试前 N 天自动进入冲刺模式，工作台展示冲刺入口 |
 
 ### Phase 2 任务状态索引
@@ -783,7 +783,10 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已完成分支实现、fast-forward 合入 `master` 并完成主线复验；`origin/master` 已推送。 |
 | T03 | `.plans/phase2-t03-s5-mock-exam-frontend-plan.md` | 用户于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已 rebase、fast-forward 合入 `master` 并完成主线复验，随文档收尾提交推送 `origin/master`。范围为 T02 API/DTO 消费、模拟考入口/答题/提交/结果/模块分析、刷新恢复、失败和重复提交；未实现 T04–T06、S7 或 S3 Worker。 |
 | T04 | `.plans/phase2-t04-s5-cram-plan.md` | 用户于 2026-07-21 明确批准进入实现；任务分支 `codex/phase2-t04-s5-cram` 已基于 `origin/master` `439d6ad84169d7ddb1e88347ccc9963fd01bfeea` rebase 并 fast-forward 合入 `master`。主线已验证确定性只读速背卡 API/DTO/Service、独立前端页面、总倒计时、安全恢复及本地 Chrome 验收；主线实现与收尾提交已推送 `origin/master`。不实现 T05–T06、S7、S3 Worker、Schema/migration、Worker、真实 AI 或外部调用。 |
-| T05–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
+| T05 | `.plans/phase2-t05-s5-cram-plan-plan.md` | 已从 `origin/master` @ `a5c1efde20a29eb85da5431e8b683d8084dc05d6` 创建行动计划；范围限定为确定性即时只读、未来 7 天、已确认考试上下文内的独立冲刺计划页面/API，复用 S1/S3/S4 事实且不写回。计划已完成 fresh-pass 审查，等待用户明确批准；业务实现、实现测试和浏览器验收均未开始。 |
+| T06 | 尚未创建 | 等待独立计划、独立审查并获用户明确批准；考试工作台“冲刺”区集成未启动。 |
+
+> **Phase 2-T05 门禁审计与行动计划证据（2026-07-21，计划已创建，未实施）**：已在工作区内容哈希与 `HEAD`/索引一致、Git 状态缓存刷新后，从最新 `origin/master` @ `a5c1efde20a29eb85da5431e8b683d8084dc05d6` 创建计划分支 `codex/phase2-t05-s5-cram-plan-plan`，登记 `.plans/phase2-t05-s5-cram-plan-plan.md`。门禁审计确认 T02 模拟考 Schema 与生成、T03 模拟考前端和 T04 临考速背均已完成主线复验并推送；T05 只计划确定性即时只读、未来 7 天、已确认考试上下文内的每日建议 API 与独立页面，读取同学期同课程的 S1 未完成任务、S3 练习表现、S4 错题/薄弱点及既有速背入口，不改写 S3/S4 事实。计划明确不新增 Schema/migration、持久化 CramPlan、建议完成写入、StudyEvent、AI/Provider、Worker 或 T06 工作台“冲刺”区；fresh-pass 审查已完成且无阻塞项；文档治理检查和 diff 检查通过后，计划分支仅提交并推送等待用户明确批准。业务代码、实现测试、浏览器验收、合入 `master` 和推送 `origin/master` 均未开始。
 
 
 > **Phase 2-T01 文档完成证据（2026-07-20，已获用户明确批准）**：用户在计划提交后明确要求创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，并同步 `docs/00` 与本文件的 Phase 2-T01 文档完成状态。本轮创建 S5 轻量 PRD，定义模拟考、临考速背、冲刺计划、考前工作台入口、AI/规则边界、概念数据对象、产品表面、验收标准和 T02–T06 独立门禁；同步 `docs/00` 将 S5 PRD 登记为有效文档。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 均通过。未实现 Phase 2-T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke；未读取、输出或持久化真实秘密。
