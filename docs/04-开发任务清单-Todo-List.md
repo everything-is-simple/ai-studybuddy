@@ -1,10 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.65
+**版本**：v1.66
 **日期**：2026-07-21
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；S7 继续等待独立门禁，S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成，T02–T06 尚未启动，下一门禁为 T02 ASR composer smoke 独立计划；S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
+
+> **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -30,7 +32,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 等待独立门禁与批准 |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | 🔄 T01 PRD 已完成；T02–T06 待独立计划与批准 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
@@ -751,11 +753,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：录音 → ASR → 文字 → 纯文本 → 复用 S2 笔记生成管道。
 
-**前置条件**：Phase 1 中 S2 笔记管道稳定运行；S7 PRD 尚未创建，必须先由 T01 在门禁满足并获批后创建。
+**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已在门禁满足且用户明确批准后创建 S7 PRD；T02–T06 必须分别创建独立计划、完成审查并获批后才能实施。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
-| 1 | T01：S7 PRD 编写 | ⏳ | 创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` |
+| 1 | T01：S7 PRD 编写 | ✅ | 已按 `.plans/phase1-5-t01-s7-prd-plan.md` 创建并登记 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`；仅文档，不含 ASR/FFmpeg、Schema、API、Worker 或前端实现 |
 | 2 | T02：ASR 组件 composer 调通 | ⏳ | SenseVoice/FunASR 在 composer 跑通 smoke test，填写能力卡 |
 | 3 | T03：FFmpeg 音频预处理 | ⏳ | 切片、降噪、格式转换；composer 能力卡 |
 | 4 | T04：ASR Adapter 装配 | ⏳ | ASR 封装为 `AuralConverter`，输出 `ConverterResult` |
