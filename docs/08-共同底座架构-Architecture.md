@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.16
-**日期**：2026-07-20
-**状态**：Phase 0.7/0.8 与 Phase 1 学生端产品化已完成；T08/M03/Post-M03 已完善 Windows DPAPI 配置存储、配置来源可观测性、敏感输入显隐、分渠道连接测试、运行时热切换和 loopback API 防护；当前没有新的已批准业务实施任务
+**版本**：v1.17
+**日期**：2026-07-21
+**状态**：Phase 0.7/0.8、Phase 1 学习闭环与学生端产品化、Phase 2 S5 冲刺闭环均已完成；POST-PHASE2 全系统验证与文档对齐进行中，Phase 3 暂缓
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
@@ -83,7 +83,7 @@ APP_DATA_ROOT/
 | `jobs`                  | 持久化后台任务                                                                    | `pending/running/completed/failed` 和重试；可建立 `pending_quality_check` 业务状态                |
 | `report_deliveries`     | 报告渠道去重                                                                      | 唯一键 `report_key + channel`，按渠道独立重试                                                     |
 
-Phase 0.8 只按 S1/S2 闭环创建必要共同对象。Phase 1-T03A 已在 S3 门禁满足后创建 `questions`、`practice_sessions`、`practice_answers`；Phase 1-T04A 已在 S4 门禁满足后创建 `mistakes`、`mistake_evidence`、`weak_points`。`mock_attempts` 等 S5-S7 详细业务表仍要等各子系统触发并完成轻量 PRD 后才创建。
+Phase 0.8 只按 S1/S2 闭环创建必要共同对象。Phase 1-T03A 创建 `questions`、`practice_sessions`、`practice_answers`，Phase 1-T04A 创建 `mistakes`、`mistake_evidence`、`weak_points`。Phase 2-T02 的学期 migration v9 已创建 `mock_exam_papers`、`mock_exam_questions`、`mock_exam_attempts`、`mock_exam_answers` 与 `mock_exam_module_analyses`；T04 速背卡和 T05 冲刺计划保持即时只读聚合，不新增表或 migration。S7 详细业务表仍须等子系统触发并完成轻量 PRD 后创建。
 
 ### 3.2 共同对象流与职责
 

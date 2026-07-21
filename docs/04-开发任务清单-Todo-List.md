@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.63
+**版本**：v1.64
 **日期**：2026-07-21
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。Phase 2-T01 S5 PRD 已在用户明确批准后创建并登记；Phase 2-T02 模拟考 Schema 与生成已完成主线合入、复验并推送。Phase 2-T03 模拟考前端与 T04 临考速背均已完成快进合入 `master`、主线复验并随文档收尾提交推送 `origin/master`；T05 冲刺计划生成已 fast-forward 合入 `master`，主线类型检查、双端构建、全量测试及 Chromium 3/3 验收通过，并随本次文档收尾提交推送 `origin/master`；T06 工作台冲刺区集成计划已创建并通过 fresh-pass 审查，等待用户明确批准；S7 与 S3 Worker 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1 与 Phase 2-T01–T06 均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。当前 POST-PHASE2 全系统验证与文档对齐已在任务分支完成 type-check、双端构建、全量测试和完整 Playwright E2E，正在等待任务分支提交、fast-forward 主线集成与主线同范围复验。Phase 3 按用户明确要求暂缓；S7 继续等待独立门禁，S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -16,7 +16,7 @@
 
 > **DOCS-20260720 系统文档当前状态同步（已完成）**：用户明确要求将仍停留在 T09A/T09E 旧门禁和 M03/Post-M03 待推送状态的系统文档同步到当前 Git 事实。任务分支 `codex/system-docs-current-status-sync` 仅修订入口规范、文档索引、任务清单、共同架构、子系统状态与前端路由事实，不改业务代码，不创建或实施新的业务任务；任务分支提交 `b9fb3e8` 已 fast-forward 合入 `master`，主线复验通过，并随本收尾提交推送 `origin/master`。
 
-> **POST-PHASE2 全系统验证与文档对齐（进行中）**：用户于 2026-07-21 明确要求 Phase 2 完成后暂不进入 Phase 3，先跑通全量测试和 `e2e/` 下全部 Playwright spec，再对齐实现与设计文档并提交、fast-forward 合入、主线复验和推送。任务分支 `codex/post-phase2-full-validation` 基于 `origin/master` `4dcc0b2e6bbb130e6e3826e1595ca5995741d2a0` 创建，行动计划为 `.plans/post-phase2-full-validation-plan.md`；当前仅完成计划登记，验证、文档修订、合入与推送证据待后续补齐。不实施 Phase 3，不启动 S7、S3 Worker 或真实外部 smoke。
+> **POST-PHASE2 全系统验证与文档对齐（分支验证与文档对齐已完成，待主线复验）**：用户于 2026-07-21 明确要求 Phase 2 完成后暂不进入 Phase 3。任务分支 `codex/post-phase2-full-validation` 基于 `origin/master` `4dcc0b2e6bbb130e6e3826e1595ca5995741d2a0` 创建，计划提交 `72c7f7d4dc1a74971e72450a2db2f79f26a21b46`，行动计划为 `.plans/post-phase2-full-validation-plan.md`。分支隔离验证均退出码 0：`pnpm type-check`；后端生产构建（含 OCR worker 复制）；前端生产构建（仅既有 KaTeX chunk 大于 500 kB 的非阻塞 warning）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-branch-full` 下 `pnpm test`（backend 237/237；frontend 26 个测试文件、61/61 suites、137/137 tests）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-branch-e2e` 下 `pnpm test:e2e`（`e2e/` 15 个 spec，Playwright 21/21）。已按当前代码、路由、API、migration v9、测试和 Git 历史对齐入口规范、总 PRD、子系统地图、架构、测试计划、前后端规范、开发规则、前端信息架构与 S5 PRD；当前仍待治理/diff 门禁、任务分支提交与推送、rebase、fast-forward 合入及 `master` 同范围复验，因此本任务尚未标记最终完成。不实施 Phase 3，不启动 S7、S3 Worker，不运行真实 AI、QQ SMTP、飞书、正式 Windows Task Scheduler 或其他外部 smoke。
 ---
 
 ## 阶段总览
@@ -27,10 +27,10 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08/T09A/T09B/T09C/T09D/T09E ✅；S3 Worker 未启动，S5 T05–T06 与 S7 待各自门禁） |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
-| Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
-| Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 等待独立门禁与批准 |
+| Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 已完成并推送；POST-PHASE2 收口进行中 |
+| Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
 ---
 
@@ -764,9 +764,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 ## Phase 2：期末冲刺（S5）
 
-**目标**：模拟考 + 临考速背 + 冲刺计划；Phase 1 可以借鉴信息架构，但不提前实现。
+**目标**：围绕已确认考试完成模拟考、临考速背、冲刺计划与考试工作台冲刺区闭环。
 
-**前置条件**：Phase 1 中 S3 练习 + S4 错题稳定运行；T01 已在门禁满足并获用户明确批准后创建 S5 PRD。后续 T03–T06 必须分别创建独立计划、完成审查并获批后才能实施。
+**完成状态**：Phase 1 的 S3 练习与 S4 错题门禁已满足；T01–T06 均已分别完成计划、审查、用户批准、实现、主线复验和 `origin/master` 推送。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
@@ -812,19 +812,19 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 2-T03 主线完成证据（2026-07-21，已 fast-forward 合入 master 并推送 origin/master）**：任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已先 rebase 至最新 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf`，再 fast-forward 合入 `master`；模拟考前端实现提交为 `e8f161b`，主线收尾提交 `bb8bf77` 已位于 `origin/master`。范围仅含 T03 的模拟考入口、模拟卷详情、作答、刷新恢复、提交、结果和模块分析页面、当前学期守卫路由、T02 五个既有 API/DTO 客户端、草稿恢复与完成态安全清理、前端/浏览器测试；未修改后端、Schema、DTO、Service、Worker、T04–T06、S7 或 S3 Worker。主线复验（退出码均为 0）：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase2-t03-master-final` 的 `pnpm test`（frontend 118/118、backend 233/233）；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase2-t03-master-browser` 的本地 Chrome/Vite Playwright `e2e/mock-exam.spec.ts` 3/3（确认成功、未确认/提交失败恢复、409 冲突安全态）。未读取、输出或持久化真实秘密，未运行真实 AI、QQ SMTP、飞书、中转站、Windows 计划任务或其他外部 smoke。
 ---
 
-## Phase 3：打磨与安全
+## Phase 3：打磨与安全（暂缓）
 
-**目标**：家长端完善、安全加固、性能优化。
+**状态**：用户于 2026-07-21 明确要求暂不进入 Phase 3；以下仅为历史候选方向，不构成计划批准或实施授权。
 
-**前置条件**：Phase 2 完成；产品进入稳定运行。
+**恢复门禁**：恢复 Phase 3 前必须重新确认产品范围并创建独立计划。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
 
-| 顺序 | 任务 | 状态 | 单一责任 |
-| ---- | ---- | ---- | -------- |
-| 1 | T01：S6 家长面板完善 | ⏳ | 独立家长登录、历史报告查阅、学习概况仪表盘 |
-| 2 | T02：安全审计 | ⏳ | API 认证/鉴权、输入校验加固、CSRF/XSS 防护 |
-| 3 | T03：性能基线 | ⏳ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
-| 4 | T04：备份与恢复 | ⏳ | 自动定期备份、损坏检测、一键恢复验证 |
-| 5 | T05：日志规范化 | ⏳ | 脱敏日志、分级输出、日志轮转与清理 |
+| 顺序 | 候选任务 | 状态 | 单一责任 |
+| ---- | -------- | ---- | -------- |
+| 1 | T01：S6 后续产品形态重新决策（历史候选：家长面板） | ⏸️ | 先决定是否继续保持异步脱敏报告；不得默认引入家长登录或 Web 面板 |
+| 2 | T02：安全审计 | ⏸️ | API 认证/鉴权、输入校验加固、CSRF/XSS 防护 |
+| 3 | T03：性能基线 | ⏸️ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
+| 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
+| 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
 
 ---
 
@@ -835,6 +835,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ✅ | 已完成并验证 |
 | 🔄 | 进行中 |
 | ⏳ | 待开始 |
+| ⏸️ | 暂缓，未获当前实施授权 |
 | ❌ | 已跳过或放弃（需注明原因） |
 | 📝 | 计划已创建，等待审查或批准；实现未开始 |
 | - [ ] | 待完成的具体任务 |

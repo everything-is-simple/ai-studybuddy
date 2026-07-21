@@ -1,9 +1,9 @@
 # AI StudyBuddy 后端开发规范 Backend Guidelines
 
-**版本**：v1.6
-**日期**：2026-07-20
+**版本**：v1.7
+**日期**：2026-07-21
 **状态**：有效
-**用途**：Phase 0.8 正式后端开发的目录结构、SQLite 约定、Adapter 输出、日志、环境变量和验证规则。写第一个后端服务 / Adapter / API / Worker 前必须读本文件。
+**用途**：正式后端开发的目录结构、SQLite/migration 约定、Adapter/API 输出、日志、环境变量和验证规则。修改后端服务、API、Worker 或数据模型前必须读本文件。
 
 ---
 
@@ -157,6 +157,13 @@ interface ReportSendResult {
 - AI 开发验证路由 `POST /api/dev/ai/generate` 校验 `taskType`、`inputText`，并保持 `AI_NOT_CONFIGURED`（503）与 `AI_ALL_PROVIDERS_FAILED`（502）的稳定语义。
 
 ---
+
+### 6.1 Phase 2 S5 API 与持久化边界
+
+- 模拟考写接口集中在 `/api/mock-exam-papers` 与 `/api/mock-exam-attempts`，使用学期 migration v9 的五张 `mock_exam_*` 表；学生读取 DTO 不返回正确答案，提交后才返回批改结果。
+- `GET /api/assessment-attempts/:id/cram-cards?semesterId=...` 与 `GET /api/assessment-attempts/:id/cram-plan?semesterId=...` 是确定性即时只读聚合；它们必须验证同学期、同课程和已确认考试，不得新增卡片/计划持久化或写回 S3/S4 历史事实。
+- T06 考试工作台冲刺区只组合既有考试、模拟考、速背与计划状态，不增加后端端点。
+- S5 当前不写 StudyEvent、不调用真实 AI/Provider、不启动 Worker，也不把题干、答案、作答、错题正文或资料原文写入日志和 S6 报告。
 
 ## 七、日志规范
 

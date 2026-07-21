@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-**Version**: v1.9
-**Updated**: 2026-07-20
+**Version**: v1.10
+**Updated**: 2026-07-21
 
 This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
 
@@ -10,7 +10,7 @@ This file is the Claude Code entry point for `I:\ai-studybuddy`. The complete to
 AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七个场景子系统（S1–S7）”。当前事实：
 
 - Phase 0.8 已完成，S1 基础与 S2 核心已在主仓库实现并通过 T09 隔离复验。
-- S1、S2、S3、S4、S6 PRD 已存在；Phase 1 已完成 T03A–T03D（S3 练习闭环）、T04/T04A/T04B（S4 错题归档、Schema 与错题改错前端闭环，含 migration v6 与 S4 API）、T05 回流规则、T06 S6 家长观察 PRD、T06A 家长报告生成、T06B 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页和 T09C 课程课表与考试目标完善。T09A–T09E 学生端产品化均已完成、通过主线复验并推送 `origin/master`；T12、M01、M02、M03 与 Post-M03 维护任务也已完成。Phase 2-T02 模拟考 Schema 与生成、T03 模拟考前端及 T04 临考速背均已完成主线复验并推送 `origin/master`；T04 为确定性只读卡片、独立页面与总倒计时，不含 Schema/migration、Worker 或真实 AI 调用。S3 Worker 不属于当前 MVP，S5 T05–T06 与 S7 仍按各自门禁等待。
+- S1–S6（除 S7）相关 PRD 已按门禁建立；Phase 1 学习闭环、学生端产品化、配置中心和维护任务均已完成主线复验并推送 `origin/master`。Phase 2-T01–T06 也已完成主线复验并推送：包含 S5 模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区；T04/T05/T06 不新增持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。当前执行 POST-PHASE2 全系统验证与文档对齐；Phase 3 按用户要求暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
 - 后端、前端、shared 三个 workspace 包已存在；不要再按“无业务代码”处理。
 - AI Provider Router 已支持多 Provider 优先级故障转移，并已在 Phase 1-T02 完成连续失败熔断、10 分钟冷却、恢复探测和脱敏日志。
 - KaoBuddy 只可作为产品组织方式参考，不复制源码、视觉、文案或资产。

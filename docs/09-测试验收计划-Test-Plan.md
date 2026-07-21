@@ -1,9 +1,9 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.11
-**日期**：2026-07-18
-**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8 与 Phase 1-T02–T08 自动化/浏览器验收已完成；真实外部渠道 smoke 仍非常规门槛
-**用途**：定义组件验证、真实渠道、Windows 调度、Phase 0.8 业务闭环与 HP 16GB 兼容复测的证据标准。
+**版本**：v1.12
+**日期**：2026-07-21
+**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1 与 Phase 2 自动化/浏览器验收已完成；POST-PHASE2 分支全量测试与完整 E2E 已通过，待主线复验
+**用途**：定义组件验证、Windows 单机业务闭环、全量自动化、完整浏览器 E2E 与实机/外部渠道证据标准。
 
 ---
 
@@ -173,7 +173,32 @@ T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新
 - 已复跑 `pnpm type-check`、`pnpm build`、`pnpm test`：全量 77/77 通过；文档治理与 `git diff --check` 同步通过。
 - 后端 API 测试以互不重叠的随机端口区间启动子进程，健康检查预算为 10 秒；`packages/backend` 的 `pnpm test` 固定 `node --test --test-concurrency=1`，避免多个 Express 子进程并行启动时由 CPU/端口竞争导致的偶发健康检查失败。
 
-## 九、文档治理检查
+## 九、Phase 2 与全系统收口验收
+
+### 9.1 Phase 2 S5 完成覆盖
+
+| 范围 | 自动化与浏览器证据 | 当前边界 |
+| ---- | ------------------ | -------- |
+| T02 模拟考 Schema 与生成 | migration v9、API 集成测试、确定性生成与学生安全 DTO | 持久化模拟卷/尝试/答案/模块分析；不依赖真实 AI |
+| T03 模拟考前端 | 页面/客户端测试与 Playwright 覆盖生成、作答、刷新恢复、提交和结果 | 只消费 T02 API，不改后端事实 |
+| T04 临考速背 | 后端/前端测试与 Playwright 覆盖翻卡、计时、刷新恢复和窄屏 | 即时只读卡片；无 Schema、Worker 或真实 AI |
+| T05 冲刺计划 | 后端/前端测试与 Playwright 覆盖 7 天建议、状态降级和安全深链 | 即时只读计划；不持久化 `CramPlan` 或完成状态 |
+| T06 工作台冲刺区 | 组件测试与 Playwright 覆盖已确认考试、窗口状态、跨考试切换和窄屏 | 仅前端聚合；不新增 API、Schema、StudyEvent 或写回 |
+
+### 9.2 POST-PHASE2 分支全量验证（2026-07-21）
+
+任务分支 `codex/post-phase2-full-validation` 使用仓库外隔离目录完成以下验证，退出码均为 0：
+
+- `pnpm type-check`；
+- 后端生产构建（含 OCR worker 复制）与前端生产构建；前端仅保留既有 KaTeX chunk 大于 500 kB 的非阻塞 warning；
+- `pnpm test`：后端 237/237；前端 JSON reporter 明确确认 61/61 suites、137/137 tests；
+- `pnpm test:e2e`：执行 `e2e/` 下 15 个 spec，Playwright 21/21 通过，覆盖完整学生旅程与 Phase 2 模拟考、速背、冲刺计划和考试工作台。
+
+本轮不运行真实 AI、QQ SMTP、飞书、正式 Windows Task Scheduler 或其他外部 smoke；这些外部依赖不作为常规全量回归门槛。上述为任务分支证据，fast-forward 合入后仍必须在 `master` 使用新的隔离目录重跑同范围验证。
+
+---
+
+## 十、文档治理检查
 
 每轮证据回填后运行：
 

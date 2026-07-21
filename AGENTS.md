@@ -1,7 +1,7 @@
 # 仓库协作指南
 
-**版本**：v1.14
-**日期**：2026-07-20
+**版本**：v1.15
+**日期**：2026-07-21
 
 本文件是通用 AI Agent 入口。完整、工具无关的协作规则见 `docs/12-开发规范-Dev-Rules.md`。
 
@@ -15,7 +15,7 @@
 - `docs/`：有效设计、任务、测试和规范文档。
 - `.plans/`：已批准或待批准的任务计划。
 
-Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03/T03A/T03B/T03C/T03D S3 限时练习闭环、T04/T04A/T04B S4 错题改错闭环、T05 回流规则，以及 T06 S6 家长观察 PRD、T06A 家长报告生成、T06B 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页和 T09C 课程课表与考试目标完善。T06B 采用冻结脱敏快照、QQ SMTP 与飞书渠道隔离、渠道级去重/重试和一次性 Windows 计划任务 runner；真实渠道 smoke 未作为常规验证依赖。T09A–T09E 学生端产品化均已完成、完成主线复验并推送 `origin/master`；T12、M01、M02、M03 与 Post-M03 维护任务也已完成并进入远端主线。Phase 2-T02 模拟考 Schema 与生成、T03 模拟考前端及 T04 临考速背均已完成主线复验并推送 `origin/master`；T04 采用确定性只读卡片、独立页面与总倒计时，不含 Schema/migration、Worker 或真实 AI 调用。S3 Worker 不属于当前 MVP，S5 T05–T06 与 S7 继续按各自门禁等待。
+Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。当前正在执行 POST-PHASE2 全系统验证与文档对齐；用户明确要求 Phase 3 暂缓，S7 继续等待独立门禁。
 
 ## 必读顺序
 
@@ -85,7 +85,7 @@ pnpm -r --filter backend run dev
 5. 满足则创建并同步更新索引。
 6. 提交前运行 `scripts/check-docs-governance.ps1`。
 
-当前状态：S1/S2/S3/S4/S6 PRD 已创建；T03A–T03D、T04A/T04B、T05 回流规则、T06 S6 PRD、T06A 家长报告生成、T06B 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心、T09A 学期创建/选择与切换、T09B 每日学习首页与 T09C 课程课表和考试目标已完成。T09A–T09E 学生端产品化均已完成、通过主线复验并推送 `origin/master`；T12、M01、M02、M03 与 Post-M03 维护任务也已完成。Phase 2-T02 模拟考 Schema 与生成、T03 模拟考前端及 T04 临考速背均已完成主线复验并推送 `origin/master`；T04 采用确定性只读卡片、独立页面与总倒计时，不含 Schema/migration、Worker 或真实 AI 调用。S3 Worker 不属于当前 MVP，S5 T05–T06 与 S7 仍按各自门禁等待。
+当前状态：S1/S2/S3/S4/S5/S6 PRD 均已创建；Phase 1 与 Phase 2-T01–T06 已完成主线集成、复验和 `origin/master` 推送。S5 的 T04 临考速背、T05 冲刺计划和 T06 工作台冲刺区均为确定性只读/即时聚合边界，不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证与文档对齐正在进行；Phase 3 已按用户要求暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
 
 ## 标准 16 步流程摘要
 
