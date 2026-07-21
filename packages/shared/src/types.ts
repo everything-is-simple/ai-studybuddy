@@ -644,6 +644,30 @@ export interface SubmitMockExamAttemptResponse {
   moduleAnalyses: MockExamModuleAnalysisDto[];
 }
 
+// Phase 2-T04 临考速背：只读、确定性卡片。严禁在此 DTO 中加入题干、答案、学生作答、错因或资料原文。
+export type CramCardSourceKind = 'knowledge_module' | 'weak_point' | 'mistake';
+
+export interface CramFlashcardSourceSummaryDto {
+  kind: CramCardSourceKind;
+  count: number;
+}
+
+export interface CramFlashcardDto {
+  id: string;
+  knowledgeModuleId: string;
+  title: string;
+  importance: 'critical' | 'high' | 'medium' | 'low';
+  contentSummary: string | null;
+  examRelevance: string | null;
+  sources: CramFlashcardSourceSummaryDto[];
+}
+
+export interface CramFlashcardResponseDto {
+  assessmentAttemptId: string;
+  courseInstanceId: string;
+  cards: CramFlashcardDto[];
+}
+
 // S4 ErrorFixer 公开 API DTO（Phase 1-T04B）
 // 错题详情允许展示已批改事实（正确答案/解析）；
 // 重做作答前仍走 S3 作答前 DTO，不泄露答案。

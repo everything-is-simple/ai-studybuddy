@@ -9,6 +9,8 @@ import { AiProviderError, AiRouterProxy, AllProvidersCoolingDownError, AllProvid
 import type { AiProvider } from '../adapters';
 import type {
   CreateMockExamPaperRequest,
+  CramFlashcardDto,
+  CramFlashcardResponseDto,
   MockExamAttemptDetailDto,
   MockExamAttemptStatus,
   MockExamAnswerResultDto,
@@ -59,6 +61,11 @@ type GeneratedQuestion = {
   type: PracticeQuestionType; stem: string; options: string[] | null; correctAnswer: string;
   acceptableAnswers: string[] | null; difficulty: PracticeDifficulty; knowledgeModuleId: string;
   explanation: string | null; sourceEvidence: string | null; pointValue: number;
+};
+type CramCardRow = {
+  id: string; title: string; importance: string; content_summary: string | null; exam_relevance: string | null;
+  weak_point_evidence_count: number | null; weak_point_latest_at: string | null;
+  mistake_count: number; mistake_error_count: number; mistake_latest_at: string | null;
 };
 
 export class ExamCrammerError extends Error {
@@ -178,6 +185,89 @@ export class ExamCrammerService {
     if (!row) throw new ExamCrammerError('ASSESSMENT_ATTEMPT_NOT_FOUND', 404, '考试不存在或不属于该课程');
     if (row.confirmation_status !== 'confirmed') throw new ExamCrammerError('ASSESSMENT_NOT_CONFIRMED', 409, '只有已确认考试才能生成模拟卷');
     return row;
+  }
+
+  /**
+   * T04: 从同学期、同课程、已确认考试的既有 S2/S4 事实生成确定性速背卡。
+   * 只读查询，绝不调用 AI、写入 S3/S4，或返回题干/答案/作答/错因/资料原文。
+   */
+  getCramCards(semesterValue: unknown, assessmentValue: unknown): CramFlashcardResponseDto {
+    const semesterId = requiredUuid(semesterValue, 'SEMESTER_NOT_FOUND', '学期不存在');
+    const assessmentAttemptId = requiredUuid(assessmentValue, 'ASSESSMENT_ATTEMPT_NOT_FOUND', '考试不存在');
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      const assessmentRelation = db.prepare('SELECT course_instance_id FROM assessment_attempts WHERE id = ?').get(assessmentAttemptId) as { course_instance_id: string } | undefined;
+      if (!assessmentRelation) throw new ExamCrammerError('ASSESSMENT_ATTEMPT_NOT_FOUND', 404, '考试不存在');
+      const courseInstanceId = assessmentRelation.course_instance_id;
+      this.requireCourse(db, semesterId, courseInstanceId);
+      this.requireConfirmedAssessment(db, assessmentAttemptId, courseInstanceId);
+
+      const rows = db.prepare(`
+        SELECT
+          m.id, m.title, m.importance, m.content_summary, m.exam_relevance,
+          (SELECT w.evidence_count FROM weak_points w
+             WHERE w.course_instance_id = m.course_instance_id
+               AND w.knowledge_module_id = m.id
+               AND w.status = 'active') AS weak_point_evidence_count,
+          (SELECT w.latest_detected_at FROM weak_points w
+             WHERE w.course_instance_id = m.course_instance_id
+               AND w.knowledge_module_id = m.id
+               AND w.status = 'active') AS weak_point_latest_at,
+          (SELECT COUNT(*) FROM mistakes x
+             WHERE x.course_instance_id = m.course_instance_id
+               AND x.knowledge_module_id = m.id
+               AND x.status IN ('pending_review', 'needs_review')) AS mistake_count,
+          (SELECT COALESCE(SUM(x.error_count), 0) FROM mistakes x
+             WHERE x.course_instance_id = m.course_instance_id
+               AND x.knowledge_module_id = m.id
+               AND x.status IN ('pending_review', 'needs_review')) AS mistake_error_count,
+          (SELECT MAX(x.latest_error_at) FROM mistakes x
+             WHERE x.course_instance_id = m.course_instance_id
+               AND x.knowledge_module_id = m.id
+               AND x.status IN ('pending_review', 'needs_review')) AS mistake_latest_at
+        FROM knowledge_modules m
+        WHERE m.course_instance_id = ?
+          AND (TRIM(COALESCE(m.content_summary, '')) <> '' OR TRIM(COALESCE(m.exam_relevance, '')) <> '')
+      `).all(courseInstanceId) as CramCardRow[];
+
+      const importanceOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+      const cards = rows
+        .map((row): CramFlashcardDto & { priority: number; evidence: number; latestAt: string } => {
+          const weakPointEvidenceCount = Number(row.weak_point_evidence_count ?? 0);
+          const mistakeCount = Number(row.mistake_count ?? 0);
+          const mistakeErrorCount = Number(row.mistake_error_count ?? 0);
+          const sources: CramFlashcardDto['sources'] = [{ kind: 'knowledge_module', count: 1 }];
+          if (weakPointEvidenceCount > 0) sources.unshift({ kind: 'weak_point', count: weakPointEvidenceCount });
+          if (mistakeCount > 0) sources.push({ kind: 'mistake', count: mistakeCount });
+          const priority = weakPointEvidenceCount > 0 ? 0 : mistakeCount > 0 ? 1 : 2;
+          const evidence = priority === 0 ? weakPointEvidenceCount : priority === 1 ? mistakeErrorCount : 0;
+          const latestAt = priority === 0 ? (row.weak_point_latest_at ?? '') : priority === 1 ? (row.mistake_latest_at ?? '') : '';
+          return {
+            id: row.id,
+            knowledgeModuleId: row.id,
+            title: text(row.title),
+            importance: (importanceOrder[row.importance] === undefined ? 'low' : row.importance) as CramFlashcardDto['importance'],
+            contentSummary: text(row.content_summary) || null,
+            examRelevance: text(row.exam_relevance) || null,
+            sources,
+            priority,
+            evidence,
+            latestAt,
+          };
+        })
+        .sort((a, b) =>
+          a.priority - b.priority ||
+          b.evidence - a.evidence ||
+          b.latestAt.localeCompare(a.latestAt) ||
+          importanceOrder[a.importance] - importanceOrder[b.importance] ||
+          a.knowledgeModuleId.localeCompare(b.knowledgeModuleId)
+        )
+        .map(({ priority: _priority, evidence: _evidence, latestAt: _latestAt, ...card }) => card);
+
+      return { assessmentAttemptId, courseInstanceId, cards };
+    } finally {
+      db.close();
+    }
   }
 
   private selectModules(db: DatabaseType, courseId: string, ids: string[] | null): ModuleRow[] {

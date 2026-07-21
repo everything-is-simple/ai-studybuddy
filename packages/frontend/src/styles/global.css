@@ -1773,3 +1773,37 @@ button:disabled {
     flex: 1 1 auto;
   }
 }
+
+
+/* ===== Phase 2-T04 临考速背 ===== */
+.cram-header,
+.cram-setup,
+.cram-session,
+.cram-empty { display: grid; gap: 12px; }
+.cram-duration-options,
+.cram-controls,
+.cram-manual-links,
+.cram-source-list { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cram-duration-options button.active { color: #1d4ed8; border-color: #93c5fd; background: #eff6ff; font-weight: 700; }
+.cram-session-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.cram-session-header h2,
+.cram-session-header p { margin: 0; }
+.cram-timer { display: grid; min-width: 110px; padding: 10px; border: 1px solid var(--color-secondary); border-radius: var(--radius); text-align: right; }
+.cram-timer strong { font-variant-numeric: tabular-nums; font-size: 1.35rem; }
+.cram-timer span { color: var(--color-text-muted); font-size: .875rem; }
+.cram-flashcard { display: grid; gap: 16px; min-height: 230px; padding: 20px; border: 2px solid #bfdbfe; border-radius: var(--radius); background: linear-gradient(135deg, #f8fbff, #eff6ff); outline: none; }
+.cram-flashcard:focus-visible { box-shadow: 0 0 0 3px #93c5fd; }
+.cram-flashcard.is-flipped { border-color: #86efac; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.cram-flashcard h3,
+.cram-flashcard p { margin: 0; }
+.cram-card-face { display: grid; gap: 12px; align-content: start; }
+.cram-card-face > p:last-child { white-space: pre-wrap; line-height: 1.7; }
+.cram-flashcard footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: auto; }
+.cram-source-list span { padding: 3px 8px; border-radius: 999px; background: #e2e8f0; color: #334155; font-size: .875rem; }
+@media (max-width: 720px) {
+  .cram-session-header { flex-direction: column; }
+  .cram-timer { width: 100%; text-align: left; }
+  .cram-flashcard { min-height: 260px; padding: 16px; }
+  .cram-flashcard footer { align-items: flex-start; flex-direction: column; }
+  .cram-controls > * { flex: 1 1 28%; }
+}

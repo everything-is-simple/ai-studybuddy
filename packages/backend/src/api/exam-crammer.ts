@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import type { ApiError, ApiSuccess, MockExamPaperDetailDto, SubmitMockExamAttemptResponse } from '@ai-studybuddy/shared';
+import type { ApiError, ApiSuccess, CramFlashcardResponseDto, MockExamPaperDetailDto, SubmitMockExamAttemptResponse } from '@ai-studybuddy/shared';
 import { ExamCrammerError, ExamCrammerService } from '../services/exam-crammer-service';
 
 const router: Router = Router();
@@ -12,6 +12,13 @@ function handle(error: unknown, res: Response): Response {
   if (error instanceof ExamCrammerError) return res.status(error.status).json(fail(error.code, error.message));
   return res.status(500).json(fail('S5_REQUEST_FAILED', '请求处理失败，请稍后重试'));
 }
+
+router.get('/assessment-attempts/:id/cram-cards', (req: Request, res: Response) => {
+  try {
+    const result: CramFlashcardResponseDto = service.getCramCards(req.query.semesterId, req.params.id);
+    return res.json(ok(result));
+  } catch (error) { return handle(error, res); }
+});
 
 router.post('/mock-exam-papers', async (req: Request, res: Response) => {
   try {
