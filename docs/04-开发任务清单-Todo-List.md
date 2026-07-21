@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.58
+**版本**：v1.59
 **日期**：2026-07-21
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -782,7 +782,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T01 | `.plans/phase2-t01-s5-prd-plan.md` | 已完成：计划已创建并完成门禁审计；用户于 2026-07-20 明确批准创建 S5 PRD；本文档任务已创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` 并同步 `docs/00`。 |
 | T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已完成分支实现、fast-forward 合入 `master` 并完成主线复验；`origin/master` 已推送。 |
 | T03 | `.plans/phase2-t03-s5-mock-exam-frontend-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 基于 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf` 完成分支实现。已验证 T02 API/DTO 消费、入口/答题/提交/结果/模块分析、刷新恢复、失败和重复提交；尚未合入或推送 `origin/master`。不实现 T02、T04–T06、S7 或 S3 Worker。 |
-| T04–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
+| T04 | `.plans/phase2-t04-s5-cram-plan.md` | 计划已创建、已独立审查，待用户明确批准；本轮只提交计划，不实现业务代码、Schema、Worker 或真实 AI 调用。 |
+| T05–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
 
 
 > **Phase 2-T01 文档完成证据（2026-07-20，已获用户明确批准）**：用户在计划提交后明确要求创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`，并同步 `docs/00` 与本文件的 Phase 2-T01 文档完成状态。本轮创建 S5 轻量 PRD，定义模拟考、临考速背、冲刺计划、考前工作台入口、AI/规则边界、概念数据对象、产品表面、验收标准和 T02–T06 独立门禁；同步 `docs/00` 将 S5 PRD 登记为有效文档。验证：`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`、`git diff --check`、`git diff --cached --check` 均通过。未实现 Phase 2-T02–T06、Schema、API、Worker、前端、S3 Worker 或 S7；未运行真实 AI、QQ SMTP、飞书、中转站或其他外部 smoke；未读取、输出或持久化真实秘密。
@@ -791,6 +792,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 2-T02 门禁审计与行动计划证据（2026-07-20，计划已创建并获批）**：已从最新 `origin/master` 创建任务分支 `codex/phase2-t02-s5-mock-exam-schema`，确认 S5 PRD 已存在，且 S3/S4 稳定运行门禁仍有效；已登记 `.plans/phase2-t02-s5-mock-exam-schema-plan.md`。本计划覆盖模拟卷、模拟考尝试、成绩统计、模块分析的概念边界、考试范围/知识模块/错题与薄弱点/考试上下文输入依赖、S3/S4 只读复用、隐私和真实 Provider 边界，以及与 T03–T06 的责任切分。用户已于 2026-07-20 明确批准进入 T02 业务实现；执行期间用户要求所有长命令/关键命令前必须说明当前步骤和目的，本分支已同步到 `AGENTS.md` 与 `docs/12-开发规范-Dev-Rules.md`。
 
 > **Phase 2-T02 主线完成证据（2026-07-20，已 fast-forward 合入 master 并推送 origin/master）**：任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已 fast-forward 合入 master，当前主线提交 `bb0caf5`。主线复验在 master worktree 通过：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；`pnpm test`（backend 233/233，frontend 94/94）；`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`；`git diff --check`。本轮仅完成 T02；未扩展到 T03–T06、模拟考前端、临考速背、冲刺计划、工作台集成、S3 Worker、S7、真实 AI/QQ SMTP/飞书/中转站/Windows 计划任务 smoke；未读取、输出或持久化真实秘密。
+> **Phase 2-T04 门禁审计与行动计划证据（2026-07-21，计划已创建、已审查、待用户明确批准）**：已从最新 `origin/master` `439d6ad84169d7ddb1e88347ccc9963fd01bfeea` 创建隔离工作树和任务分支 `codex/phase2-t04-s5-cram-plan`，并登记 `.plans/phase2-t04-s5-cram-plan.md`。审计确认 T02 模拟考后端、T03 模拟考前端、S3 练习与 S4 错题可仅以既有契约只读复用；T04 首版计划限定为确定性即时速背卡片与整次限时翻阅，不新增 Schema/migration、Worker、写 API、真实 AI 或外部调用。独立审查确认未将 T04 扩展至 T05 冲刺计划、T06 工作台冲刺区、S7 或 S3 Worker，且计划/文档不包含真实题干、答案、错题原文、资料、秘密或正式运行数据。当前仅允许计划文档提交与推送；在用户明确批准前，不得修改任何 T04 业务代码、测试、API、DTO、Service、Schema 或前端页面。
 > **Phase 2-T03 门禁审计与行动计划证据（2026-07-20，计划待用户明确批准）**：已从最新 `origin/master`（`769840ee71ada882c3bcec4fdde6224735272daf`）创建任务分支 `codex/phase2-t03-s5-mock-exam-frontend-plan`，审计确认 S5 PRD 已登记、T01/T02 已进入主线，且 T02 已提供模拟卷生成/详情、尝试创建/详情与提交批改五个 API 及对应学生安全 DTO。已创建并完成自审 `.plans/phase2-t03-s5-mock-exam-frontend-plan.md`，计划只定义未来的模拟考入口、答题、刷新恢复、提交、结果和模块分析前端闭环，以及测试和隔离浏览器验收；未发现用户明确批准进入 T03 前端实现。当前仅允许计划任务，T03 React 页面、路由、Hook、API 客户端、测试业务代码、后端、Schema、Worker、T04–T06、S7 和 S3 Worker 均未开始；未读取、输出或持久化真实秘密，未运行真实 AI、QQ SMTP、飞书、中转站、Windows 计划任务或其他外部 smoke。
 > **Phase 2-T03 主线完成证据（2026-07-21，已 fast-forward 合入 master 并推送 origin/master）**：任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已先 rebase 至最新 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf`，再 fast-forward 合入 `master`；模拟考前端实现提交为 `e8f161b`，主线收尾提交 `bb8bf77` 已位于 `origin/master`。范围仅含 T03 的模拟考入口、模拟卷详情、作答、刷新恢复、提交、结果和模块分析页面、当前学期守卫路由、T02 五个既有 API/DTO 客户端、草稿恢复与完成态安全清理、前端/浏览器测试；未修改后端、Schema、DTO、Service、Worker、T04–T06、S7 或 S3 Worker。主线复验（退出码均为 0）：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase2-t03-master-final` 的 `pnpm test`（frontend 118/118、backend 233/233）；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase2-t03-master-browser` 的本地 Chrome/Vite Playwright `e2e/mock-exam.spec.ts` 3/3（确认成功、未确认/提交失败恢复、409 冲突安全态）。未读取、输出或持久化真实秘密，未运行真实 AI、QQ SMTP、飞书、中转站、Windows 计划任务或其他外部 smoke。
 ---
