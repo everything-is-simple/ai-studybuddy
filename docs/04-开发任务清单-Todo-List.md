@@ -773,7 +773,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 3 | T03：模拟考前端 | ✅ | 已 rebase 至最新 `master` 并 fast-forward 合入；主线类型检查、构建、全量测试与本地浏览器验收通过，已随本轮文档收尾提交推送 `origin/master` |
 | 4 | T04：临考速背 | ✅ | 已 rebase 至最新 `origin/master` 并 fast-forward 合入；主线类型检查、构建、全量测试与本地浏览器验收通过，已随本轮文档收尾提交推送 `origin/master` |
 | 5 | T05：冲刺计划生成 | ✅ | 已基于执行时最新 `origin/master` `a5c1efde20a29eb85da5431e8b683d8084dc05d6` 完成 rebase（无需重放）并 fast-forward 合入 `master`；主线类型检查、双端构建、全量测试及 Chromium 3/3 验收通过，随本次文档收尾提交推送 `origin/master`。不含 T06 工作台冲刺区 |
-| 6 | T06：工作台”冲刺”区集成 | 🔄 | 任务分支已完成只读摘要、窗口状态、T04/T05 入口、失败重试与跨考试清理，待 fast-forward 合入 `master`、主线复验并推送 `origin/master` |
+| 6 | T06：工作台”冲刺”区集成 | ✅ | 已 fast-forward 合入 `master`；主线类型检查、双端构建、全量测试与本地浏览器验收通过，已推送 `origin/master` |
 
 ### Phase 2 任务状态索引
 
