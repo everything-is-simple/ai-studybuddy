@@ -1,8 +1,8 @@
 # AI StudyBuddy 总 PRD：共同底座 + 七个场景子系统
 
-**版本**：v1.7
+**版本**：v1.8
 **日期**：2026-07-21
-**状态**：Windows 单机产品基线；Phase 1 学习闭环与学生端产品化、Phase 2 S5 冲刺闭环均已完成；POST-PHASE2 全系统验证进行中，Phase 3 暂缓
+**状态**：Windows 单机产品基线；Phase 1、Phase 2 S5 与 POST-PHASE2 全系统验证/文档收口均已完成并推送；Phase 3 暂缓
 **归档来源**：旧草稿已归档到 `I:\ai-studybuddy-backup\system-design-docs-draft_*.zip`
 
 ---
@@ -43,7 +43,7 @@ MVP 成功标准不是“功能多”，而是“能真实陪一个大学生持�
 
 共同底座负责所有子系统共用的能力：本机学生身份、课程/考试目标、知识模块、本地文件存储、格式转换、AI Provider 路由、持久化任务、报告发送、日志和数据安全。
 
-截至 2026-07-21，Phase 1 的 S1/S2/S3/S4/S6 简版、T08 本机配置中心和 T09A–T09E 学生端产品化均已进入 `origin/master`；Phase 2 的 S5 模拟考、临考速背、冲刺计划和考试工作台冲刺区也已完成主线复验并推送。当前正在做全系统测试与文档收口，不进入 Phase 3。
+截至 2026-07-21，Phase 1 的 S1/S2/S3/S4/S6 简版、T08 本机配置中心和 T09A–T09E 学生端产品化均已进入 `origin/master`；Phase 2 的 S5 模拟考、临考速背、冲刺计划和考试工作台冲刺区也已完成主线复验并推送。POST-PHASE2 全系统测试、完整 E2E、文档收口与主线复验已完成并推送 `origin/master`；不进入 Phase 3。
 
 ```mermaid
 flowchart TD

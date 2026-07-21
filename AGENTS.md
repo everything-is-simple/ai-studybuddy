@@ -1,6 +1,6 @@
 # 仓库协作指南
 
-**版本**：v1.15
+**版本**：v1.16
 **日期**：2026-07-21
 
 本文件是通用 AI Agent 入口。完整、工具无关的协作规则见 `docs/12-开发规范-Dev-Rules.md`。
@@ -15,7 +15,7 @@
 - `docs/`：有效设计、任务、测试和规范文档。
 - `.plans/`：已批准或待批准的任务计划。
 
-Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。当前正在执行 POST-PHASE2 全系统验证与文档对齐；用户明确要求 Phase 3 暂缓，S7 继续等待独立门禁。
+Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；用户明确要求 Phase 3 暂缓，S7 继续等待独立门禁。
 
 ## 必读顺序
 
@@ -85,7 +85,7 @@ pnpm -r --filter backend run dev
 5. 满足则创建并同步更新索引。
 6. 提交前运行 `scripts/check-docs-governance.ps1`。
 
-当前状态：S1/S2/S3/S4/S5/S6 PRD 均已创建；Phase 1 与 Phase 2-T01–T06 已完成主线集成、复验和 `origin/master` 推送。S5 的 T04 临考速背、T05 冲刺计划和 T06 工作台冲刺区均为确定性只读/即时聚合边界，不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证与文档对齐正在进行；Phase 3 已按用户要求暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
+当前状态：S1/S2/S3/S4/S5/S6 PRD 均已创建；Phase 1 与 Phase 2-T01–T06 已完成主线集成、复验和 `origin/master` 推送。S5 的 T04 临考速背、T05 冲刺计划和 T06 工作台冲刺区均为确定性只读/即时聚合边界，不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；Phase 3 已按用户要求暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
 
 ## 标准 16 步流程摘要
 

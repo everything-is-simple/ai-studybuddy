@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.42
+**版本**：v2.43
 **日期**：2026-07-21
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -49,7 +49,7 @@
 | S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 开始开发 S2 前触发 |
 | S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ MVP 已完成：Schema、生成、提交批改与前端闭环均已验收 | S2 MVP 完成后触发 |
 | S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
-| S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | ✅ Phase 2-T01–T06 已完成主线复验并推送；POST-PHASE2 全系统验证与文档对齐进行中 | Phase 2 已触发并完成 |
+| S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | ✅ Phase 2-T01–T06 与 POST-PHASE2 全系统验证、完整 E2E、文档对齐和主线复验均已完成并推送 | Phase 2 已触发并完成 |
 | S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | ✅ T06A 规则报告生成与 T06B 渠道推送已实现；真实渠道 smoke 非常规验证 | Phase 1 后期、准备正式发送家长报告前触发 |
 | S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | 📅 未创建 | Phase 1.5 触发 |
 
@@ -136,7 +136,7 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B、T09C、T09D 与 T09E 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环、练习历史与归档学期只读查看，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。当前批准任务是 POST-PHASE2 全系统验证与文档对齐；Phase 3 按用户要求暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
+4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；Phase 3 按用户要求暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
 5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 计划、实现、主线集成、主线复验与 `origin/master` 推送已完成，验证隔离根 `I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
 
 ---
@@ -170,6 +170,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.43 | 2026-07-21 | 同步 POST-PHASE2 分支与主线全量测试、完整 E2E、文档对齐和最终推送均已完成；Phase 3 继续暂缓。 |
 | v2.42 | 2026-07-21 | 同步 Phase 2-T01–T06 已完成主线复验并推送、POST-PHASE2 全系统验证与文档对齐进行中，以及 Phase 3 暂缓的当前状态。 |
 | v2.41 | 2026-07-20 | Phase 2-T01：在 S3 练习与 S4 错题稳定运行门禁满足且用户明确批准后，创建并登记 S5 期末冲刺子系统 PRD；下一门禁为 Phase 2-T02 模拟考 Schema 与生成独立计划，T02–T06 尚未启动，S7 仍按门禁等待 |
 | v2.40 | 2026-07-20 | 同步系统文档当前状态：确认 T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成主线集成、复验并推送 `origin/master`；补齐 T09E 收尾提交 `af37bd5`、M03 收尾提交 `6ddd9fa` 与 Post-M03 收尾提交 `eac469b`，更新前端 14 路由事实基线，并明确当前没有新的已批准业务实施任务 |

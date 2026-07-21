@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.12
+**版本**：v1.13
 **日期**：2026-07-21
-**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1 与 Phase 2 自动化/浏览器验收已完成；POST-PHASE2 分支全量测试与完整 E2E 已通过，待主线复验
+**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1、Phase 2 与 POST-PHASE2 分支/主线全量自动化和完整 E2E 均已完成
 **用途**：定义组件验证、Windows 单机业务闭环、全量自动化、完整浏览器 E2E 与实机/外部渠道证据标准。
 
 ---
@@ -194,7 +194,17 @@ T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新
 - `pnpm test`：后端 237/237；前端 JSON reporter 明确确认 61/61 suites、137/137 tests；
 - `pnpm test:e2e`：执行 `e2e/` 下 15 个 spec，Playwright 21/21 通过，覆盖完整学生旅程与 Phase 2 模拟考、速背、冲刺计划和考试工作台。
 
-本轮不运行真实 AI、QQ SMTP、飞书、正式 Windows Task Scheduler 或其他外部 smoke；这些外部依赖不作为常规全量回归门槛。上述为任务分支证据，fast-forward 合入后仍必须在 `master` 使用新的隔离目录重跑同范围验证。
+本轮不运行真实 AI、QQ SMTP、飞书、正式 Windows Task Scheduler 或其他外部 smoke；这些外部依赖不作为常规全量回归门槛。
+
+### 9.3 POST-PHASE2 主线全量复验（2026-07-21）
+
+任务分支完成 `git fetch --prune origin` 和 `git rebase origin/master` 后，以 `git merge --ff-only` 纳入干净的 `master`，未产生 merge commit。主线使用与分支不同的隔离目录重新完成：
+
+- `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-master-full` 下 `pnpm type-check`、后端生产构建、前端生产构建和 `pnpm test` 均退出码 0；后端 237/237，前端 JSON reporter 确认 26 个测试文件、61/61 suites、137/137 tests；
+- `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-master-e2e` 下完整 `pnpm test:e2e` 执行 15 个 spec，Playwright 21/21 通过；
+- 文档治理和 `git diff --check` 通过，测试/构建未留下受跟踪文件变更；前端仍只有既有 KaTeX 535.51 kB chunk 非阻塞 warning。
+
+分支与主线证据范围一致，POST-PHASE2 收口完成；真实外部 smoke 仍未运行，也不据此宣称真实渠道可用。
 
 ---
 

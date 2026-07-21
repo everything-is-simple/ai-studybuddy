@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.64
+**版本**：v1.65
 **日期**：2026-07-21
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1 与 Phase 2-T01–T06 均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。当前 POST-PHASE2 全系统验证与文档对齐已在任务分支完成 type-check、双端构建、全量测试和完整 Playwright E2E，正在等待任务分支提交、fast-forward 主线集成与主线同范围复验。Phase 3 按用户明确要求暂缓；S7 继续等待独立门禁，S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；S7 继续等待独立门禁，S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -16,7 +16,9 @@
 
 > **DOCS-20260720 系统文档当前状态同步（已完成）**：用户明确要求将仍停留在 T09A/T09E 旧门禁和 M03/Post-M03 待推送状态的系统文档同步到当前 Git 事实。任务分支 `codex/system-docs-current-status-sync` 仅修订入口规范、文档索引、任务清单、共同架构、子系统状态与前端路由事实，不改业务代码，不创建或实施新的业务任务；任务分支提交 `b9fb3e8` 已 fast-forward 合入 `master`，主线复验通过，并随本收尾提交推送 `origin/master`。
 
-> **POST-PHASE2 全系统验证与文档对齐（分支验证与文档对齐已完成，待主线复验）**：用户于 2026-07-21 明确要求 Phase 2 完成后暂不进入 Phase 3。任务分支 `codex/post-phase2-full-validation` 基于 `origin/master` `4dcc0b2e6bbb130e6e3826e1595ca5995741d2a0` 创建，计划提交 `72c7f7d4dc1a74971e72450a2db2f79f26a21b46`，行动计划为 `.plans/post-phase2-full-validation-plan.md`。分支隔离验证均退出码 0：`pnpm type-check`；后端生产构建（含 OCR worker 复制）；前端生产构建（仅既有 KaTeX chunk 大于 500 kB 的非阻塞 warning）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-branch-full` 下 `pnpm test`（backend 237/237；frontend 26 个测试文件、61/61 suites、137/137 tests）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-branch-e2e` 下 `pnpm test:e2e`（`e2e/` 15 个 spec，Playwright 21/21）。已按当前代码、路由、API、migration v9、测试和 Git 历史对齐入口规范、总 PRD、子系统地图、架构、测试计划、前后端规范、开发规则、前端信息架构与 S5 PRD；当前仍待治理/diff 门禁、任务分支提交与推送、rebase、fast-forward 合入及 `master` 同范围复验，因此本任务尚未标记最终完成。不实施 Phase 3，不启动 S7、S3 Worker，不运行真实 AI、QQ SMTP、飞书、正式 Windows Task Scheduler 或其他外部 smoke。
+> **POST-PHASE2 全系统验证与文档对齐（✅ 已完成主线复验并推送 origin/master）**：用户于 2026-07-21 明确要求 Phase 2 完成后暂不进入 Phase 3。任务分支 `codex/post-phase2-full-validation` 基于 `origin/master` `4dcc0b2e6bbb130e6e3826e1595ca5995741d2a0` 创建，计划提交 `72c7f7d4dc1a74971e72450a2db2f79f26a21b46`，文档对齐提交 `aea8c013e2e953c7a692093b799da751bd5913a4`，行动计划为 `.plans/post-phase2-full-validation-plan.md`。分支隔离验证均退出码 0：`pnpm type-check`；后端生产构建（含 OCR worker 复制）；前端生产构建（仅既有 KaTeX chunk 535.51 kB 的非阻塞 warning）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-branch-full` 下 `pnpm test`（backend 237/237；frontend 26 个测试文件、61/61 suites、137/137 tests）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-branch-e2e` 下 `pnpm test:e2e`（`e2e/` 15 个 spec，Playwright 21/21）。已按当前代码、路由、API、migration v9、测试和 Git 历史对齐入口规范、总 PRD、子系统地图、架构、测试计划、前后端规范、开发规则、前端信息架构与 S5 PRD。
+>
+> **POST-PHASE2 主线收尾证据（2026-07-21）**：重新 `git fetch --prune origin` 后确认最新 `origin/master` 仍为 `4dcc0b2e6bbb130e6e3826e1595ca5995741d2a0`，任务分支 `git rebase origin/master` 无需重放且无冲突；随后在干净的主线工作树 `I:\ai-studybuddy-tmp\worktrees\post-t12-m02-master-integration` 执行 `git pull --ff-only origin master` 与 `git merge --ff-only codex/post-phase2-full-validation`，本地 `master` 快进到 `aea8c013e2e953c7a692093b799da751bd5913a4`，未产生 merge commit。主线隔离复验均退出码 0：`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-master-full` 下 `pnpm type-check`、后端 build、前端 build、`pnpm test`（backend 237/237、frontend 61/61 suites 与 137/137 tests；机器可读证据为 `frontend-vitest.json`）；`APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\post-phase2-full-validation-20260721-master-e2e` 下完整 `pnpm test:e2e`（15 个 spec、21/21）；文档治理与 `git diff --check` 通过。最终状态由本次 `docs(process): 同步 Phase 2 收口验证完成状态` 提交发布并推送 `origin/master`。本轮不实施 Phase 3，不启动 S7、S3 Worker，不运行真实 AI、QQ SMTP、飞书、正式 Windows Task Scheduler 或其他外部 smoke。
 ---
 
 ## 阶段总览
@@ -29,7 +31,7 @@
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 等待独立门禁与批准 |
-| Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 已完成并推送；POST-PHASE2 收口进行中 |
+| Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
 ---
