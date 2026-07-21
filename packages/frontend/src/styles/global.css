@@ -1828,3 +1828,117 @@ button:disabled {
   .cram-plan-suggestion { align-items: stretch; flex-direction: column; }
   .cram-plan-suggestion .button-link { width: 100%; text-align: center; }
 }
+
+/* ===== Phase 2-T06 工作台冲刺区 ===== */
+.workbench-cram {
+  display: grid;
+  gap: 16px;
+}
+
+.workbench-cram-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.workbench-cram-heading h2,
+.workbench-cram-heading p,
+.workbench-cram-note,
+.workbench-cram-priority span,
+.workbench-cram-priority strong {
+  margin: 0;
+}
+
+.workbench-cram-readonly {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.workbench-cram-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workbench-cram-summary > div,
+.workbench-cram-priority {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.workbench-cram-summary span,
+.workbench-cram-priority span,
+.workbench-cram-note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.workbench-cram-summary strong,
+.workbench-cram-priority strong {
+  overflow-wrap: anywhere;
+}
+
+.workbench-cram-priority {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.workbench-cram-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workbench-cram-actions .button-link {
+  text-align: center;
+}
+
+.workbench-cram-actions .button-link.button-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-secondary);
+}
+
+.workbench-cram-actions .button-link.button-secondary:hover {
+  background: var(--color-secondary);
+}
+
+@media (max-width: 720px) {
+  .workbench-cram-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 390px) {
+  .workbench-cram-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workbench-cram-readonly {
+    align-self: flex-start;
+  }
+
+  .workbench-cram-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workbench-cram-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workbench-cram-actions .button-link {
+    width: 100%;
+  }
+}

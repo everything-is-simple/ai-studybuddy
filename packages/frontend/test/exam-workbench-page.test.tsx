@@ -73,6 +73,34 @@ let currentExam: any;
 let allExams: any[];
 let allTasks: any[];
 let timelineEvents: any[];
+let cramPlan: any;
+
+function makeAvailableCramPlan(exam = currentExam) {
+  return {
+    assessmentAttemptId: exam.id,
+    courseInstanceId: exam.courseInstanceId,
+    assessmentName: exam.name,
+    examAt: exam.examAt,
+    daysUntilExam: 5,
+    availability: 'available' as const,
+    days: [
+      {
+        date: new Date().toISOString().slice(0, 10),
+        suggestions: [
+          {
+            id: 'task-1',
+            priority: 1 as const,
+            reason: '优先完成考试前到期的未完成任务',
+            sourceKind: 'study_task' as const,
+            sourceId: 'task-1',
+            targetType: 'study_task' as const,
+            targetId: 'task-1',
+          },
+        ],
+      },
+    ],
+  };
+}
 
 function resetFixtures() {
   currentExam = {
@@ -147,6 +175,7 @@ function resetFixtures() {
     },
   ];
   timelineEvents = [];
+  cramPlan = makeAvailableCramPlan(currentExam);
 }
 
 vi.mock('../src/api/study-rhythm-api', () => ({
@@ -177,6 +206,10 @@ vi.mock('../src/api/study-rhythm-api', () => ({
     allTasks = allTasks.map((task) => (task.id === taskId ? { ...task, status } : task));
     return allTasks.find((task) => task.id === taskId);
   }),
+}));
+
+vi.mock('../src/api/cram-plan-api', () => ({
+  getCramPlan: vi.fn(async () => cramPlan),
 }));
 
 vi.mock('../src/components/app-navigation', () => ({ AppNavigation: () => null }));
@@ -261,6 +294,15 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(pendingOverview?.textContent).not.toContain('还有');
     expect(container.querySelector(`a[href="/materials?courseInstanceId=${COURSE_A.id}"]`)).not.toBeNull();
     expect(container.querySelector(`a[href="/exams/${CURRENT_EXAM_ID}/practice"]`)).not.toBeNull();
+
+    const cramSection = container.querySelector('[data-testid="workbench-cram"]');
+    expect(cramSection?.textContent).toContain('冲刺中');
+    expect(cramSection?.textContent).toContain('建议天数1 天');
+    expect(cramSection?.textContent).toContain('建议数量1 项');
+    expect(cramSection?.textContent).toContain('优先完成考试前到期的未完成任务');
+    expect(cramSection?.textContent).toContain('只读摘要');
+    expect(container.querySelector(`a[href="/exams/${CURRENT_EXAM_ID}/cram"]`)).not.toBeNull();
+    expect(container.querySelector(`a[href="/exams/${CURRENT_EXAM_ID}/cram-plan"]`)).not.toBeNull();
   });
 
   it('pending 考试只显示确认动作，确认后才显示正式计划', async () => {
@@ -270,6 +312,9 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(container.textContent).toContain('考试日期待确认');
     expect(container.querySelector('[data-testid="task-plan"]')).toBeNull();
     expect(container.querySelector('[data-testid="workbench-practice"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workbench-cram"]')?.textContent).toContain('请先确认考试信息');
+    const { getCramPlan } = await import('../src/api/cram-plan-api');
+    expect(getCramPlan).not.toHaveBeenCalled();
     await act(async () => buttonContaining('确认考试日期').click());
     await flush();
 
@@ -277,6 +322,110 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     expect(confirmExam).toHaveBeenCalledWith('semester-1', PENDING_EXAM_ID);
     expect(container.querySelector('[data-testid="task-plan"]')).not.toBeNull();
   });
+  it.each([
+    ['not_started', '尚未开始', '尚未进入考前 7 天冲刺窗口'],
+    ['ended', '已结束', '该考试已结束'],
+    ['available', '冲刺中', '暂时没有可安全生成的建议'],
+  ] as const)('冲刺摘要明确展示 %s 窗口状态和降级提示', async (availability, label, message) => {
+    cramPlan = { ...makeAvailableCramPlan(), availability, days: [] };
+
+    await renderWorkbench();
+
+    const section = container.querySelector('[data-testid="workbench-cram"]');
+    expect(section?.textContent).toContain(label);
+    expect(section?.textContent).toContain(message);
+    expect(section?.textContent).toContain('建议天数0 天');
+    expect(section?.textContent).toContain('建议数量0 项');
+  });
+
+  it('冲刺摘要失败时只在局部显示错误，并可重试恢复', async () => {
+    const { getCramPlan } = await import('../src/api/cram-plan-api');
+    const cramPlanMock = getCramPlan as unknown as ReturnType<typeof vi.fn>;
+    cramPlanMock.mockRejectedValueOnce(new Error('冲刺摘要暂不可用'));
+
+    await renderWorkbench();
+
+    expect(container.querySelector('[data-testid="workbench-cram"]')?.textContent).toContain('冲刺摘要暂不可用');
+    expect(container.querySelector('[data-testid="task-plan"]')).not.toBeNull();
+    await act(async () => buttonContaining('重试').click());
+    await flush();
+
+    expect(cramPlanMock).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('[data-testid="workbench-cram"]')?.textContent).toContain(
+      '优先完成考试前到期的未完成任务'
+    );
+  });
+
+  it('冲刺区只导航，不触发任务或考试写请求', async () => {
+    await renderWorkbench();
+
+    const section = container.querySelector('[data-testid="workbench-cram"]')!;
+    expect(section.querySelectorAll('button')).toHaveLength(0);
+    expect(section.querySelectorAll('a')).toHaveLength(2);
+
+    const { confirmExam, createStudyTask, updateStudyTaskStatus } = await import('../src/api/study-rhythm-api');
+    expect(confirmExam).not.toHaveBeenCalled();
+    expect(createStudyTask).not.toHaveBeenCalled();
+    expect(updateStudyTaskStatus).not.toHaveBeenCalled();
+  });
+
+  it('切换考试时立即隐藏旧冲刺摘要，并只接受新考试结果', async () => {
+    const { getCramPlan } = await import('../src/api/cram-plan-api');
+    const cramPlanMock = getCramPlan as unknown as ReturnType<typeof vi.fn>;
+    const otherExam = allExams.find((exam) => exam.id === OTHER_EXAM_ID);
+    let resolveOtherPlan: ((plan: any) => void) | undefined;
+    cramPlanMock
+      .mockResolvedValueOnce(makeAvailableCramPlan(currentExam))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveOtherPlan = resolve;
+          })
+      );
+
+    await renderWorkbench();
+    expect(container.querySelector('[data-testid="workbench-cram"]')?.textContent).toContain(
+      '优先完成考试前到期的未完成任务'
+    );
+
+    currentExam = otherExam;
+    await act(async () => container.querySelector<HTMLAnchorElement>(`a[href="/exams/${OTHER_EXAM_ID}"]`)!.click());
+    await flush();
+
+    const pendingSection = container.querySelector('[data-testid="workbench-cram"]');
+    expect(pendingSection?.textContent).toContain('正在读取冲刺摘要');
+    expect(pendingSection?.textContent).not.toContain('优先完成考试前到期的未完成任务');
+
+    await act(async () =>
+      resolveOtherPlan?.({
+        ...makeAvailableCramPlan(otherExam),
+        daysUntilExam: 7,
+        days: [
+          {
+            date: new Date().toISOString().slice(0, 10),
+            suggestions: [
+              {
+                id: 'task-other',
+                priority: 1,
+                reason: '先完成英语考试前任务',
+                sourceKind: 'study_task',
+                sourceId: 'task-other',
+                targetType: 'study_task',
+                targetId: 'task-other',
+              },
+            ],
+          },
+        ],
+      })
+    );
+    await flush();
+
+    const completedSection = container.querySelector('[data-testid="workbench-cram"]');
+    expect(completedSection?.textContent).toContain('先完成英语考试前任务');
+    expect(completedSection?.textContent).not.toContain('优先完成考试前到期的未完成任务');
+    expect(cramPlanMock).toHaveBeenLastCalledWith('semester-1', OTHER_EXAM_ID, expect.any(AbortSignal));
+  });
+
   it('切换考试项目时将任务截止时间重置为新考试日期', async () => {
     await renderWorkbench();
     const deadline = container.querySelector<HTMLInputElement>('input[name="deadlineAt"]')!;

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import type {
   AssessmentAttemptDto,
   CourseInstanceDto,
+  CramPlanResponseDto,
   StudyTaskDto,
   StudyEventDto,
   StudyTaskStatus,
@@ -18,6 +19,7 @@ import {
   getTimeline,
   updateStudyTaskStatus,
 } from '../api/study-rhythm-api';
+import { getCramPlan } from '../api/cram-plan-api';
 import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { StudyEventList } from '../components/study-event-list';
@@ -39,6 +41,11 @@ interface WorkbenchData {
 interface TimelineData {
   courseInstanceId: string | null;
   events: StudyEventDto[];
+}
+
+interface WorkbenchCramData {
+  assessmentAttemptId: string;
+  plan: CramPlanResponseDto | null;
 }
 
 const TASK_TYPE_OPTIONS: Array<{ value: StudyTaskType; label: string }> = [
@@ -75,6 +82,27 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
   );
 
   const { data, loading, error, refetch } = useApiRequest(fetcher, [fetcher]);
+
+  const cramPlanFetcher = useCallback(
+    async (signal: AbortSignal): Promise<WorkbenchCramData | null> => {
+      const exam = data?.exam;
+      if (!semesterId || !examId || !exam || exam.id !== examId) return null;
+      if (exam.confirmationStatus !== 'confirmed') {
+        return { assessmentAttemptId: exam.id, plan: null };
+      }
+      const plan = await getCramPlan(semesterId, exam.id, signal);
+      return { assessmentAttemptId: exam.id, plan };
+    },
+    [data?.exam.id, data?.exam.confirmationStatus, examId, semesterId]
+  );
+  const {
+    data: cramData,
+    loading: cramLoading,
+    error: cramError,
+    refetch: refetchCramPlan,
+  } = useApiRequest(cramPlanFetcher, [cramPlanFetcher]);
+  const currentCramData =
+    data?.exam.id === examId && cramData?.assessmentAttemptId === examId ? cramData : null;
 
   const timelineFetcher = useCallback(
     async (signal: AbortSignal): Promise<TimelineData> => {
@@ -183,6 +211,7 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
       setEstimatedMinutes('');
       setActionMessage('学习任务已创建');
       refetch();
+      refetchCramPlan();
     } catch (caughtError) {
       setActionError(caughtError instanceof Error ? caughtError.message : '任务创建失败');
     } finally {
@@ -199,6 +228,7 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
       await updateStudyTaskStatus({ semesterId, taskId, status });
       setActionMessage(status === 'done' ? '任务已完成' : '任务已开始');
       refetch();
+      refetchCramPlan();
     } catch (caughtError) {
       setActionError(caughtError instanceof Error ? caughtError.message : '任务状态更新失败');
       refetch();
@@ -254,17 +284,27 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
           </header>
 
           {data.exam.confirmationStatus !== 'confirmed' ? (
-            <section className="card pending-exam-panel">
-              <h2>考试日期待确认</h2>
-              <p>确认后才会启用正式倒计时、任务进度和考试项目计划。</p>
-              {data.exam.confirmationStatus === 'pending' ? (
-                <button type="button" onClick={() => void handleConfirm()} disabled={confirming}>
-                  {confirming ? '确认中…' : '确认考试日期'}
-                </button>
-              ) : (
-                <p>当前状态不允许确认，请返回课程页核对考试信息。</p>
-              )}
-            </section>
+            <>
+              <section className="card pending-exam-panel">
+                <h2>考试日期待确认</h2>
+                <p>确认后才会启用正式倒计时、任务进度和考试项目计划。</p>
+                {data.exam.confirmationStatus === 'pending' ? (
+                  <button type="button" onClick={() => void handleConfirm()} disabled={confirming}>
+                    {confirming ? '确认中…' : '确认考试日期'}
+                  </button>
+                ) : (
+                  <p>当前状态不允许确认，请返回课程页核对考试信息。</p>
+                )}
+              </section>
+              <WorkbenchCramSection
+                exam={data.exam}
+                routeExamId={examId}
+                cramData={currentCramData}
+                loading={cramLoading}
+                error={cramError}
+                onRetry={refetchCramPlan}
+              />
+            </>
           ) : (
             <>
               {confirmedExams.length > 1 && (
@@ -380,6 +420,15 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
                 </Link>
               </section>
 
+              <WorkbenchCramSection
+                exam={data.exam}
+                routeExamId={examId}
+                cramData={currentCramData}
+                loading={cramLoading}
+                error={cramError}
+                onRetry={refetchCramPlan}
+              />
+
               <section className="card" data-testid="task-plan">
                 <h2>计划</h2>
                 <form className="task-form" onSubmit={handleCreateTask}>
@@ -471,6 +520,118 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
       )}
     </div>
   );
+}
+
+interface WorkbenchCramSectionProps {
+  exam: AssessmentAttemptDto;
+  routeExamId: string;
+  cramData: WorkbenchCramData | null;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}
+
+function WorkbenchCramSection({
+  exam,
+  routeExamId,
+  cramData,
+  loading,
+  error,
+  onRetry,
+}: WorkbenchCramSectionProps) {
+  const isCurrentExam = exam.id === routeExamId;
+  const plan = isCurrentExam ? cramData?.plan ?? null : null;
+  const suggestions = plan?.days.flatMap((day) => day.suggestions) ?? [];
+  const suggestionDays = plan?.days.filter((day) => day.suggestions.length > 0).length ?? 0;
+  const topSuggestion = [...suggestions].sort(
+    (left, right) => left.priority - right.priority || left.id.localeCompare(right.id)
+  )[0];
+  const encodedExamId = encodeURIComponent(routeExamId);
+
+  return (
+    <section className="card workbench-cram" data-testid="workbench-cram" aria-labelledby="workbench-cram-title">
+      <div className="workbench-cram-heading">
+        <div>
+          <p className="workbench-eyebrow">考前集中复习</p>
+          <h2 id="workbench-cram-title">冲刺</h2>
+        </div>
+        <span className="workbench-cram-readonly">只读摘要</span>
+      </div>
+
+      {exam.confirmationStatus !== 'confirmed' ? (
+        <FeedbackMessage state="empty" message="请先确认考试信息，确认后工作台才会读取冲刺窗口和建议摘要。" />
+      ) : !isCurrentExam || (loading && !plan) ? (
+        <FeedbackMessage state="loading" message="正在读取冲刺摘要…" />
+      ) : error ? (
+        <FeedbackMessage state="error" message={error} onRetry={onRetry} />
+      ) : plan ? (
+        <>
+          <div className="workbench-cram-summary" aria-label="冲刺摘要">
+            <div>
+              <span>冲刺窗口</span>
+              <strong>{formatCramAvailability(plan.availability)}</strong>
+            </div>
+            <div>
+              <span>距考试</span>
+              <strong>{formatCramDays(plan.daysUntilExam)}</strong>
+            </div>
+            <div>
+              <span>建议天数</span>
+              <strong>{suggestionDays} 天</strong>
+            </div>
+            <div>
+              <span>建议数量</span>
+              <strong>{suggestions.length} 项</strong>
+            </div>
+          </div>
+          {plan.availability === 'not_started' && (
+            <p className="text-muted">尚未进入考前 7 天冲刺窗口；可先使用临考速背或查看完整计划说明。</p>
+          )}
+          {plan.availability === 'ended' && (
+            <p className="text-muted">该考试已结束，工作台不会生成新的冲刺建议。</p>
+          )}
+          {plan.availability === 'available' && suggestions.length === 0 && (
+            <p className="text-muted">暂时没有可安全生成的建议；不会伪造建议或改写历史学习事实。</p>
+          )}
+          {plan.availability === 'available' && topSuggestion && (
+            <div className="workbench-cram-priority" data-testid="workbench-cram-top-suggestion">
+              <span>最高优先级建议</span>
+              <strong>{topSuggestion.reason}</strong>
+            </div>
+          )}
+        </>
+      ) : (
+        <FeedbackMessage state="loading" message="正在读取冲刺摘要…" />
+      )}
+
+      {exam.confirmationStatus === 'confirmed' && isCurrentExam && (
+        <div className="workbench-cram-actions">
+          <Link className="button-link" to={`/exams/${encodedExamId}/cram`}>
+            临考速背
+          </Link>
+          <Link className="button-link button-secondary" to={`/exams/${encodedExamId}/cram-plan`}>
+            查看完整冲刺计划
+          </Link>
+        </div>
+      )}
+      <p className="workbench-cram-note">冲刺区只提供导航和只读摘要，不会自动修改任务、错题、薄弱点或练习结果。</p>
+    </section>
+  );
+}
+
+function formatCramAvailability(availability: CramPlanResponseDto['availability']): string {
+  const labels: Record<CramPlanResponseDto['availability'], string> = {
+    available: '冲刺中',
+    not_started: '尚未开始',
+    ended: '已结束',
+  };
+  return labels[availability];
+}
+
+function formatCramDays(daysUntilExam: number): string {
+  if (daysUntilExam > 0) return `${daysUntilExam} 天`;
+  if (daysUntilExam === 0) return '今天';
+  return `已过 ${Math.abs(daysUntilExam)} 天`;
 }
 
 function groupTasksByExam(tasks: StudyTaskDto[]): Map<string, StudyTaskDto[]> {

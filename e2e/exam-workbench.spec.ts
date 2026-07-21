@@ -13,6 +13,12 @@ function localInputAfterDays(days: number, hour = 9): string {
 }
 
 test('学生完成多考试确认、切换、任务闭环并刷新读回', async ({ page, request }) => {
+  const cramPlanMethods: string[] = [];
+  page.on('request', (browserRequest) => {
+    const requestUrl = new URL(browserRequest.url());
+    if (requestUrl.pathname.endsWith('/cram-plan')) cramPlanMethods.push(browserRequest.method());
+  });
+
   const semesterResponse = await request.post(`${backendBaseUrl}/dev/init-semester`, {
     data: {
       studentName: 'T11 合成学生',
@@ -83,6 +89,39 @@ test('学生完成多考试确认、切换、任务闭环并刷新读回', async
   await page.getByRole('button', { name: '创建任务' }).click();
   const currentTask = page.getByTestId('current-task-list').locator('li').filter({ hasText: 'T11 当前考试任务' });
   await expect(currentTask).toBeVisible();
+
+  const cramSection = page.getByTestId('workbench-cram');
+  await expect(cramSection.getByText('冲刺中', { exact: true })).toBeVisible();
+  await expect(cramSection).toContainText('建议数量');
+  await expect(cramSection).toContainText('1 项');
+  await expect(cramSection.getByTestId('workbench-cram-top-suggestion')).toContainText(
+    '优先完成考试前到期的未完成任务'
+  );
+  await expect(cramSection).toContainText('只读摘要');
+
+  const workbenchUrl = page.url();
+  await cramSection.getByRole('link', { name: '查看完整冲刺计划' }).click();
+  await expect(page).toHaveURL(/\/exams\/.+\/cram-plan$/);
+  await expect(page.getByRole('heading', { name: /的冲刺计划$/, level: 1 })).toBeVisible();
+  await page.goto(workbenchUrl);
+  await expect(page.getByTestId('workbench-cram')).toBeVisible();
+  await page.getByTestId('workbench-cram').getByRole('link', { name: '临考速背' }).click();
+  await expect(page).toHaveURL(/\/exams\/.+\/cram$/);
+  await expect(page.getByRole('heading', { name: /的临考速背$/, level: 1 })).toBeVisible();
+  await page.goto(workbenchUrl);
+  await expect(page.getByTestId('workbench-cram')).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileCramSection = page.getByTestId('workbench-cram');
+  await expect(mobileCramSection.getByRole('link', { name: '查看完整冲刺计划' })).toBeVisible();
+  await expect(mobileCramSection.getByRole('link', { name: '临考速背' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+  const evidenceRoot = path.join(process.env.APP_DATA_ROOT!, 'playwright');
+  fs.mkdirSync(evidenceRoot, { recursive: true });
+  await page.screenshot({ path: path.join(evidenceRoot, 'exam-workbench-cram-mobile.png'), fullPage: true });
+  await page.setViewportSize({ width: 1280, height: 720 });
+
   await currentTask.getByRole('button', { name: '开始学习' }).click();
   await expect(currentTask.getByText('进行中')).toBeVisible();
   await currentTask.getByRole('button', { name: '标记完成' }).click();
@@ -93,15 +132,15 @@ test('学生完成多考试确认、切换、任务闭环并刷新读回', async
   await expect(workbenchHeader.getByText('1 / 1', { exact: true })).toBeVisible();
   await expect(page.getByText('T11 当前考试任务', { exact: true })).toBeVisible();
 
+  await page.screenshot({ path: path.join(evidenceRoot, 'exam-workbench-success.png'), fullPage: true });
+  expect(cramPlanMethods.length).toBeGreaterThan(0);
+  expect(new Set(cramPlanMethods)).toEqual(new Set(['GET']));
+
   const materialsLink = page.getByRole('link', { name: '打开本课程资料' });
   await expect(materialsLink).toHaveAttribute('href', /courseInstanceId=/);
   await materialsLink.click();
   await expect(page).toHaveURL(/\/materials\?courseInstanceId=/);
   await expect(page.getByLabel('选择课程')).toHaveValue(/.+/);
-
-  const evidenceRoot = path.join(process.env.APP_DATA_ROOT!, 'playwright');
-  fs.mkdirSync(evidenceRoot, { recursive: true });
-  await page.screenshot({ path: path.join(evidenceRoot, 'exam-workbench-success.png'), fullPage: true });
 
   await page.goto('/exams/not-a-uuid');
   await expect(page.getByText('考试不存在')).toBeVisible();
