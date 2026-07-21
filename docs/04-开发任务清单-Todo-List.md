@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.59
+**版本**：v1.60
 **日期**：2026-07-21
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。Phase 2-T01 S5 PRD 已在用户明确批准后创建并登记；Phase 2-T02 模拟考 Schema 与生成已完成主线合入、复验并推送。Phase 2-T03 模拟考前端已完成快进合入 `master`、主线复验并随文档收尾提交推送 `origin/master`；T04–T06、S7 与 S3 Worker 继续按各自门禁等待。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8 均已完成。Phase 1 已完成 T00 协作基线、T10 人工补文恢复、T03 S3 PRD、T11 考试确认与任务创建闭环、T02 Provider 健康熔断、T03A S3 数据库与 Schema、T03B 练习生成 API、T03C 限时作答与规则批改、T03D S3 练习前端闭环，以及 T04 S4 轻量 PRD、T04A S4 错题归档与 Schema、T04B S4 错题改错前端闭环（含 migration v6 与 S4 API 补洞）、T05 回流规则、T06 S6 家长观察 PRD、T06A S6 家长报告生成、T06B S6 家长报告推送、T07 S1 时间线扩展、T08 本机配置中心与连接验收、T09A 学期创建/选择与切换、T09B 每日学习首页、T09C 课程课表与考试目标完善、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档，以及 M01 前端 Markmap 按需加载与构建 chunk 治理。T09A、T09B、T09C、T09D、T09E 与 M01 均已 fast-forward 合入并推送 `origin/master`，且均已完成主线复验；T09E 实现提交 `de5c41e`、主线收尾提交 `af37bd5`。T12 已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`；M02 错题详情一级标题语义回归修复已 fast-forward 合入、完成主线复验并推送 `origin/master`。M03 实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa`；Post-M03 实现提交 `e08ab36`、主线收尾提交 `eac469b`，均已推送 `origin/master`。Phase 2-T01 S5 PRD 已在用户明确批准后创建并登记；Phase 2-T02 模拟考 Schema 与生成已完成主线合入、复验并推送。Phase 2-T03 模拟考前端与 T04 临考速背均已完成快进合入 `master`、主线复验并随文档收尾提交推送 `origin/master`；T05–T06、S7 与 S3 Worker 继续按各自门禁等待。各阶段任务按单一责任拆分。
 
 > **前端信息架构研究证据（2026-07-17）**：已将 OpenDesign 研究稿纳入 `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`。吸收考试工作台枢纽、S6 保持异步报告、正式产品消除手输学期 UUID，以及时间线优先嵌入考试工作台的原则；T07 已按独立计划在工作台落地当前课程近期活动，T08 已按独立计划落地本机配置中心。页面数量、系统设置、学期向导、每日首页、练习历史和家长面板均不因此自动进入实现。渠道与 Provider 秘密不得保存到浏览器或 `localStorage`。T09A 已合入并推送 `origin/master`，主线复验通过；T09B、T09C、T09D 与 T09E 均已完成主线集成、主线复验并推送 `origin/master`；家长 Web 面板未启动。
 
@@ -25,7 +25,7 @@
 | Phase 0.5 | 成熟开源组件在 composer 独立调通        | ✅ 已完成（MVP 主路径 smoke test 全部通过）                        |
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
-| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08/T09A/T09B/T09C/T09D/T09E ✅；S3 Worker 未启动，S5/S7 待各自门禁） |
+| Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | 🔄 进行中（T00/T10/T02/T03/T11/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08/T09A/T09B/T09C/T09D/T09E ✅；S3 Worker 未启动，S5 T05–T06 与 S7 待各自门禁） |
 | Phase 1.5 | 课堂录音 ASR（S7）                      | ⏳ 待开始                                                          |
 | Phase 2   | 期末真题冲刺（S5）                      | ⏳ 待开始                                                          |
 | Phase 3   | 打磨家长端、安全、性能                  | ⏳ 待开始                                                          |
@@ -781,7 +781,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ---- | -------- | ------------- |
 | T01 | `.plans/phase2-t01-s5-prd-plan.md` | 已完成：计划已创建并完成门禁审计；用户于 2026-07-20 明确批准创建 S5 PRD；本文档任务已创建 `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` 并同步 `docs/00`。 |
 | T02 | `.plans/phase2-t02-s5-mock-exam-schema-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t02-s5-mock-exam-schema` 已完成分支实现、fast-forward 合入 `master` 并完成主线复验；`origin/master` 已推送。 |
-| T03 | `.plans/phase2-t03-s5-mock-exam-frontend-plan.md` | 用户已于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 基于 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf` 完成分支实现。已验证 T02 API/DTO 消费、入口/答题/提交/结果/模块分析、刷新恢复、失败和重复提交；尚未合入或推送 `origin/master`。不实现 T02、T04–T06、S7 或 S3 Worker。 |
+| T03 | `.plans/phase2-t03-s5-mock-exam-frontend-plan.md` | 用户于 2026-07-20 明确批准进入实现；任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已 rebase、fast-forward 合入 `master` 并完成主线复验，随文档收尾提交推送 `origin/master`。范围为 T02 API/DTO 消费、模拟考入口/答题/提交/结果/模块分析、刷新恢复、失败和重复提交；未实现 T04–T06、S7 或 S3 Worker。 |
 | T04 | `.plans/phase2-t04-s5-cram-plan.md` | 用户于 2026-07-21 明确批准进入实现；任务分支 `codex/phase2-t04-s5-cram` 已基于 `origin/master` `439d6ad84169d7ddb1e88347ccc9963fd01bfeea` rebase 并 fast-forward 合入 `master`。主线已验证确定性只读速背卡 API/DTO/Service、独立前端页面、总倒计时、安全恢复及本地 Chrome 验收；主线实现与收尾提交已推送 `origin/master`。不实现 T05–T06、S7、S3 Worker、Schema/migration、Worker、真实 AI 或外部调用。 |
 | T05–T06 | 尚未创建 | 等待各自独立计划、独立审查并获用户明确批准；当前未启动。 |
 
