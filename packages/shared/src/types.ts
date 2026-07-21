@@ -668,6 +668,35 @@ export interface CramFlashcardResponseDto {
   cards: CramFlashcardDto[];
 }
 
+// Phase 2-T05 冲刺计划：确定性、即时、只读建议。严禁加入题干、答案、作答、错因正文、资料原文或 Provider 信息。
+export type CramPlanAvailability = 'available' | 'not_started' | 'ended';
+export type CramPlanSourceKind = 'study_task' | 'weak_point' | 'mistake' | 'practice_performance' | 'cram_cards';
+export type CramPlanTargetType = 'study_task' | 'weak_point' | 'mistake' | 'practice_history' | 'cram_cards';
+
+export interface CramPlanSuggestionDto {
+  id: string;
+  priority: 1 | 2 | 3 | 4;
+  reason: string;
+  sourceKind: CramPlanSourceKind;
+  sourceId: string | null;
+  targetType: CramPlanTargetType;
+  targetId: string | null;
+}
+
+export interface CramPlanDayDto {
+  date: string;
+  suggestions: CramPlanSuggestionDto[];
+}
+
+export interface CramPlanResponseDto {
+  assessmentAttemptId: string;
+  courseInstanceId: string;
+  assessmentName: string;
+  examAt: string;
+  daysUntilExam: number;
+  availability: CramPlanAvailability;
+  days: CramPlanDayDto[];
+}
 // S4 ErrorFixer 公开 API DTO（Phase 1-T04B）
 // 错题详情允许展示已批改事实（正确答案/解析）；
 // 重做作答前仍走 S3 作答前 DTO，不泄露答案。

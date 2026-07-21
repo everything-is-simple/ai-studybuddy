@@ -44,6 +44,8 @@ describe('ExamContextNav', () => {
       ['资料', '/materials?courseInstanceId=course-1'],
       ['练习', '/exams/exam-1/practice'],
       ['模拟考', '/exams/exam-1/mock-exam'],
+      ['临考速背', '/exams/exam-1/cram'],
+      ['冲刺计划', '/exams/exam-1/cram-plan'],
       ['错题', '/exams/exam-1/mistakes'],
       ['时间线', '/exams/exam-1#recent-study-activity'],
     ] as const) {
@@ -53,10 +55,10 @@ describe('ExamContextNav', () => {
     }
   });
 
-  it('marks the active mock-exam entry', () => {
-    renderContextNav('mock_exam');
+  it('marks the active cram-plan entry', () => {
+    renderContextNav('cram_plan');
 
-    const mockExam = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '模拟考');
-    expect(mockExam?.getAttribute('aria-current')).toBe('page');
+    const cramPlan = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '冲刺计划');
+    expect(cramPlan?.getAttribute('aria-current')).toBe('page');
   });
 });

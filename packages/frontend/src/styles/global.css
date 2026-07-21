@@ -1807,3 +1807,24 @@ button:disabled {
   .cram-flashcard footer { align-items: flex-start; flex-direction: column; }
   .cram-controls > * { flex: 1 1 28%; }
 }
+
+/* ===== Phase 2-T05 冲刺计划 ===== */
+.cram-plan-header,
+.cram-plan-state,
+.cram-plan-day,
+.cram-plan-manual,
+.cram-plan-days { display: grid; gap: 12px; }
+.cram-plan-days { margin-top: 16px; }
+.cram-plan-days > .text-muted { margin: 0; }
+.cram-plan-day h2,
+.cram-plan-day p,
+.cram-plan-manual h2 { margin: 0; }
+.cram-plan-day ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.cram-plan-suggestion { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px; border: 1px solid #dbe3ef; border-radius: var(--radius); }
+.cram-plan-suggestion > div { display: grid; gap: 6px; min-width: 0; }
+.cram-plan-suggestion p { color: var(--color-text-muted); line-height: 1.55; }
+.cram-plan-suggestion .button-link { flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 720px) {
+  .cram-plan-suggestion { align-items: stretch; flex-direction: column; }
+  .cram-plan-suggestion .button-link { width: 100%; text-align: center; }
+}

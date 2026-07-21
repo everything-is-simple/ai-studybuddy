@@ -100,6 +100,8 @@ export const config = {
 
   backendPort: Number(process.env.BACKEND_PORT ?? 3000),
   backendHost: process.env.BACKEND_HOST ?? '127.0.0.1',
+  // T05 仅供隔离验证注入固定时钟；未设置时服务使用真实当前时间。
+  cramPlanNow: process.env.CRAM_PLAN_NOW ?? '',
   configAllowedOrigins: process.env.CONFIG_ALLOWED_ORIGINS ?? '',
 
   // OCR 子进程配置（T04 使用）

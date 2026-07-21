@@ -15,6 +15,7 @@ const ExamWorkbenchPage = lazy(() => import('./pages/exam-workbench-page'));
 const PracticeStartPage = lazy(() => import('./pages/practice-start-page'));
 const MockExamStartPage = lazy(() => import('./pages/mock-exam-start-page'));
 const CramCardsPage = lazy(() => import('./pages/cram-cards-page'));
+const CramPlanPage = lazy(() => import('./pages/cram-plan-page'));
 const MockExamPaperPage = lazy(() => import('./pages/mock-exam-paper-page'));
 const MockExamSessionPage = lazy(() => import('./pages/mock-exam-session-page'));
 const MockExamResultPage = lazy(() => import('./pages/mock-exam-result-page'));
@@ -222,6 +223,19 @@ export function App() {
                 (activeSemesterId) => (
                   <Suspense fallback={<PageState state="loading" title="正在加载考试项目" />}>
                     <ExamWorkbenchPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
+                  </Suspense>
+                ),
+                '正在恢复当前学期'
+              )
+            }
+          />
+          <Route
+            path="/exams/:examId/cram-plan"
+            element={
+              renderSemesterRoute(
+                (activeSemesterId) => (
+                  <Suspense fallback={<PageState state="loading" title="正在加载冲刺计划" />}>
+                    <CramPlanPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
                   </Suspense>
                 ),
                 '正在恢复当前学期'

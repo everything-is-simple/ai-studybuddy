@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export type ExamContextNavEntry = 'overview' | 'materials' | 'practice' | 'mock_exam' | 'cram' | 'mistakes' | 'timeline';
+export type ExamContextNavEntry = 'overview' | 'materials' | 'practice' | 'mock_exam' | 'cram' | 'cram_plan' | 'mistakes' | 'timeline';
 
 interface ExamContextNavProps {
   examId: string;
@@ -23,6 +23,8 @@ function buildExamContextItems(examId: string, courseInstanceId?: string | null)
     { key: 'practice', to: `/exams/${encodedExamId}/practice`, label: '练习' },
     { key: 'mock_exam', to: `/exams/${encodedExamId}/mock-exam`, label: '模拟考' },
     { key: 'cram', to: `/exams/${encodedExamId}/cram`, label: '临考速背' },
+
+    { key: 'cram_plan', to: `/exams/${encodedExamId}/cram-plan`, label: '冲刺计划' },
     { key: 'mistakes', to: `/exams/${encodedExamId}/mistakes`, label: '错题' },
     { key: 'timeline', to: `/exams/${encodedExamId}#recent-study-activity`, label: '时间线' },
   ];

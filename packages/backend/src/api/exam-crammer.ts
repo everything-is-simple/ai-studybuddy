@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import type { ApiError, ApiSuccess, CramFlashcardResponseDto, MockExamPaperDetailDto, SubmitMockExamAttemptResponse } from '@ai-studybuddy/shared';
+import type { ApiError, ApiSuccess, CramFlashcardResponseDto, CramPlanResponseDto, MockExamPaperDetailDto, SubmitMockExamAttemptResponse } from '@ai-studybuddy/shared';
 import { ExamCrammerError, ExamCrammerService } from '../services/exam-crammer-service';
+import { CramPlanService } from '../services/cram-plan-service';
 
 const router: Router = Router();
 const service = new ExamCrammerService();
+const cramPlanService = new CramPlanService();
 
 function ok<T>(data: T): ApiSuccess<T> { return { success: true, data }; }
 function fail(code: string, message: string): ApiError { return { success: false, error: { code, message } }; }
@@ -16,6 +18,12 @@ function handle(error: unknown, res: Response): Response {
 router.get('/assessment-attempts/:id/cram-cards', (req: Request, res: Response) => {
   try {
     const result: CramFlashcardResponseDto = service.getCramCards(req.query.semesterId, req.params.id);
+    return res.json(ok(result));
+  } catch (error) { return handle(error, res); }
+});
+router.get('/assessment-attempts/:id/cram-plan', (req: Request, res: Response) => {
+  try {
+    const result: CramPlanResponseDto = cramPlanService.getCramPlan(req.query.semesterId, req.params.id);
     return res.json(ok(result));
   } catch (error) { return handle(error, res); }
 });
