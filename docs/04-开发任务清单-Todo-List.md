@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.62
+**版本**：v1.63
 **日期**：2026-07-21
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -15,6 +15,8 @@
 > **Phase 1-M03 设置中心配置可观测性与安全摘要（已合入并推送）**：方案 A 已在隔离任务分支 `codex/phase1-m03-settings-configuration-observability` 完成实现、主线集成与复验：环境 fallback 安全登记为“环境配置（待验证）”，AI/SMTP/飞书首屏展示白名单式脱敏摘要，已保存秘密始终不可回显且不进入浏览器存储；AI HTTP 429 与常见 SMTP 传输失败映射为固定、可行动且不泄密的错误码。隔离验证通过 type-check、后端/前端 build、全量测试（后端 227、前端 93）和真实本地 Express/SQLite 全量 Playwright（14）；仅保留既有 KaTeX chunk-size 非阻塞 warning。实现提交 `2aa7ea4`、主线收尾提交 `6ddd9fa` 已进入 `origin/master`；未读取、输出或持久化任何真实秘密，未自动触发 AI、QQ SMTP 或飞书外部请求。
 
 > **DOCS-20260720 系统文档当前状态同步（已完成）**：用户明确要求将仍停留在 T09A/T09E 旧门禁和 M03/Post-M03 待推送状态的系统文档同步到当前 Git 事实。任务分支 `codex/system-docs-current-status-sync` 仅修订入口规范、文档索引、任务清单、共同架构、子系统状态与前端路由事实，不改业务代码，不创建或实施新的业务任务；任务分支提交 `b9fb3e8` 已 fast-forward 合入 `master`，主线复验通过，并随本收尾提交推送 `origin/master`。
+
+> **POST-PHASE2 全系统验证与文档对齐（进行中）**：用户于 2026-07-21 明确要求 Phase 2 完成后暂不进入 Phase 3，先跑通全量测试和 `e2e/` 下全部 Playwright spec，再对齐实现与设计文档并提交、fast-forward 合入、主线复验和推送。任务分支 `codex/post-phase2-full-validation` 基于 `origin/master` `4dcc0b2e6bbb130e6e3826e1595ca5995741d2a0` 创建，行动计划为 `.plans/post-phase2-full-validation-plan.md`；当前仅完成计划登记，验证、文档修订、合入与推送证据待后续补齐。不实施 Phase 3，不启动 S7、S3 Worker 或真实外部 smoke。
 ---
 
 ## 阶段总览
