@@ -794,6 +794,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **Phase 1.5-T02/T04-G2 正式语义同步（2026-07-23，文档分支 `codex/phase1-5-asr-g2-semantics-adoption-docs`，主线合入待批准）**：用户已明确批准同步三个 SoT 与本文件。G2 现在定义为“可验证的操作系统级离线隔离门禁（Verifiable OS-level Egress Isolation）”：ASR 出站必须由 OS、容器或虚拟化层在进程外强制隔离；Windows Firewall 是可接受实现之一而不是产品运行依赖；`offline`/cache-only、DNS、hosts、代理或人工断网不能单独构成 `PASS`。任一 `PASS` 只对证据所述的平台、OS/运行时版本、架构和隔离实现有效，必须同时保留外部强制、审计/清理/回滚和隔离下结构化本地 ASR 正向证据。旧 Windows `G2=BLOCKED` 仍为历史事实；环境不可用可标记 `ENVIRONMENT_UNAVAILABLE`/`DEFERRED`，但不是 `PASS`。本轮没有运行任何隔离、模型、G1/G3、ASR/FFmpeg 或 Provider 验证，也没有创建 `AuralConverter`、修改产品代码或启动 T05/T06；G1/G3=`PASS`、T02/T04=`PARTIAL`、T03=`PASS`、T05/T06 未启动均不变。文档同步不等于能力验证、产品接入或生产发布资格。
 
+
+> **Phase 1.5-T02/T04-G2 标准 Windows 实测补证（2026-07-23，执行分支 `codex/phase1-5-g2-windows-isolation-exec`，结果 `ENVIRONMENT_UNAVAILABLE` / 非 PASS）**：用户已批准按标准 Windows 补证计划执行一次单平台组合实测；执行分支从 `origin/master` `a6d632ce0c26caa1db9358951eecb40120362107` 创建，脱敏证据审查草案位于 `.plans/phase1-5-t02-t04-g2-standard-windows-isolation-evidence-review.md`，仓库外证据目录为 `I:\ai-studybuddy-tmp\runs\phase1-5-g2-windows-isolation-20260723-021826`。本次只读前置采集记录 Microsoft Windows 10 专业版 10.0.19045 / 22H2 / x64、AMD Ryzen 7 5800H、PowerShell/.NET x64；`Get-NetFirewallProfile` 与 `netsh advfirewall show allprofiles state` 均显示 Domain/Private/Public 三个 Windows Firewall profile 为禁用/关闭，`applicableEnabledProfileCount=0`。按已批准计划停止为 `ENVIRONMENT_UNAVAILABLE`，未创建 Firewall 规则，未执行出站探测，未运行 ASR 矩阵，未修改永久 Firewall profile、默认策略、注册表、服务、PATH 或无关网络配置；任务命名 Firewall 规则残留为 0。本结果不是 G2 `PASS`，不得泛化为跨平台结论，也不授权 `AuralConverter`/T04 装配、生产接入、生产发布或 T05/T06。
+
 ## Phase 2：期末冲刺（S5）
 
 **目标**：围绕已确认考试完成模拟考、临考速背、冲刺计划与考试工作台冲刺区闭环。
