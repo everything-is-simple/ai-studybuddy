@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.70
+**版本**：v1.71
 **日期**：2026-07-22
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 已执行完毕并判定 `PARTIAL`，Windows CPU 本地技术可行但静音/轻噪声 false positive 等门禁未关闭；T03–T06 尚未启动，下一门禁仅为创建、审查并批准 T03 FFmpeg 音频预处理计划；S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 已执行完毕并判定 `PARTIAL`，Windows CPU 本地技术可行但静音/轻噪声 false positive 等门禁未关闭；T03 FFmpeg 音频预处理计划已创建并完成 fresh-pass 审查，等待用户明确批准，实际 T03 与 T04–T06 均未启动；S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -32,7 +32,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02 已完成 smoke、结论 `PARTIAL`；T03–T06 未启动 |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02 已完成 smoke、结论 `PARTIAL`；T03 计划待批，T03 实际执行与 T04–T06 未启动 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
@@ -753,13 +753,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：录音 → ASR → 文字 → 纯文本 → 复用 S2 笔记生成管道。
 
-**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已在门禁满足且用户明确批准后创建 S7 PRD；T02–T06 必须分别创建独立计划、完成审查并获批后才能实施。
+**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已在门禁满足且用户明确批准后创建 S7 PRD；T02 已完成并判定 `PARTIAL`；T03 计划已创建并完成审查，须获用户明确批准后才能实施；T04–T06 必须分别创建独立计划、完成审查并获批后才能实施。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
 | 1 | T01：S7 PRD 编写 | ✅ | 已按 `.plans/phase1-5-t01-s7-prd-plan.md` 创建并登记 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`；仅文档，不含 ASR/FFmpeg、Schema、API、Worker 或前端实现 |
 | 2 | T02：ASR 组件 composer 调通 | ✅（`PARTIAL`） | FunASR 1.3.22 + `iic/SenseVoiceSmall` 已完成 Windows CPU 本地/离线重复 smoke 与能力卡；技术可行，但静音/轻噪声 false positive、immutable revision 与离线证据仍有缺口，不直接授权 T04 |
-| 3 | T03：FFmpeg 音频预处理 | ⏳ | 切片、降噪、格式转换；composer 能力卡 |
+| 3 | T03：FFmpeg 音频预处理 | 📝 计划待批 | 已创建 `.plans/phase1-5-t03-s7-ffmpeg-preprocess-plan.md`；未来仅验证格式识别、受控转换、采样率/声道规范化、切片与 composer 能力卡，不含 ASR/`AuralConverter`/后端接入 |
 | 4 | T04：ASR Adapter 装配 | ⏳ | ASR 封装为 `AuralConverter`，输出 `ConverterResult` |
 | 5 | T05：录音上传与转写 Job | ⏳ | 后端接受音频上传，Job Worker 调 ASR 后进入 S2 管道 |
 | 6 | T06：前端录音/上传页面 | ⏳ | 浏览器可上传录音文件，查看转写进度与笔记结果 |
@@ -770,6 +770,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 1.5-T02 最终 smoke 证据（2026-07-21，`PARTIAL`）**：Composer 使用独立 Python 3.10.19 `.venv`，固定 FunASR 1.3.22、torch/torchaudio 2.11.0+cpu 与 ModelScope 1.38.1；官方 `iic/SenseVoiceSmall` 模型共 20 文件、940,019,376 bytes，ModelScope API 与下载 README 均标记 Apache License 2.0，逐文件 SHA-256 已保存在 composer 本机忽略目录。显式本地模型与 offline 环境变量三次复跑中，模型加载 3,342 ms、总进程 28,056 ms、峰值工作集约 3,125.5 MiB；中文与中英混合短样例 3/3 非空且哈希稳定，损坏 WAV / 非 WAV 分别稳定返回 `AUDIO_DECODE_FAILED` / `AUDIO_FORMAT_UNSUPPORTED`，14/14 结果通过 JSON Schema。静音与轻噪声均 3/3 产生同一短误识别；100 ms TCP 轮询未见连接但未做防火墙隔离；模型只固定 `master` 而非 immutable revision。首次安装另有约 280.58 MiB 误写默认用户 pip cache，未做不安全清理，后续缓存已全部收口。故 T02 执行完成但判 `PARTIAL`：可作为 T03 独立计划输入，不直接进入 T04；T03–T06 仍须分别计划、审查和批准。任务分支复验已在隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-5-t02-branch-test-20260722` 下完成：`pnpm type-check`、后端 build、前端 build 及 `pnpm test` 均以退出码 0 结束（frontend 137/137、backend 237/237）；前端仅保留既有 Vite 大 chunk 非阻塞警告。
 
 ---
+> **Phase 1.5-T03 FFmpeg 音频预处理行动计划证据（2026-07-22，📝 计划待用户明确批准）**：已从 `origin/master` / `f54f8fc6a8c2fcf62bda98d4282b6a6ff5b4e438` 创建隔离任务分支 `codex/phase1-5-t03-s7-ffmpeg-preprocess-plan` 与 worktree，并新增、fresh-pass 审查 `.plans/phase1-5-t03-s7-ffmpeg-preprocess-plan.md`。计划只定义未来在 `I:\ai-studybuddy-composer\asr\FFmpeg\` 白名单内验证 Windows 本地 FFmpeg 的来源/许可证/哈希、格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常回滚、脱敏 JSON 证据和 `COMPONENT-CARD.md`；推荐候选固定为 Gyan FFmpeg 8.1.2 essentials ZIP 及其 SHA-256，无法复核即停止。T02 仍为 `PARTIAL`，静音/轻噪声 false positive、模型 immutable revision、离线隔离与 no-speech 门禁未关闭；本轮未下载、安装、解压、运行或 smoke FFmpeg，未创建 Composer 内容或合成样例，未修改 `packages/`、S7 PRD、Schema、API、Job/Worker、前端，未开始 T03 实际执行、T04 `AuralConverter`、T05 或 T06。仅完成计划与审查，必须等待用户明确批准后才可执行 T03。
+
 
 ## Phase 2：期末冲刺（S5）
 
