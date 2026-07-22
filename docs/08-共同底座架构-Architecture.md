@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.19
-**日期**：2026-07-21
-**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5-T02 ASR composer smoke 已完成、结论 `PARTIAL`；Phase 3 暂缓
+**版本**：v1.20
+**日期**：2026-07-23
+**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5 的 T02=`PARTIAL`、T03=`PASS`、T04=能力验证 `PARTIAL`（非 Adapter 装配）；G2 正式语义已采用、跨平台强证据待独立批准；Phase 3 暂缓
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
@@ -178,7 +178,7 @@ HP 实机兼容复测（Windows 11、Ryzen 5 5625U、Node 22 LTS、16GB）在设
 
 HP 实机兼容复测目标（待机会执行，不阻塞 Phase 0.8）：Docker Desktop 与 WSL2 未运行；学习服务可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出；重复同周期不重复发送。
 
-## 七、Phase 1.5 S7 ASR 候选架构证据
+## 七、Phase 1.5 S7 ASR 候选架构证据与 G2 出站隔离门禁
 
 Phase 1.5-T02 在独立 composer 中验证 FunASR 1.3.22 + `iic/SenseVoiceSmall` 可于 Windows CPU 从本地目录加载并处理标准 WAV；该事实只证明候选技术可行，不改变正式产品的 Adapter 边界：
 
@@ -189,4 +189,23 @@ Phase 1.5-T02 在独立 composer 中验证 FunASR 1.3.22 + `iic/SenseVoiceSmall`
 - 模型首次取得允许联网，但正式复跑必须使用显式本地路径和独立缓存；模型/runtime 版本需要 immutable revision 或可验证资产哈希，许可证和再分发结论须与软件包分开记录。
 - T03 负责 FFmpeg 格式标准化、切片与静音/噪声预处理事实；T04 才能定义正式 `AuralConverter`。T02 不授权 Schema、API、Job/Worker、前端或 S2 产品接入。
 
-当前结论为 `PARTIAL`：可进入 T03 计划门禁，但静音 false positive、模型 revision、离线证明强度和资源预算在 T04 前必须重新关闭。
+### 7.1 G2 的正式语义与强证据下限
+
+G2 是**可验证的操作系统级离线隔离门禁**（Verifiable OS-level Egress Isolation）：本地 ASR 进程的出站能力必须由 ASR 进程外部的 OS、容器或虚拟化层强制隔离。Windows Firewall 只是标准 Windows 环境中可接受的一个实现；Linux network namespace/nftables、Docker `--network none`、独立虚拟机或其他等价的宿主/虚拟化强制机制也可使用。G2 不把 Windows Firewall 或任何单一机制设为跨平台产品运行依赖。
+
+一次 G2 `PASS` 至少同时具备：
+
+1. 隔离机制在 ASR 进程外部强制生效，并针对运行所用的进程、网络命名空间、容器或虚拟机边界；
+2. 执行前后都留存可审计的机制状态、适用范围、阻断/拒绝结果、清理与回滚证据；
+3. 在隔离保持有效时，使用显式本地模型路径取得结构化、可复查的本地 ASR 正向结果；
+4. 证据记录精确的平台、OS/运行时版本、CPU 架构和隔离实现。`PASS` 只对该组合有效，不外推为全部平台、产品接入或生产发布资格。
+
+`offline`/cache-only、DNS、hosts、代理设置、无 TCP 轮询或人工断网最多是辅助性缓存、清理或环境事实，不能单独构成 G2 `PASS`。隔离能力不可用时应如实标记 `ENVIRONMENT_UNAVAILABLE` 或 `DEFERRED`；它们同样不是 `PASS`。
+
+### 7.2 当前事实与禁止推论
+
+- 旧 Windows 防火墙尝试的 `G2=BLOCKED` 是历史事实：定制 Windows 10 的 Domain/Private/Public profile 均不可用，未创建规则、未修改永久策略。正式跨平台语义不会回填或重写这条历史记录。
+- 已有门禁状态保持：G1/G3=`PASS`；T02=`PARTIAL`；T03=`PASS`；T04=能力验证 `PARTIAL`、非 Adapter 装配；T05/T06 未启动。当前没有任何平台组合取得新的 G2 `PASS`。
+- 文档采用 G2 语义不运行隔离、不下载或核验模型、不重跑 G1/G3，也不创建 `AuralConverter`、产品 API、Worker、Schema、前端或共享类型。真实平台隔离验证和所有产品实现仍须各自独立计划、审查与用户明确批准。
+
+当前总体结论仍为 `PARTIAL`：候选技术和若干前置能力证据不等于本地 ASR 已接入产品；G2 的跨平台强证据尚未执行，能力验证、产品接入与生产发布资格严格分离。
