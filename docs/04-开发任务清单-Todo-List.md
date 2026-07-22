@@ -4,7 +4,7 @@
 **日期**：2026-07-22
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义已进入独立任务；标准 Windows 实测因 Firewall profiles 全部禁用记录为 `ENVIRONMENT_UNAVAILABLE`，WSL/Linux 单组合（CentOSStream-10-Alt / WSL2 / x86_64 / root `unshare -n`）已形成 `PASS` 证据审查草案；该结果不泛化为跨平台 `PASS`，也不改变 T02/T04 产品装配授权。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -32,7 +32,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02/T04 能力验证均为 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；原三门禁补证执行为 `BLOCKED`；T02/T04-R2 当前候选最小化修正计划已完成 fresh-pass、执行待再次明确批准；T05–T06 未启动 |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02/T04 能力验证均为 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；原三门禁补证执行为 `BLOCKED`；T02/T04-R2 已完成 G1/G3；G2 标准 Windows 为 `ENVIRONMENT_UNAVAILABLE`，WSL/Linux 单组合证据审查为 `PASS`（不泛化、不授权装配）；T05–T06 未启动 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
@@ -753,7 +753,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：录音 → ASR → 文字 → 纯文本 → 复用 S2 笔记生成管道。
 
-**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已完成；T02 已执行并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已执行后续 ASR 能力验证并判定 `PARTIAL`；原 T02/T04 三门禁补证按停止条件执行后为 `BLOCKED`。T02/T04-R2 已完成 G1/G3，G2 保持历史 `BLOCKED`，总体 `PARTIAL`；新的 G2 跨平台门禁语义任务已完成计划 fresh-pass，正式采用或执行仍待后续批准。T05/T06 继续未启动。
+**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已完成；T02 已执行并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已执行后续 ASR 能力验证并判定 `PARTIAL`；原 T02/T04 三门禁补证按停止条件执行后为 `BLOCKED`。T02/T04-R2 已完成 G1/G3，旧 Windows `G2=BLOCKED` 保持历史事实；G2 正式语义已采用平台无关的 OS/容器/虚拟化层强制出站隔离证据，标准 Windows 实测因 Firewall profiles 全部禁用记录为 `ENVIRONMENT_UNAVAILABLE`，WSL/Linux 单组合（CentOSStream-10-Alt / WSL2 / x86_64 / root `unshare -n`）已形成 `PASS` 证据审查草案。该结果不泛化为跨平台 `PASS`，不自动授权 `AuralConverter`/T04 装配。T05/T06 继续未启动。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
@@ -762,7 +762,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 3 | T03：FFmpeg 音频预处理 | ✅ | 已按 `.plans/phase1-5-t03-s7-ffmpeg-preprocess-plan.md` 在 Composer 白名单完成格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常与能力卡证据；提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 已合入并推送 `origin/master`；不含 ASR/`AuralConverter`/后端接入 |
 | 4 | T04：ASR Adapter 装配 | ✅（能力验证 `PARTIAL`，非装配完成） | 已按 `.plans/phase1-5-t04-s7-next-asr-capability-plan.md` 获批执行后续 ASR 能力补证与 Adapter 前置判定；仅形成 Composer 能力证据，不创建/装配 `AuralConverter`，不修改业务代码，不启动 T05/T06，不代表生产接入资格 |
 | 4R | T02/T04-R2：ASR 当前候选最小化修正 | ✅ 执行 `PARTIAL` | G1 固定 revision 与 G3 固定 16 项矩阵均 `PASS`；G2 因当前定制 Windows 无可用 Firewall profile 保持历史 `BLOCKED`；不比较外部候选，不进入产品装配 |
-| 4G | T02/T04-G2：跨平台可验证离线门禁语义修订 | ⏳ 文档同步分支完成，主线合入待批准；跨平台执行待独立批准 | G2 正式语义为平台无关的 OS/容器/虚拟化层强制出站隔离；Windows Firewall 只是一个可接受实现，不改变 T02/T04 状态，不启动 T05/T06 |
+| 4G | T02/T04-G2：跨平台可验证离线门禁语义与实测 | ⚠️ 语义已进入 SoT；标准 Windows `ENVIRONMENT_UNAVAILABLE`；WSL/Linux 单组合证据审查 `PASS` | G2 正式语义为平台无关的 OS/容器/虚拟化层强制出站隔离；Windows Firewall 只是一个可接受实现。WSL/Linux PASS 仅适用于 CentOSStream-10-Alt / WSL2 / x86_64 / root `unshare -n`，不泛化、不启动 T05/T06、不授权产品装配 |
 | 4GS | T02/T04-G2：正式语义落地计划 | ✅ 计划已合入 `origin/master`；文档同步分支待主线合入 | 已按批准计划同步 `docs/08`、`docs/09`、S7 PRD 与任务事实；本分支不执行隔离、不改产品、不改变 T02/T04/T05/T06 状态 |
 | 5 | T05：录音上传与转写 Job | ⏳ | 后端接受音频上传，Job Worker 调 ASR 后进入 S2 管道 |
 | 6 | T06：前端录音/上传页面 | ⏳ | 浏览器可上传录音文件，查看转写进度与笔记结果 |
@@ -793,6 +793,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 1.5-T02/T04-G2 正式语义落地计划（2026-07-22，fresh-pass `PASS`，已合入 `origin/master`）**：计划提交 `0b6e2b360c4a8464b59cc8ab3833264706703c23` 已 fast-forward 合入并推送 `origin/master`。计划路径 `.plans/phase1-5-t02-t04-asr-g2-semantics-adoption-plan.md` 规定将平台无关的强制出站隔离证据语义同步到 `docs/08`、`docs/09`、S7 PRD 与本文件的顺序、统一措辞、历史状态保留、文档验证与停止边界。
 
 > **Phase 1.5-T02/T04-G2 正式语义同步（2026-07-23，文档分支 `codex/phase1-5-asr-g2-semantics-adoption-docs`，主线合入待批准）**：用户已明确批准同步三个 SoT 与本文件。G2 现在定义为“可验证的操作系统级离线隔离门禁（Verifiable OS-level Egress Isolation）”：ASR 出站必须由 OS、容器或虚拟化层在进程外强制隔离；Windows Firewall 是可接受实现之一而不是产品运行依赖；`offline`/cache-only、DNS、hosts、代理或人工断网不能单独构成 `PASS`。任一 `PASS` 只对证据所述的平台、OS/运行时版本、架构和隔离实现有效，必须同时保留外部强制、审计/清理/回滚和隔离下结构化本地 ASR 正向证据。旧 Windows `G2=BLOCKED` 仍为历史事实；环境不可用可标记 `ENVIRONMENT_UNAVAILABLE`/`DEFERRED`，但不是 `PASS`。本轮没有运行任何隔离、模型、G1/G3、ASR/FFmpeg 或 Provider 验证，也没有创建 `AuralConverter`、修改产品代码或启动 T05/T06；G1/G3=`PASS`、T02/T04=`PARTIAL`、T03=`PASS`、T05/T06 未启动均不变。文档同步不等于能力验证、产品接入或生产发布资格。
+
+> **Phase 1.5-T02/T04-G2 标准 Windows 实测补证（2026-07-23，`ENVIRONMENT_UNAVAILABLE`）**：任务分支 `codex/phase1-5-g2-windows-isolation-exec` 按获批计划执行前置审计，确认当前定制版 Windows 10 的 Domain/Private/Public Firewall profile 均为 disabled；按 SoT 停止条件未创建临时出站规则、未运行隔离 ASR、未修改永久 Firewall 策略。证据目录 `I:\ai-studybuddy-tmp\runs\phase1-5-g2-windows-isolation-20260723-021826`；提交 `ca16da22e8e69438ebe18815a10cae19f391b8cf` 位于任务分支，未合入 `master`。该组合不是 `PASS`，不得用于关闭跨平台门禁。
+
+> **Phase 1.5-T02/T04-G2 WSL/Linux 实测补证（2026-07-23，单组合 `PASS` 证据审查）**：用户授权使用 `D:\wsl` 中可用 Linux WSL 进行最后一次实测后，执行分支 `codex/phase1-5-g2-wsl-isolation-exec` 从 `origin/master` `a6d632ce0c26caa1db9358951eecb40120362107` 创建，运行数据目录 `I:\ai-studybuddy-tmp\runs\phase1-5-g2-wsl-isolation-20260723-022923`。被测组合为 Windows Host + WSL2 `CentOSStream-10-Alt`、CentOS Stream 10、kernel `6.6.114.1-microsoft-standard-WSL2`、`x86_64`、Python 3.12.12 venv、FunASR 1.3.22、torch 2.13.0+cu130、torchaudio 2.11.0+cu130、ModelScope 1.38.1，隔离实现为 root `unshare -n` 临时 Linux network namespace。外部基线可访问网络，隔离 namespace 内 `ip addr` 仅 loopback，`curl -I -L https://example.com/` 与 `https://www.msftconnecttest.com/connecttest.txt` 均因解析失败退出 6；隔离内 ASR 矩阵 `09-asr-matrix/summary.json` 为 `status=PASS`、16/16 通过、`modelLoadMs=6824`，覆盖静音/轻噪 no-speech、清晰中文/混合术语、损坏 WAV、非音频、受控超时和清理检查；`10-wsl-runtime-residual-check.json` 与 `11-wsl-cleanup-and-zero-residual.json` 均为 `PASS`，未修改 Firewall/nft/iptables/routing/sysctl，证据目录、venv 与 pip cache 仅为复核保留。审查草案 `.plans/phase1-5-t02-t04-g2-wsl-isolation-evidence-review.md` 记录该组合 `G2=PASS`；标准 Windows 仍为 `ENVIRONMENT_UNAVAILABLE`，Docker/VM/其他 Linux/其他架构均 `NOT_TESTED`。本轮未创建或装配 `AuralConverter`，未修改 `packages/`、Schema、migration、API、Worker、前端或 shared 类型，未启动 T05/T06；该结果不等于跨平台 `PASS`、生产接入或 T04 装配授权，后续装配必须等待用户再次明确批准。
+
 
 ## Phase 2：期末冲刺（S5）
 
