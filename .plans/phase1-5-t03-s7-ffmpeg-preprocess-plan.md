@@ -1,11 +1,11 @@
 # Phase 1.5-T03：S7 FFmpeg 音频预处理行动计划
 
-**版本**：v1.0
+**版本**：v1.1
 **日期**：2026-07-22
 **任务分支**：`codex/phase1-5-t03-s7-ffmpeg-preprocess-plan`
 **任务 worktree**：`I:\ai-studybuddy-worktrees\phase1-5-t03-s7-ffmpeg-preprocess-plan`
-**任务类型**：仅计划、fresh-pass 审查与文档回填
-**批准状态**：📝 计划待用户明确批准；本文件通过 fresh-pass 审查不等于获准执行 T03。
+**任务类型**：行动计划、fresh-pass 审查与获批后的 Composer 试炼执行回填
+**批准状态**：✅ 用户已于 2026-07-22 明确批准 T03；执行已完成且结论为 `PASS`（仅 Composer 本机预处理 smoke，未合入 `master`）。
 
 ---
 
@@ -22,9 +22,9 @@ Phase 1.5-T03 的单一责任是在独立 Composer 试炼场验证 **Windows 本
   → 未来 T04 的独立评估输入（不是 Adapter、不是 ASR 调用）
 ```
 
-**本轮停止点**：只创建、审查、提交并推送本计划及 `docs/04` 回填。不得下载、安装、解压、运行或 smoke FFmpeg；不得创建样例、Composer 目录或运行数据。完成计划任务后停下，等待用户“明确批准”。
+**预批准计划阶段停止点（已完成）**：只创建、审查、提交并推送本计划及 `docs/04` 回填；当时未下载、安装、解压、运行或 smoke FFmpeg，直至用户于 2026-07-22 明确批准。
 
-**未来获批 T03 的停止点**：仅在本文件的 Composer 白名单内记录预处理能力和 `COMPONENT-CARD.md`；不自动进入 T04、T05 或 T06。T04 仍须独立计划、独立审查和用户明确批准。
+**获批执行后的停止点（已遵守）**：仅在本文件的 Composer 白名单内记录预处理能力和 `COMPONENT-CARD.md`；不自动进入 T04、T05 或 T06。T04 仍须独立计划、独立审查和用户明确批准。
 
 ---
 
@@ -181,4 +181,39 @@ T04 可使用的只有“受控 FFmpeg 在本机将指定安全样例规范化�
 | smoke 矩阵、资源与结构化证据 | PASS | 覆盖正常、异常、长切片、重复性、资源、残留与脱敏 JSON/能力卡。 |
 | 文档/Git 边界 | PASS | 仅本计划与 `docs/04` 可变；只推任务分支，禁止合入/推送 `master`。 |
 
-**fresh-pass 结论**：计划覆盖 T03 所需的前处理能力、隔离、来源、回滚、验收与 T04 证据边界；本结论仅批准“计划已审查”，不授权任何 T03 实际执行。仍须等待用户明确批准。
+**fresh-pass 结论（预批准历史记录）**：计划覆盖 T03 所需的前处理能力、隔离、来源、回滚、验收与 T04 证据边界；当时该审查仅确认“计划已审查”，不自行授权实际执行。用户随后已于 2026-07-22 明确批准，执行结果见第 10 节。
+
+
+---
+
+## 10. 获批后的 Composer 执行记录（2026-07-22）
+
+### 10.1 批准、范围与隔离结果
+
+用户已于 2026-07-22 明确批准执行本计划。执行只在 `I:\ai-studybuddy-composer\asr\FFmpeg\{bin,samples,output,.cache,smoke-test,shared}` 内写入。执行前/后基线分别在 Composer `shared/baseline-before.json` 与 `shared/baseline-after.json`；执行后没有白名单外的直接子目录，且无 `ffmpeg`/`ffprobe` 残留进程。没有写系统 PATH、注册表、服务、全局配置、`%LocalAppData%` 或既有用户缓存。未修改 `packages/`、S7 PRD、Schema、migration、API、Job/Worker、前端或任何产品接口，未创建/装配/调用 `AuralConverter` 或 FunASR，未进入 T04–T06。
+
+样例均为本机脚本生成的非敏感正弦波、静音、确定性轻噪声、无效字节或文本；不含语音、真实课堂录音、学生/教师数据、资料原文、Provider 信息或秘密。清单与哈希见 Composer `shared/sample-manifest.json`。
+
+### 10.2 固定来源、版本与许可证事实
+
+- 唯一下载并验证的归档为 Gyan `ffmpeg-8.1.2-essentials_build.zip`，109,728,040 字节。计划固定 SHA-256、发布方 sidecar 和本地 SHA-256 均为 `db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec`，见 `shared/source-manifest.json`。
+- 仅提取 `ffmpeg.exe`、`ffprobe.exe`、`LICENSE` 和 `README` 至 Composer `bin/`/`shared/`；条目、二进制 SHA-256 和文件大小在 `shared/archive-selection.json`、`shared/extracted-artifacts.json`。
+- `ffmpeg -version` 为 `8.1.2-essentials_build-www.gyan.dev`；`-buildconf` 实测含 `--enable-gpl --enable-version3 --enable-static`。版本、构建配置、`-L` 许可证文本和随包 LICENSE/README 分别在 `shared/ffmpeg-version.txt`、`shared/ffmpeg-buildconf.txt`、`shared/ffmpeg-license.txt`、`shared/LICENSE.txt`、`shared/README.txt`。
+- 这只记录 GPLv3-enabled 静态构建的本机试炼事实，不是产品依赖准入、动态链接结论、再分发授权或履约结论。未来产品采用或 BtbN LGPL 变体仍须独立计划、固定 asset/SHA-256 和许可证审查；未使用 `latest`、包管理器或系统 FFmpeg。
+
+### 10.3 smoke 矩阵、可重复性与资源证据
+
+完整 smoke 共 19 个 JSONL 用例：15 个正常路径 `PASS`（WAV、MP3、M4A、11,025 Hz 双声道、静音、轻噪、8 个长音频切片），4 个边界 `EXPECTED_FAIL`（损坏 WAV、非音频文本、输出目标为目录、500 ms 受控超时），无非预期失败。成功输出均经 `ffprobe` 验证为 PCM WAV / `pcm_s16le`、16 kHz、单声道；两次独立基线转换 SHA-256 一致。31 秒合成长样例采用 6 秒切片、2 秒重叠，起点 `[0,4,8,12,16,20,24,28]` 秒、末片 3 秒，覆盖 `[0,31]`。
+
+逐例输入/输出摘要、退出码、耗时、峰值工作集、磁盘增量、进程清理和哈希见 `shared/results/smoke-results.jsonl`；汇总见 `shared/smoke-summary.json`，重复性见 `shared/reproducibility.json`，切片见 `shared/slice-strategy-evidence.json`，脱敏 stdout/stderr 在 `shared/logs/`。`shared/COMPONENT-CARD.md` 已记录来源、版本、架构、哈希、许可证/NOTICE、支持/拒绝格式、规范化/切片、资源、限制、最小回滚与 T04 证据边界。
+
+执行中仅修正 Composer 内 smoke harness 的 Windows PowerShell 兼容性（不支持 `ProcessStartInfo.ArgumentList`、避免保留 `$Error` 变量）；修正后从头重跑完整矩阵，未把中断尝试计入结论。
+
+### 10.4 结论与后续门禁
+
+**T03 Composer 预处理 smoke 结论：`PASS`。** 此结论仅表示固定、隔离的 Windows 本机 FFmpeg 二进制在非敏感合成样例上具备可追溯的格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常受控失败、资源记录和无残留进程证据。
+
+它**不**修复或关闭 T02 的 `PARTIAL`：静音/轻噪声 false positive、模型 immutable revision、离线防火墙隔离和 no-speech 门禁仍未关闭；也不构成 ASR/S7 完成、生产接入、`AuralConverter` 契约、正式 API/MIME 白名单或产品许可证/再分发结论。T04 是否可启动仍必须有独立计划、fresh-pass 审查和用户明确批准。本分支尚未合入 `master`。
+### 10.5 执行后 fresh-pass 审查
+
+独立执行后审查逐项复核并通过：计划固定值、发布方 sidecar 与本地归档 SHA-256 三者一致；19 条 JSONL 结果完整（15 `PASS`、4 `EXPECTED_FAIL`、0 `FAIL`），所有正常输出均为 `pcm_s16le` / 16 kHz / 单声道 WAV，峰值内存字段完整且基线输出哈希可重复；Composer 顶层仅有六个白名单目录、日志不含 Composer 原始绝对路径、无 `ffmpeg`/`ffprobe` 残留 PID；Git 工作树仅修改本计划与 `docs/04-开发任务清单-Todo-List.md`。审查再次确认 T02 仍为 `PARTIAL`，许可证/再分发结论未越权，T04–T06 未被触发，且本分支未合入 `master`。
