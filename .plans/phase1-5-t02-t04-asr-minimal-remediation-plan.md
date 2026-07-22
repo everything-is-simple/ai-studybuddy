@@ -306,3 +306,28 @@ git diff --cached --check
 **PASS（计划质量）**。计划具备可执行的单一责任、前置条件、成功标准、停止条件、回滚和脱敏边界；未发现需要在本任务加入 Paraformer、faster-whisper、whisper.cpp、sherpa-onnx、长音频或产品实现的理由。
 
 该 PASS 只表示计划审查通过，不表示 G1/G2/G3 已关闭，也不改变 T02 `PARTIAL`、T03 `PASS`、T04 `PARTIAL`、T05/T06 `NOT_STARTED`。
+
+## 14. 执行顺序调整授权（2026-07-22）
+
+用户在管理员会话复核后明确批准以下有限调整：
+
+- 当前定制版 Windows 10 无可用的 Firewall profile；
+- 允许先执行 G1 固定模型 revision 和 G3 no-speech 16 项矩阵；
+- G2 保持 `BLOCKED`，不得使用 offline/cache-only 环境变量或其他弱化证据冒充 Firewall 隔离 `PASS`；
+- 不修改永久 Firewall 策略，不启用或改造系统 Firewall profile；
+- 不扩大候选范围，不进入 T05/T06；
+- 完成 G1/G3 后停止并报告，不宣称三个门禁全部关闭。
+
+该调整只改变 G1/G3 的执行顺序和 G2 停止条件对后续试炼的阻断关系，不改变 G1、G3 的成功标准、固定矩阵、写入白名单、产品代码禁区或最终判定规则。即使 G1/G3 均通过，本次总体结论最高仍为 `PARTIAL`，因为 G2 明确保留为 `BLOCKED`。
+
+## 15. G1/G3 执行结果（2026-07-22）
+
+在第 14 节有限调整授权下完成运行 `minimal-remediation-20260722-220554-e937e8`：
+
+- G1=`PASS`：从 ModelScope 官方 Git 获取并核对两个完整 commit hash，使用完整 hash 显式下载新隔离快照；SenseVoiceSmall revision 为 `7bf452403abd7353a300cd760f7adae7701c92c1`，FSMN-VAD revision 为 `f9a8b8274674755d925277e27063869038d41515`，逐文件 SHA-256 清单已生成；
+- G2=`BLOCKED`：管理员会话下 Domain/Private/Public profile 仍全部禁用；未创建 Firewall 规则，未修改永久策略，offline/cache-only 不计作隔离证据；
+- G3=`PASS`：固定参数矩阵 16/16 符合预期。静音与轻噪各 3/3 均为结构化 `NO_SPEECH`、VAD 段数 0、文本长度 0；清晰中文与中英混合各 3/3 非空且短哈希稳定；损坏 WAV、非音频、受控超时和清理检查均得到预期分类；
+- 后置清理：目标 Python 残留 0、任务命名 Firewall 规则残留 0、运行临时目录清空；
+- 总体=`PARTIAL`：只关闭 G1/G3，G2 仍未关闭；不宣称三个门禁全部关闭。
+
+结构化证据位于 `I:\ai-studybuddy-composer\asr\T04-next-capability\metrics\minimal-remediation\minimal-remediation-20260722-220554-e937e8\`。本轮不修改产品代码，不创建或调用 `AuralConverter`，不进入 T05/T06。能力验证结果不等于生产接入资格。
