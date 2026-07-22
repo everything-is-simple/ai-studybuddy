@@ -32,7 +32,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02 已完成 smoke、结论 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；T04 计划待批；T05–T06 未启动 |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02/T04 能力验证均为 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；T02/T04 三门禁补证计划已 fresh-pass、执行待再次明确批准；T05–T06 未启动 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
@@ -777,6 +777,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 1.5-T04 能力验证证据（2026-07-22，`PARTIAL`，任务分支尚未合入或推送）**：T04 在 `I:\ai-studybuddy-composer\asr\T04-next-capability\` 专属 Composer 目录内完成，样例全部为安全合成、非敏感音频；结构化证据包括 `shared\t04-summary.json`、`shared\results\t04-results.jsonl`、`shared\COMPONENT-CARD.md`、`shared\T04-EXECUTION-SUMMARY.md`、`metrics\precheck-summary.json`、`metrics\t04-asr-main-20260722.process.json`、`metrics\t04-timeout-20260722.process.json`、`metrics\environment-and-boundary.json`、`metrics\final-boundary-recheck.json` 与 `metrics\final-git-baseline-check.json`。前置核对确认 T02 FunASR 1.3.22 + `iic/SenseVoiceSmall` Windows CPU 证据存在但 T02 仍为 `PARTIAL`；T03 Gyan FFmpeg 8.1.2 证据、SHA-256 `db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec`、19 个 smoke（15 `PASS` / 4 `EXPECTED_FAIL`）与提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 均已核对，T03 的 16 kHz 单声道 PCM WAV 输出仍只作为能力事实，不成为正式生产契约。
 >
 > **Phase 1.5-T04 判定与阻断（2026-07-22，`PARTIAL`）**：主 ASR 矩阵 `t04-asr-main-20260722` 产生 14 条机器结果，其中 P1 中文清晰样例与 P2 中英混合术语样例 3/3 成功且文本哈希稳定；N3 损坏 WAV 稳定分类为 `AUDIO_DECODE_FAILED`，N4 非音频文件稳定分类为 `AUDIO_FORMAT_UNSUPPORTED`；N5 受控超时验证返回 `PROCESS_TIMEOUT`，无残留候选 Python/FFmpeg/FFprobe 进程。N1 静音与 N2 轻噪声仍产生非空 ASR 文本，确认 T02 no-speech false positive 风险未关闭；模型仍未固定 immutable revision，未执行防火墙离线隔离，P3 非标准采样率/声道仅引用 T03 预处理能力事实而未重跑 FFmpeg。最终判定为 `PARTIAL`：能力可验证但仍存在 no-speech、immutable revision、离线隔离与预处理接续覆盖缺口；该结论只是能力验证结果，不等于生产接入资格，不代表 ASR 已完成、S7 已完成或可直接生产接入，也不得自动授权 T05/T06。
+> **Phase 1.5-T02/T04 ASR 三门禁补证计划（2026-07-22，fresh-pass 完成，执行待用户再次明确批准）**：基于 `origin/master` `6aba5a15cd004abfab191a117dd75a4f533631d8`，隔离分支 `codex/phase1-5-t02-t04-asr-gates-plan` 已创建 `.plans/phase1-5-t02-t04-asr-gates-remediation-plan.md` 并完成 fresh-pass。计划仅定义 immutable model revision、防火墙离线隔离和 no-speech 三个阻断门禁的未来补证方法、最小证据、成功/停止条件、回滚、脱敏与 `PASS`/`PARTIAL`/`FAIL`/`BLOCKED` 判定。计划坚持只用既有本地 FunASR 1.3.22、`iic/SenseVoiceSmall` 和安全合成样例；无可信 immutable revision 或无权创建并回滚临时、目标进程范围的 Firewall 规则即停止，不下载模型、不猜测、不以 cache-only/环境变量替代。静音/轻噪均要求至少 3 次结构化 `NO_SPEECH` 且无非空文本，同时回归正向中英样例、损坏 WAV、非音频、超时和进程清理。仅创建计划和任务登记；不执行 ASR/FFmpeg/Composer/Firewall，不改 `packages/`、Schema、migration、API、Job/Worker、前端或 shared 类型，不创建/装配/调用 `AuralConverter`，不启动 T05/T06。T02 与 T04 仍为 `PARTIAL`，T03 保持已入主线 `PASS`，能力补证无论结果均不等于 ASR/S7 完成或生产接入资格。
 
 ## Phase 2：期末冲刺（S5）
 
