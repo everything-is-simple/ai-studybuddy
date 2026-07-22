@@ -4,7 +4,7 @@
 **日期**：2026-07-22
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 已执行完毕并判定 `PARTIAL`，Windows CPU 本地技术可行但静音/轻噪声 false positive 等门禁未关闭；T03 FFmpeg 音频预处理已完成 Composer smoke、结论 `PASS`，并已通过提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 ASR 后续能力验证保持 `PARTIAL`；T02/T04 三门禁补证已在独立执行分支按停止条件完成，immutable revision、Windows Firewall 离线隔离与 no-speech 均未关闭，总体判定 `BLOCKED`（无新增 `FAIL`），仅为能力证据，不等于生产接入资格；未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。POST-PHASE2 的分支和主线均通过 type-check、双端构建、全量测试及完整 Playwright E2E。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 已执行完毕并判定 `PARTIAL`，Windows CPU 本地技术可行但静音/轻噪声 false positive 等门禁未关闭；T03 FFmpeg 音频预处理已完成 Composer smoke、结论 `PASS`，并已通过提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 ASR 后续能力验证保持 `PARTIAL`；T02/T04 三门禁补证已在独立执行分支按停止条件完成，immutable revision、Windows Firewall 离线隔离与 no-speech 均未关闭，总体判定 `BLOCKED`（无新增 `FAIL`）；T02/T04-R2 当前候选最小化修正计划已完成 fresh-pass，实际执行仍待再次明确批准；所有结论仅为能力证据，不等于生产接入资格；未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；S3 Worker 不属于当前 MVP。各阶段任务按单一责任拆分。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -32,7 +32,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02/T04 能力验证均为 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；T02/T04 三门禁补证计划已 fresh-pass、执行待再次明确批准；T05–T06 未启动 |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02/T04 能力验证均为 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；原三门禁补证执行为 `BLOCKED`；T02/T04-R2 当前候选最小化修正计划已完成 fresh-pass、执行待再次明确批准；T05–T06 未启动 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
@@ -753,14 +753,15 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：录音 → ASR → 文字 → 纯文本 → 复用 S2 笔记生成管道。
 
-**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已在门禁满足且用户明确批准后创建 S7 PRD；T02 已完成并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已创建后续 ASR 能力行动计划并完成 fresh-pass 审查，当前为“📝 计划待批”；T04–T06 的任何执行仍须分别获得独立明确批准。
+**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已完成；T02 已执行并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已执行后续 ASR 能力验证并判定 `PARTIAL`；原 T02/T04 三门禁补证按停止条件执行后为 `BLOCKED`。T02/T04-R2 只规划当前候选最小化修正，执行仍须用户再次明确批准；T05/T06 继续未启动。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
 | 1 | T01：S7 PRD 编写 | ✅ | 已按 `.plans/phase1-5-t01-s7-prd-plan.md` 创建并登记 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`；仅文档，不含 ASR/FFmpeg、Schema、API、Worker 或前端实现 |
 | 2 | T02：ASR 组件 composer 调通 | ✅（`PARTIAL`） | FunASR 1.3.22 + `iic/SenseVoiceSmall` 已完成 Windows CPU 本地/离线重复 smoke 与能力卡；技术可行，但静音/轻噪声 false positive、immutable revision 与离线证据仍有缺口，不直接授权 T04 |
 | 3 | T03：FFmpeg 音频预处理 | ✅ | 已按 `.plans/phase1-5-t03-s7-ffmpeg-preprocess-plan.md` 在 Composer 白名单完成格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常与能力卡证据；提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 已合入并推送 `origin/master`；不含 ASR/`AuralConverter`/后端接入 |
-| 4 | T04：ASR Adapter 装配 | ✅（能力验证 `PARTIAL`，非装配完成，待合入） | 已按 `.plans/phase1-5-t04-s7-next-asr-capability-plan.md` 获批执行后续 ASR 能力补证与 Adapter 前置判定；仅形成 Composer 能力证据，不创建/装配 `AuralConverter`，不修改业务代码，不启动 T05/T06，不代表生产接入资格 |
+| 4 | T04：ASR Adapter 装配 | ✅（能力验证 `PARTIAL`，非装配完成） | 已按 `.plans/phase1-5-t04-s7-next-asr-capability-plan.md` 获批执行后续 ASR 能力补证与 Adapter 前置判定；仅形成 Composer 能力证据，不创建/装配 `AuralConverter`，不修改业务代码，不启动 T05/T06，不代表生产接入资格 |
+| 4R | T02/T04-R2：ASR 当前候选最小化修正 | ✅ 计划 fresh-pass；执行待批 | 仅规划固定 revision 的 SenseVoiceSmall + FSMN-VAD、三个门禁、16 个核心运行和一次可回滚 Firewall 生命周期；不比较外部候选，不进入产品装配 |
 | 5 | T05：录音上传与转写 Job | ⏳ | 后端接受音频上传，Job Worker 调 ASR 后进入 S2 管道 |
 | 6 | T06：前端录音/上传页面 | ⏳ | 浏览器可上传录音文件，查看转写进度与笔记结果 |
 
@@ -780,6 +781,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 1.5-T02/T04 ASR 三门禁补证计划（2026-07-22，fresh-pass 完成，后续执行已获明确批准）**：基于 `origin/master` `6aba5a15cd004abfab191a117dd75a4f533631d8`，隔离分支 `codex/phase1-5-t02-t04-asr-gates-plan` 已创建 `.plans/phase1-5-t02-t04-asr-gates-remediation-plan.md` 并完成 fresh-pass。计划仅定义 immutable model revision、防火墙离线隔离和 no-speech 三个阻断门禁的未来补证方法、最小证据、成功/停止条件、回滚、脱敏与 `PASS`/`PARTIAL`/`FAIL`/`BLOCKED` 判定。计划坚持只用既有本地 FunASR 1.3.22、`iic/SenseVoiceSmall` 和安全合成样例；无可信 immutable revision 或无权创建并回滚临时、目标进程范围的 Firewall 规则即停止，不下载模型、不猜测、不以 cache-only/环境变量替代。静音/轻噪均要求至少 3 次结构化 `NO_SPEECH` 且无非空文本，同时回归正向中英样例、损坏 WAV、非音频、超时和进程清理。计划阶段仅创建计划和任务登记，未执行 ASR/FFmpeg/Composer/Firewall，未改 `packages/`、Schema、migration、API、Job/Worker、前端或 shared 类型，未创建/装配/调用 `AuralConverter`，未启动 T05/T06。T02 与 T04 仍为 `PARTIAL`，T03 保持已入主线 `PASS`，能力补证无论结果均不等于 ASR/S7 完成或生产接入资格。
 
 > **Phase 1.5-T02/T04 ASR 三门禁补证执行证据（2026-07-22，`BLOCKED`）**：执行分支 `codex/phase1-5-t02-t04-asr-gates-exec` 从 `origin/master` `5ae83ab74f1badece657384f4f07d42c221b0007` 创建，隔离 worktree 为 `I:\ai-studybuddy-worktrees\phase1-5-t02-t04-asr-gates-exec`，仅复核既有本地 FunASR 1.3.22、ModelScope 1.38.1、Python 3.10.19、CPU 架构及 `iic/SenseVoiceSmall`。G1 为 `BLOCKED`：20 个模型文件共 940019376 字节，现有清单 SHA-256 复核 20/20 一致（`model.pt` 为 `833ca2dcfdf8ec91bd4f31cfac36d6124e0c459074d5e909aec9cabe6204a3ea`），但下载日志仅记录可变引用 `iic/SenseVoiceSmall@master`，`configuration.json` 和限定本地缓存扫描均不能提供可信 immutable commit/revision；未下载、联网查询或猜测，因此 T02 不得升级。G2 为 `BLOCKED`：当前进程无管理员权限，Domain/Private/Public profile 均为禁用；精确规则名 `AIStudyBuddy-T04-ASR-Gates-20260722` 前后均为 0，未尝试创建、删除或修改 Firewall 规则，没有用 offline/cache-only 环境变量替代，也没有实际 ASR-under-Firewall 证据；因规则从未创建，无需回滚且终态无残留。G3 为 `BLOCKED` / `NOT_RUN`：按 G1/G2 停止条件未启动模型，本轮 ASR 样例执行数为 0；既有安全合成证据仍为静音 3/3、轻噪 3/3 均产生非空误转写，no-speech 门禁未关闭，清晰中文与中英混合 3/3 稳定、损坏 WAV `AUDIO_DECODE_FAILED`、非音频 `AUDIO_FORMAT_UNSUPPORTED`、受控超时 `PROCESS_TIMEOUT` 仅作为既有证据引用，候选 Python/FFmpeg/FFprobe 残留进程为 0。结构化证据位于 `I:\ai-studybuddy-composer\asr\T04-next-capability\metrics\gates-remediation\`、`shared\gates-remediation-summary.json`、`shared\results\gates-remediation-results.jsonl`、`logs\gates-remediation-audit.log` 及更新后的 `shared\COMPONENT-CARD.md`。总体为 `BLOCKED` 且无新增 `FAIL`；T02 `PARTIAL`、T03 `PASS`、T04 `PARTIAL`、T05/T06 `NOT_STARTED`。本轮未下载模型、未调用 Provider、未新增 ASR 执行、未修改 Firewall 或 `packages/`，未触碰 `AuralConverter`，未启动 T05/T06；能力验证结果不等于 ASR/S7 完成或生产接入资格。
+
+> **Phase 1.5-T02/T04-R2 ASR 当前候选最小化修正计划（2026-07-22，fresh-pass 完成，执行待再次明确批准）**：用户认可将 Claude 的多候选研究建议收敛为“1 个现有 ASR + 1 个 VAD + 2 个固定快照 + 3 个门禁 + 16 个核心运行 + 1 次 Firewall 生命周期 + 1 份报告”。计划分支 `codex/phase1-5-t02-t04-asr-minimal-remediation-plan` 从 `origin/master` `bd7cf7c996f3ad82fa627d43d28e0f9740ba9dbd` 创建，计划路径 `.plans/phase1-5-t02-t04-asr-minimal-remediation-plan.md`。计划仅允许未来获批后重新取得固定 revision 的 `iic/SenseVoiceSmall` 和 FSMN-VAD，在管理员提供已启用 Firewall profile 的前提下，以临时、命名、目标 Python 进程范围规则完成真实离线隔离，并运行静音 3、轻噪 3、清晰中文 3、中英混合 3、损坏 WAV 1、非音频 1、受控超时 1、清理检查 1。计划不预设 VAD 是唯一根因，不允许矩阵中逐样例调参，不比较 Paraformer/faster-whisper/whisper.cpp/sherpa-onnx，不运行长音频或真实课堂录音，不修改 `packages/`、Schema、API、Worker、前端或 shared 类型，不创建 `AuralConverter`，不启动 T05/T06。本轮只创建计划和任务登记，实际模型下载、管理员 Firewall 和 ASR 矩阵仍须用户再次明确批准。
+
 ## Phase 2：期末冲刺（S5）
 
 **目标**：围绕已确认考试完成模拟考、临考速背、冲刺计划与考试工作台冲刺区闭环。
