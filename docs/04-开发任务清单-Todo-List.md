@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.76
+**版本**：v1.77
 **日期**：2026-07-22
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持 `BLOCKED`，总体为 `PARTIAL`。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -753,7 +753,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：录音 → ASR → 文字 → 纯文本 → 复用 S2 笔记生成管道。
 
-**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已完成；T02 已执行并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已执行后续 ASR 能力验证并判定 `PARTIAL`；原 T02/T04 三门禁补证按停止条件执行后为 `BLOCKED`。T02/T04-R2 只规划当前候选最小化修正，执行仍须用户再次明确批准；T05/T06 继续未启动。
+**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已完成；T02 已执行并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已执行后续 ASR 能力验证并判定 `PARTIAL`；原 T02/T04 三门禁补证按停止条件执行后为 `BLOCKED`。T02/T04-R2 已完成 G1/G3，G2 保持历史 `BLOCKED`，总体 `PARTIAL`；新的 G2 跨平台门禁语义任务已完成计划 fresh-pass，正式采用或执行仍待后续批准。T05/T06 继续未启动。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
@@ -761,7 +761,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 2 | T02：ASR 组件 composer 调通 | ✅（`PARTIAL`） | FunASR 1.3.22 + `iic/SenseVoiceSmall` 已完成 Windows CPU 本地/离线重复 smoke 与能力卡；技术可行，但静音/轻噪声 false positive、immutable revision 与离线证据仍有缺口，不直接授权 T04 |
 | 3 | T03：FFmpeg 音频预处理 | ✅ | 已按 `.plans/phase1-5-t03-s7-ffmpeg-preprocess-plan.md` 在 Composer 白名单完成格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常与能力卡证据；提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 已合入并推送 `origin/master`；不含 ASR/`AuralConverter`/后端接入 |
 | 4 | T04：ASR Adapter 装配 | ✅（能力验证 `PARTIAL`，非装配完成） | 已按 `.plans/phase1-5-t04-s7-next-asr-capability-plan.md` 获批执行后续 ASR 能力补证与 Adapter 前置判定；仅形成 Composer 能力证据，不创建/装配 `AuralConverter`，不修改业务代码，不启动 T05/T06，不代表生产接入资格 |
-| 4R | T02/T04-R2：ASR 当前候选最小化修正 | ✅ 计划 fresh-pass；执行待批 | 仅规划固定 revision 的 SenseVoiceSmall + FSMN-VAD、三个门禁、16 个核心运行和一次可回滚 Firewall 生命周期；不比较外部候选，不进入产品装配 |
+| 4R | T02/T04-R2：ASR 当前候选最小化修正 | ✅ 执行 `PARTIAL` | G1 固定 revision 与 G3 固定 16 项矩阵均 `PASS`；G2 因当前定制 Windows 无可用 Firewall profile 保持历史 `BLOCKED`；不比较外部候选，不进入产品装配 |
+| 4G | T02/T04-G2：跨平台可验证离线门禁语义修订 | ✅ 计划 fresh-pass；正式采用/执行待批 | 仅规划平台无关的 OS/容器/虚拟化层出站隔离证据契约；Windows Firewall 只是一个实现，不改变 T02/T04 状态，不启动 T05/T06 |
 | 5 | T05：录音上传与转写 Job | ⏳ | 后端接受音频上传，Job Worker 调 ASR 后进入 S2 管道 |
 | 6 | T06：前端录音/上传页面 | ⏳ | 浏览器可上传录音文件，查看转写进度与笔记结果 |
 
@@ -786,6 +787,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 1.5-T02/T04-R2 执行前置审计（2026-07-22，`BLOCKED`）**：执行分支 `codex/phase1-5-t02-t04-asr-minimal-remediation-exec` 从 `origin/master` `e88d5a4921c7381eba43e268eb6281872f9a09a7` 创建，隔离 worktree 为 `I:\ai-studybuddy-tmp\worktrees\phase1-5-asr-minimal-remediation-exec`。用户已明确批准执行，但只读 preflight 确认当前进程 `isAdministrator=false`，Domain/Private/Public 三个 Windows Firewall profile 的 `Enabled` 均为 `false`；Firewall 服务运行中，但有效 profile 数为 0。既有候选 Python `I:\ai-studybuddy-composer\asr\FunASR\.venv\Scripts\python.exe` 存在且当前匹配运行进程数为 0，命名任务规则残留数为 0。正式计划第 5.2 节要求“已提升管理员 PowerShell + 至少一个已启用 profile”，不满足即 `G2=BLOCKED` 并停止，因此本轮未创建/删除 Firewall 规则、未下载 SenseVoiceSmall/FSMN-VAD、未猜测 revision、未执行 16 项矩阵，也未修改永久 Firewall 策略或使用 offline/cache-only 替代。结构化证据位于 `I:\ai-studybuddy-composer\asr\T04-next-capability\metrics\minimal-remediation\preflight-20260722-205151-ac5424\`。本轮 G1=`NOT_STARTED`、G2=`BLOCKED`、G3=`NOT_RUN`，总体 `BLOCKED`；T02 `PARTIAL`、T03 `PASS`、T04 `PARTIAL`、T05/T06 `NOT_STARTED`。能力验证结果不等于生产接入资格。下一次重试必须从已提升的管理员会话启动，并由管理员在任务开始前启用至少一个适用 Firewall profile；本任务仍只允许创建和回滚临时命名出站阻断规则。
 
 > **Phase 1.5-T02/T04-R2 G1/G3 最小化修正执行（2026-07-22，`PARTIAL`）**：用户明确批准在定制版 Windows 10 无可用 Firewall profile 的条件下调整执行顺序，允许先完成 G1/G3，同时要求 G2 保持 `BLOCKED`、不修改永久 Firewall 策略、不以弱化证据冒充 `PASS`。运行 `minimal-remediation-20260722-220554-e937e8` 已完成：G1=`PASS`，从 ModelScope 官方 Git 核对并以完整 commit hash 显式下载新隔离快照，SenseVoiceSmall revision=`7bf452403abd7353a300cd760f7adae7701c92c1`、FSMN-VAD revision=`f9a8b8274674755d925277e27063869038d41515`，逐文件 SHA-256、版本、架构、来源和许可证记录已生成；G3=`PASS`，固定参数 16/16 矩阵符合预期，静音与轻噪各 3/3 均为结构化 `NO_SPEECH`、VAD 段数 0、文本长度 0，清晰中文与中英混合各 3/3 非空且短哈希稳定，损坏 WAV、非音频、受控超时和清理检查均得到预期结果。G2=`BLOCKED`：管理员会话下 Domain/Private/Public profile 仍全部禁用，未创建规则、未修改永久策略，运行前后命名规则残留均为 0，offline/cache-only 只用于缓存安全且不计为隔离证据。后置清理确认目标 Python 残留 0、运行临时目录清空、命名 Firewall 规则残留 0。结构化证据位于 `I:\ai-studybuddy-composer\asr\T04-next-capability\metrics\minimal-remediation\minimal-remediation-20260722-220554-e937e8\`，组件卡已更新。总体=`PARTIAL`，不宣称三个门禁全部关闭；T02 `PARTIAL`、T03 `PASS`、T04 `PARTIAL`、T05/T06 `NOT_STARTED`。能力验证结果不等于生产接入资格。
+
+> **Phase 1.5-T02/T04-G2 跨平台离线门禁语义修订计划（2026-07-22，fresh-pass `PASS`，正式采用/执行待批）**：用户已明确批准创建独立纯计划任务，将 G2 从绑定单一 Windows 机制的“Windows Firewall 离线隔离门禁”修订为“可验证的操作系统级离线隔离门禁（Verifiable OS-level Egress Isolation）”。计划分支 `codex/phase1-5-asr-g2-cross-platform-gate-plan` 从最新 `origin/master` `ad5a90ff410a7f5194cf1274b6807227620b00a7` 创建，计划路径 `.plans/phase1-5-t02-t04-asr-g2-cross-platform-egress-isolation-plan.md`。计划只定义统一强证据契约以及标准 Windows、Linux network namespace/nftables、Docker `--network none`、独立虚拟机和其他 OS/虚拟化强制机制的等价边界；offline/cache-only、DNS、hosts 或代理配置不能单独作为 G2 `PASS`。当前定制 Windows 缺少可用 Firewall profile 的事实在未来正式采用新语义后分类为 `ENVIRONMENT_UNAVAILABLE / DEFERRED`，但既有 `G2=BLOCKED` 记录保持历史事实，跨平台 G2 仍待补，不得写成 `PASS`。本轮不执行模型下载或 G1/G3/G2，不修改 `packages/`、业务代码、Schema、API、Worker、前端、shared 类型或正式架构/测试 SoT，不启动 T05/T06；T02/T04 保持 `PARTIAL`，能力验证结果不等于生产接入或生产发布资格。
+
 ## Phase 2：期末冲刺（S5）
 
 **目标**：围绕已确认考试完成模拟考、临考速背、冲刺计划与考试工作台冲刺区闭环。
