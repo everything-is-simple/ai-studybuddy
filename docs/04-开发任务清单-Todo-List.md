@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.77
-**日期**：2026-07-22
+**版本**：v1.78
+**日期**：2026-07-23
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。Phase 2.5 运行环境重启与 Windows 使用机器部署准备已按五个独立工作包登记并获用户批准，当前在独立任务分支实施；其完成不改变 Phase 3 暂缓、S7 等待和 G2 历史门禁状态。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -844,6 +844,33 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **Phase 2-T03 主线完成证据（2026-07-21，已 fast-forward 合入 master 并推送 origin/master）**：任务分支 `codex/phase2-t03-s5-mock-exam-frontend` 已先 rebase 至最新 `origin/master` `769840ee71ada882c3bcec4fdde6224735272daf`，再 fast-forward 合入 `master`；模拟考前端实现提交为 `e8f161b`，主线收尾提交 `bb8bf77` 已位于 `origin/master`。范围仅含 T03 的模拟考入口、模拟卷详情、作答、刷新恢复、提交、结果和模块分析页面、当前学期守卫路由、T02 五个既有 API/DTO 客户端、草稿恢复与完成态安全清理、前端/浏览器测试；未修改后端、Schema、DTO、Service、Worker、T04–T06、S7 或 S3 Worker。主线复验（退出码均为 0）：`pnpm type-check`；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase2-t03-master-final` 的 `pnpm test`（frontend 118/118、backend 233/233）；隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase2-t03-master-browser` 的本地 Chrome/Vite Playwright `e2e/mock-exam.spec.ts` 3/3（确认成功、未确认/提交失败恢复、409 冲突安全态）。未读取、输出或持久化真实秘密，未运行真实 AI、QQ SMTP、飞书、中转站、Windows 计划任务或其他外部 smoke。
 ---
 
+## Phase 2.5：运行环境重启与 Windows 使用机器部署准备（实施中）
+
+**目标**：在不扩大产品边界、不装配 S7 的前提下，恢复当前开发机的可重复运行环境，并形成可迁移到 Windows 使用机器的原生部署、数据保护和升级回滚基础。
+
+**边界**：Express 仅监听 `127.0.0.1`；Docker/WSL 仅承担开发隔离与 G2/S7 能力验证；不修改全局防火墙；不引入真实 ASR、AuralConverter、S7 API/Worker/前端；不携带真实密钥、资料、数据库或运行缓存。
+
+| 顺序 | 任务 | 状态 | 单一责任 |
+| ---- | ---- | ---- | -------- |
+| 1 | PROCESS-RUNTIME-DEPLOY-01：开发环境重启与 OCR 运行时恢复 | 🚧 | 固化 Python/OCR 依赖、隔离开发运行目录、开发机配置与 OCR smoke；不提交 `.env.local` 或模型缓存 |
+| 2 | PROCESS-RUNTIME-DEPLOY-02：Windows 生产启动与静态资源服务 | ⏳ | 前端静态产物由 Express 提供、SPA fallback、单进程生产启动、回环监听；不新增公网入口 |
+| 3 | PROCESS-RUNTIME-DEPLOY-03：使用机器 bootstrap 与安装检查 | ⏳ | `%LOCALAPPDATA%\AIStudyBuddy` 目录、venv、运行时检查、启停和只读安装检查；不依赖开发机盘符 |
+| 4 | PROCESS-RUNTIME-DEPLOY-04：数据备份/恢复与升级回滚 | ⏳ | SQLite/学期库/materials 白名单备份、hash 校验、非破坏性恢复、升级回滚与任务计划适配 |
+| 5 | PROCESS-RUNTIME-DEPLOY-05：全新机器验收与部署文档 | ⏳ | 部署包、兼容清单、验收矩阵、运维文档与分支/主线新鲜证据；不把 G2 结论写成产品部署结论 |
+
+### Phase 2.5 行动计划索引
+
+| 任务 | 计划文件 | 计划/实施状态 |
+| ---- | -------- | ------------- |
+| PROCESS-RUNTIME-DEPLOY-01 | `.plans/process-runtime-01-dev-ocr-recovery-plan.md` | 已批准、实施中；当前开发机路径只允许写入未提交 `.env.local`，OCR 依赖与 smoke 需以新鲜验证为准 |
+| PROCESS-RUNTIME-DEPLOY-02 | `.plans/process-runtime-02-production-host-plan.md` | 已批准、待实现；先以失败测试锁定生产静态服务和 SPA fallback 行为 |
+| PROCESS-RUNTIME-DEPLOY-03 | `.plans/process-runtime-03-bootstrap-install-check-plan.md` | 已批准、待实现；默认 `%LOCALAPPDATA%\AIStudyBuddy`，脚本参数化且不得写死 `H:\`/`I:\` |
+| PROCESS-RUNTIME-DEPLOY-04 | `.plans/process-runtime-04-backup-restore-upgrade-plan.md` | 已批准、待实现；恢复必须保留 recovery-point，普通备份排除秘密、日志、缓存和临时文件 |
+| PROCESS-RUNTIME-DEPLOY-05 | `.plans/process-runtime-05-deployment-validation-docs-plan.md` | 已批准、待实现；部署包扫描、全新机器验收与文档治理尚未完成 |
+
+> **2026-07-23 启动记录**：本任务从最新 `origin/master` 创建独立 worktree `H:\ai-studybuddy\.worktrees\process-runtime-deployment` 与分支 `codex/process-runtime-deployment`。原分支 `codex/phase1-5-g2-wsl-isolation-exec` 的 G2 文档提交及未提交 `semester-access-service.ts` 修改均保持原样，未在本任务中覆盖。`master` 与 `origin/master` 基线一致；后续完成判定仍必须以主线复验和 `origin/master` 推送为准。
+
+---
 ## Phase 3：打磨与安全（暂缓）
 
 **状态**：用户于 2026-07-21 明确要求暂不进入 Phase 3；以下仅为历史候选方向，不构成计划批准或实施授权。
