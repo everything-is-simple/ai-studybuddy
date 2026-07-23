@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.82
+**版本**：v1.83
 **日期**：2026-07-23
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -874,7 +874,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **2026-07-23 master 合入复验证据与推送收口**：已在独立集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723` 将 `codex/process-runtime-deployment` 以 fast-forward 方式合入本地 `master`；当前 master 提交为 `99fdeb5`（计划提交 `4070b07` + 实现提交 `99fdeb5`）；最终远端主线事实以本轮 `git push origin master` 后的 `git ls-remote --heads origin master` 确认为准。主线复验使用隔离目录 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-tests-20260723`：`pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build`、`pnpm test` 均 exit 0，后端测试 242/242 通过；首次主线复验因 `H:\.pnpm-store` 文件复制 EPERM 停在依赖安装阶段，已改用隔离 pnpm store `H:\ai-studybuddy-tmp\runs\process-runtime-pnpm-store-20260723` 重新安装依赖后通过。浏览器 E2E 使用 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-e2e-20260723`，`pnpm test:e2e` 21/21 通过。`scripts/check-docs-governance.ps1` 与 `git diff --check` 均通过。本地 master 复验仍不改变非目标：不接入 S7/ASR 产品链路，不修改 Firewall，不携带真实密钥/数据，不把 Docker/WSL 作为使用机器常驻产品依赖。
 
-> **2026-07-24 远端主线确认**：`git ls-remote --heads origin master` 返回 `3a82e9405e8192ca23786df2eca4920b9524d134	refs/heads/master`；Phase 2.5 运行环境重启与 Windows 使用机器部署准备已进入远端主线。主仓库 `H:\ai-studybuddy` 仍停留在 `codex/phase1-5-g2-wsl-isolation-exec`，未提交的 `packages/backend/src/services/semester-access-service.ts` 仍未被本轮夹带。
+> **2026-07-24 远端主线确认**：`git push origin master` 与随后实时 `git ls-remote --heads origin master` 校验通过；Phase 2.5 运行环境重启与 Windows 使用机器部署准备已进入远端主线。因提交自身会改变 Git 哈希，文档不写死“最终哈希”，以交付说明中的实时 `git ls-remote` 输出为准。主仓库 `H:\ai-studybuddy` 仍停留在 `codex/phase1-5-g2-wsl-isolation-exec`，未提交的 `packages/backend/src/services/semester-access-service.ts` 仍未被本轮夹带。
 
 ---
 ## Phase 3：打磨与安全（暂缓）

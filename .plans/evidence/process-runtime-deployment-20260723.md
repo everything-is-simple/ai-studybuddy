@@ -224,7 +224,7 @@ pnpm test:e2e
 
 - 任务分支已提交，已 fast-forward 合入本地 master，并已推送 `origin/master`。
 - `docs/04` 已更新 Phase 2.5 任务状态和主线最终证据。
-- 远端最终哈希以 `git ls-remote --heads origin master` 的当前结果为准；2026-07-24 确认为 `3a82e9405e8192ca23786df2eca4920b9524d134`。
+- 远端最终哈希以实时 `git ls-remote --heads origin master` 的当前结果为准；不在仓库文档写死最终哈希，避免提交自身改变哈希后文档过期。
 
 ## 2026-07-23 master 本地合入复验证据
 
@@ -247,6 +247,7 @@ pnpm test:e2e
 
 ## 2026-07-24 远端主线最终确认
 
-- `git ls-remote --heads origin master`：`3a82e9405e8192ca23786df2eca4920b9524d134	refs/heads/master`
+- `git push origin master`：已成功。
+- 随后实时 `git ls-remote --heads origin master`：已与本地 `HEAD` 匹配；具体最终哈希见交付说明中的实时输出。
 - 集成 worktree 状态：`master...origin/master` 干净。
 - 主仓库 `H:\ai-studybuddy` 仍在 `codex/phase1-5-g2-wsl-isolation-exec`，未提交的 `packages/backend/src/services/semester-access-service.ts` 未被本轮提交夹带。
