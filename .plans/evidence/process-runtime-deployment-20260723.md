@@ -220,10 +220,11 @@ pnpm test:e2e
 - 恢复文件白名单：`studybuddy.db`、`semesters\smoke-semester-20260723-5\semester.db`、`semesters\smoke-semester-20260723-5\materials\synthetic-note.txt`
 - 排除样本未进入备份 payload。
 
-## 仍需完成
+## 收口状态
 
-- 提交任务分支，rebase 到最新 master，fast-forward 合入后主线复验并推送 origin/master。
-- 更新 docs/04 任务状态和主线最终证据。
+- 任务分支已提交，已 fast-forward 合入本地 master，并已推送 `origin/master`。
+- `docs/04` 已更新 Phase 2.5 任务状态和主线最终证据。
+- 远端最终哈希以 `git ls-remote --heads origin master` 的当前结果为准。
 
 ## 2026-07-23 master 本地合入复验证据
 
