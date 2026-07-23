@@ -224,3 +224,22 @@ pnpm test:e2e
 
 - 提交任务分支，rebase 到最新 master，fast-forward 合入后主线复验并推送 origin/master。
 - 更新 docs/04 任务状态和主线最终证据。
+
+## 2026-07-23 master 本地合入复验证据
+
+- 集成 worktree：`H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`
+- 合并方式：`git merge --ff-only codex/process-runtime-deployment`
+- 本地 master 提交：`99fdeb5`（包含计划提交 `4070b07` 与实现提交 `99fdeb5`）
+- 状态边界：本节记录本地 master 复验；只有 `git push origin master` 成功后才可报告远端主线完成。
+- 依赖安装说明：首次主线复验停在 pnpm 依赖安装阶段，原因是 `H:\.pnpm-store` 复制 `node-gyp-build` 文件时 EPERM；改用隔离 pnpm store `H:\ai-studybuddy-tmp\runs\process-runtime-pnpm-store-20260723` 并 `pnpm --store-dir <store> install --frozen-lockfile --force` 后通过。
+- 核心验证隔离目录：`APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-tests-20260723`
+  - `pnpm type-check`：exit 0
+  - `pnpm -r --filter backend run build`：exit 0
+  - `pnpm -r --filter @ai-studybuddy/frontend run build`：exit 0
+  - `pnpm test`：exit 0，后端测试 242/242 pass
+- E2E 隔离目录：`APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-e2e-20260723`
+  - `pnpm test:e2e`：exit 0，21/21 pass
+- 治理检查：
+  - `powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`：exit 0
+  - `git diff --check`：exit 0
+- 非目标确认：未接入 S7/ASR 产品链路；未修改 Firewall；未携带真实密钥/数据；Docker/WSL 未成为使用机器常驻产品依赖。

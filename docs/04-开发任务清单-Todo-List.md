@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.79
+**版本**：v1.80
 **日期**：2026-07-23
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。Phase 2.5 运行环境重启与 Windows 使用机器部署准备已按五个独立工作包登记并获用户批准，当前在独立任务分支实施；其完成不改变 Phase 3 暂缓、S7 等待和 G2 历史门禁状态。
+> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。Phase 2.5 运行环境重启与 Windows 使用机器部署准备已按五个独立工作包完成本地 master 合入复验，待 `origin/master` 推送确认后作为远端主线事实；其完成不改变 Phase 3 暂缓、S7 等待和 G2 历史门禁状态。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -862,15 +862,17 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
-| PROCESS-RUNTIME-DEPLOY-01 | `.plans/process-runtime-01-dev-ocr-recovery-plan.md` | 已批准；分支实现与 OCR smoke 已通过，待 master 合入复验和 `origin/master` 推送后最终完成 |
-| PROCESS-RUNTIME-DEPLOY-02 | `.plans/process-runtime-02-production-host-plan.md` | 已批准；生产静态服务、SPA fallback、回环监听和启停 smoke 已通过，待 master 合入复验 |
-| PROCESS-RUNTIME-DEPLOY-03 | `.plans/process-runtime-03-bootstrap-install-check-plan.md` | 已批准；bootstrap、venv、check-installation 与受控运行时验证已通过，待 master 合入复验 |
-| PROCESS-RUNTIME-DEPLOY-04 | `.plans/process-runtime-04-backup-restore-upgrade-plan.md` | 已批准；备份/恢复 smoke、manifest hash、recovery-point 与 tmp/config 排除验证已通过，待 master 合入复验 |
-| PROCESS-RUNTIME-DEPLOY-05 | `.plans/process-runtime-05-deployment-validation-docs-plan.md` | 已批准；部署包 20260723-6、部署文档、文档治理、diff check 和 E2E 已完成分支验证，待 master 合入复验与推送 |
+| PROCESS-RUNTIME-DEPLOY-01 | `.plans/process-runtime-01-dev-ocr-recovery-plan.md` | ✅ 已完成本地 master 合入复验；OCR smoke 与受控 Python/venv 证据齐全，待 `origin/master` 推送确认 |
+| PROCESS-RUNTIME-DEPLOY-02 | `.plans/process-runtime-02-production-host-plan.md` | ✅ 已完成本地 master 合入复验；生产静态服务、SPA fallback、回环监听和启停 smoke 证据齐全，待 `origin/master` 推送确认 |
+| PROCESS-RUNTIME-DEPLOY-03 | `.plans/process-runtime-03-bootstrap-install-check-plan.md` | ✅ 已完成本地 master 合入复验；bootstrap、venv、check-installation 与受控运行时证据齐全，待 `origin/master` 推送确认 |
+| PROCESS-RUNTIME-DEPLOY-04 | `.plans/process-runtime-04-backup-restore-upgrade-plan.md` | ✅ 已完成本地 master 合入复验；备份/恢复 smoke、manifest hash、recovery-point 与 tmp/config 排除证据齐全，待 `origin/master` 推送确认 |
+| PROCESS-RUNTIME-DEPLOY-05 | `.plans/process-runtime-05-deployment-validation-docs-plan.md` | ✅ 已完成本地 master 合入复验；部署包 20260723-6、部署文档、文档治理、diff check 与 E2E 证据齐全，待 `origin/master` 推送确认 |
 
 > **2026-07-23 启动记录**：本任务从最新 `origin/master` 创建独立 worktree `H:\ai-studybuddy\.worktrees\process-runtime-deployment` 与分支 `codex/process-runtime-deployment`。原分支 `codex/phase1-5-g2-wsl-isolation-exec` 的 G2 文档提交及未提交 `semester-access-service.ts` 修改均保持原样，未在本任务中覆盖。`master` 与 `origin/master` 基线一致；后续完成判定仍必须以主线复验和 `origin/master` 推送为准。
 
 > **2026-07-23 分支验证证据（待主线收口）**：任务分支 `codex/process-runtime-deployment` 已完成 Windows 原生部署准备主体实现与分支验证：生产模式 Express 托管前端静态产物与 SPA fallback，API 保持 `/api` JSON 边界且仅监听 `127.0.0.1`；新增 bootstrap/start/stop/check/build package/backup/restore/OCR smoke/家长报告任务 wrapper 等脚本；OCR 依赖清单固定 `rapidocr-onnxruntime==1.4.4`，使用受控 Python/venv，不依赖模糊 PATH；最终部署包为 `H:\ai-studybuddy-tmp\runs\process-runtime-deployment-package-20260723-6` 与同名 zip，扫描确认未包含 `node_modules`、`.git`、`.env.local`、日志、tmp、models。分支验证退出码 0：`pnpm type-check`；`pnpm -r --filter backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-tests-20260723` 的 `pnpm test`（后端 242/242）；补装 Playwright Chromium 后，隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-e2e-20260723` 的 `pnpm test:e2e`（21/21）；`H:\ai-studybuddy-runtime\install-test-20260723-5` 上 bootstrap/check/start/stop/OCR smoke 通过；`H:\ai-studybuddy-runtime\restore-smoke-20260723-5` 备份/恢复 smoke 通过，tmp/config 排除样本未进入 payload。详细证据见 `.plans/evidence/process-runtime-deployment-20260723.md`。本记录仍不是 master 完成结论；最终完成需合入 master、主线复验并推送 `origin/master`。
+
+> **2026-07-23 master 本地合入复验证据（待推送确认）**：已在独立集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723` 将 `codex/process-runtime-deployment` 以 fast-forward 方式合入本地 `master`；当前 master 提交为 `99fdeb5`（计划提交 `4070b07` + 实现提交 `99fdeb5`），尚待 `git push origin master` 后成为远端主线事实。主线复验使用隔离目录 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-tests-20260723`：`pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build`、`pnpm test` 均 exit 0，后端测试 242/242 通过；首次主线复验因 `H:\.pnpm-store` 文件复制 EPERM 停在依赖安装阶段，已改用隔离 pnpm store `H:\ai-studybuddy-tmp\runs\process-runtime-pnpm-store-20260723` 重新安装依赖后通过。浏览器 E2E 使用 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-e2e-20260723`，`pnpm test:e2e` 21/21 通过。`scripts/check-docs-governance.ps1` 与 `git diff --check` 均通过。本地 master 复验仍不改变非目标：不接入 S7/ASR 产品链路，不修改 Firewall，不携带真实密钥/数据，不把 Docker/WSL 作为使用机器常驻产品依赖。
 
 ---
 ## Phase 3：打磨与安全（暂缓）
