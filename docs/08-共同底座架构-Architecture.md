@@ -178,7 +178,25 @@ HP 实机兼容复测（Windows 11、Ryzen 5 5625U、Node 22 LTS、16GB）在设
 
 HP 实机兼容复测目标（待机会执行，不阻塞 Phase 0.8）：Docker Desktop 与 WSL2 未运行；学习服务可用内存至少 6GB；OCR、AI、邮件或报告峰值时至少 3GB；无持续分页增长；OCR 后 Python 和报告后 Node 都退出；重复同周期不重复发送。
 
-## 七、Phase 1.5 S7 ASR 候选架构证据与 G2 出站隔离门禁
+## 七、Windows 生产运行与部署包边界
+
+PROCESS-RUNTIME-DEPLOY 后，生产运行采用单后端进程托管静态前端：`packages/frontend` 先由 Vite 构建，部署包组装到后端生产静态目录；Express 在生产模式下提供静态文件和 SPA fallback，`/api` 继续返回标准 API 信封。后端必须只监听 `127.0.0.1`，不得新增公网入口、局域网绑定或防火墙开放规则。
+
+使用机器部署包只包含编译后后端、编译后前端、共享运行资产、OCR Worker、OCR 依赖清单和部署脚本；不得携带 `.git`、`node_modules`、`.env.local`、真实密钥、正式 SQLite、真实资料、日志、tmp、模型缓存、WSL venv、pip/npm cache 或 Playwright 证据。
+
+运行目录由 `%LOCALAPPDATA%\AIStudyBuddy` 承载，至少拆分 `app/config/data/logs/tmp/models/backups/runtime`。`runtime\venv` 由 bootstrap 在使用机器创建，`PYTHON_PATH` 指向该 venv；当前开发机 `D:\miniconda\py310` 只可作为本机 bootstrap 输入，不能成为产品依赖。
+
+生产脚本边界：
+
+- `bootstrap-runtime.ps1` 执行目录创建、app 复制、生产 Node 依赖安装、OCR venv 安装和无密钥 `production.env` 生成；
+- `start-production.ps1` / `stop-production.ps1` 负责单进程启停和 PID/端口治理；
+- `check-installation.ps1` 只读检查 Windows、Node/Python、OCR、端口、健康接口、数据库状态、任务计划、密钥误携带和 E2E 目录误用；
+- `backup-data.ps1` / `restore-data.ps1` / `test-data-integrity.ps1` 只对白名单学习数据做 manifest/hash 备份、WhatIf 恢复预检、恢复点和完整性校验；
+- 家长报告任务计划只注册当前 Windows 用户任务，命令指向安装根 wrapper，不写死开发机路径。
+
+S7/ASR 仍停留在验证能力和 G2 门禁：Docker/WSL 可用于隔离验证或未来实验，但不进入本轮产品 API、Worker、前端或正式运行链路。
+
+## 八、Phase 1.5 S7 ASR 候选架构证据与 G2 出站隔离门禁
 
 Phase 1.5-T02 在独立 composer 中验证 FunASR 1.3.22 + `iic/SenseVoiceSmall` 可于 Windows CPU 从本地目录加载并处理标准 WAV；该事实只证明候选技术可行，不改变正式产品的 Adapter 边界：
 

@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.44
-**日期**：2026-07-21
+**版本**：v2.45
+**日期**：2026-07-23
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -22,21 +22,22 @@
 | 03g | [subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md](subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md) | ✅ 有效 | S7 轻量 PRD，课堂录音、本地 ASR、纯文本输出与 S2 笔记管道复用边界 |
 | 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | 阶段任务、执行顺序、完成门槛和验证结论 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
-| 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `I:\ai-studybuddy-*` 本地目录职责、外部试炼场与单机数据边界 |
+| 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `H:\ai-studybuddy-*` 本地目录职责、外部试炼场、验证产物与单机数据边界 |
 | 07 | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md) | ✅ 有效 | 文档分层、子系统文档触发条件 |
 | 08 | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md) | ✅ 有效 | 共同底座架构、Adapter、Job、数据对象和跨子系统边界 |
 | 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5/0.7/0.8 验收标准与证据规则 |
 | 10 | [后端开发规范-Backend-Guidelines.md](10-后端开发规范-Backend-Guidelines.md) | ✅ 有效 | 后端目录结构、SQLite、Adapter、AI Provider、日志和环境变量约定 |
 | 11 | [前端开发规范-Frontend-Guidelines.md](11-前端开发规范-Frontend-Guidelines.md) | ✅ 有效 | React/Vite 前端结构、API 信封、上传轮询、笔记渲染安全与 T08 验收规范 |
 | 12 | [开发规范-Dev-Rules.md](12-开发规范-Dev-Rules.md) | ✅ 有效 | 工具无关 16 步协作流程、分支/worktree、多 Agent、验证、隐私和提交规则 |
+| 13 | [部署运维指南-Deployment.md](13-部署运维指南-Deployment.md) | ✅ 有效 | Windows 原生部署包、受控前置运行时、生产启停、检查、备份恢复、升级回滚和任务计划 |
 | 15 | [前端信息架构与界面范围研究-Frontend-Information-Architecture.md](15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md) | ✅ 有效 | 基于当前路由和产品边界研究学生端信息架构、页面范围与后续界面候选项；不替代独立实施门禁 |
 
 ---
 
 ## 一点五、代码与试炼场边界
 
-- `I:\ai-studybuddy` 是唯一主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。
-- `I:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
+- `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。
+- `H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
 - 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。
 - 试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
 
@@ -65,7 +66,7 @@
 | 10-后端开发规范-Backend-Guidelines.md | 写第一个后端服务 / Adapter / API / Worker 前 | ✅ 已创建（Phase 0.8 T03） |
 | 11-前端开发规范-Frontend-Guidelines.md | 写第一个正式前端页面前 | ✅ 已创建（Phase 0.8 T08） |
 | 12-开发规范-Dev-Rules.md | 多 AI / 多分支 / 多 worktree 协作时 | ✅ 已创建（Phase 1-T00） |
-| 13-部署运维指南-Deployment.md | Phase 1 完成后准备部署时 | 未触发 |
+| 13-部署运维指南-Deployment.md | Phase 1 完成后准备部署时 | ✅ 已创建（PROCESS-RUNTIME-DEPLOY） |
 | 14-安全与隐私-Security-Privacy.md | Phase 1 后期或真实家庭试用前 | 未触发 |
 
 ---

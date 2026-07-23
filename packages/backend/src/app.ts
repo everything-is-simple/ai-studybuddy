@@ -1,4 +1,6 @@
 import type { ApiSuccess } from '@ai-studybuddy/shared';
+import fs from 'node:fs';
+import path from 'node:path';
 import express, { type Express } from 'express';
 import aiDevRouter from './api/dev-ai';
 import converterDevRouter from './api/dev-converter';
@@ -20,6 +22,7 @@ export function createApp(options: {
   configurationService: ConfigurationService;
   allowedOriginsRaw?: string;
   timetableRecognizer?: TimetableRecognizer;
+  staticRoot?: string;
 }): Express {
   const app = express();
   app.use('/api', createApiOriginPolicy(parseAllowedOrigins(options.allowedOriginsRaw)));
@@ -45,5 +48,21 @@ export function createApp(options: {
   app.use('/api', practiceRunnerRouter);
   app.use('/api', examCrammerRouter);
   app.use('/api', errorFixerRouter);
+
+  app.use('/api', (_req, res) => {
+    res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'API route not found' } });
+  });
+
+  const staticRoot = options.staticRoot;
+  if (staticRoot && fs.existsSync(staticRoot)) {
+    app.use(express.static(staticRoot, { index: 'index.html' }));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) { next(); return; }
+      const indexPath = path.join(staticRoot, 'index.html');
+      if (!fs.existsSync(indexPath)) { next(); return; }
+      res.sendFile(indexPath);
+    });
+  }
+
   return app;
 }

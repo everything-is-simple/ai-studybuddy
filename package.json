@@ -11,7 +11,8 @@
     "test": "pnpm build && pnpm -r run test",
     "test:e2e": "playwright test",
     "format:check": "prettier --check .",
-    "playwright:install": "playwright install"
+    "playwright:install": "playwright install",
+    "build:production": "powershell -ExecutionPolicy Bypass -File scripts/assemble-production.ps1"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

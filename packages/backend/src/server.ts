@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { createApp } from './app';
 import { bootstrapBackend, type BackendController } from './bootstrap';
 import { config } from './config/env';
@@ -13,6 +14,7 @@ async function main(): Promise<void> {
       createApp({
         configurationService,
         allowedOriginsRaw: config.configAllowedOrigins,
+        staticRoot: config.frontendStaticRoot || path.resolve(__dirname, 'public'),
       }),
     createWorker: () => new MaterialJobWorker(),
     port: config.backendPort,

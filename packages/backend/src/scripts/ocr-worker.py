@@ -19,6 +19,12 @@ def main():
         sys.exit(1)
 
     image_path = sys.argv[1]
+    cache_root = os.environ.get("OCR_CACHE_ROOT", "").strip()
+    if cache_root:
+        os.makedirs(cache_root, exist_ok=True)
+        os.environ.setdefault("XDG_CACHE_HOME", cache_root)
+        os.environ.setdefault("RAPIDOCR_HOME", cache_root)
+        os.environ.setdefault("ORT_HOME", cache_root)
 
     if not os.path.exists(image_path):
         result = {"ok": False, "error": f"文件不存在: {image_path}"}

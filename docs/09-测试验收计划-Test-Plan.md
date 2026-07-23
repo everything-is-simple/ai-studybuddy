@@ -243,7 +243,26 @@ G2 的验收对象是**可验证的操作系统级离线隔离**，而不是某�
 
 ---
 
-## 十二、文档治理检查
+## 十二、PROCESS-RUNTIME-DEPLOY Windows 部署验收矩阵
+
+本矩阵只评价 Windows 原生部署准备，不评价 S7/ASR 产品装配，也不把 G2 试验结论写成产品部署结论。所有会写运行数据的命令必须使用仓库外隔离根；E2E 必须使用 `H:\ai-studybuddy-tmp\runs\<task-id>` 这类可再生目录，不得使用正式 `%LOCALAPPDATA%\AIStudyBuddy\data`。
+
+| 验收项 | 通过标准 | 当前证据口径 |
+| ------ | -------- | ------------ |
+| 部署包扫描 | 包含编译后后端/前端/shared、OCR Worker、OCR requirements、部署脚本、兼容清单；排除 `.git`、`node_modules`、密钥、真实数据、日志、tmp、models、Playwright 证据 | 记录部署包根、zip、扫描命令和排除扫描结果 |
+| Bootstrap | 使用机器安装根创建目录、复制 app、安装生产 Node 依赖、创建 OCR venv、生成无密钥 `production.env`；不依赖开发机盘符作为运行时 | 记录 InstallRoot、Node/Python 版本、venv 路径和无密钥声明 |
+| 生产启停 | 后端只监听 `127.0.0.1`；健康接口成功；前端 `/` 与 SPA fallback 返回 HTML；未知 `/api/*` 返回 JSON 404；停止后端口释放 | 记录 PID、端口、health JSON、HTTP 状态和 stop 结果 |
+| OCR smoke | RapidOCR 可导入；中文合成图、空白图、不存在路径、超时、Worker JSON 输出和临时清理通过；模型缓存不进源码 | 记录 `test-ocr-runtime.ps1` 输出和 RuntimeRoot |
+| 备份/恢复 | 白名单备份 `studybuddy.db`、学期库和 materials；排除 config/tmp/logs/models/secrets；manifest hash 通过；`-WhatIf` 不落盘；实际恢复生成 recovery point | 记录 backup path、payload 文件列表、integrity 输出、restore root |
+| 配置/密钥 | 安装包和 Git 不携带真实密钥；AI/SMTP/飞书未配置时离线确定性主线可用，发送类能力不伪造成功 | 记录 `check-installation.ps1` secure-config、secret-files 和 plain-secret-config 检查 |
+| 任务计划 | 默认不注册真实发送；注册脚本以当前用户身份指向安装根 wrapper；卸载/注销不删学习数据 | 记录单测或 WhatIf/静态检查；真实发送另行验收 |
+| 安全网络 | 不新增防火墙规则，不绑定局域网，不暴露公网；日志不含 API Key、SMTP 授权码、完整 Webhook 或资料原文 | 记录端口监听和日志/密钥扫描 |
+
+当前 Node native 依赖安装还需要稳定网络取得预编译包；若下载失败会退回本地编译并要求 Visual Studio C++ Build Tools。bootstrap 脚本必须给出可操作错误，不能静默半配置。
+
+---
+
+## 十三、文档治理检查
 
 每轮证据回填后运行：
 

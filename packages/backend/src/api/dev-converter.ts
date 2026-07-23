@@ -20,6 +20,8 @@ const pdfConverter = new PdfConverter();
 const ocrConverter = new OcrConverter({
   pythonPath: config.pythonPath,
   timeoutMs: config.ocrTimeoutMs,
+  cacheRoot: config.ocrCacheRoot,
+  tempRoot: config.ocrTempRoot,
 });
 const textConverter = new TextConverter();
 const docxConverter = new DocxConverter();

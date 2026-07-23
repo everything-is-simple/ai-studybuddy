@@ -16,6 +16,7 @@ import { Readability } from '@mozilla/readability';
 import { DocxConverter } from './docx-converter';
 import { PptxConverter } from './pptx-converter';
 import { UrlFetcher } from './url-fetcher';
+import { getOcrWorkerEnvironment } from '../config/env';
 
 // ── 公共工具 ────────────────────────────────────────────────
 
@@ -83,15 +84,24 @@ export class PdfConverter {
 export interface OcrConverterOptions {
   pythonPath?: string;
   timeoutMs?: number;
+  workerPath?: string;
+  tempRoot?: string;
+  cacheRoot?: string;
 }
 
 export class OcrConverter {
-  private pythonPath: string;
-  private timeoutMs: number;
+  private readonly pythonPath: string;
+  private readonly timeoutMs: number;
+  private readonly workerPath: string;
+  private readonly tempRoot: string;
+  private readonly cacheRoot?: string;
 
   constructor(options: OcrConverterOptions = {}) {
     this.pythonPath = options.pythonPath ?? 'python';
     this.timeoutMs = options.timeoutMs ?? 60000;
+    this.workerPath = options.workerPath ?? path.resolve(__dirname, '../scripts/ocr-worker.py');
+    this.tempRoot = options.tempRoot ?? require('os').tmpdir();
+    this.cacheRoot = options.cacheRoot;
   }
 
   async convert(input: Buffer | string): Promise<ConverterResult> {
@@ -99,17 +109,18 @@ export class OcrConverter {
     let imagePath: string;
 
     try {
+      fs.mkdirSync(this.tempRoot, { recursive: true });
+      if (this.cacheRoot) fs.mkdirSync(this.cacheRoot, { recursive: true });
+
       if (Buffer.isBuffer(input)) {
-        tempPath = path.join(require('os').tmpdir(), `studybuddy-ocr-${crypto.randomUUID()}.tmp`);
+        tempPath = path.join(this.tempRoot, `studybuddy-ocr-${crypto.randomUUID()}.tmp`);
         fs.writeFileSync(tempPath, input);
         imagePath = tempPath;
       } else {
         imagePath = input;
       }
 
-      const workerPath = path.resolve(__dirname, '../scripts/ocr-worker.py');
-
-      const result = await this.runWorker(workerPath, imagePath);
+      const result = await this.runWorker(this.workerPath, imagePath);
 
       if (!result.ok) {
         return {
@@ -150,26 +161,37 @@ export class OcrConverter {
     imagePath: string
   ): Promise<{ ok: boolean; text?: string; charCount?: number; error?: string }> {
     return new Promise((resolve, reject) => {
-      const process = spawn(this.pythonPath, [workerPath, imagePath], {
-        timeout: this.timeoutMs,
+      const child = spawn(this.pythonPath, [workerPath, imagePath], {
+        env: getOcrWorkerEnvironment({ tempRoot: this.tempRoot, cacheRoot: this.cacheRoot }),
       });
 
       let stdout = '';
       let stderr = '';
+      let timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        child.kill();
+      }, this.timeoutMs);
 
-      process.stdout.on('data', (chunk: Buffer) => {
+      child.stdout.on('data', (chunk: Buffer) => {
         stdout += chunk.toString('utf8');
       });
 
-      process.stderr.on('data', (chunk: Buffer) => {
+      child.stderr.on('data', (chunk: Buffer) => {
         stderr += chunk.toString('utf8');
       });
 
-      process.on('error', (error) => {
+      child.on('error', (error) => {
+        clearTimeout(timer);
         reject(error);
       });
 
-      process.on('close', (code) => {
+      child.on('close', (code) => {
+        clearTimeout(timer);
+        if (timedOut) {
+          reject(new Error(`OCR 子进程超时（${this.timeoutMs}ms）`));
+          return;
+        }
         if (code !== 0) {
           reject(new Error(`OCR 子进程退出码 ${code}：${stderr || 'unknown error'}`));
           return;
@@ -385,7 +407,10 @@ function inferSourceType(
   }
 }
 
-export async function dispatchConverter(input: DispatchConverterInput): Promise<ConverterResult> {
+export async function dispatchConverter(
+  input: DispatchConverterInput,
+  options: { ocr?: OcrConverterOptions } = {}
+): Promise<ConverterResult> {
   const { buffer, url, filename, declaredMimeType } = input;
 
   if (url !== undefined && url.length > 0) {
@@ -430,7 +455,7 @@ export async function dispatchConverter(input: DispatchConverterInput): Promise<
     case 'pdf':
       return new PdfConverter().convert(buffer);
     case 'image':
-      return new OcrConverter().convert(buffer);
+      return new OcrConverter(options.ocr).convert(buffer);
     case 'text':
       return new TextConverter().convert(buffer, 'text');
     case 'html':

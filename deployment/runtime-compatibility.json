@@ -1,0 +1,9 @@
+{
+  "backendVersion": "0.8.0",
+  "verifiedOn": "2026-07-23",
+  "node": { "minimumMajor": 20, "maximumMajor": 25, "verified": "v25.4.0" },
+  "python": { "minimum": "3.10", "maximum": "3.12", "verified": "3.10.19", "architecture": "x64" },
+  "ocr": { "package": "rapidocr-onnxruntime", "version": "1.4.4" },
+  "network": { "host": "127.0.0.1", "publicBinding": false },
+  "dockerWsl": { "requiredForProduct": false }
+}

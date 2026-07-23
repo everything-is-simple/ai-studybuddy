@@ -1,8 +1,8 @@
 # AI StudyBuddy 本地目录与验证资产治理
 
-**版本**：v1.5
+**版本**：v1.6
 **状态**：已确认
-**日期**：2026-07-18
+**日期**：2026-07-23
 **用途**：定义主系统、外部组件试炼场、运行数据、日志、临时文件和备份的唯一边界。本文件是 Windows 单机目录治理的单一事实来源（SoT）。
 
 ---
@@ -13,23 +13,54 @@
 
 目录必须按职责隔离：**源码不存真实数据，试炼场不变成主系统，运行数据不进入 Git，备份不反向污染当前 SoT。**
 
-## 二、七个本机目录
+## 二、当前开发机目录边界（H 盘）
 
-| 路径                         | 唯一职责             | 可以放                                                | 禁止放                                                 |
-| ---------------------------- | -------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
-| `I:\ai-studybuddy`           | 主系统 Git 仓库      | `docs/`、`packages/`、脚本、正式测试、正式 Adapter    | `.env.local`、真实学习资料、长期日志、试炼场依赖       |
-| `I:\ai-studybuddy-composer`  | 外部组件试炼场       | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码、真实学习资料、主仓库 workspace 配置      |
-| `I:\ai-studybuddy-data`      | 运行数据根目录建议值 | SQLite、`materials/`、`exports/`、受控备份            | 源码、Git 元数据、密钥明文                             |
-| `I:\ai-studybuddy-day-study` | 人工学习工作区       | 用户自己创建或整理的资料副本                          | 系统唯一数据源、应用数据库                             |
-| `I:\ai-studybuddy-logs`      | 运行日志汇总         | 脱敏诊断、任务状态、错误摘要                          | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
-| `I:\ai-studybuddy-tmp`       | 可再生临时空间       | OCR 切片、导出中间件、临时测试结果                    | SQLite 正式库、`materials/`、唯一备份                  |
-| `I:\ai-studybuddy-backup`    | 只读历史备份         | 阶段 ZIP、旧稿归档、恢复说明                          | 当前 SoT 文档的直接编辑副本                            |
+当前开发机已迁到 H 盘治理；旧文档中的 `I:\...` 只保留为历史路径语义，不再作为本轮重启的默认值。各目录按职责拆开，目的是让源码、正式/半正式数据、日志、可再生临时产物、worktree、备份和人工学习区互不污染。
 
-正式产品通过 `APP_DATA_ROOT` 指定运行数据根目录。当前开发机建议 `APP_DATA_ROOT=I:\ai-studybuddy-data`；成品安装时可改为 `%LOCALAPPDATA%\AIStudyBuddy`。业务代码不得写死盘符。
+| 路径 | 唯一职责 | 可以放 | 禁止放 |
+| ---- | -------- | ------ | ------ |
+| `H:\ai-studybuddy` | 主系统 Git 仓库 | `docs/`、`packages/`、`scripts/`、`.plans/`、正式测试和产品代码 | 真实学习资料、正式 SQLite、长期日志、模型缓存、密钥明文、部署运行数据 |
+| `H:\ai-studybuddy-worktrees` / `H:\ai-studybuddy\.worktrees` | 任务 worktree | 从最新 `master` 派生的任务分支、隔离实现 | 正式运行数据、密钥、模型缓存 |
+| `H:\ai-studybuddy-composer` | 外部组件/能力试炼场 | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码直接引用、真实学习资料、主仓库 workspace 配置 |
+| `H:\ai-studybuddy-data` | 开发机人工指定的数据根候选 | SQLite、`materials/`、受控导出/备份 | 源码、Git 元数据、密钥明文；E2E 不得复用 |
+| `H:\ai-studybuddy-day-study` | 人工学习工作区 | 用户自己创建或整理的资料副本 | 系统唯一数据源、应用数据库、自动迁移目标 |
+| `H:\ai-studybuddy-logs` | 脱敏日志汇总 | 运行摘要、错误摘要、任务状态 | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
+| `H:\ai-studybuddy-tmp` | 可再生临时/验证空间 | OCR 切片、E2E `runs/<task-id>`、部署包 smoke、Playwright 证据 | SQLite 正式库、唯一备份、真实资料主副本 |
+| `H:\ai-studybuddy-backup` | 只读阶段备份 | 源码阶段 ZIP、旧稿归档、恢复说明 | 当前 SoT 文档的直接编辑副本、密钥明文 |
+
+非正式目录说明：`H:\ai-studybuddy-t09-validation` 是历史/专项验证产物区，不是本轮要建立的正式系统目录；`H:\.pnpm-store` 是 pnpm 内容寻址缓存，不是 AI StudyBuddy 运行目录，不能作为部署包内容或验收数据源。
+
+本轮开发机重启使用仓库外隔离运行根，例如：
+
+```text
+H:\ai-studybuddy-runtime\
+├─ runs\local-dev-20260723-001\
+├─ logs\
+├─ tmp\
+└─ backups\
+```
+
+`.env.local` 只允许在本机未提交状态写入 `APP_DATA_ROOT`、`PYTHON_PATH` 等机器路径；业务代码、部署包、文档示例不得把 `D:\miniconda\py310` 或 `H:\...` 写成使用机器依赖。
+
+正式使用机器固定采用当前 Windows 用户目录：
+
+```text
+%LOCALAPPDATA%\AIStudyBuddy\
+├─ app\
+├─ config\
+├─ data\
+├─ logs\
+├─ tmp\
+├─ models\
+├─ backups\
+└─ runtime\venv\
+```
+
+生产形态只监听 `127.0.0.1`；Docker/WSL 只用于开发隔离、ASR/G2 验证或未来可选实验，不是使用机器常驻产品依赖。E2E/Playwright 必须使用 `H:\ai-studybuddy-tmp\runs\<task-id>` 这类可再生隔离目录，不得复用 `%LOCALAPPDATA%\AIStudyBuddy\data` 或开发机正式数据根。
 
 ## 三、外部组件试炼场
 
-`I:\ai-studybuddy-composer\windows-native` 是 Phase 0.7 的独立 Node/Python 验证目录，使用自己的 `package.json`、`.venv` 和 `.env.local`，不加入 `I:\ai-studybuddy\pnpm-workspace.yaml`。
+`H:\ai-studybuddy-composer\windows-native` 是 Phase 0.7 的独立 Node/Python 验证目录，使用自己的 `package.json`、`.venv` 和 `.env.local`，不加入 `H:\ai-studybuddy\pnpm-workspace.yaml`。
 
 每个组件样例至少包含：
 
@@ -68,16 +99,16 @@ APP_DATA_ROOT\
 
 - 数据表只保存逻辑 `storage_key`，不保存绝对文件路径。
 - SQLite 关闭后才能复制到 `data\backups`；恢复前保留原库的只读副本。
-- `tmp` 和 `I:\ai-studybuddy-tmp` 可以清理，但清理脚本必须拒绝跨目录删除，且绝不删除 `materials`、`data` 或备份。
+- `tmp` 和 `H:\ai-studybuddy-tmp` 可以清理，但清理脚本必须拒绝跨目录删除，且绝不删除 `materials`、`data` 或备份。
 - 邮件附件和导出放在 `exports`；发送记录由 SQLite 的 `report_deliveries` 去重。
 - `config/*.enc` 只能由创建它的 Windows 当前用户解密；`state.json` 只存状态和验证时间，不存密钥、完整 URL 或邮箱授权码。
-- 测试和浏览器验收必须把 `APP_DATA_ROOT` 指向 `I:\ai-studybuddy-tmp\runs\<task-id>` 等隔离目录，不得读写正式运行目录。
+- 测试和浏览器验收必须把 `APP_DATA_ROOT` 指向 `H:\ai-studybuddy-tmp\runs\<task-id>` 等隔离目录，不得读写正式运行目录。
 
 ## 五、密钥、日志与备份
 
 `.env.example` 仅列变量名；`.env.local` 永不提交。日志不得记录 `AI_API_KEY`、`SMTP_AUTH_CODE`、完整 `FEISHU_WEBHOOK_URL`、资料原文、笔记正文、答案或聊天内容。
 
-每个里程碑完成后：先对 `I:\ai-studybuddy` 做 Git 提交，再把源码与文档的阶段快照放到 `I:\ai-studybuddy-backup`；真实学习数据由家长确认后单独备份。备份只用于恢复，不得直接恢复为 `docs/` 的当前设计依据。
+每个里程碑完成后：先对 `H:\ai-studybuddy` 做 Git 提交，再把源码与文档的阶段快照放到 `H:\ai-studybuddy-backup`；真实学习数据由家长确认后单独备份。备份只用于恢复，不得直接恢复为 `docs/` 的当前设计依据。
 
 ## 六、Phase 0.8 接入门槛
 

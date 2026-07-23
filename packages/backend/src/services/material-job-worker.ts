@@ -7,6 +7,7 @@ import { getGlobalDbPath } from '../db/paths';
 import { StorageAdapter, dispatchConverter, AiRouterProxy } from '../adapters';
 import type { AiProvider } from '../adapters';
 import { NoteBuilderService } from './note-builder-service';
+import { config } from '../config/env';
 
 interface JobRow {
   id: string;
@@ -162,10 +163,20 @@ export class MaterialJobWorker {
       if (!material) throw new Error('资料不存在');
       db.prepare("UPDATE materials SET status = 'converting', updated_at = ? WHERE id = ?").run(now(), job.material_id);
       const file = await this.storage.get(material.storage_key);
-      const result = await dispatchConverter({
-        buffer: await streamBuffer(file.stream),
-        filename: material.original_filename,
-      });
+      const result = await dispatchConverter(
+        {
+          buffer: await streamBuffer(file.stream),
+          filename: material.original_filename,
+        },
+        {
+          ocr: {
+            pythonPath: config.pythonPath,
+            timeoutMs: config.ocrTimeoutMs,
+            cacheRoot: config.ocrCacheRoot,
+            tempRoot: config.ocrTempRoot,
+          },
+        }
+      );
       if (!result.ok || !result.text?.trim()) throw new Error(result.error || '资料转换失败');
       const timestamp = now();
       db.transaction(() => {

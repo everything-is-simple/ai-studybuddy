@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
     "clean": "node -e \"const fs=require(\\\"fs\\\"); for (const path of [\\\"dist\\\", \\\"tsconfig.tsbuildinfo\\\"]) fs.rmSync(path, { recursive: true, force: true });\"",
-    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "start:production": "node dist/server.js"
   },
   "dependencies": {
     "@ai-studybuddy/shared": "workspace:*",

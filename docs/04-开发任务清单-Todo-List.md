@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.78
+**版本**：v1.79
 **日期**：2026-07-23
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -852,23 +852,25 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
-| 1 | PROCESS-RUNTIME-DEPLOY-01：开发环境重启与 OCR 运行时恢复 | 🚧 | 固化 Python/OCR 依赖、隔离开发运行目录、开发机配置与 OCR smoke；不提交 `.env.local` 或模型缓存 |
-| 2 | PROCESS-RUNTIME-DEPLOY-02：Windows 生产启动与静态资源服务 | ⏳ | 前端静态产物由 Express 提供、SPA fallback、单进程生产启动、回环监听；不新增公网入口 |
-| 3 | PROCESS-RUNTIME-DEPLOY-03：使用机器 bootstrap 与安装检查 | ⏳ | `%LOCALAPPDATA%\AIStudyBuddy` 目录、venv、运行时检查、启停和只读安装检查；不依赖开发机盘符 |
-| 4 | PROCESS-RUNTIME-DEPLOY-04：数据备份/恢复与升级回滚 | ⏳ | SQLite/学期库/materials 白名单备份、hash 校验、非破坏性恢复、升级回滚与任务计划适配 |
-| 5 | PROCESS-RUNTIME-DEPLOY-05：全新机器验收与部署文档 | ⏳ | 部署包、兼容清单、验收矩阵、运维文档与分支/主线新鲜证据；不把 G2 结论写成产品部署结论 |
+| 1 | PROCESS-RUNTIME-DEPLOY-01：开发环境重启与 OCR 运行时恢复 | 🔄 | 固化 Python/OCR 依赖、隔离开发运行目录、开发机配置与 OCR smoke；不提交 `.env.local` 或模型缓存 |
+| 2 | PROCESS-RUNTIME-DEPLOY-02：Windows 生产启动与静态资源服务 | 🔄 | 前端静态产物由 Express 提供、SPA fallback、单进程生产启动、回环监听；不新增公网入口 |
+| 3 | PROCESS-RUNTIME-DEPLOY-03：使用机器 bootstrap 与安装检查 | 🔄 | `%LOCALAPPDATA%\AIStudyBuddy` 目录、venv、运行时检查、启停和只读安装检查；不依赖开发机盘符 |
+| 4 | PROCESS-RUNTIME-DEPLOY-04：数据备份/恢复与升级回滚 | 🔄 | SQLite/学期库/materials 白名单备份、hash 校验、非破坏性恢复、升级回滚与任务计划适配 |
+| 5 | PROCESS-RUNTIME-DEPLOY-05：全新机器验收与部署文档 | 🔄 | 部署包、兼容清单、验收矩阵、运维文档与分支/主线新鲜证据；不把 G2 结论写成产品部署结论 |
 
 ### Phase 2.5 行动计划索引
 
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
-| PROCESS-RUNTIME-DEPLOY-01 | `.plans/process-runtime-01-dev-ocr-recovery-plan.md` | 已批准、实施中；当前开发机路径只允许写入未提交 `.env.local`，OCR 依赖与 smoke 需以新鲜验证为准 |
-| PROCESS-RUNTIME-DEPLOY-02 | `.plans/process-runtime-02-production-host-plan.md` | 已批准、待实现；先以失败测试锁定生产静态服务和 SPA fallback 行为 |
-| PROCESS-RUNTIME-DEPLOY-03 | `.plans/process-runtime-03-bootstrap-install-check-plan.md` | 已批准、待实现；默认 `%LOCALAPPDATA%\AIStudyBuddy`，脚本参数化且不得写死 `H:\`/`I:\` |
-| PROCESS-RUNTIME-DEPLOY-04 | `.plans/process-runtime-04-backup-restore-upgrade-plan.md` | 已批准、待实现；恢复必须保留 recovery-point，普通备份排除秘密、日志、缓存和临时文件 |
-| PROCESS-RUNTIME-DEPLOY-05 | `.plans/process-runtime-05-deployment-validation-docs-plan.md` | 已批准、待实现；部署包扫描、全新机器验收与文档治理尚未完成 |
+| PROCESS-RUNTIME-DEPLOY-01 | `.plans/process-runtime-01-dev-ocr-recovery-plan.md` | 已批准；分支实现与 OCR smoke 已通过，待 master 合入复验和 `origin/master` 推送后最终完成 |
+| PROCESS-RUNTIME-DEPLOY-02 | `.plans/process-runtime-02-production-host-plan.md` | 已批准；生产静态服务、SPA fallback、回环监听和启停 smoke 已通过，待 master 合入复验 |
+| PROCESS-RUNTIME-DEPLOY-03 | `.plans/process-runtime-03-bootstrap-install-check-plan.md` | 已批准；bootstrap、venv、check-installation 与受控运行时验证已通过，待 master 合入复验 |
+| PROCESS-RUNTIME-DEPLOY-04 | `.plans/process-runtime-04-backup-restore-upgrade-plan.md` | 已批准；备份/恢复 smoke、manifest hash、recovery-point 与 tmp/config 排除验证已通过，待 master 合入复验 |
+| PROCESS-RUNTIME-DEPLOY-05 | `.plans/process-runtime-05-deployment-validation-docs-plan.md` | 已批准；部署包 20260723-6、部署文档、文档治理、diff check 和 E2E 已完成分支验证，待 master 合入复验与推送 |
 
 > **2026-07-23 启动记录**：本任务从最新 `origin/master` 创建独立 worktree `H:\ai-studybuddy\.worktrees\process-runtime-deployment` 与分支 `codex/process-runtime-deployment`。原分支 `codex/phase1-5-g2-wsl-isolation-exec` 的 G2 文档提交及未提交 `semester-access-service.ts` 修改均保持原样，未在本任务中覆盖。`master` 与 `origin/master` 基线一致；后续完成判定仍必须以主线复验和 `origin/master` 推送为准。
+
+> **2026-07-23 分支验证证据（待主线收口）**：任务分支 `codex/process-runtime-deployment` 已完成 Windows 原生部署准备主体实现与分支验证：生产模式 Express 托管前端静态产物与 SPA fallback，API 保持 `/api` JSON 边界且仅监听 `127.0.0.1`；新增 bootstrap/start/stop/check/build package/backup/restore/OCR smoke/家长报告任务 wrapper 等脚本；OCR 依赖清单固定 `rapidocr-onnxruntime==1.4.4`，使用受控 Python/venv，不依赖模糊 PATH；最终部署包为 `H:\ai-studybuddy-tmp\runs\process-runtime-deployment-package-20260723-6` 与同名 zip，扫描确认未包含 `node_modules`、`.git`、`.env.local`、日志、tmp、models。分支验证退出码 0：`pnpm type-check`；`pnpm -r --filter backend run build`；`pnpm -r --filter @ai-studybuddy/frontend run build`；隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-tests-20260723` 的 `pnpm test`（后端 242/242）；补装 Playwright Chromium 后，隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-e2e-20260723` 的 `pnpm test:e2e`（21/21）；`H:\ai-studybuddy-runtime\install-test-20260723-5` 上 bootstrap/check/start/stop/OCR smoke 通过；`H:\ai-studybuddy-runtime\restore-smoke-20260723-5` 备份/恢复 smoke 通过，tmp/config 排除样本未进入 payload。详细证据见 `.plans/evidence/process-runtime-deployment-20260723.md`。本记录仍不是 master 完成结论；最终完成需合入 master、主线复验并推送 `origin/master`。
 
 ---
 ## Phase 3：打磨与安全（暂缓）
