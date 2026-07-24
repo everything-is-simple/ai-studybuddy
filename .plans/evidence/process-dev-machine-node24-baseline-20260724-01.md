@@ -1,14 +1,15 @@
 # 开发机 Windows 原生 Node 24 运行时基线——脱敏执行证据
 
 **日期**：2026-07-24
-**状态**：任务分支验证通过；尚待最新 `master` 复验和 `origin/master` 推送。
+**状态**：已 fast-forward 合入本地 `master`，主线部署路径与仓库复验通过；尚待 `origin/master` 推送。
 **计划**：`.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md`
 **任务分支**：`codex/process-dev-machine-node24-runtime-baseline`
-**worktree**：`H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline`
+**任务 worktree**：`H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline`
+**主线复验 worktree**：`H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`
 
 ## 1. 结论边界
 
-本证据只支持以下结论（待主线复验及推送完成后）：
+本证据支持以下本地主线复验结论；仅在推送 `origin/master` 成功后方可作为远端主线完成事实：
 
 > 开发机上的 Windows 原生环境，在 Node 24 下可按部署脚本完成安装、OCR 验证、启动、健康检查、停止及必要的数据安全检查。
 
@@ -71,8 +72,16 @@
 - `scripts/check-docs-governance.ps1`：exit `0`。
 - `git diff --check`：exit `0`。
 
-## 8. 未完成门禁
+## 8. 本地 master 复验
+
+- 主线集成：任务提交 `f8e1df4a79f5e4e4428d01c8079674d5244805f5` 已以 fast-forward 合入独立 `master` worktree；此时尚未推送远端。
+- 新运行根：`H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01`；新部署包、安装根和测试数据根均与任务分支验证隔离。
+- 部署路径：构建、bootstrap、安装检查、OCR、`GET http://127.0.0.1:30127/api/health`、停止和脱敏安全检查最终均通过；health 为 `success=true`，停止后 PID 文件和关联 Node 进程均不存在。
+- 复验记录的边界：首次 OCR 调用误传了不存在的 `-InstallRoot` 参数（exit `1`）；改为脚本契约的 `-RuntimeRoot` 与受控 venv Python 后通过。启动命令接入日志管道时因后台 Node 继承输出句柄而超时；独立 health/stop 验证确认服务实际已启动并可正确停止。两者均为复验封装问题，不是部署脚本或产品失败。
+- 仓库级：`pnpm type-check`、后端构建、前端构建、`pnpm test`（backend 242/242）、文档治理和 `git diff --check` 均 exit `0`。
+
+## 9. 未完成门禁
 
 - 用户电脑安装和运行：**待目标机器到位后实机验收；当前不宣称完成。**
 - ASR / Docker / WSL：独立环境门禁暂缓，未进入产品实现。
-- 本任务尚未完成主线 fast-forward 合并、主线复验或 `origin/master` 推送。
+- 本任务尚待 `git push origin master` 及远端 `origin/master` 引用核验；在此之前不得宣称远端主线完成。
