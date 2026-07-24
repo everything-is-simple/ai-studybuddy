@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.86
+**版本**：v1.87
 **日期**：2026-07-24
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -876,7 +876,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **2026-07-24 远端主线确认**：`git push origin master` 与随后实时 `git ls-remote --heads origin master` 校验通过；Phase 2.5 运行环境重启与 Windows 使用机器部署准备已进入远端主线。因提交自身会改变 Git 哈希，文档不写死“最终哈希”，以交付说明中的实时 `git ls-remote` 输出为准。主仓库 `H:\ai-studybuddy` 仍停留在 `codex/phase1-5-g2-wsl-isolation-exec`，未提交的 `packages/backend/src/services/semester-access-service.ts` 仍未被本轮夹带。
 
-> **2026-07-24 开发机 Windows 原生 + Node 24 运行时基线（开发机基线已验证并推送 `origin/master`；非用户机验收）**：计划 `.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md` 已由任务分支 `codex/process-dev-machine-node24-runtime-baseline` fast-forward 合入独立主线集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`；原主工作区的未提交学期版本 8/9 改动及 S7/G2 文档未被覆盖。新的干净部署包 `H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01\deployment-package-node24-master` 在新的独立安装根 `H:\ai-studybuddy-runtime\dev-machine-node24-baseline-master-20260724-01` 中完成 `bootstrap-runtime.ps1` → `check-installation.ps1` → `test-ocr-runtime.ps1` → `start-production.ps1`（仅 `127.0.0.1:30127`）→ `/api/health` → `stop-production.ps1` → 脱敏数据安全检查；最终各部署步骤均 exit `0`，health 为 `success=true`，停止后无 PID/关联 Node 残留。Node 为 `v24.14.0`，Python 为 `3.10.19 x64`，OCR 合成中文 smoke 通过；主线 `pnpm type-check`、后端/前端构建、`pnpm test`（242/242）、文档治理和 `git diff --check` 均 exit `0`。当前运行时事实和命中的部署脚本已收紧为仅 Node 24；脱敏证据见 `.plans/evidence/process-dev-machine-node24-baseline-20260724-01.md`。**用户电脑安装运行仍为待目标机器到位后的独立实机验收门禁，当前不得宣称完成；ASR / Docker / WSL 继续独立暂缓，未进入产品实现。**
+> **2026-07-24 开发机 Windows 原生 + Node 24 运行时基线（开发机基线已验证并推送 `origin/master`；非用户机验收）**：计划 `.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md` 已由任务分支 `codex/process-dev-machine-node24-runtime-baseline` fast-forward 合入独立主线集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`；原主工作区的未提交学期版本 8/9 改动及 S7/G2 文档未被覆盖。新的干净部署包 `H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01\deployment-package-node24-master` 在新的独立安装根 `H:\ai-studybuddy-runtime\dev-machine-node24-baseline-master-20260724-01` 中完成 `bootstrap-runtime.ps1` → `check-installation.ps1` → `test-ocr-runtime.ps1` → `start-production.ps1`（仅 `127.0.0.1:30127`）→ `/api/health` → `stop-production.ps1` → 脱敏数据安全检查；构建、bootstrap、安装检查、修正后的 OCR、停止和安全检查均为 exit `0`。启动脚本已输出本机回环地址；其日志包装因后台 Node 继承输出句柄超时，故以独立 `/api/health` 的 `success=true` 与停止后无 PID/关联 Node 残留确认启动/停止结果。Node 为 `v24.14.0`，Python 为 `3.10.19 x64`，OCR 合成中文 smoke 通过；主线 `pnpm type-check`、后端/前端构建、`pnpm test`（242/242）、文档治理和 `git diff --check` 均 exit `0`。当前运行时事实和命中的部署脚本已收紧为仅 Node 24；脱敏证据见 `.plans/evidence/process-dev-machine-node24-baseline-20260724-01.md`。**用户电脑安装运行仍为待目标机器到位后的独立实机验收门禁，当前不得宣称完成；ASR / Docker / WSL 继续独立暂缓，未进入产品实现。**
 
 ---
 ## Phase 3：打磨与安全（暂缓）

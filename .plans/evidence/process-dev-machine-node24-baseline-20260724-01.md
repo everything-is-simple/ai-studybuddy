@@ -76,7 +76,7 @@
 
 - 主线集成：任务提交 `f8e1df4a79f5e4e4428d01c8079674d5244805f5` 已以 fast-forward 合入独立 `master` worktree；此时尚未推送远端。
 - 新运行根：`H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01`；新部署包、安装根和测试数据根均与任务分支验证隔离。
-- 部署路径：构建、bootstrap、安装检查、OCR、`GET http://127.0.0.1:30127/api/health`、停止和脱敏安全检查最终均通过；health 为 `success=true`，停止后 PID 文件和关联 Node 进程均不存在。
+- 部署路径：构建、bootstrap、安装检查、修正后的 OCR、停止和脱敏安全检查均 exit `0`；启动脚本输出本机回环地址，随后 `GET http://127.0.0.1:30127/api/health` 返回 `success=true`，停止后 PID 文件和关联 Node 进程均不存在。启动日志管道的超时边界见下一项。
 - 复验记录的边界：首次 OCR 调用误传了不存在的 `-InstallRoot` 参数（exit `1`）；改为脚本契约的 `-RuntimeRoot` 与受控 venv Python 后通过。启动命令接入日志管道时因后台 Node 继承输出句柄而超时；独立 health/stop 验证确认服务实际已启动并可正确停止。两者均为复验封装问题，不是部署脚本或产品失败。
 - 仓库级：`pnpm type-check`、后端构建、前端构建、`pnpm test`（backend 242/242）、文档治理和 `git diff --check` 均 exit `0`。
 
