@@ -1,4 +1,4 @@
-# T06B 家长报告计划任务注册（使用机器部署版）
+﻿# T06B 家长报告计划任务注册（使用机器部署版）
 [CmdletBinding(SupportsShouldProcess)]
 param(
   [string]$InstallRoot,

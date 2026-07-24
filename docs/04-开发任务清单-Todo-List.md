@@ -1,7 +1,7 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.83
-**日期**：2026-07-23
+**版本**：v1.85
+**日期**：2026-07-24
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
 > 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。Phase 2.5 运行环境重启与 Windows 使用机器部署准备已按五个独立工作包完成本地 master 合入复验和最终文档收口；随本轮 `git push origin master` 进入远端主线事实，最终远端哈希以交付说明和 `git ls-remote --heads origin master` 为准；其完成不改变 Phase 3 暂缓、S7 等待和 G2 历史门禁状态。
@@ -875,6 +875,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **2026-07-23 master 合入复验证据与推送收口**：已在独立集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723` 将 `codex/process-runtime-deployment` 以 fast-forward 方式合入本地 `master`；当前 master 提交为 `99fdeb5`（计划提交 `4070b07` + 实现提交 `99fdeb5`）；最终远端主线事实以本轮 `git push origin master` 后的 `git ls-remote --heads origin master` 确认为准。主线复验使用隔离目录 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-tests-20260723`：`pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build`、`pnpm test` 均 exit 0，后端测试 242/242 通过；首次主线复验因 `H:\.pnpm-store` 文件复制 EPERM 停在依赖安装阶段，已改用隔离 pnpm store `H:\ai-studybuddy-tmp\runs\process-runtime-pnpm-store-20260723` 重新安装依赖后通过。浏览器 E2E 使用 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-runtime-deployment-master-e2e-20260723`，`pnpm test:e2e` 21/21 通过。`scripts/check-docs-governance.ps1` 与 `git diff --check` 均通过。本地 master 复验仍不改变非目标：不接入 S7/ASR 产品链路，不修改 Firewall，不携带真实密钥/数据，不把 Docker/WSL 作为使用机器常驻产品依赖。
 
 > **2026-07-24 远端主线确认**：`git push origin master` 与随后实时 `git ls-remote --heads origin master` 校验通过；Phase 2.5 运行环境重启与 Windows 使用机器部署准备已进入远端主线。因提交自身会改变 Git 哈希，文档不写死“最终哈希”，以交付说明中的实时 `git ls-remote` 输出为准。主仓库 `H:\ai-studybuddy` 仍停留在 `codex/phase1-5-g2-wsl-isolation-exec`，未提交的 `packages/backend/src/services/semester-access-service.ts` 仍未被本轮夹带。
+
+> **2026-07-24 开发机 Windows 原生 + Node 24 运行时基线（任务分支验证通过，待 master 复验和 `origin/master` 推送；非用户机验收）**：用户已批准的计划 `.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md` 已在独立 worktree `H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline` 和分支 `codex/process-dev-machine-node24-runtime-baseline` 完成验证；原主工作区的未提交学期版本 8/9 改动及 S7/G2 文档未被覆盖。最终干净部署包 `H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-20260724-01\deployment-package-node24-final-scoped` 在独立安装根 `H:\ai-studybuddy-runtime\dev-machine-node24-baseline-20260724-01-node24-final` 中完成 `bootstrap-runtime.ps1` → `check-installation.ps1` → `test-ocr-runtime.ps1` → `start-production.ps1`（仅 `127.0.0.1:30126`）→ `/api/health` → `stop-production.ps1` → 数据安全检查，步骤均 exit `0`；Node 为 `v24.14.0`，Python 为 `3.10.19 x64`，OCR 合成中文 smoke 通过。已将当前运行时事实和命中的部署脚本收紧为仅 Node 24；脱敏证据见 `.plans/evidence/process-dev-machine-node24-baseline-20260724-01.md`。**用户电脑安装运行仍为待目标机器到位后的独立实机验收门禁，当前不得宣称完成；ASR / Docker / WSL 继续独立暂缓，未进入产品实现。**
 
 ---
 ## Phase 3：打磨与安全（暂缓）

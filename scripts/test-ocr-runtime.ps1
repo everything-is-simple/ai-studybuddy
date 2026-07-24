@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([string]$PythonPath, [Parameter(Mandatory)] [string]$RuntimeRoot)
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath($RuntimeRoot)
@@ -16,7 +16,7 @@ $worker = [IO.Path]::GetFullPath($worker)
 if ([string]::IsNullOrWhiteSpace($PythonPath)) { $PythonPath = $env:PYTHON_PATH }
 if ([string]::IsNullOrWhiteSpace($PythonPath)) { $PythonPath = (Get-Command python -ErrorAction Stop).Source }
 if (-not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) { throw "Python not found: $PythonPath" }
-& $PythonPath -c 'import rapidocr_onnxruntime; print("OCR_IMPORT_OK")'
+& $PythonPath -c 'import rapidocr_onnxruntime'
 if ($LASTEXITCODE) { throw 'rapidocr_onnxruntime import failed.' }
 $env:OCR_CACHE_ROOT = $cache
 $image = Join-Path $ocrTmp 'chinese.png'

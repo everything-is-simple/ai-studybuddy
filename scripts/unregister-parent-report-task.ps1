@@ -1,4 +1,4 @@
-# T06B 家长报告计划任务卸载；不删除学习数据、配置或备份。
+﻿# T06B 家长报告计划任务卸载；不删除学习数据、配置或备份。
 [CmdletBinding(SupportsShouldProcess)]
 param([string]$TaskName = 'AIStudyBuddy-ParentReport')
 $ErrorActionPreference = 'Stop'

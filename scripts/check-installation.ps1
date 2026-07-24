@@ -37,7 +37,7 @@ db.close();
 if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { Add-Check 'windows' 'pass' ([Environment]::OSVersion.Version.ToString()) } else { Add-Check 'windows' 'fail' 'Windows is required for this deployment package.' }
 $node = Get-NodeVersionInfo
 if ($null -eq $node) { Add-Check 'node' 'fail' 'Node.js is not available on PATH.' }
-elseif ($node.Major -lt 20 -or $node.Major -gt 25) { Add-Check 'node' 'fail' $node.Raw }
+elseif ($node.Major -ne 24) { Add-Check 'node' 'fail' "$($node.Raw); verified Node.js major 24 is required" }
 else { Add-Check 'node' 'pass' $node.Raw }
 $envFile = $paths.EnvFile
 if (-not (Test-Path -LiteralPath $envFile -PathType Leaf)) {
@@ -66,7 +66,7 @@ if ($null -eq $py -or $py.Major -ne 3 -or $py.Minor -lt 10 -or $py.Minor -gt 12)
 }
 if ($py) {
   $env:PYTHONDONTWRITEBYTECODE = '1'
-  & $env:PYTHON_PATH -c 'import rapidocr_onnxruntime; print("OCR_IMPORT_OK")' | Out-Null
+  & $env:PYTHON_PATH -c 'import rapidocr_onnxruntime' | Out-Null
   if ($LASTEXITCODE -eq 0) { Add-Check 'ocr-worker' 'pass' 'rapidocr_onnxruntime import ok' } else { Add-Check 'ocr-worker' 'fail' 'rapidocr_onnxruntime import failed' }
 } else { Add-Check 'ocr-worker' 'fail' 'Python unavailable.' }
 foreach ($name in @('Root','App','Backend','Scripts','Data','Logs','Tmp','Models','Backups','Runtime','Config')) {

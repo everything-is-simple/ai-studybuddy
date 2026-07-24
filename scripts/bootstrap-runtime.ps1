@@ -47,7 +47,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $paths.Backend 'package-lock.json') 
 
 $node = Get-NodeVersionInfo
 if ($null -eq $node) { throw 'Node.js is not available on PATH.' }
-if ($node.Major -lt 20 -or $node.Major -gt 25) { throw "Unsupported Node.js version: $($node.Raw)" }
+if ($node.Major -ne 24) { throw "Verified Node.js major 24 is required; found $($node.Raw)." }
 $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
 if ($null -eq $npm) { $npm = Get-Command npm -ErrorAction SilentlyContinue }
 if ($null -eq $npm) { throw 'npm is required to install production Node dependencies on the use machine.' }
@@ -105,7 +105,7 @@ if (-not $SkipOcrInstall) {
   if ($LASTEXITCODE) { throw "OCR dependency installation failed: $LASTEXITCODE" }
 }
 $env:PYTHONDONTWRITEBYTECODE = '1'
-& $venvPython -c 'import rapidocr_onnxruntime; print("OCR_IMPORT_OK")' | Out-Null
+& $venvPython -c 'import rapidocr_onnxruntime' | Out-Null
 if ($LASTEXITCODE) { throw 'OCR dependency import check failed.' }
 
 if (-not (Test-Path -LiteralPath $paths.EnvFile -PathType Leaf)) {

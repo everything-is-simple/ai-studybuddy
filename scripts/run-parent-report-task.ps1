@@ -1,4 +1,4 @@
-# T06B 家长报告计划任务运行包装器（使用机器部署版）
+﻿# T06B 家长报告计划任务运行包装器（使用机器部署版）
 [CmdletBinding()]
 param([string]$InstallRoot)
 $ErrorActionPreference = 'Stop'
@@ -10,7 +10,7 @@ Assert-AIStudyBuddyLoopbackHost
 if ([string]::IsNullOrWhiteSpace($env:APP_DATA_ROOT)) { throw 'APP_DATA_ROOT is required for parent report runner.' }
 if (-not (Test-Path -LiteralPath (Join-Path $paths.Backend 'scripts\parent-report-runner.js') -PathType Leaf)) { throw "Compiled parent-report runner is missing: $($paths.Backend)\scripts\parent-report-runner.js" }
 $node = Get-NodeVersionInfo
-if ($null -eq $node -or $node.Major -lt 20 -or $node.Major -gt 25) { throw 'Supported Node.js 20-25 is required.' }
+if ($null -eq $node -or $node.Major -ne 24) { throw 'Verified Node.js major 24 is required.' }
 Push-Location $paths.Backend
 try {
   & node (Join-Path $paths.Backend 'scripts\parent-report-runner.js')
