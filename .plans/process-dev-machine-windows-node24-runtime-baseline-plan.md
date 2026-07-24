@@ -1,6 +1,6 @@
 # 开发机 Windows 原生 Node 24 运行时基线与用户机验收门禁计划
 
-**状态**：任务分支已 fast-forward 合入本地 `master`；独立主线部署路径和仓库验证已通过，待 `origin/master` 推送。用户电脑验收仍未开始。
+**状态**：已 fast-forward 合入 `master` 并推送、核验 `origin/master`；独立主线部署路径和仓库验证已通过。用户电脑验收仍未开始。
 **计划日期**：2026-07-24
 **任务分支**：`codex/process-dev-machine-node24-runtime-baseline`
 **独立 worktree**：`H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline`

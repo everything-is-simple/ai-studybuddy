@@ -1,7 +1,7 @@
 # 开发机 Windows 原生 Node 24 运行时基线——脱敏执行证据
 
 **日期**：2026-07-24
-**状态**：已 fast-forward 合入本地 `master`，主线部署路径与仓库复验通过；尚待 `origin/master` 推送。
+**状态**：已 fast-forward 合入 `master` 并推送、核验 `origin/master`；主线部署路径与仓库复验通过。
 **计划**：`.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md`
 **任务分支**：`codex/process-dev-machine-node24-runtime-baseline`
 **任务 worktree**：`H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline`
@@ -9,7 +9,7 @@
 
 ## 1. 结论边界
 
-本证据支持以下本地主线复验结论；仅在推送 `origin/master` 成功后方可作为远端主线完成事实：
+本证据支持以下已完成开发机基线结论；远端主线已于 2026-07-24 推送并通过 `git ls-remote --heads origin master` 核验：
 
 > 开发机上的 Windows 原生环境，在 Node 24 下可按部署脚本完成安装、OCR 验证、启动、健康检查、停止及必要的数据安全检查。
 
@@ -84,4 +84,4 @@
 
 - 用户电脑安装和运行：**待目标机器到位后实机验收；当前不宣称完成。**
 - ASR / Docker / WSL：独立环境门禁暂缓，未进入产品实现。
-- 本任务尚待 `git push origin master` 及远端 `origin/master` 引用核验；在此之前不得宣称远端主线完成。
+- 本轮开发机基线已推送并核验 `origin/master`；后续用户机验收必须另建计划并在目标机器执行。
