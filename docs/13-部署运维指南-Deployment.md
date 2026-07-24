@@ -17,7 +17,7 @@ AI StudyBuddy 当前生产形态是 Windows 本机应用：
 - SQLite、学习资料、日志、临时文件、模型缓存、备份和运行时 venv 彼此隔离。
 - Docker/WSL 只承担开发隔离、ASR/G2 验证或未来可选实验，不是使用机器常驻依赖。
 
-本轮 v1 部署采用“受控前置运行时”：使用机器需要先具备经过验证的 Node.js 和 x64 Python；部署脚本在用户目录创建 Python venv 并安装锁定 OCR 依赖。真正无 Node/Python 前置依赖的 MSI/便携版不在本轮范围内。
+本轮 v1 部署采用“受控前置运行时”：使用机器需要先具备经过验证的 Node.js 20、22 或 24 LTS 和 x64 Python；Node 25 不属于受支持生产运行时。部署脚本在用户目录创建 Python venv 并安装锁定 OCR 依赖。真正无 Node/Python 前置依赖的 MSI/便携版不在本轮范围内。
 
 ---
 
@@ -70,7 +70,7 @@ $installRoot = Join-Path $env:LOCALAPPDATA 'AIStudyBuddy'
 
 `bootstrap-runtime.ps1` 会：创建目录、复制部署包、验证 Node/npm、安装生产 Node 依赖、验证 native 依赖导入、创建 Python venv、安装 OCR 依赖、验证 RapidOCR 导入，并生成不含真实密钥的 `config\production.env`。
 
-Node native 依赖（例如 `better-sqlite3`）需要匹配当前 Node 的预编译包；若预编译下载失败，npm 可能退回本地编译并要求 Visual Studio C++ Build Tools。bootstrap 已重试 npm 安装，但使用机器仍应使用兼容清单中记录的受验证 Node/Python 组合，并保持网络可访问生产依赖源。
+Node native 依赖（例如 `better-sqlite3`）需要匹配当前 Node 的预编译包；当前已验证组合为 Node v24.14.0 + Python 3.10.19 x64。Node 25 被脚本明确拒绝：它在本机验收中未取得可用 `better-sqlite3` 预编译包，网络失败后会退回本地编译并要求 Visual Studio C++ Build Tools。bootstrap 已重试 npm 安装；使用机器仍应安装兼容清单中记录的 Node 20、22 或 24 LTS、保持网络可访问生产依赖源，而不是依赖本地 C++ 编译回退。
 
 ---
 
@@ -116,7 +116,7 @@ Node native 依赖（例如 `better-sqlite3`）需要匹配当前 Node 的预编
 .\scripts\restore-data.ps1 -InstallRoot $installRoot -BackupPath <backup-path> -WhatIf
 ```
 
-实际恢复前必须停止后端和计划任务。实际恢复默认先在 `backups\recovery-<timestamp>` 保留恢复点，再复制备份 payload。升级流程固定：停止后端和计划任务 → 生成只读备份 → 复制新应用包 → 运行 migration/健康检查 → 验收通过后切换；失败时保留旧应用包和旧数据库，不覆盖回滚源。
+实际恢复前必须停止后端和计划任务。实际恢复默认先在 `backups\recovery-<timestamp>` 保留恢复点，再复制备份 payload；备份 payload 故意为只读，但恢复后的活动数据文件会清除只读属性，确保 SQLite 和资料目录可继续写入。升级流程固定：停止后端和计划任务 → 生成只读备份 → 复制新应用包 → 运行 migration/健康检查 → 验收通过后切换；失败时保留旧应用包和旧数据库，不覆盖回滚源。
 
 ---
 

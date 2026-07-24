@@ -44,6 +44,8 @@ foreach ($entry in $entries) {
   $destination = Join-Path $paths.Data ($relative -replace '/', '\')
   New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent) | Out-Null
   Copy-Item -LiteralPath $source -Destination $destination -Force
+  # Backups are intentionally read-only; active SQLite/material files must be writable after restore.
+  (Get-Item -LiteralPath $destination -Force).IsReadOnly = $false
 }
 Write-Output "Restore completed from: $backup"
 if ($recovery) { Write-Output "Recovery point retained at: $recovery" }

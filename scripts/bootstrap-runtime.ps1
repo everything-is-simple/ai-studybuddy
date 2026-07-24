@@ -47,7 +47,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $paths.Backend 'package-lock.json') 
 
 $node = Get-NodeVersionInfo
 if ($null -eq $node) { throw 'Node.js is not available on PATH.' }
-if ($node.Major -ne 24) { throw "Verified Node.js major 24 is required; found $($node.Raw)." }
+if (-not (Test-AIStudyBuddySupportedNodeVersion $node)) { throw "Verified Node.js major 24 is required; found $($node.Raw)." }
 $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
 if ($null -eq $npm) { $npm = Get-Command npm -ErrorAction SilentlyContinue }
 if ($null -eq $npm) { throw 'npm is required to install production Node dependencies on the use machine.' }
@@ -71,8 +71,8 @@ if (-not $SkipNodeInstall) {
 }
 Push-Location $paths.Backend
 try {
-  & node -e "require('express'); require('better-sqlite3'); require('@primno/dpapi'); require('@ai-studybuddy/shared');"
-  if ($LASTEXITCODE) { throw 'Production Node dependency import check failed.' }
+  $nodeImport = Invoke-AIStudyBuddyNodeRuntimeCheck -Check 'dependency-import'
+  if (-not $nodeImport.Success) { throw "Production Node dependency import check failed. $($nodeImport.Error)" }
 } finally { Pop-Location }
 
 if ([string]::IsNullOrWhiteSpace($PythonPath)) {
@@ -86,8 +86,8 @@ if ([string]::IsNullOrWhiteSpace($PythonPath)) { throw 'Python 3.10-3.12 x64 is 
 $PythonPath = [IO.Path]::GetFullPath($PythonPath)
 $py = Get-PythonVersionInfo $PythonPath
 if ($null -eq $py -or $py.Major -ne 3 -or $py.Minor -lt 10 -or $py.Minor -gt 12) { throw "Unsupported Python runtime: $PythonPath" }
-$pythonBits = (& $PythonPath -c "import struct; print(struct.calcsize('P') * 8)" | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or $pythonBits -ne '64') { throw "Python x64 is required: $PythonPath" }
+$pythonInfo = Invoke-AIStudyBuddyPythonRuntimeCheck -PythonPath $PythonPath -Check 'python-info'
+if (-not $pythonInfo.Success -or [int]$pythonInfo.Data.bits -ne 64) { throw "Python x64 is required: $PythonPath. $($pythonInfo.Error)" }
 
 if (-not (Test-Path -LiteralPath $paths.Venv -PathType Container)) {
   & $PythonPath -m venv $paths.Venv
@@ -105,8 +105,8 @@ if (-not $SkipOcrInstall) {
   if ($LASTEXITCODE) { throw "OCR dependency installation failed: $LASTEXITCODE" }
 }
 $env:PYTHONDONTWRITEBYTECODE = '1'
-& $venvPython -c 'import rapidocr_onnxruntime' | Out-Null
-if ($LASTEXITCODE) { throw 'OCR dependency import check failed.' }
+$ocrImport = Invoke-AIStudyBuddyPythonRuntimeCheck -PythonPath $venvPython -Check 'ocr-import'
+if (-not $ocrImport.Success) { throw "OCR dependency import check failed. $($ocrImport.Error)" }
 
 if (-not (Test-Path -LiteralPath $paths.EnvFile -PathType Leaf)) {
   @(

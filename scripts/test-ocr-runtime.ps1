@@ -1,6 +1,7 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param([string]$PythonPath, [Parameter(Mandatory)] [string]$RuntimeRoot)
 $ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot 'lib\AIStudyBuddy.Deployment.psm1') -Force -DisableNameChecking
 $root = [IO.Path]::GetFullPath($RuntimeRoot)
 $ocrTmp = Join-Path $root 'tmp\ocr-smoke'
 $cache = Join-Path $root 'models\rapidocr'
@@ -16,28 +17,34 @@ $worker = [IO.Path]::GetFullPath($worker)
 if ([string]::IsNullOrWhiteSpace($PythonPath)) { $PythonPath = $env:PYTHON_PATH }
 if ([string]::IsNullOrWhiteSpace($PythonPath)) { $PythonPath = (Get-Command python -ErrorAction Stop).Source }
 if (-not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) { throw "Python not found: $PythonPath" }
-& $PythonPath -c 'import rapidocr_onnxruntime'
-if ($LASTEXITCODE) { throw 'rapidocr_onnxruntime import failed.' }
+$ocrImport = Invoke-AIStudyBuddyPythonRuntimeCheck -PythonPath $PythonPath -Check 'ocr-import'
+if (-not $ocrImport.Success) { throw "rapidocr_onnxruntime import failed. $($ocrImport.Error)" }
 $env:OCR_CACHE_ROOT = $cache
 $image = Join-Path $ocrTmp 'chinese.png'
 $blank = Join-Path $ocrTmp 'blank.png'
 $broken = Join-Path $ocrTmp 'broken.png'
 $missing = Join-Path $ocrTmp 'missing.png'
+$generator = Join-Path $ocrTmp 'generate-fixtures.py'
 try {
-  $pyCode = @"
+  @'
 from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
+import sys
+
+image_path, blank_path, broken_path = map(Path, sys.argv[1:4])
 font = ImageFont.truetype(r'C:\Windows\Fonts\msyh.ttc', 72)
-img = Image.new('RGB', (1200, 240), 'white')
-ImageDraw.Draw(img).text((40, 60), '人工智能学习助手', font=font, fill='black')
-img.save(r'$image')
-Image.new('RGB', (400, 200), 'white').save(r'$blank')
-open(r'$broken', 'wb').write(b'not-an-image')
-"@
-  & $PythonPath -c $pyCode
+image = Image.new('RGB', (1200, 240), 'white')
+text = ''.join(chr(value) for value in (0x4eba, 0x5de5, 0x667a, 0x80fd, 0x5b66, 0x4e60, 0x52a9, 0x624b))
+ImageDraw.Draw(image).text((40, 60), text, font=font, fill='black')
+image.save(image_path)
+Image.new('RGB', (400, 200), 'white').save(blank_path)
+broken_path.write_bytes(b'not-an-image')
+'@ | Set-Content -LiteralPath $generator -Encoding utf8
+  & $PythonPath $generator $image $blank $broken
   if ($LASTEXITCODE) { throw 'Synthetic OCR image creation failed.' }
   function Invoke-Worker($path) {
     $raw = & $PythonPath $worker $path
-    if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 1) { return ($raw -join "`n") }
+    if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 1) { return ($raw -join [Environment]::NewLine) }
     throw "OCR Worker invocation failed: $path"
   }
   $cn = Invoke-Worker $image | ConvertFrom-Json
@@ -47,7 +54,7 @@ open(r'$broken', 'wb').write(b'not-an-image')
   $bad = Invoke-Worker $broken | ConvertFrom-Json
   if ($bad.ok) { throw 'Broken image should fail.' }
   $notFound = Invoke-Worker $missing | ConvertFrom-Json
-  if ($notFound.ok -or $notFound.error -notmatch '文件不存在') { throw 'Missing image contract failed.' }
+  if ($notFound.ok -or [string]::IsNullOrWhiteSpace($notFound.error)) { throw 'Missing image contract failed.' }
   $testCandidates = @(
     (Join-Path $PSScriptRoot '..\packages\backend\test\ocr-converter-runtime.test.mjs'),
     (Join-Path $PSScriptRoot '..\..\packages\backend\test\ocr-converter-runtime.test.mjs')

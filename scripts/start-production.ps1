@@ -10,11 +10,11 @@ Assert-AIStudyBuddyLoopbackHost
 if ($Port -gt 0) { $env:BACKEND_PORT = [string]$Port }
 if ([string]::IsNullOrWhiteSpace($env:BACKEND_PORT)) { $env:BACKEND_PORT = '3000' }
 $node = Get-NodeVersionInfo
-if ($null -eq $node -or $node.Major -ne 24) { throw 'Verified Node.js major 24 is required.' }
+if (-not (Test-AIStudyBuddySupportedNodeVersion $node)) { throw 'Verified Node.js major 24 is required.' }
 $py = Get-PythonVersionInfo $env:PYTHON_PATH
 if ($null -eq $py) { throw "Configured OCR Python is missing: $($env:PYTHON_PATH)" }
-& $env:PYTHON_PATH -c 'import rapidocr_onnxruntime' | Out-Null
-if ($LASTEXITCODE) { throw 'OCR Worker dependency import failed.' }
+$ocrImport = Invoke-AIStudyBuddyPythonRuntimeCheck -PythonPath $env:PYTHON_PATH -Check 'ocr-import'
+if (-not $ocrImport.Success) { throw "OCR Worker dependency import failed. $($ocrImport.Error)" }
 foreach ($dir in @($paths.Data, $paths.Logs, $paths.Tmp, $paths.Models, $paths.Backups)) {
   if (-not (Test-AIStudyBuddyWritableDirectory $dir)) { throw "Required directory is missing or inaccessible: $dir" }
 }

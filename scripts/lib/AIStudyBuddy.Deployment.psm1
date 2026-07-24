@@ -62,12 +62,34 @@ function Get-NodeVersionInfo {
   return [pscustomobject]@{ Raw = $raw; Major = [int]$Matches[1]; Minor = [int]$Matches[2]; Patch = [int]$Matches[3] }
 }
 
+function Test-AIStudyBuddySupportedNodeVersion {
+  param([object]$NodeVersion)
+  if ($null -eq $NodeVersion) { return $false }
+  return [int]$NodeVersion.Major -eq 24
+}
 function Get-PythonVersionInfo {
   param([string]$PythonPath)
   if (-not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) { return $null }
   $raw = (& $PythonPath --version 2>&1 | Out-String).Trim()
   if ($raw -notmatch 'Python\s+(\d+)\.(\d+)\.(\d+)') { return $null }
   return [pscustomobject]@{ Raw = $raw; Major = [int]$Matches[1]; Minor = [int]$Matches[2]; Patch = [int]$Matches[3] }
+}
+
+function Get-AIStudyBuddyRelativePath {
+  param(
+    [Parameter(Mandatory)] [string]$BasePath,
+    [Parameter(Mandatory)] [string]$TargetPath
+  )
+  $base = [IO.Path]::GetFullPath($BasePath)
+  $target = [IO.Path]::GetFullPath($TargetPath)
+  if (-not $base.EndsWith('\')) { $base += '\' }
+  $baseUri = [Uri]$base
+  $targetUri = [Uri]$target
+  $relativeUri = $baseUri.MakeRelativeUri($targetUri)
+  if ($relativeUri.IsAbsoluteUri) { throw "Target path must share the base volume: $TargetPath" }
+  $relative = [Uri]::UnescapeDataString($relativeUri.ToString()).Replace('/','\')
+  if ([string]::IsNullOrWhiteSpace($relative)) { return '.' }
+  return $relative
 }
 
 function Import-AIStudyBuddyEnvFile {
@@ -98,4 +120,45 @@ function Get-AIStudyBuddySecretFileMatches {
   return $result | Sort-Object FullName -Unique
 }
 
+function Invoke-AIStudyBuddyPythonRuntimeCheck {
+  param(
+    [Parameter(Mandatory)] [string]$PythonPath,
+    [Parameter(Mandatory)] [ValidateSet('python-info','ocr-import')] [string]$Check
+  )
+  $helper = Join-Path $PSScriptRoot 'AIStudyBuddy.RuntimeChecks.py'
+  if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+    return [pscustomobject]@{ Success = $false; ExitCode = -1; Data = $null; Error = "Python runtime helper is missing: $helper" }
+  }
+  $raw = (& $PythonPath $helper $Check 2>$null | Out-String).Trim()
+  $exitCode = $LASTEXITCODE
+  if ([string]::IsNullOrWhiteSpace($raw)) {
+    return [pscustomobject]@{ Success = $false; ExitCode = $exitCode; Data = $null; Error = 'Python runtime helper returned no JSON.' }
+  }
+  try { $data = $raw | ConvertFrom-Json } catch {
+    return [pscustomobject]@{ Success = $false; ExitCode = $exitCode; Data = $null; Error = 'Python runtime helper returned invalid JSON.' }
+  }
+  $error = if ($data.error) { [string]$data.error } else { '' }
+  return [pscustomobject]@{ Success = ($exitCode -eq 0 -and $data.ok -eq $true); ExitCode = $exitCode; Data = $data; Error = $error }
+}
+
+function Invoke-AIStudyBuddyNodeRuntimeCheck {
+  param(
+    [Parameter(Mandatory)] [ValidateSet('dependency-import','sqlite-precheck')] [string]$Check,
+    [string[]]$CheckArguments = @()
+  )
+  $helper = Join-Path $PSScriptRoot 'AIStudyBuddy.RuntimeChecks.cjs'
+  if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+    return [pscustomobject]@{ Success = $false; ExitCode = -1; Data = $null; Error = "Node runtime helper is missing: $helper" }
+  }
+  $raw = (& node $helper $Check @CheckArguments 2>$null | Out-String).Trim()
+  $exitCode = $LASTEXITCODE
+  if ([string]::IsNullOrWhiteSpace($raw)) {
+    return [pscustomobject]@{ Success = $false; ExitCode = $exitCode; Data = $null; Error = 'Node runtime helper returned no JSON.' }
+  }
+  try { $data = $raw | ConvertFrom-Json } catch {
+    return [pscustomobject]@{ Success = $false; ExitCode = $exitCode; Data = $null; Error = 'Node runtime helper returned invalid JSON.' }
+  }
+  $error = if ($data.error) { [string]$data.error } else { '' }
+  return [pscustomobject]@{ Success = ($exitCode -eq 0 -and $data.ok -eq $true); ExitCode = $exitCode; Data = $data; Error = $error }
+}
 Export-ModuleMember -Function *-AIStudyBuddy*, Get-NodeVersionInfo, Get-PythonVersionInfo, Import-AIStudyBuddyEnvFile

@@ -14,20 +14,10 @@ function Resolve-ComparePath([string]$Path) {
 function Add-DatabaseCheck([string]$Path, [int]$ExpectedVersion, [string]$Scope, [string]$Name) {
   $node = Get-NodeVersionInfo
   if ($null -eq $node) { Add-Check $Name 'fail' 'Node.js unavailable for SQLite precheck.'; return }
-  $script = @"
-const DB=require('better-sqlite3');
-const db=new DB(process.argv[1],{readonly:true,fileMustExist:true});
-const quick=db.pragma('quick_check',{simple:true});
-const exists=db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_migrations'").get();
-let version=0;
-if(exists){ const row=db.prepare('SELECT MAX(version) AS v FROM schema_migrations WHERE scope = ?').get(process.argv[2]); version=Number(row?.v ?? 0); }
-console.log(JSON.stringify({quick,version}));
-db.close();
-"@
   Push-Location $paths.Backend
-  try { $raw = (& node -e $script $Path $Scope 2>$null | Out-String).Trim() } catch { $raw = '' } finally { Pop-Location }
-  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($raw)) { Add-Check $Name 'fail' 'SQLite read-only migration precheck failed.'; return }
-  try { $state = $raw | ConvertFrom-Json } catch { Add-Check $Name 'fail' 'SQLite precheck returned invalid JSON.'; return }
+  try { $runtimeCheck = Invoke-AIStudyBuddyNodeRuntimeCheck -Check 'sqlite-precheck' -CheckArguments @($Path, $Scope) } finally { Pop-Location }
+  if (-not $runtimeCheck.Success -or $null -eq $runtimeCheck.Data) { Add-Check $Name 'fail' 'SQLite read-only migration precheck failed.'; return }
+  $state = $runtimeCheck.Data
   if ($state.quick -ne 'ok') { Add-Check $Name 'fail' "SQLite quick_check=$($state.quick)"; return }
   if ([int]$state.version -gt $ExpectedVersion) { Add-Check $Name 'fail' "Database version $($state.version) is newer than application $ExpectedVersion."; return }
   if ([int]$state.version -lt $ExpectedVersion) { Add-Check $Name 'warn' "Migration pending: $($state.version)/$ExpectedVersion"; return }
@@ -37,7 +27,7 @@ db.close();
 if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { Add-Check 'windows' 'pass' ([Environment]::OSVersion.Version.ToString()) } else { Add-Check 'windows' 'fail' 'Windows is required for this deployment package.' }
 $node = Get-NodeVersionInfo
 if ($null -eq $node) { Add-Check 'node' 'fail' 'Node.js is not available on PATH.' }
-elseif ($node.Major -ne 24) { Add-Check 'node' 'fail' "$($node.Raw); verified Node.js major 24 is required" }
+elseif (-not (Test-AIStudyBuddySupportedNodeVersion $node)) { Add-Check 'node' 'fail' ($node.Raw + '; require verified Node.js major 24') }
 else { Add-Check 'node' 'pass' $node.Raw }
 $envFile = $paths.EnvFile
 if (-not (Test-Path -LiteralPath $envFile -PathType Leaf)) {
@@ -57,17 +47,21 @@ if (-not [string]::IsNullOrWhiteSpace($env:FRONTEND_STATIC_ROOT) -and (Resolve-C
   Add-Check 'frontend-static-root' 'warn' $env:FRONTEND_STATIC_ROOT
 } else { Add-Check 'frontend-static-root' 'pass' 'backend/public' }
 $py = $null
-if (-not [string]::IsNullOrWhiteSpace($env:PYTHON_PATH)) { $py = Get-PythonVersionInfo $env:PYTHON_PATH }
-if ($null -eq $py -or $py.Major -ne 3 -or $py.Minor -lt 10 -or $py.Minor -gt 12) {
-  Add-Check 'python' 'fail' ([string]$env:PYTHON_PATH)
-} else {
-  $bits = (& $env:PYTHON_PATH -c "import struct; print(struct.calcsize('P') * 8)" | Out-String).Trim()
-  if ($LASTEXITCODE -ne 0 -or $bits -ne '64') { Add-Check 'python' 'fail' "$($py.Raw); architecture=$bits" } else { Add-Check 'python' 'pass' "$($py.Raw); x64" }
+$pythonInfo = $null
+if (-not [string]::IsNullOrWhiteSpace($env:PYTHON_PATH)) {
+  $py = Get-PythonVersionInfo $env:PYTHON_PATH
+  if ($py) { $pythonInfo = Invoke-AIStudyBuddyPythonRuntimeCheck -PythonPath $env:PYTHON_PATH -Check 'python-info' }
 }
-if ($py) {
+if ($null -eq $py -or $py.Major -ne 3 -or $py.Minor -lt 10 -or $py.Minor -gt 12 -or -not $pythonInfo.Success -or [int]$pythonInfo.Data.bits -ne 64) {
+  $bits = if ($pythonInfo -and $pythonInfo.Data) { [string]$pythonInfo.Data.bits } else { '' }
+  Add-Check 'python' 'fail' "$([string]$env:PYTHON_PATH); architecture=$bits"
+} else {
+  Add-Check 'python' 'pass' "$($py.Raw); x64"
+}
+if ($py -and $pythonInfo.Success) {
   $env:PYTHONDONTWRITEBYTECODE = '1'
-  & $env:PYTHON_PATH -c 'import rapidocr_onnxruntime' | Out-Null
-  if ($LASTEXITCODE -eq 0) { Add-Check 'ocr-worker' 'pass' 'rapidocr_onnxruntime import ok' } else { Add-Check 'ocr-worker' 'fail' 'rapidocr_onnxruntime import failed' }
+  $ocrImport = Invoke-AIStudyBuddyPythonRuntimeCheck -PythonPath $env:PYTHON_PATH -Check 'ocr-import'
+  if ($ocrImport.Success) { Add-Check 'ocr-worker' 'pass' 'rapidocr_onnxruntime import ok' } else { Add-Check 'ocr-worker' 'fail' 'rapidocr_onnxruntime import failed' }
 } else { Add-Check 'ocr-worker' 'fail' 'Python unavailable.' }
 foreach ($name in @('Root','App','Backend','Scripts','Data','Logs','Tmp','Models','Backups','Runtime','Config')) {
   $dir = $paths[$name]
@@ -83,8 +77,8 @@ if (-not (Test-Path -LiteralPath (Join-Path $paths.Backend 'node_modules') -Path
   Add-Check 'node-dependencies' 'fail' 'node_modules missing; run bootstrap-runtime.ps1.'
 } elseif ($node) {
   Push-Location $paths.Backend
-  try { & node -e "require('express'); require('better-sqlite3'); require('@primno/dpapi'); require('@ai-studybuddy/shared');" | Out-Null } finally { Pop-Location }
-  if ($LASTEXITCODE -eq 0) { Add-Check 'node-dependencies' 'pass' 'production imports ok' } else { Add-Check 'node-dependencies' 'fail' 'production imports failed' }
+  try { $nodeImport = Invoke-AIStudyBuddyNodeRuntimeCheck -Check 'dependency-import' } finally { Pop-Location }
+  if ($nodeImport.Success) { Add-Check 'node-dependencies' 'pass' 'production imports ok' } else { Add-Check 'node-dependencies' 'fail' 'production imports failed' }
 }
 $portNumber = [int]$env:BACKEND_PORT
 $listening = @(Get-NetTCPConnection -LocalPort $portNumber -State Listen -ErrorAction SilentlyContinue)
@@ -122,3 +116,4 @@ if ($secretEnvHits.Count -gt 0 -or -not [string]::IsNullOrWhiteSpace($env:AI_PRO
 if ($env:APP_DATA_ROOT -match 'ai-studybuddy-tmp[\\/]runs') { Add-Check 'e2e-isolation' 'fail' 'Formal data root points to Playwright/E2E isolation' } else { Add-Check 'e2e-isolation' 'pass' 'Formal data root is not an E2E root' }
 $checks | Format-Table -AutoSize
 if (@($checks | Where-Object status -eq 'fail').Count -gt 0) { exit 1 }
+

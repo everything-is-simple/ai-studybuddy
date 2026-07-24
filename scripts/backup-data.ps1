@@ -25,14 +25,15 @@ if (Test-Path -LiteralPath $semesters -PathType Container) {
   } | ForEach-Object { $_.FullName }
 }
 foreach ($file in $files) {
-  $relative = [IO.Path]::GetRelativePath($paths.Data, $file)
+  $relative = Get-AIStudyBuddyRelativePath -BasePath $paths.Data -TargetPath $file
   $destination = Join-Path $payload $relative
   New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent) | Out-Null
   Copy-Item -LiteralPath $file -Destination $destination -Force
 }
 $manifestEntries = @(
   Get-ChildItem -LiteralPath $payload -Recurse -Force -File | ForEach-Object {
-    [ordered]@{ path = [IO.Path]::GetRelativePath($payload, $_.FullName).Replace('\','/'); sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(); bytes = $_.Length }
+    $relative = Get-AIStudyBuddyRelativePath -BasePath $payload -TargetPath $_.FullName
+    [ordered]@{ path = $relative.Replace('\','/'); sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(); bytes = $_.Length }
   }
 )
 $manifest = [ordered]@{
