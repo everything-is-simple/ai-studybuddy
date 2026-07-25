@@ -1,7 +1,7 @@
 # 多 worktree 脏状态审计、归属判定与安全收口计划
 
 **计划编号**：PROCESS-DIRTY-20260725
-**状态**：计划已创建，待用户明确批准实施；本文件本身不授权删除、重置、覆盖 checkout、回滚或业务代码修改。
+**状态**：执行中；用户于 2026-07-25 明确要求立即开展大扫除。已完成不丢失内容的 Batch 0/目录归拢，删除和原脏工作区语义收口仍受后续精确门禁约束。
 **创建日期**：2026-07-25
 **计划工作树**：`codex/process-dirty-state-remediation-plan`，从 `origin/master` @ `b1c88968733a2ded70ed4781e63f9aa9d17b3e71` 创建。
 **任务清单位置**：`docs/04-开发任务清单-Todo-List.md` 的 `PROCESS-DIRTY-20260725` 记录及行动计划索引。
@@ -219,3 +219,28 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
 2. 不得新建、恢复、复制或移动 worktree 到 `H:\ai-studybuddy\.worktrees`；已有的 1 个登记 worktree 和 15 个未登记旧目录只可按获批的清单迁出或安全处置。
 3. 历史文档/旧计划中出现的仓内 `.worktrees` 路径仅作为历史证据，不构成当前许可；当前规则以 `docs/06` 和 `docs/12` 为准。
 4. 此决定不授权删除：先完成只读归属判定，再由用户逐批批准 Git worktree 移动、无效残留清理或归档。
+
+
+## 10. 2026-07-25 实施记录
+
+本轮按“先迁出、后判定、暂不销毁”的原则完成第一批实际收口：
+
+1. 从仓库内迁出仍有效的 worktree：
+   - `H:\ai-studybuddy\.worktrees\process-runtime-deployment` → `H:\ai-studybuddy-worktrees\process-runtime-deployment`；
+   - 使用 `git worktree move`；分支 `codex/process-runtime-deployment`、HEAD `99fdeb54c9d56c79e3eaf20706e974ced94a06e4` 与 1 条未跟踪状态完整保留。
+2. 移除 3 个干净、无占用且 HEAD 已被 `origin/master` 包含的陈旧登记 worktree 工作副本：
+   - `H:\ai-studybuddy-origin-master-readonly`；
+   - `H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline`；
+   - `H:\ai-studybuddy-worktrees\process-system-truth-document-reconciliation`。
+   Git 分支和提交仍保留，没有执行强制删除。
+3. 将仓库内剩余 15 个已失去 Git 登记、且多数仍指向历史 `I:\...` gitdir 的目录整体迁至：
+   - `H:\ai-studybuddy-worktrees\_legacy-unregistered-20260725`。
+   迁移前确认该路径下不存在有效登记 worktree、无占用进程；迁移后 15 个直接子项计数一致。
+4. 将外部 worktree 根中 6 个未登记旧目录归拢到上述隔离区的 `_external-root-remnants`；将两个确认包括隐藏项在内均为空的顶层目录 `H:\ai-studybuddy-day-study`、`H:\ai-studybuddy-logs` 归拢到 `_empty-top-level-directories`。
+5. 最终复查：
+   - `H:\ai-studybuddy\.worktrees` 不存在；
+   - `H:\ai-studybuddy-worktrees` 顶层仅保留 8 个有效登记 worktree 和 1 个历史隔离区；
+   - 本地 `master` 与 `origin/master` 均为 `d8b060ae5e1b0cca33559f30cdbc2464bc44a908`；
+   - 原始脏工作区没有被 reset、覆盖 checkout、回滚或删除。
+
+本轮没有销毁隔离区内容。后续优先级为：先判定并无损收口原脏工作区（尤其学期版本 8/9 与计划迁移），再处理运行时兼容工作树中的大规模生成物/草稿；Firewall、G2、ASR、Docker/WSL 与 Phase 3 不作为当前开发主线。

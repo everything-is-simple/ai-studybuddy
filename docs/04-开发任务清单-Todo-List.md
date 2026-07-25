@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.90
+**版本**：v1.91
 **日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -8,7 +8,7 @@
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
-> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（计划已创建，待实施批准）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`。本计划首先保护系统的学生本机学习闭环和已经在 `origin/master` 验证的事实，明确“脏状态不等于可删除垃圾”：`H:\ai-studybuddy` 的学期版本 8/9 差异属于高风险语义判定；运行时兼容 worktree 的已跟踪脚本草稿与编译生成物必须逐项分开；`node_modules.shared-deps`、未跟踪 T02 计划和仓库外组件证据均有独立处置门。此轮只创建/审查计划和更新治理文档，不删除、不 reset、不覆盖 checkout、不改业务代码，也不触发 S7、ASR/G2、Docker/WSL、Firewall、真实外部服务或用户电脑验收。后续只读盘点、学期版本判定、每一个精确删除清单、计划归档和主线迁移均需逐批取得用户明确批准。用户于 2026-07-25 明确决定：`H:\ai-studybuddy` 必须保持为干净主系统目录，严禁再在其中创建或保留 `.worktrees` 根；唯一允许的新任务 worktree 根目录为 `H:\ai-studybuddy-worktrees`。历史仓内 worktree/残留的迁出或处置仍须按精确清单另行批准。
+> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（执行中，第一批目录归拢已完成）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`。2026-07-25 已将仓库内唯一有效 worktree `process-runtime-deployment` 通过 `git worktree move` 迁至 `H:\ai-studybuddy-worktrees`，并保留其分支、HEAD 与未跟踪状态；3 个干净、无占用且已被 `origin/master` 包含的陈旧登记 worktree 工作副本已用非强制 Git 流程移除。仓库内其余 15 个失联历史目录已整体迁至 `H:\ai-studybuddy-worktrees\_legacy-unregistered-20260725`，外部根另有 6 个未登记旧目录及 2 个空顶层目录也已归拢其中；未销毁任何隔离内容。最终复查确认 `H:\ai-studybuddy\.worktrees` 不存在，外部 worktree 根顶层仅保留 8 个有效登记 worktree 和 1 个历史隔离区，原脏工作区未被 reset、覆盖 checkout、回滚或删除。下一门禁是原脏工作区的无损归属收口，重点判定本地 `CURRENT_SEMESTER_VERSION = 8` 相对主线版本 9 的来源及 5 个未跟踪计划的去向；当前主线不再被 Firewall/G2/ASR/Docker/WSL 拖住。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
