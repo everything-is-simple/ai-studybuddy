@@ -6,7 +6,7 @@
 
 > 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 按用户明确要求暂缓。S7 仅完成 T01 PRD：T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均不等于 S7 产品接入或用户机验收；Schema、Adapter、API、Worker、前端及 T05–T06 未启动。G2 的历史/候选证据仅按其自身环境范围解释，不修改永久 Firewall 策略，不用 offline/cache-only 冒充隔离证据。
 
-> **DOCS-20260725 系统事实与文档状态收口（分支验证通过，待主线复验和推送）**：仅在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。分支验证：`scripts/check-docs-governance.ps1` 与 `git diff --check` 均退出码 `0`；最终完成结论仍以合入 `master`、主线复验和远端推送为准。
+> **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
