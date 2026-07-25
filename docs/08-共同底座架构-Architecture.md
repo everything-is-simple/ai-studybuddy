@@ -229,6 +229,6 @@ G2 是**可验证的操作系统级离线隔离门禁**（Verifiable OS-level Eg
 当前总体结论仍为 `PARTIAL`：候选技术和若干前置能力证据不等于本地 ASR 已接入产品；G2 的跨平台强证据尚未执行，能力验证、产品接入与生产发布资格严格分离。
 
 
-## S7-MVP 同步本地转写边界（2026-07-25，本机 `master` 主线复验通过，待推送 `origin/master`）
+## S7-MVP 同步本地转写边界（2026-07-25，已完成主线复验并推送 `origin/master`）
 
 S7-MVP 在既有共同底座上新增一条窄路径：资料页的许可确认和受控 WAV 上传 → `ClassCaptureService` → 配置化 `WhisperCppAuralConverter` → 可编辑转写 DTO → 学生显式保存 → S2 `text` material 与 `normalized_texts`。这不是新的持久化 S7 Job/Worker，不保存原始录音，不自动调用 AI Provider，也不建立独立音频表。CLI/模型路径只能来自环境变量；临时文件路径只能来自 `paths.ts` 的 `APP_DATA_ROOT` 派生目录；错误统一走 API 信封且不泄漏路径、stdout/stderr 或全文。

@@ -268,7 +268,7 @@ I:\ai-studybuddy-composer 的最小样例
 
 ---
 
-### 9.3A S7-MVP 外置 whisper.cpp 引用边界（2026-07-25，本机 `master` 主线复验通过，待推送 `origin/master`）
+### 9.3A S7-MVP 外置 whisper.cpp 引用边界（2026-07-25，已完成主线复验并推送 `origin/master`）
 
 S7-MVP 只允许通过 `LOCAL_ASR_WHISPER_CLI_PATH`、`LOCAL_ASR_WHISPER_MODEL_PATH`、超时和大小限制等显式环境变量引用开发机已核验的外置 `whisper.cpp` 候选；主仓库不复制 CLI、DLL、模型、样例、harness 或证据。产品 Adapter 必须重新以真实 SQLite/API/前端闭环验证 WAV 输入、进程超时、临时文件清理、编辑后 S2 handoff 和无进程残留。候选级 `PARTIAL`、全零 PCM harness 前置判定和任何 G2 记录均不能被表述为完整 S7、通用静音或用户机能力。
 

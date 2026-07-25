@@ -274,7 +274,7 @@ git diff --check
 Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 1.5-T02 的 `PARTIAL` ASR 证据已同步回 `docs/04-*`、`docs/08-*`、composer README 与能力卡；不得将该结论描述为 S7 或 `AuralConverter` 已完成。Phase 0.8 T04A composer 试炼场证据与 T05 正式 AI Router 验收已同步回 `docs/04-*`、`docs/05-*`、`docs/08-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
 
 
-## 十一、S7-MVP 本地 WAV → S2 验收（2026-07-25，本机 `master` 主线复验通过，待推送 `origin/master`）
+## 十一、S7-MVP 本地 WAV → S2 验收（2026-07-25，已完成主线复验并推送 `origin/master`）
 
 | 层级 | 必须验证 | 禁止替代 |
 | ---- | -------- | -------- |
