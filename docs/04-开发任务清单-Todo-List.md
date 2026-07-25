@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.96
+**版本**：v1.97
 **日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -898,6 +898,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
 | 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准、实现未开始）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；批准计划不表示 Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。首个实施切片仍须独立计划；截至本次登记仍未修改业务代码、API、Schema、Worker、前端或测试。**
+
+> **PHASE3-T02A 生产攻击面与统一错误边界详细实施计划（2026-07-25，计划待批）**：已从 `origin/master` 创建外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02a-production-attack-surface-error-boundary-plan`，分支 `codex/phase3-t02a-production-attack-surface-error-boundary-plan`。计划路径 `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md`。本切片只覆盖生产 `/api/dev*` 隔离、统一 JSON 错误边界、显式 `NODE_ENV=production` 和后端核心 `127.0.0.1` 回环校验；本轮仅创建计划，不修改业务代码、不执行用户电脑验收、不处理 OCR/ASR 子进程、日志、备份/ACL、完整 S7、G2、S3 Worker、Docker/WSL、Firewall 或真实外部服务。当前仅完成详细计划和计划自审，等待用户单独批准；不得把本计划创建写成 T02A 实施完成或 Phase 3 安全审计完成。
 
 ---
 
