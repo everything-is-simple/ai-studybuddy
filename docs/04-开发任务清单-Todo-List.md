@@ -4,7 +4,7 @@
 **日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 按用户明确要求暂缓。S7 仅完成 T01 PRD：T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均不等于 S7 产品接入或用户机验收；Schema、Adapter、API、Worker、前端及 T05–T06 未启动。G2 的历史/候选证据仅按其自身环境范围解释，不修改永久 Firewall 策略，不用 offline/cache-only 冒充隔离证据。
+> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 按用户明确要求暂缓。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已在本任务分支完成实现与开发机验证，待主线复验和推送；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
@@ -36,7 +36,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 PRD 已完成；T02/T04 外部候选能力均为 `PARTIAL`，T03 Composer smoke 为 `PASS`；G2 等隔离证据只在各自环境范围内解释，未构成 S7 产品接入；Schema、Adapter、API、Worker、前端及 T05–T06 未启动 |
+| Phase 1.5 | 课堂录音转文字（S7-MVP）                | 🧪 任务分支开发机验证通过，待主线复验：本地受控 WAV → 同步 `whisper.cpp` → 可编辑文本 → 显式保存为 S2 文本资料；旧候选证据不等于完整 S7、G2、T02 主线、用户机验收或 Phase 3 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 
@@ -493,7 +493,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 23 | Phase 1-T09D：全局导航与学生旅程 E2E | ✅ | 已交付全局导航、考试上下文导航、统一 PageState、响应式入口、stale/current/404 状态与真实 Express/SQLite 学生旅程 E2E；已 fast-forward 合入 `master`、完成主线复验并推送 `origin/master`。计划提交 `0d2127e`、实现提交 `0a054f8`、主线收尾提交 `e1034e7`。不含 T09E 练习历史/学期归档。 |
 | 24 | Phase 1-T09E：练习历史与学期归档 | ✅ | 已获用户明确批准并在任务分支 `codex/phase1-t09e-practice-history-archive` 完成实现；实现提交 `de5c41e` 已 fast-forward 合入 `master`，主线复验通过并随主线收尾提交 `af37bd5` 推送 `origin/master`。 |
 | 25 | Phase 1-T12：设置中心 Provider 预设与渠道配置 UX 改造 | ✅ | 已完成独立计划审查、分支验证、fast-forward 主线集成、主线复验并推送 `origin/master`；任务分支 `codex/phase1-t12-settings-provider-presets-impl`，实现提交 `73bafdb`。 |
-| 26 | Phase 1-M02：错题详情一级标题语义回归修复 | ✅ | 方案 A 已 fast-forward 合入 master、完成主线全量复验并推送 origin/master；仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。实现提交 80ea2ab，验证证据 6c5df0，主线复验登记 6aa088e。 |
+| 26 | Phase 1-M02：错题详情一级标题语义回归修复 | ✅ | 方案 A 已 fast-forward 合入 master、完成主线全量复验并推送 origin/master；仅恢复可见 h1 语义并补充回归测试，不改 S4 API/Schema/业务规则。实现提交 80ea2ab，验证证据 e6c5df0，主线复验登记 6aa088e。 |
 | 27 | Phase 1-M03：设置中心配置可观测性与安全摘要 | ✅ | 已 fast-forward 合入并随主线收尾推送 `origin/master`；环境 fallback 显示安全摘要/待验证状态，秘密永不由后端回显。 |
 | 28 | Post-M03：配置来源审计与设置页敏感输入显隐 | ✅ | 实现提交 `e08ab36` 与主线收尾提交 `eac469b` 已进入 `origin/master`；分支与主线均通过 type-check、前后端 build、前端 94/94、后端 228/228、Playwright 14/14、文档治理及 diff 检查。浏览器证据保存在仓库外；全程未读取真实秘密、未运行外部调用。 |
 | 29 | DOCS-20260720：系统文档当前状态同步 | ✅ | 已从最新 `origin/master` 建立独立任务分支，按 Git 历史同步 T09A–T09E、T12、M01–M03、Post-M03 与前端路由事实；任务分支提交 `b9fb3e8` 已 fast-forward 合入 `master`，主线复验通过，并随本收尾提交推送 `origin/master`。 |
@@ -758,19 +758,18 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 **目标**：录音 → ASR → 文字 → 纯文本 → 复用 S2 笔记生成管道。
 
-**前置条件**：Phase 1 中 S2 笔记管道稳定运行。T01 已完成；T02 已执行并判定 `PARTIAL`；T03 已完成 Composer smoke、结论 `PASS`，并已随提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 合入并推送 `origin/master`；T04 已执行后续 ASR 能力验证并判定 `PARTIAL`；原 T02/T04 三门禁补证按停止条件执行后为 `BLOCKED`。T02/T04-R2 已完成 G1/G3，G2 保持历史 `BLOCKED`，总体 `PARTIAL`；新的 G2 跨平台门禁语义任务已完成计划 fresh-pass，正式采用或执行仍待后续批准。T05/T06 继续未启动。
+**当前可执行任务**：Phase 1 中 S2 文本资料、资料状态卡和笔记生成管道已经稳定。用户已明确批准以**一个小型 S7-MVP**替代旧的“先 T05 Job、再 T06 页面”的实施顺序：短 WAV 在一次请求内调用受控、外部配置的 `whisper.cpp`，只把用户确认后的可编辑文本写入既有 S2 `text` 资料；不保存原始录音，不自动生成笔记，不启动 Provider。旧 T02/T04 候选能力 `PARTIAL`、T03 Composer smoke `PASS` 与 G2 历史记录继续作为外部组件事实保留，均不被本任务改写为完整 S7 或用户机验收完成。
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
-| 1 | T01：S7 PRD 编写 | ✅ | 已按 `.plans/phase1-5-t01-s7-prd-plan.md` 创建并登记 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`；仅文档，不含 ASR/FFmpeg、Schema、API、Worker 或前端实现 |
-| 2 | T02：ASR 组件 composer 调通 | ✅（`PARTIAL`） | FunASR 1.3.22 + `iic/SenseVoiceSmall` 已完成 Windows CPU 本地/离线重复 smoke 与能力卡；技术可行，但静音/轻噪声 false positive、immutable revision 与离线证据仍有缺口，不直接授权 T04 |
-| 3 | T03：FFmpeg 音频预处理 | ✅ | 已按 `.plans/phase1-5-t03-s7-ffmpeg-preprocess-plan.md` 在 Composer 白名单完成格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常与能力卡证据；提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 已合入并推送 `origin/master`；不含 ASR/`AuralConverter`/后端接入 |
-| 4 | T04：ASR Adapter 装配 | ✅（能力验证 `PARTIAL`，非装配完成） | 已按 `.plans/phase1-5-t04-s7-next-asr-capability-plan.md` 获批执行后续 ASR 能力补证与 Adapter 前置判定；仅形成 Composer 能力证据，不创建/装配 `AuralConverter`，不修改业务代码，不启动 T05/T06，不代表生产接入资格 |
-| 4R | T02/T04-R2：ASR 当前候选最小化修正 | ✅ 执行 `PARTIAL` | G1 固定 revision 与 G3 固定 16 项矩阵均 `PASS`；G2 因当前定制 Windows 无可用 Firewall profile 保持历史 `BLOCKED`；不比较外部候选，不进入产品装配 |
-| 4G | T02/T04-G2：跨平台可验证离线门禁语义修订 | ⏳ 文档同步分支完成，主线合入待批准；跨平台执行待独立批准 | G2 正式语义为平台无关的 OS/容器/虚拟化层强制出站隔离；Windows Firewall 只是一个可接受实现，不改变 T02/T04 状态，不启动 T05/T06 |
-| 4GS | T02/T04-G2：正式语义落地计划 | ✅ 计划已合入 `origin/master`；文档同步分支待主线合入 | 已按批准计划同步 `docs/08`、`docs/09`、S7 PRD 与任务事实；本分支不执行隔离、不改产品、不改变 T02/T04/T05/T06 状态 |
-| 5 | T05：录音上传与转写 Job | ⏳ | 后端接受音频上传，Job Worker 调 ASR 后进入 S2 管道 |
-| 6 | T06：前端录音/上传页面 | ⏳ | 浏览器可上传录音文件，查看转写进度与笔记结果 |
+| 1 | T01：S7 PRD 编写 | ✅ | 已建立 S7 领域边界；本轮将同步为当前“小型同步 WAV MVP”产品合同 |
+| 2 | 旧 T02/T04：外置 ASR 候选能力 | ✅（`PARTIAL`） | 保留为固定候选与限制事实；不等于产品接入、通用静音、G2、完整 S7 或用户机验收 |
+| 3 | 旧 T03：FFmpeg Composer smoke | ✅（历史能力） | 不纳入本 MVP；本 MVP 不转换 MP3/M4A/视频，只接受受控 PCM WAV |
+| 4 | **S7-MVP：本地 WAV → 可编辑文本 → S2 输入** | 🧪 分支验证通过，待主线复验 | `.plans/phase1-5-s7-mvp-local-audio-transcription-plan.md`：配置化 `whisper.cpp` Adapter、同步 API、S2 文本 handoff、资料页内最小 UI、真实 SQLite/API/前端/E2E 验证；不建 Worker、无云端/Provider/Firewall/G2/Docker/WSL |
+| 5 | 完整 S7 后续能力 | ⏸️ | 长音频、格式转换、后台 Job、实时录音、说话人分离、视频和原始音频留存均需单独产品任务与批准 |
+
+> **S7-MVP 分支验证证据（2026-07-25，待主线复验）**：任务分支 `codex/phase1-5-s7-mvp-docs-plan` 已实现“本地受控 WAV → 显式配置的本机 `whisper.cpp` → 可编辑文本 → 学生显式保存为 S2 `text/converted` 资料 → 学生随后主动生成笔记”的小闭环。分支门禁已通过：`pnpm type-check`、backend/frontend build、backend `245/245`、frontend `139/139`、Playwright `21/21`、文档治理与 `git diff --check`。开发机隔离 smoke 摘要位于 `H:\ai-studybuddy-tmp\runs\phase1-5-s7-mvp-smoke-20260725-01\s7-mvp-local-smoke-summary.json`：固定资产哈希一致，合成中文 WAV 转写和 S2 handoff 通过，保存不创建 Job，临时 request 目录和 `whisper-cli.exe` 残留均为零。负向摘要位于同目录 `s7-mvp-runtime-negative-summary.json`：真实固定 CLI 的受控超时稳定返回 `ASR_PROCESS_TIMEOUT`（504），显式非零 CLI 稳定返回 `ASR_TRANSCRIPTION_FAILED`（502），两项均无 request/CLI 残留。上述仅为开发机分支事实；完整 S7、G2、T02 主线、用户电脑验收和 Phase 3 仍未完成。
+
 
 > **Phase 1.5-T02 ASR composer smoke 行动计划证据（2026-07-21，已批准并执行）**：已从最新且干净的 `master` / `origin/master` `df55dfef6b658a7dbef68472916ddae82ce645ed` 创建任务分支 `codex/phase1-5-t02-s7-asr-composer-plan` 与独立 worktree，并创建、fresh-pass 审查 `.plans/phase1-5-t02-s7-asr-composer-smoke-plan.md`。计划仅定义未来在独立 composer 试炼场核验 Windows 本地 CPU ASR 的候选选择、标准音频样例、`ConverterResult` 映射证据、性能/资源/稳定性记录、PASS/PARTIAL/FAIL 判定、能力卡、白名单与回滚规则；本轮未执行 ASR smoke，未安装依赖或下载模型，未修改 composer、`packages/` 或 S7 PRD，未开始 T03 FFmpeg、T04 `AuralConverter`、T05 Job/Worker 或 T06 前端。用户已于 2026-07-21 明确批准该计划；当前只执行 T02，不自动进入 T03–T06。
 

@@ -70,6 +70,15 @@ export function retryAiGeneration(semesterId: string, materialId: string, signal
   });
 }
 
+export function generateNote(semesterId: string, materialId: string, signal?: AbortSignal): Promise<unknown> {
+  return request(`/materials/${encodeURIComponent(materialId)}/generate-note`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ semesterId }),
+    signal,
+  });
+}
+
 export function replaceText(
   semesterId: string,
   materialId: string,

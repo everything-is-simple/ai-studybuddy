@@ -272,3 +272,16 @@ git diff --check
 ```
 
 Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 1.5-T02 的 `PARTIAL` ASR 证据已同步回 `docs/04-*`、`docs/08-*`、composer README 与能力卡；不得将该结论描述为 S7 或 `AuralConverter` 已完成。Phase 0.8 T04A composer 试炼场证据与 T05 正式 AI Router 验收已同步回 `docs/04-*`、`docs/05-*`、`docs/08-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
+
+
+## 十一、S7-MVP 本地 WAV → S2 验收（2026-07-25，任务分支开发机验证通过，待主线复验）
+
+| 层级 | 必须验证 | 禁止替代 |
+| ---- | -------- | -------- |
+| Adapter | 受控 PCM WAV 成功、格式/大小拒绝、运行时未配置、非零退出、超时、临时文件和 CLI 残留清理 | 只测 harness、只测 cache/offline、真实录音 |
+| API + SQLite | 许可确认、学期/课程归属、编辑文本保存为 `text` material + `normalized_texts`、不创建转换/笔记 Job | mock DB、自动 Provider 调用 |
+| 前端 | 许可复选框、格式/质量提示、转写后可编辑、显式保存、资料卡明确生成笔记操作 | `localStorage` 暂存全文、自动保存 |
+| 浏览器闭环 | fake CLI + 隔离 `APP_DATA_ROOT` 下完成“选择 WAV → 编辑 → 保存为 S2 输入” | 使用真实 Provider、Firewall/G2、Docker/WSL |
+| 开发机 smoke | 固定外置 CLI/模型哈希复核后用合成 PCM WAV，记录脱敏退出码、耗时和清理结论 | 把结果外推为用户机、完整 S7 或通用静音 |
+
+S7-MVP 已完成任务分支测试、构建、文档治理、diff 检查与开发机 smoke；仍须主线复验及远端推送，在此之前不得标记为主线完成。

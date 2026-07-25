@@ -425,6 +425,106 @@ export class NoteBuilderService {
     }
   }
 
+  async createNormalizedTextMaterial(input: {
+    semesterId: unknown;
+    courseInstanceId: unknown;
+    title: unknown;
+    text: unknown;
+    sourceType: 'class_audio_transcription';
+  }): Promise<MaterialDto> {
+    const semesterId = requiredUuid(input.semesterId, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    const courseInstanceId = requiredUuid(
+      input.courseInstanceId,
+      'MISSING_REQUIRED_FIELD',
+      'courseInstanceId 不能为空'
+    );
+    const title = string(input.title);
+    const text = string(input.text);
+    if (!title || title.length > 200) throw new NoteBuilderError('INVALID_TITLE', 400, 'title 长度必须为 1-200 字符');
+    if (!text || text.length > 1048576)
+      throw new NoteBuilderError('INVALID_TEXT', 400, 'text 长度必须为 1-1048576 字符');
+    this.assertWritableSemester(semesterId);
+    const db = this.openReadySemesterDb(semesterId);
+    let storageKey: string | undefined;
+    try {
+      this.requireCourse(db, semesterId, courseInstanceId);
+      const saved = await this.storage.put({
+        semesterId,
+        courseId: courseInstanceId,
+        originalName: `${title}.txt`,
+        data: Buffer.from(text, 'utf8'),
+      });
+      storageKey = saved.storageKey;
+      const materialId = id();
+      const normalizedTextId = id();
+      const createdAt = now();
+      db.transaction(() => {
+        db.prepare(
+          `INSERT INTO materials (id, course_instance_id, file_type, storage_key, status, original_filename, title, file_size_bytes, created_at, updated_at)
+           VALUES (?, ?, 'text', ?, 'converted', ?, ?, ?, ?, ?)`
+        ).run(materialId, courseInstanceId, saved.storageKey, `${title}.txt`, title, saved.size, createdAt, createdAt);
+        db.prepare(
+          `INSERT INTO normalized_texts (id, material_id, source_type, text, char_count, metadata_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`
+        ).run(
+          normalizedTextId,
+          materialId,
+          input.sourceType,
+          text,
+          text.length,
+          JSON.stringify({ converter: 'class_capture', userConfirmed: true }),
+          createdAt
+        );
+      })();
+      return this.toMaterial({
+        id: materialId,
+        course_instance_id: courseInstanceId,
+        file_type: 'text',
+        storage_key: saved.storageKey,
+        status: 'converted',
+        original_filename: `${title}.txt`,
+        title,
+        file_size_bytes: saved.size,
+        created_at: createdAt,
+        updated_at: createdAt,
+      });
+    } catch (error) {
+      if (storageKey) await this.storage.delete(storageKey).catch(() => undefined);
+      if (error instanceof NoteBuilderError) throw error;
+      throw new NoteBuilderError('STORAGE_ERROR', 500, '保存转写文本失败');
+    } finally {
+      db.close();
+    }
+  }
+
+  requestNoteGeneration(semesterIdValue: unknown, materialIdValue: unknown) {
+    const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    const materialId = requiredUuid(materialIdValue, 'MATERIAL_NOT_FOUND', '资料不存在');
+    this.assertWritableSemester(semesterId);
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      const material = db.prepare('SELECT status FROM materials WHERE id = ?').get(materialId) as
+        { status: MaterialStatus } | undefined;
+      if (!material) throw new NoteBuilderError('MATERIAL_NOT_FOUND', 404, '资料不存在');
+      if (material.status !== 'converted') throw new NoteBuilderError('INVALID_STATUS', 400, '当前资料尚不能生成笔记');
+      const normalized = db.prepare('SELECT id FROM normalized_texts WHERE material_id = ?').get(materialId) as
+        { id: string } | undefined;
+      if (!normalized) throw new NoteBuilderError('NORMALIZED_TEXT_NOT_FOUND', 409, '缺少可生成笔记的正文');
+      const activeJob = db
+        .prepare("SELECT id FROM jobs WHERE material_id = ? AND status IN ('pending', 'running') LIMIT 1")
+        .get(materialId) as { id: string } | undefined;
+      if (activeJob) throw new NoteBuilderError('JOB_ALREADY_PENDING', 409, '已有待执行或运行中的任务');
+      const createdAt = now();
+      db.prepare(
+        `INSERT INTO jobs (id, job_type, status, payload_json, attempts, max_attempts, available_at, created_at, material_id)
+         VALUES (?, 'note_generate', 'pending', ?, 0, 3, ?, ?, ?)`
+      ).run(id(), JSON.stringify({ semesterId, normalizedTextId: normalized.id }), createdAt, createdAt, materialId);
+      return { id: materialId, status: 'converted', jobStatus: 'pending' };
+    } finally {
+      db.close();
+    }
+  }
+
   getNote(semesterIdValue: unknown, noteIdValue: unknown) {
     const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
     const noteId = requiredUuid(noteIdValue, 'NOTE_NOT_FOUND', '笔记不存在');

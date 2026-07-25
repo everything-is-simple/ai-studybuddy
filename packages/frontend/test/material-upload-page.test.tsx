@@ -33,6 +33,22 @@ const pendingQualityMaterial = {
   updatedAt: '2026-07-01T00:01:00.000Z',
 } as const;
 
+const convertedMaterial = {
+  id: '44444444-4444-4444-8444-444444444444',
+  courseInstanceId: STUB_COURSE.id,
+  fileType: 'text',
+  status: 'converted',
+  title: '课堂转写文本',
+  originalFilename: '课堂转写文本.txt',
+  fileSizeBytes: 1024,
+  hasNote: false,
+  knowledgeModuleCount: 0,
+  conversionRetryCount: 0,
+  aiRetryCount: 0,
+  createdAt: '2026-07-01T00:00:00.000Z',
+  updatedAt: '2026-07-01T00:01:00.000Z',
+} as const;
+
 const conversionFailedMaterial = {
   id: '33333333-3333-4333-8333-333333333333',
   courseInstanceId: STUB_COURSE.id,
@@ -63,6 +79,7 @@ vi.mock('../src/api/note-builder-api', () => ({
   uploadMaterial: vi.fn(async () => pendingQualityMaterial),
   retryConversion: vi.fn(async () => ({})),
   retryAiGeneration: vi.fn(async () => ({})),
+  generateNote: vi.fn(async () => ({})),
   replaceText: vi.fn(async () => ({ id: pendingQualityMaterial.id, status: 'converted', jobStatus: 'pending' })),
 }));
 
@@ -204,6 +221,29 @@ describe('MaterialUploadPage 人工补文恢复闭环', () => {
     expect(container.textContent).toContain('已有待执行或运行中的任务');
     await typeIntoTextarea('修改后的正文');
     expect(container.textContent).not.toContain('已有待执行或运行中的任务');
+  });
+});
+
+
+describe('MaterialUploadPage S7-MVP 入口与显式生成笔记', () => {
+  it('在已选择课程后显示许可边界和受控 WAV 提示', async () => {
+    await renderAndSelectCourse();
+    expect(container.textContent).toContain('课堂录音转文字');
+    expect(container.textContent).toContain('我确认这段课堂录音已获得老师和相关同学允许，仅用于本机学习整理。');
+    expect(container.textContent).toContain('16 kHz、单声道、16-bit PCM WAV');
+    expect(container.textContent).toContain('静音、多人重叠说话、噪声或低音量场景可能不准确');
+  });
+
+  it('converted S2 文本只在学生点击后才请求生成笔记', async () => {
+    mockMaterials = [convertedMaterial];
+    await renderAndSelectCourse();
+    expect(container.textContent).toContain('转换完成，准备生成笔记');
+    clickButton('生成笔记');
+    await flush();
+    const { generateNote, getMaterials } = await import('../src/api/note-builder-api');
+    expect(generateNote).toHaveBeenCalledWith('sem-1', convertedMaterial.id);
+    expect(getMaterials).toHaveBeenCalledTimes(2);
+    expect(container.textContent).toContain('已提交生成笔记请求');
   });
 });
 

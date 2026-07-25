@@ -7,6 +7,7 @@ interface MaterialStatusProps {
   onRetryConversion?: (material: MaterialDto) => void;
   onRetryAi?: (material: MaterialDto) => void;
   onReplaceText?: (material: MaterialDto) => void;
+  onGenerateNote?: (material: MaterialDto) => void;
   actionsDisabled?: boolean;
   children?: ReactNode;
 }
@@ -31,6 +32,7 @@ export function MaterialStatus({
   onRetryConversion,
   onRetryAi,
   onReplaceText,
+  onGenerateNote,
   actionsDisabled = false,
   children,
 }: MaterialStatusProps) {
@@ -54,6 +56,11 @@ export function MaterialStatus({
           <Link to={`/notes/${material.noteId}`} className="button-link">
             查看笔记
           </Link>
+        )}
+        {material.status === 'converted' && !material.noteId && onGenerateNote && (
+          <button type="button" onClick={() => onGenerateNote(material)} disabled={actionsDisabled}>
+            生成笔记
+          </button>
         )}
         {material.status === 'conversion_failed' && onRetryConversion && (
           <button type="button" onClick={() => onRetryConversion(material)} disabled={actionsDisabled}>

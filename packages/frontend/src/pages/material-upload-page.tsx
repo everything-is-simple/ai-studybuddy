@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useApiRequest } from '../hooks/use-api-request';
 import { useMaterialPolling } from '../hooks/use-material-polling';
 import { getCourses } from '../api/study-rhythm-api';
-import { replaceText, retryAiGeneration, retryConversion, uploadMaterial } from '../api/note-builder-api';
+import { generateNote, replaceText, retryAiGeneration, retryConversion, uploadMaterial } from '../api/note-builder-api';
+import { saveClassCaptureToNotes, transcribeClassCapture } from '../api/class-capture-api';
 import { FeedbackMessage } from '../components/feedback-message';
 import { FileDropzone } from '../components/file-dropzone';
 import { MaterialStatus } from '../components/material-status';
@@ -26,6 +27,13 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
   const [replacementError, setReplacementError] = useState<string | null>(null);
   const [replacementSubmittingId, setReplacementSubmittingId] = useState<string | null>(null);
   const [courseContextMessage, setCourseContextMessage] = useState<string | null>(null);
+  const [classCaptureFile, setClassCaptureFile] = useState<File | null>(null);
+  const [classCaptureTitle, setClassCaptureTitle] = useState('');
+  const [classCapturePermissionConfirmed, setClassCapturePermissionConfirmed] = useState(false);
+  const [classCaptureTranscribing, setClassCaptureTranscribing] = useState(false);
+  const [classCaptureSaving, setClassCaptureSaving] = useState(false);
+  const [classCaptureText, setClassCaptureText] = useState('');
+  const [classCaptureError, setClassCaptureError] = useState<string | null>(null);
 
   const coursesFetcher = useCallback(
     (signal: AbortSignal) => {
@@ -110,6 +118,78 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
       await refetchMaterials();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '重试失败');
+    }
+  };
+
+  const handleGenerateNote = async (materialId: string) => {
+    if (!semesterId) return;
+    try {
+      await generateNote(semesterId, materialId);
+      setSuccessMessage('已提交生成笔记请求；笔记生成仅在你主动点击后开始。');
+      await refetchMaterials();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : '生成笔记请求失败');
+    }
+  };
+
+  const handleClassCaptureTranscribe = async () => {
+    if (!semesterId || !selectedCourseId || !classCaptureFile) return;
+    const title = classCaptureTitle.trim();
+    if (!classCapturePermissionConfirmed) {
+      setClassCaptureError('请先确认课堂录音已获得老师和相关同学允许。');
+      return;
+    }
+    if (!title) {
+      setClassCaptureError('请为这段课堂录音填写标题。');
+      return;
+    }
+    setClassCaptureTranscribing(true);
+    setClassCaptureError(null);
+    setClassCaptureText('');
+    try {
+      const transcript = await transcribeClassCapture({
+        semesterId,
+        courseInstanceId: selectedCourseId,
+        title,
+        permissionConfirmed: true,
+        file: classCaptureFile,
+      });
+      setClassCaptureText(transcript.text);
+    } catch (err) {
+      setClassCaptureError(err instanceof Error ? err.message : '课堂录音转写失败');
+    } finally {
+      setClassCaptureTranscribing(false);
+    }
+  };
+
+  const handleClassCaptureSave = async () => {
+    if (!semesterId || !selectedCourseId) return;
+    const title = classCaptureTitle.trim();
+    const text = classCaptureText.trim();
+    if (!text) {
+      setClassCaptureError('请确认转写文本不为空后再保存。');
+      return;
+    }
+    setClassCaptureSaving(true);
+    setClassCaptureError(null);
+    try {
+      await saveClassCaptureToNotes({
+        semesterId,
+        courseInstanceId: selectedCourseId,
+        title,
+        permissionConfirmed: classCapturePermissionConfirmed,
+        text,
+      });
+      setSuccessMessage('已保存为 S2 资料文本；需要生成笔记时，请在资料卡中主动点击“生成笔记”。');
+      setClassCaptureFile(null);
+      setClassCaptureTitle('');
+      setClassCapturePermissionConfirmed(false);
+      setClassCaptureText('');
+      await refetchMaterials();
+    } catch (err) {
+      setClassCaptureError(err instanceof Error ? err.message : '保存课堂转写失败');
+    } finally {
+      setClassCaptureSaving(false);
     }
   };
 
@@ -222,6 +302,65 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
         </section>
       )}
 
+      {selectedCourse && (
+        <section className="card">
+          <h2>课堂录音转文字</h2>
+          <p>仅支持本机 16 kHz、单声道、16-bit PCM WAV。静音、多人重叠说话、噪声或低音量场景可能不准确。</p>
+          <label className="class-capture-permission">
+            <input
+              type="checkbox"
+              checked={classCapturePermissionConfirmed}
+              onChange={(event) => setClassCapturePermissionConfirmed(event.target.checked)}
+              disabled={classCaptureTranscribing || classCaptureSaving}
+            />
+            我确认这段课堂录音已获得老师和相关同学允许，仅用于本机学习整理。
+          </label>
+          <label htmlFor="class-capture-title">录音标题</label>
+          <input
+            id="class-capture-title"
+            value={classCaptureTitle}
+            onChange={(event) => setClassCaptureTitle(event.target.value)}
+            maxLength={200}
+            disabled={classCaptureTranscribing || classCaptureSaving}
+            placeholder="例如：第三章函数课堂讲解"
+          />
+          <FileDropzone
+            onFileSelect={setClassCaptureFile}
+            disabled={classCaptureTranscribing || classCaptureSaving}
+            accept=".wav,audio/wav,audio/x-wav"
+          />
+          {classCaptureFile && <div className="selected-file">已选择：{classCaptureFile.name}（{formatBytes(classCaptureFile.size)}）</div>}
+          <button
+            type="button"
+            className="button-primary"
+            onClick={handleClassCaptureTranscribe}
+            disabled={!classCaptureFile || !classCapturePermissionConfirmed || !classCaptureTitle.trim() || classCaptureTranscribing || classCaptureSaving}
+          >
+            {classCaptureTranscribing ? '转写中…' : '转写录音'}
+          </button>
+          {classCaptureError && <p className="manual-text-error">{classCaptureError}</p>}
+          {classCaptureText && (
+            <div className="manual-text-recovery">
+              <label htmlFor="class-capture-transcript">可编辑转写文本</label>
+              <textarea
+                id="class-capture-transcript"
+                value={classCaptureText}
+                onChange={(event) => setClassCaptureText(event.target.value)}
+                maxLength={1048576}
+                rows={10}
+                disabled={classCaptureSaving}
+              />
+              <div className="manual-text-footer">
+                <span>{classCaptureText.trim().length.toLocaleString()} / 1,048,576 字</span>
+                <button type="button" className="button-primary" onClick={handleClassCaptureSave} disabled={!classCaptureText.trim() || classCaptureSaving}>
+                  {classCaptureSaving ? '保存中…' : '保存为 S2 笔记输入'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {selectedCourseId && (
         <section className="card">
           <h2>资料处理状态</h2>
@@ -245,6 +384,7 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
                     onRetryConversion={() => handleRetryConversion(material.id)}
                     onRetryAi={() => handleRetryAi(material.id)}
                     onReplaceText={() => handleOpenReplaceText(material.id)}
+                    onGenerateNote={() => handleGenerateNote(material.id)}
                     actionsDisabled={isSubmittingReplacement}
                   >
                     {isReplacing && (

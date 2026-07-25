@@ -128,3 +128,8 @@ Phase 0.7 只验证，不修改主系统。SQLite、本地文件、SQLite Job Wo
 4. **仓库外组件试炼场、运行数据和证据目录**不属于主仓 Git 脏状态，不得因为主仓清理而移动、复制或删除。
 
 禁止使用 `git clean`、`git reset --hard`、覆盖 checkout 或面向仓库根的通配符递归删除来处理脏状态。当前收口批次、风险分级和批准门以 `.plans/process-dirty-state-remediation-plan.md` 与 `docs/04` 的 `PROCESS-DIRTY-20260725` 为准。即使个别 worktree 尚未收口，也不改变 `origin/master` 的产品事实，更不改变用户电脑验收、S7 产品接入或外部候选能力的状态。
+
+
+## S7-MVP 临时音频目录边界（2026-07-25）
+
+S7-MVP 的上传 WAV 不是长期资料文件：仅可在由 `APP_DATA_ROOT` 派生的 `tmp/class-capture/<request-id>/` 内短暂存在，服务端在成功、失败、超时和取消路径都删除。真实课堂录音、模型、CLI、DLL、harness、转写全文和运行日志不进入主仓库；外置候选继续留在 `H:\ai-studybuddy-components`，但业务代码只能使用环境变量，不能硬编码本机盘符。此规则不等于用户电脑验收完成。

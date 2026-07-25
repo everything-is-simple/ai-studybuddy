@@ -94,6 +94,11 @@ export function getTmpDir(): string {
   return resolveAppDataPath('tmp');
 }
 
+// S7-MVP 临时音频仅允许位于 APP_DATA_ROOT 内；调用结束后由 Adapter 无条件清理。
+export function getClassCaptureTmpDir(): string {
+  return resolveAppDataPath(path.join('tmp', 'class-capture'));
+}
+
 export function getBackupsDir(): string {
   return resolveAppDataPath('backups');
 }

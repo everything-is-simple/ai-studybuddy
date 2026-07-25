@@ -35,7 +35,7 @@ AI StudyBuddy 的开发方式：
 | S4   | 错题改错 ErrorFixer     | 复盘错题          | 查看错因、重做                         | 错题本、薄弱点、复习排程、变题           | 规则引擎、SQLite Job Worker                                           | 错因分类、改错建议、变题                                            |
 | S5   | 期末冲刺 ExamCrammer    | 考前冲刺          | 按考试范围上传真题、限时模拟           | 真题解析、模拟卷、冲刺计划、模考结果     | PDF/OCR、计时器、题库                                                 | 教学解析、变题组卷、难题走中转/官方兜底                             |
 | S6   | 家长观察 ParentReport   | 家长接收节奏报告  | 阅读邮件/飞书报告                      | 日报、周报、月报、考前提醒               | QQ SMTP、飞书 Webhook                                                 | 可选润色总结，失败不阻塞发送                                        |
-| S7   | 课堂采集 ClassCapture   | 上课现场          | 录音/视频/拍笔记                       | 转写文本、课堂素材                       | SenseVoice、FunASR、FFmpeg、RapidOCR/PaddleOCR                        | 默认不用；失败兜底可用视觉模型                                      |
+| S7   | 课堂采集 ClassCapture   | 上课后本机整理    | 已获允许的受控 PCM WAV                 | 可编辑转写文本、S2 文本资料              | 显式配置的本机 whisper.cpp；S2 资料页                              | 不走云端；质量受静音/重叠/噪声/低音量影响                           |
 
 ---
 
@@ -46,7 +46,7 @@ S6 读取 `StudyEvent`、任务状态和考试日期的脱敏统计，输出邮�
 ### 当前实现与下一门禁
 
 - S1、S2、S3、S4、S5、S6 简版均已实现；S5 的 Phase 2-T01–T06 已完成主线复验并推送。
-- S7 已触发 **PRD 阶段**，但尚未触发产品接入：T02/T04 外部候选能力验证为 `PARTIAL`，T03 Composer smoke 为 `PASS`；这些证据不构成 S7 Schema、Adapter、API、Worker、前端、用户机安装或课堂产品闭环完成。T05–T06 未启动。
+- S7-MVP 已在隔离任务分支实现并完成开发机验证，待主线复验和推送：限定为受控 PCM WAV → 同步本机 `whisper.cpp` → 可编辑文本 → 显式保存为 S2 文本资料。旧 T02/T04 候选能力 `PARTIAL`、T03 Composer smoke `PASS` 只保留为外部历史事实，不构成完整 S7、通用静音、G2、T02 主线、用户机安装或课堂产品闭环完成。
 - T08 已完成跨子系统的本机配置中心，但它属于共同底座，不新增第八个场景子系统。
 - T09A–T09E 与 Phase 2 S5 均已完成、通过主线复验并推送 `origin/master`，但不改变 S1–S7 的业务所有权。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；Phase 3 暂缓，S7 继续等待独立门禁。
 

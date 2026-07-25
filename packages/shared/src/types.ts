@@ -263,6 +263,19 @@ export interface HighlightDto {
   position: string;
 }
 
+// ============================================================
+// S7-MVP ClassCapture DTO（仅本机同步转写，不持久化原始音频）
+// ============================================================
+
+export interface ClassCaptureTranscriptDto {
+  text: string;
+  charCount: number;
+}
+
+export interface ClassCaptureSavedMaterialDto {
+  material: MaterialDto;
+}
+
 export interface MaterialDto {
   id: string;
   courseInstanceId: string;

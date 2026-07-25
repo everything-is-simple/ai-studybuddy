@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.48
+**版本**：v2.49
 **日期**：2026-07-25
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -19,7 +19,7 @@
 | 03d | [subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md](subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md) | ✅ 有效 | S4 轻量 PRD，错误作答事实、错因确认、重做证据、薄弱点与掌握边界 |
 | 03f | [subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md](subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md) | ✅ 有效 | S5 轻量 PRD，模拟考、临考速背、冲刺计划与考前工作台入口边界 |
 | 03e | [subsystems/06-S6-家长观察子系统PRD-ParentReport.md](subsystems/06-S6-家长观察子系统PRD-ParentReport.md) | ✅ 有效 | S6 轻量 PRD，脱敏日报/周报/月报/考前提醒与家长报告隐私边界 |
-| 03g | [subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md](subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md) | ✅ 有效 | S7 轻量 PRD，课堂录音、本地 ASR、纯文本输出与 S2 笔记管道复用边界 |
+| 03g | [subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md](subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md) | ✅ 有效 | S7-MVP：受控本地 WAV、同步本机 ASR、可编辑文本与 S2 文本资料 handoff；完整 S7 另立门禁 |
 | 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | 阶段任务、执行顺序、完成门槛和验证结论 |
 | 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
 | 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `H:\ai-studybuddy-*` 本地目录职责、外部试炼场、验证产物与单机数据边界 |
@@ -38,7 +38,7 @@
 
 - **产品目的与使用者**：`docs/01` 是首要入口。系统为一名在 Windows 本机学习的学生而做，帮助她把课程/考试目标、学习节奏、资料笔记、练习、错题和考前冲刺连成可持续闭环；家长不是系统操作者，只接收脱敏的异步学习摘要。
 - **已集成事实**：只有 `origin/master` 上的代码、`docs/04` 任务状态和主线复验共同构成“已完成”结论。当前 S1–S6 主线已完成；开发机 Windows 原生 + Node 24 部署基线已验证，但用户电脑的安装运行验收仍是未完成门禁。
-- **S7 与外部候选边界**：S7 PRD 已创建，但产品接入尚未开始。外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据不等于 Schema、Adapter、API、Worker、前端或用户机能力已完成。
+- **S7 与外部候选边界**：S7-MVP 已在隔离任务分支完成实现与开发机验证，待主线复验和推送：目标仅为受控 PCM WAV → 显式本机 `whisper.cpp` → 可编辑文本 → S2 文本资料。旧外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据仍不等于完整 S7、通用静音、G2、T02 主线、用户机能力或 Phase 3。
 - **当前暂停项**：Phase 3 暂缓；Docker/WSL、ASR 隔离和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
 - `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。`H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
 - 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
@@ -56,7 +56,7 @@
 | S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | ✅ Phase 2-T01–T06 与 POST-PHASE2 全系统验证、完整 E2E、文档对齐和主线复验均已完成并推送 | Phase 2 已触发并完成 |
 | S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | ✅ T06A 规则报告生成与 T06B 渠道推送已实现；真实渠道 smoke 非常规验证 | Phase 1 后期、准备正式发送家长报告前触发 |
-| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | ⚠️ T01 PRD 已创建；T02/T04 候选能力验证为 `PARTIAL`、T03 Composer smoke 为 `PASS`；产品接入和 T05–T06 未启动 | 每一步仍须独立计划、批准与产品边界验收；候选证据不等于接入完成 |
+| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | 🚧 S7-MVP 实施中：受控 WAV 同步转写、编辑、显式保存为 S2 文本资料；旧候选能力仍为 `PARTIAL`/历史事实 | 不含 Worker、FFmpeg、云端、G2、实时录音、用户机验收或完整 S7；完成仍须主线复验与推送 |
 
 ---
 
@@ -141,7 +141,7 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B、T09C、T09D 与 T09E 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环、练习历史与归档学期只读查看，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收；Phase 3 按用户要求暂缓。S7 仅完成 PRD，T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于产品接入；Schema、Adapter、API、Worker、前端及 T05–T06 均未启动，S3 Worker 不属于当前 MVP。
+4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收；Phase 3 按用户要求暂缓。S7-MVP 已获用户批准并在任务分支实施：它只覆盖受控 WAV、本机同步 `whisper.cpp`、可编辑文本及显式 S2 handoff；尚未完成，旧 T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于完整 S7、通用静音、G2 或用户机验收。S3 Worker 不属于当前 MVP。
 5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 计划、实现、主线集成、主线复验与 `origin/master` 推送已完成，验证隔离根 `I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
 
 ---
@@ -176,6 +176,8 @@ git diff --check
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
 | v2.48 | 2026-07-25 | 固化用户的主系统目录边界：`H:\ai-studybuddy` 内禁止任何 worktree 根，唯一的新任务 worktree 根为 `H:\ai-studybuddy-worktrees`；历史仓内 worktree 只可按批准清单迁出或安全处置。 |
+| v2.49 | 2026-07-25 | 登记并同步 S7-MVP：仅受控 PCM WAV 的本机同步转写、学生编辑与显式 S2 文本资料 handoff；实施中，不扩大为 Worker、FFmpeg、云端、G2、用户机验收或完整 S7。 |
+
 | v2.47 | 2026-07-25 | 登记多 worktree 脏状态的安全收口计划：语义差异、待审计划、生成物、依赖残留和外部证据必须分层治理；不以清理之名丢失内容，也不改变产品/用户机/S7 的既有边界。 |
 | v2.46 | 2026-07-25 | 收口产品目的、使用者、主线事实、S7 候选证据与产品接入边界；明确开发机 Node 24 已验证不等于用户电脑验收，并区分当前 H 盘开发机治理与历史绝对路径。 |
 | v2.44 | 2026-07-21 | Phase 1.5-T01：创建并登记 S7 课堂采集子系统 PRD，明确课堂录音经本地 ASR 转为纯文本并复用 S2 笔记管道；T02–T06 保持未启动，下一门禁为 T02 composer smoke 独立计划。 |

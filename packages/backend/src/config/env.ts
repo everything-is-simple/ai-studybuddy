@@ -33,6 +33,14 @@ function readNumberEnv(key: string, fallback: number): number {
   return Number(process.env[key] ?? fallback);
 }
 
+function readBoundedNumberEnv(key: string, fallback: number, minimum: number, maximum: number): number {
+  const value = Number(process.env[key] ?? fallback);
+  if (!Number.isFinite(value) || value < minimum || value > maximum) {
+    throw new Error(`[CONFIG] INVALID_NUMBER ${key} must be between ${minimum} and ${maximum}`);
+  }
+  return Math.floor(value);
+}
+
 export function getDocxZipLimits() {
   return {
     maxEntries: readNumberEnv('DOCX_ZIP_MAX_ENTRIES', 10000),
@@ -120,6 +128,17 @@ export const config = {
   ocrTimeoutMs: Number(process.env.OCR_TIMEOUT_MS ?? 60000),
   ocrCacheRoot: path.resolve(process.env.OCR_CACHE_ROOT ?? path.join(resolvedRoot, 'models', 'rapidocr')),
   ocrTempRoot: path.resolve(process.env.OCR_TEMP_ROOT ?? path.join(resolvedRoot, 'tmp', 'ocr')),
+
+  // S7-MVP 本机 whisper.cpp 运行时。默认空值表示未配置，绝不猜测本机路径或回退云端。
+  localAsrWhisperCliPath: process.env.LOCAL_ASR_WHISPER_CLI_PATH ?? '',
+  localAsrWhisperModelPath: process.env.LOCAL_ASR_WHISPER_MODEL_PATH ?? '',
+  localAsrWhisperTimeoutMs: readBoundedNumberEnv('LOCAL_ASR_WHISPER_TIMEOUT_SECONDS', 90, 1, 300) * 1000,
+  localAsrWhisperMaxFileBytes: readBoundedNumberEnv(
+    'LOCAL_ASR_WHISPER_MAX_FILE_BYTES',
+    25 * 1024 * 1024,
+    1024,
+    100 * 1024 * 1024
+  ),
 
   // AI Provider（T05 时使用）
   aiProviders: parseAiProviders(),

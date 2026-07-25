@@ -52,7 +52,7 @@ NoteBuilder 接收多格式资料（PDF / 图片 / 文本 / DOCX / PPTX），通
 
 - 不做笔记富文本编辑器；MVP 只展示 AI 生成结果，不允许孩子在线编辑笔记内容。
 - 不做多份资料合并成一份笔记；一份资料对应一份笔记。
-- 不做录音转写（S7 ClassCapture 负责）。
+- 不做录音转写本身（S7-MVP 的本机 Adapter 负责）；S2 只接收学生编辑并显式确认后的纯文本资料，不保存原始录音，也不自动生成笔记。
 - 不做练习题生成（S3 PracticeRunner 负责）。
 - 不做错题回流（S4 ErrorFixer 负责）。
 - 不做家长看笔记正文（S6 只读脱敏"已整理 N 份资料"统计）。
@@ -66,6 +66,7 @@ NoteBuilder 接收多格式资料（PDF / 图片 / 文本 / DOCX / PPTX），通
 ```mermaid
 flowchart TD
   A["学生选择课程"] --> B["上传资料：PDF / 图片 / 文本 / DOCX / PPTX"]
+  S7["S7-MVP：学生确认后的课堂转写文本"] --> G
   B --> C["系统保存原始文件到 storage_key，创建 material 记录"]
   C --> D["创建转换 Job（pending）"]
   D --> E["Job Worker 领取并执行格式转换"]
@@ -931,3 +932,8 @@ pending → converting → converted → note_generating → completed
 | S2-v2.0                 | 多资料交叉知识图谱、知识模块自动合并去重                |
 
 > 当前实现完成证据以 `docs/04` 的 Phase 0.8-T07/T08/T09 与 Phase 1-T10 记录为准。以上验收清单保留完整产品契约，不表示 URL 批量导入、资料删除、章节分段合并或所有性能目标已经进入当前完成范围。Phase 1-T08 只改变 Provider 配置与降级入口，不改变 S2 数据对象或业务 API。
+
+
+## S7-MVP 到 S2 的文本 handoff（2026-07-25，任务分支开发机验证通过，待主线复验）
+
+S7-MVP 不把录音加入 S2 的文件类型，也不复用“上传文件 → 转换 Job”流程。学生在 S7 卡片中编辑并显式保存的文本，由 S2 创建普通 `file_type='text'` material 与 `normalized_texts`，来源标记为 `class_audio_transcription`、初始状态为 `converted`；不创建 `material_convert` Job，不自动调用 Provider 或生成笔记。学生随后在既有资料卡中主动点击生成笔记，继续沿用 S2 的既有失败和隐私边界。

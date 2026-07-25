@@ -289,3 +289,12 @@ git diff --check
 ```powershell
 Invoke-RestMethod http://localhost:3000/api/health
 ```
+
+
+## S7-MVP 后端补充规则（2026-07-25）
+
+- `whisper.cpp` 只能由独立 Adapter 以参数数组启动；用户文件名、标题、文本不得拼接到 shell 命令。
+- CLI/模型、超时和最大字节数只能由 `env.ts` 集中读取；未配置返回稳定 `ASR_RUNTIME_UNAVAILABLE`，不猜路径、不回退云端。
+- 临时 WAV 目录必须由 `paths.ts` 从 `APP_DATA_ROOT` 派生，并在 `finally` 清理；API、日志和 DTO 不得泄漏路径、stdout/stderr、原始音频或转写全文。
+- S7-MVP 只在学生显式保存后调用 S2 的窄文本 handoff；不得创建 S7 Worker/Job，不得自动创建 `material_convert` 或 `note_generate` Job。
+- API 测试使用真实 SQLite 与受控 fake CLI，不 mock 数据库；开发机真实 CLI smoke 使用隔离数据根和脱敏合成 WAV。

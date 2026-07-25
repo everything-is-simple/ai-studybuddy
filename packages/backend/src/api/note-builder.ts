@@ -81,6 +81,13 @@ router.post('/materials/:id/retry-ai-generation', (req: Request, res: Response) 
     handle(error, res);
   }
 });
+router.post('/materials/:id/generate-note', (req: Request, res: Response) => {
+  try {
+    res.json(ok(service.requestNoteGeneration(req.body.semesterId, req.params.id)));
+  } catch (error) {
+    handle(error, res);
+  }
+});
 router.post('/materials/:id/replace-text', (req: Request, res: Response) => {
   try {
     res.json(ok(service.replaceText(req.body.semesterId, req.params.id, req.body.text)));
