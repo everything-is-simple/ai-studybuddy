@@ -244,3 +244,27 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
    - 原始脏工作区没有被 reset、覆盖 checkout、回滚或删除。
 
 本轮没有销毁隔离区内容。后续优先级为：先判定并无损收口原脏工作区（尤其学期版本 8/9 与计划迁移），再处理运行时兼容工作树中的大规模生成物/草稿；Firewall、G2、ASR、Docker/WSL 与 Phase 3 不作为当前开发主线。
+
+## 11. Batch 1 学期版本 8/9 无损收口结果（2026-07-25）
+
+本批次是在用户已经批准“更新/大扫除”的范围内执行；目标不是把旧状态直接改掉，而是保留可恢复证据后，让主系统回到唯一已集成事实。
+
+### 11.1 输入事实与保存方式
+
+1. 原主工作区当时位于分支 `codex/phase1-5-g2-wsl-isolation-exec`，相对 `origin/master` 为 1 个提交领先、16 个提交落后；唯一业务语义差异是 `packages/backend/src/services/semester-access-service.ts` 中 `CURRENT_SEMESTER_VERSION` 从主线的 `9` 变为 `8`，并伴随计划文件迁移/新增。
+2. 已先创建仅作恢复用途的外置归档 worktree 与分支：`H:\ai-studybuddy-worktrees\archive-pre-semester-cleanup-20260725`、`codex/archive-pre-semester-cleanup-20260725`。
+3. 原状态已提交为 `152d81fcb2775ae8e91ccbc24511cdcb478d97ff`（`chore(archive): 保存学期版本收口前状态`），同时保留未丢弃的 `stash@{0}`：`archive: pre-semester-version-cleanup 2026-07-25`。归档分支永不合并到 `master`，其作用仅为可追溯恢复点。
+
+### 11.2 收口结论
+
+1. 当前主工作区已安全切换到干净 `master`，并 fast-forward 到 `origin/master` 的 `9caeee9edfb1a6e2b8651fd1a49259621d88bb77`；未使用 `git reset --hard`、覆盖式 checkout、`git clean` 或文件系统删除来处理原脏状态。
+2. 当前 `semester-access-service.ts` 的 `CURRENT_SEMESTER_VERSION = 9` 已与 `packages/backend/src/db/migrations.ts` 的学期迁移版本和 `semester-selector-service.ts` 的当前版本一致。版本 `8` 被明确保留为历史归档状态，不作为新的主线事实。
+3. 验证均使用隔离 `APP_DATA_ROOT`：`pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build`、`error-fixer-archive-api.test.mjs` 单文件 5/5，以及后续 `pnpm test` 全量 242/242 均通过。第一次全量运行曾有两项同文件测试在 10 秒健康等待内失败且 stderr 为空；单文件与完整复跑均通过，因此当前只能登记为未复现的测试启动异常，不能伪造为已确认业务 Bug，也不能据此改动业务代码。
+
+### 11.3 剩余清理顺序（不得跳批）
+
+1. **Batch 2 — 运行时兼容草稿归属**：先只读审查 `codex/process-runtime-deploy-compatibility` 与 `codex/process-runtime-deploy-compatibility-clean`。将已跟踪脚本/文档草稿、未跟踪计划、以及 TypeScript/E2E 生成物逐项分开；只有用户批准精确文件清单后，才可移动、提交或删除生成物。
+2. **Batch 3 — 现有部署 worktree 归属**：审查 `codex/process-runtime-deployment` 的未跟踪内容及其是否仍对应有效部署任务；保留、归档或删除都必须由精确路径、进程检查和用户批准支持。
+3. **Batch 4 — 暂停计划归属**：`phase1-5-t02-*` worktree 中的未跟踪 ASR 计划只登记为暂停草稿；不得借清理之名继续 G2、Firewall、WSL、Docker、S7 产品接入或创建 AuralConverter。
+4. **Batch 5 — 历史隔离区保留期审查**：`H:\ai-studybuddy-worktrees\_legacy-unregistered-20260725` 目前是保护性隔离区，不是自动删除队列。后续是否删除、压缩备份或长期保留，需先完成目录级清单与单独批准。
+5. **完成条件**：`H:\ai-studybuddy` 始终保持干净且仅承载已集成的主系统；每个外部状态都有所有权、用途、恢复点和处置结论；随后回到 `docs/04` 中学生本机学习闭环的下一项实际产品任务。Firewall/G2/ASR/Docker/WSL、S7 产品接入、用户电脑验收和 Phase 3 继续是独立未完成门禁。
