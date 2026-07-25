@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-**Version**: v1.12
+**Version**: v1.13
 **Updated**: 2026-07-25
 
 This file is the Claude Code entry point for the current main repository (`H:\ai-studybuddy` on this development machine; use `<repo-root>` for cross-machine rules). The complete tool-neutral collaboration rules live in `docs/12-开发规范-Dev-Rules.md`.
@@ -11,6 +11,7 @@ AI StudyBuddy 是中文优先的个人学习助手，采用“共同底座 + 七
 
 - Phase 0.8 已完成，S1 基础与 S2 核心已在主仓库实现并通过 T09 隔离复验。
 - S1–S6（除 S7）相关 PRD 已按门禁建立；Phase 1 学习闭环、学生端产品化、配置中心和维护任务均已完成主线复验并推送 `origin/master`。Phase 2-T01–T06 也已完成主线复验并推送：包含 S5 模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区；T04/T05/T06 不新增持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，但用户电脑安装运行仍待实机验收。Phase 3 按用户要求暂缓；S7 产品接入尚未开始，外部候选能力证据不等于 Schema、Adapter、API、Worker、前端或用户机完成，S3 Worker 不属于当前 MVP。
+- 多 worktree 脏状态的安全收口计划为 `.plans/process-dirty-state-remediation-plan.md`：语义差异、未跟踪计划、生成物、依赖残留和仓库外证据必须分层处理；未获逐批明确批准前不删除、不 reset、不覆盖 checkout，也不改变产品功能状态。
 - 后端、前端、shared 三个 workspace 包已存在；不要再按“无业务代码”处理。
 - AI Provider Router 已支持多 Provider 优先级故障转移，并已在 Phase 1-T02 完成连续失败熔断、10 分钟冷却、恢复探测和脱敏日志。
 - KaoBuddy 只可作为产品组织方式参考，不复制源码、视觉、文案或资产。
@@ -73,7 +74,7 @@ pnpm -r --filter backend run dev
 - S1 时间线：T07 已完成，考试工作台可读取当前课程近期活动。
 - 本机配置中心：T08 已完成，支持 DPAPI 加密存储、AI/SMTP/飞书连接测试、运行时热切换、loopback API 防护和前端设置页；真实渠道 smoke 不作为常规验证依赖。
 - 学生端产品化：T09A 学期创建/选择/切换、T09B 每日首页、T09C 课程课表/考试目标、T09D 全局导航与学生旅程 E2E、T09E 练习历史与学期归档均已完成、通过主线复验并推送 `origin/master`；Phase 1 学生端可交付 MVP 已形成。
-- S7：Phase 1.5 触发。
+- S7：Phase 1.5 已触发，但产品接入尚未开始；外部候选/harness 证据必须按独立环境范围解释。
 
 ## 精简 16 步流程
 

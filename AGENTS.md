@@ -1,13 +1,13 @@
 # 仓库协作指南
 
-**版本**：v1.16
-**日期**：2026-07-21
+**版本**：v1.17
+**日期**：2026-07-25
 
 本文件是通用 AI Agent 入口。完整、工具无关的协作规则见 `docs/12-开发规范-Dev-Rules.md`。
 
 ## 项目结构与当前状态
 
-`I:\ai-studybuddy` 是唯一主系统 Git 仓库，中文优先。当前不再是空仓库：
+`<repo-root>` 是唯一主系统 Git 仓库（本开发机为 `H:\ai-studybuddy`），中文优先。当前不再是空仓库：
 
 - `packages/backend`：Express/SQLite/Worker/Adapter/API 实现。
 - `packages/frontend`：React/Vite 最小页面。
@@ -15,7 +15,7 @@
 - `docs/`：有效设计、任务、测试和规范文档。
 - `.plans/`：已批准或待批准的任务计划。
 
-Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；用户明确要求 Phase 3 暂缓，S7 继续等待独立门禁。
+Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，但用户电脑安装运行仍待目标机器验收。Phase 3 暂缓；S7 产品接入尚未开始，外部候选能力不等于 Schema、Adapter、API、Worker、前端或用户机完成。
 
 ## 必读顺序
 
@@ -50,7 +50,7 @@ pnpm test
 会写入运行数据的命令必须先设置隔离目录：
 
 ```powershell
-$env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\<task-id>'
+$env:APP_DATA_ROOT = 'H:\ai-studybuddy-tmp\runs\<task-id>'
 pnpm -r --filter backend run dev
 ```
 
@@ -65,6 +65,7 @@ pnpm -r --filter backend run dev
 - 合并流程固定：`git checkout master` → `git pull --ff-only origin master` → 将任务分支 rebase 到最新 `master` → `git checkout master` → `git merge --ff-only <task-branch>`；不能快进或有冲突时停下，不强行合并。
 - 合并后必须在 `master` 重新运行要求的验证，再 `git push origin master`。只有 `origin/master` 包含该提交后，才可向用户报告任务完成。
 - 交付说明必须写清：任务分支名、提交哈希、是否已合并 `master`、是否已推送 `origin/master`、`docs/04` 更新位置。
+- 脏状态必须先在 `docs/04` 登记并按语义改动、计划、生成物、依赖残留或外部证据分层；未经精确路径核验和用户批准，不得用 `git clean`、`git reset --hard`、覆盖 checkout 或批量删除处理。
 
 ## 编码与命名规范
 
@@ -111,5 +112,5 @@ pnpm -r --filter backend run dev
 - 不凭记忆创建文档，不提前触发未来 PRD。
 - 不复制 KaoBuddy 或其他无明确许可证项目的源码、视觉、图片、长段文案或品牌资产。
 - 不提交真实 API Key、Provider URL、资料原文、完整 UUID、正式运行数据或外部试炼场依赖。
-- 不硬编码 `I:\...` 等本机盘符到未来业务代码。
+- 不硬编码 `H:\...`、`I:\...` 等本机盘符到未来业务代码。
 - 不回滚他人变更；并行协作时先确认文件所有权和当前 diff。

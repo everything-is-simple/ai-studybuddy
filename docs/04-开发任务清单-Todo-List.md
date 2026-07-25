@@ -1,12 +1,14 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.88
+**版本**：v1.89
 **日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
 > 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 按用户明确要求暂缓。S7 仅完成 T01 PRD：T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均不等于 S7 产品接入或用户机验收；Schema、Adapter、API、Worker、前端及 T05–T06 未启动。G2 的历史/候选证据仅按其自身环境范围解释，不修改永久 Firewall 策略，不用 offline/cache-only 冒充隔离证据。
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
+
+> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（计划已创建，待实施批准）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`。本计划首先保护系统的学生本机学习闭环和已经在 `origin/master` 验证的事实，明确“脏状态不等于可删除垃圾”：`H:\ai-studybuddy` 的学期版本 8/9 差异属于高风险语义判定；运行时兼容 worktree 的已跟踪脚本草稿与编译生成物必须逐项分开；`node_modules.shared-deps`、未跟踪 T02 计划和仓库外组件证据均有独立处置门。此轮只创建/审查计划和更新治理文档，不删除、不 reset、不覆盖 checkout、不改业务代码，也不触发 S7、ASR/G2、Docker/WSL、Firewall、真实外部服务或用户电脑验收。后续只读盘点、学期版本判定、每一个精确删除清单、计划归档和主线迁移均需逐批取得用户明确批准。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -515,6 +517,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | M03 | .plans/phase1-m03-settings-configuration-observability-plan.md | 方案 A 已获用户批准；已完成实现、主线集成、主线复验并推送 `origin/master`。 |
 | Post-M03 | `.plans/post-m03-config-audit-plan.md` | 已完成：用户于 2026-07-20 明确批准；实现提交 `e08ab36`、主线收尾提交 `eac469b` 已进入 `origin/master`，分支与主线全量验证、浏览器验收和独立审查修复均已完成。 |
 | DOCS-20260720 | `.plans/process-system-docs-current-status-sync-plan.md` | 已完成：任务分支 `codex/system-docs-current-status-sync` 的文档同步提交 `b9fb3e8` 已 fast-forward 合入 `master`；主线复验通过，并随本收尾提交推送 `origin/master`。 |
+| PROCESS-DIRTY-20260725 | `.plans/process-dirty-state-remediation-plan.md` | 计划已创建并待实施批准：先按语义改动、待审计划、生成物、依赖残留和外部证据分层；不以“清理脏状态”为由删除或覆盖任何内容。 |
 
 计划文件不是聊天附件：创建、修订、批准和实施状态必须同步回本表。若计划尚未到创建时机，必须明确写“尚未创建”，不能用缺失文件暗示任务已取消，也不能提前创建空计划。
 
