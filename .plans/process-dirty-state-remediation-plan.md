@@ -268,3 +268,21 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
 3. **Batch 4 — 暂停计划归属**：`phase1-5-t02-*` worktree 中的未跟踪 ASR 计划只登记为暂停草稿；不得借清理之名继续 G2、Firewall、WSL、Docker、S7 产品接入或创建 AuralConverter。
 4. **Batch 5 — 历史隔离区保留期审查**：`H:\ai-studybuddy-worktrees\_legacy-unregistered-20260725` 目前是保护性隔离区，不是自动删除队列。后续是否删除、压缩备份或长期保留，需先完成目录级清单与单独批准。
 5. **完成条件**：`H:\ai-studybuddy` 始终保持干净且仅承载已集成的主系统；每个外部状态都有所有权、用途、恢复点和处置结论；随后回到 `docs/04` 中学生本机学习闭环的下一项实际产品任务。Firewall/G2/ASR/Docker/WSL、S7 产品接入、用户电脑验收和 Phase 3 继续是独立未完成门禁。
+
+## 12. Batch 2 与 Batch 3 实施记录（2026-07-25）
+
+### 12.1 Batch 2：运行时兼容草稿归属与生成物清理
+
+1. `H:\ai-studybuddy-worktrees\process-runtime-deploy-compatibility-20260724` 工作区干净，但其 `9ed5bc10596f2a076bfc37eef065a1c97c719604`（`fix(deploy): 修复 PowerShell 兼容与恢复可写性`）相对 `origin/master` 仍为唯一 patch；该提交必须保留为待独立评审的运行时修复候选，既不得伪称已合入，也不得作为垃圾删除。
+2. `H:\ai-studybuddy-worktrees\process-runtime-deploy-compatibility-clean-20260724` 中 6 个已跟踪部署脚本/文档改动、1 份计划、1 个专项测试和 2 个运行时辅助源文件均与上述候选提交对应，属于同一份未合并修复草稿，继续保留。
+3. 已在用户明确批准后，先确认无外部占用、所有目标均在该 worktree 内且非源文件，再逐个删除 306 个未跟踪 TypeScript 编译副本（`.js`、`.d.ts`、`.js.map`）。删除后同类生成物为 0，四个非生成物未跟踪源文件仍存在。此操作不改主系统、不删脚本、计划、测试、Git 提交或正式数据。
+
+### 12.2 Batch 3：陈旧部署 worktree 清理
+
+1. `H:\ai-studybuddy-worktrees\process-runtime-deployment` 的 HEAD `99fdeb54c9d56c79e3eaf20706e974ced94a06e4` 已是 `origin/master` 的祖先，且该 worktree 无独有提交、无已跟踪改动、无外部占用进程；它只是落后主线的旧副本。
+2. 唯一未跟踪对象 `node_modules.shared-deps` 被核验为 Windows Junction，目标为 `H:\ai-studybuddy\node_modules`，不是独立依赖副本，也没有仓库配置或其他 worktree 引用。
+3. 用户批准后只用非递归 Junction 移除操作删除该链接本身，并立即验证 `H:\ai-studybuddy\node_modules` 仍是存在的目录；随后工作区状态干净，已通过 `git worktree remove` 移除旧 worktree。未删除主系统依赖目录、已集成代码、计划或提交。
+
+### 12.3 后续边界
+
+Batch 2/3 的“可丢弃生成物”和“可移除陈旧工作副本”已完成，不等于 `9ed5bc1` 的部署候选已完成，也不等于用户电脑验收、S7、ASR、Firewall、Docker/WSL 或 Phase 3 已完成。下一次涉及该候选提交的实现、rebase、合并或删除，都必须以独立计划和批准为前提。

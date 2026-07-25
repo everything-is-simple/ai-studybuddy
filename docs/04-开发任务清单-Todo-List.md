@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.92
+**版本**：v1.93
 **日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -8,7 +8,7 @@
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
-> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（执行中：第一批目录归拢与 Batch 1 学期版本无损收口已完成）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`。2026-07-25 已将仓库内有效 worktree 迁至 `H:\ai-studybuddy-worktrees`，将失联历史目录整体迁入历史隔离区；未销毁隔离内容，`H:\ai-studybuddy\.worktrees` 已不存在。随后对原脏工作区的 `CURRENT_SEMESTER_VERSION = 8` 进行了无损收口：原状态已保存到归档分支 `codex/archive-pre-semester-cleanup-20260725` 的提交 `152d81fcb2775ae8e91ccbc24511cdcb478d97ff`，并保留 `stash@{0}` 作为第二恢复点；主系统现为干净的 `master...origin/master`（`9caeee9edfb1a6e2b8651fd1a49259621d88bb77`），学期访问服务恢复并核验为与迁移一致的版本 `9`。验证：`pnpm type-check`、后端/前端构建、单文件错题归档测试 5/5 与隔离目录下全量 `pnpm test` 242/242 均通过；首次全量运行出现的两项后端健康启动异常未复现，尚不足以认定为业务 Bug，如再次出现才单独立项追查。下一门禁是仅对剩余有效 worktree 逐项分类：暂停的 ASR 计划草稿只保留归属，不进入产品；运行时兼容 worktree 的脚本草稿、已跟踪改动与编译生成物必须分离并单独审查；部署 worktree 的未跟踪内容必须先确认所有权。当前主线不再被 Firewall/G2/ASR/Docker/WSL 拖住；不得将用户电脑验收、S7 产品接入或 Phase 3 写为完成。
+> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（执行中：目录归拢、Batch 1 学期版本无损收口、Batch 2 生成物清理及 Batch 3 陈旧部署 worktree 清理已完成）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`。2026-07-25 已将仓库内 worktree 和失联历史目录迁出主系统；`H:\ai-studybuddy\.worktrees` 已不存在。原脏工作区的学期版本 `8` 已保存到归档提交 `152d81fcb2775ae8e91ccbc24511cdcb478d97ff` 及保留的 `stash@{0}`，主系统为干净的 `master...origin/master`（`87f5533eabc6449a2b1d163fe20ab5d28d756d94`），版本 `9` 与迁移一致；相关 type-check、构建与全量测试 242/242 已通过。Batch 2 已从 `process-runtime-deploy-compatibility-clean-20260724` 精确删除 306 个未跟踪 TypeScript 编译生成物，保留其 6 个部署脚本改动、计划、专项测试和 2 个运行时辅助源文件；另一个分支 `codex/process-runtime-deploy-compatibility` 的唯一提交 `9ed5bc1` 尚未等价进入主线，只登记为待独立评审的部署修复候选，不得直接合入或丢弃。Batch 3 已确认 `process-runtime-deployment` 无独有提交且 HEAD 为主线祖先，先仅移除其指向 `H:\ai-studybuddy\node_modules` 的 `node_modules.shared-deps` Junction，再用 `git worktree remove` 移除干净旧工作副本；主系统依赖目录和主线均已复查完好。下一门禁是为 `9ed5bc1` 的部署修复候选作独立继续/归档决定，并继续逐项审查暂停计划与历史隔离区；当前主线不被 Firewall/G2/ASR/Docker/WSL 拖住，用户电脑验收、S7 产品接入和 Phase 3 均不得写为完成。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
