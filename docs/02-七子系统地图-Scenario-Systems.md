@@ -46,7 +46,7 @@ S6 读取 `StudyEvent`、任务状态和考试日期的脱敏统计，输出邮�
 ### 当前实现与下一门禁
 
 - S1、S2、S3、S4、S5、S6 简版均已实现；S5 的 Phase 2-T01–T06 已完成主线复验并推送。
-- S7-MVP 已在隔离任务分支实现并完成开发机验证，待主线复验和推送：限定为受控 PCM WAV → 同步本机 `whisper.cpp` → 可编辑文本 → 显式保存为 S2 文本资料。旧 T02/T04 候选能力 `PARTIAL`、T03 Composer smoke `PASS` 只保留为外部历史事实，不构成完整 S7、通用静音、G2、T02 主线、用户机安装或课堂产品闭环完成。
+- S7-MVP 已合入本机 `master` 并完成主线复验，待推送 `origin/master`：限定为受控 PCM WAV → 同步本机 `whisper.cpp` → 可编辑文本 → 显式保存为 S2 文本资料。旧 T02/T04 候选能力 `PARTIAL`、T03 Composer smoke `PASS` 只保留为外部历史事实，不构成完整 S7、通用静音、G2、T02 主线、用户机安装或课堂产品闭环完成。
 - T08 已完成跨子系统的本机配置中心，但它属于共同底座，不新增第八个场景子系统。
 - T09A–T09E 与 Phase 2 S5 均已完成、通过主线复验并推送 `origin/master`，但不改变 S1–S7 的业务所有权。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；Phase 3 暂缓，S7 继续等待独立门禁。
 

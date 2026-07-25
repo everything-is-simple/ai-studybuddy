@@ -2,7 +2,7 @@
 
 **版本**：v0.3
 **日期**：2026-07-25
-**状态**：S7-MVP 已在任务分支完成实现与开发机验证，待主线复验和 `origin/master` 推送；旧 T02/T04 外置候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均不等于完整 S7、通用静音、G2、T02 主线、用户机验收或 Phase 3
+**状态**：S7-MVP 已合入本机 `master` 并完成主线复验，待推送 `origin/master`；旧 T02/T04 外置候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均不等于完整 S7、通用静音、G2、T02 主线、用户机验收或 Phase 3
 **定位**：把学生已获允许的短课堂录音在本机转为可编辑文字，并显式交给既有 S2 NoteBuilder 文本资料入口
 
 ---

@@ -38,7 +38,7 @@
 
 - **产品目的与使用者**：`docs/01` 是首要入口。系统为一名在 Windows 本机学习的学生而做，帮助她把课程/考试目标、学习节奏、资料笔记、练习、错题和考前冲刺连成可持续闭环；家长不是系统操作者，只接收脱敏的异步学习摘要。
 - **已集成事实**：只有 `origin/master` 上的代码、`docs/04` 任务状态和主线复验共同构成“已完成”结论。当前 S1–S6 主线已完成；开发机 Windows 原生 + Node 24 部署基线已验证，但用户电脑的安装运行验收仍是未完成门禁。
-- **S7 与外部候选边界**：S7-MVP 已在隔离任务分支完成实现与开发机验证，待主线复验和推送：目标仅为受控 PCM WAV → 显式本机 `whisper.cpp` → 可编辑文本 → S2 文本资料。旧外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据仍不等于完整 S7、通用静音、G2、T02 主线、用户机能力或 Phase 3。
+- **S7 与外部候选边界**：S7-MVP 已合入本机 `master` 并完成主线复验，待推送 `origin/master`：目标仅为受控 PCM WAV → 显式本机 `whisper.cpp` → 可编辑文本 → S2 文本资料。旧外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据仍不等于完整 S7、通用静音、G2、T02 主线、用户机能力或 Phase 3。
 - **当前暂停项**：Phase 3 暂缓；Docker/WSL、ASR 隔离和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
 - `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。`H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
 - 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
@@ -56,7 +56,7 @@
 | S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | ✅ Phase 2-T01–T06 与 POST-PHASE2 全系统验证、完整 E2E、文档对齐和主线复验均已完成并推送 | Phase 2 已触发并完成 |
 | S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | ✅ T06A 规则报告生成与 T06B 渠道推送已实现；真实渠道 smoke 非常规验证 | Phase 1 后期、准备正式发送家长报告前触发 |
-| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | 🚧 S7-MVP 实施中：受控 WAV 同步转写、编辑、显式保存为 S2 文本资料；旧候选能力仍为 `PARTIAL`/历史事实 | 不含 Worker、FFmpeg、云端、G2、实时录音、用户机验收或完整 S7；完成仍须主线复验与推送 |
+| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | 🧪 S7-MVP 本机 `master` 主线复验通过，待推送 `origin/master`：受控 WAV 同步转写、编辑、显式保存为 S2 文本资料；旧候选能力仍为 `PARTIAL`/历史事实 | 不含 Worker、FFmpeg、云端、G2、实时录音、用户机验收或完整 S7；远端完成仍须推送确认 |
 
 ---
 
@@ -176,6 +176,7 @@ git diff --check
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
 | v2.48 | 2026-07-25 | 固化用户的主系统目录边界：`H:\ai-studybuddy` 内禁止任何 worktree 根，唯一的新任务 worktree 根为 `H:\ai-studybuddy-worktrees`；历史仓内 worktree 只可按批准清单迁出或安全处置。 |
+| v2.50 | 2026-07-25 | S7-MVP 已 fast-forward 至本机 `master` 并完成主线复验，待推送 `origin/master`；仍不扩大为完整 S7、Worker、FFmpeg、云端、G2、用户机验收或 Phase 3。 |
 | v2.49 | 2026-07-25 | 登记并同步 S7-MVP：仅受控 PCM WAV 的本机同步转写、学生编辑与显式 S2 文本资料 handoff；实施中，不扩大为 Worker、FFmpeg、云端、G2、用户机验收或完整 S7。 |
 
 | v2.47 | 2026-07-25 | 登记多 worktree 脏状态的安全收口计划：语义差异、待审计划、生成物、依赖残留和外部证据必须分层治理；不以清理之名丢失内容，也不改变产品/用户机/S7 的既有边界。 |
