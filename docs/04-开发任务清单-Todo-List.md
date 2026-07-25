@@ -1,14 +1,14 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.93
+**版本**：v1.94
 **日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 按用户明确要求暂缓。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
+> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 已按用户 2026-07-25 明确要求启动治理/计划阶段；首批 Phase 3 实施任务仍需独立计划和批准。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
-> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（执行中：目录归拢、Batch 1 学期版本无损收口、Batch 2 生成物清理及 Batch 3 陈旧部署 worktree 清理已完成）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`。2026-07-25 已将仓库内 worktree 和失联历史目录迁出主系统；`H:\ai-studybuddy\.worktrees` 已不存在。原脏工作区的学期版本 `8` 已保存到归档提交 `152d81fcb2775ae8e91ccbc24511cdcb478d97ff` 及保留的 `stash@{0}`，主系统为干净的 `master...origin/master`（`87f5533eabc6449a2b1d163fe20ab5d28d756d94`），版本 `9` 与迁移一致；相关 type-check、构建与全量测试 242/242 已通过。Batch 2 已从 `process-runtime-deploy-compatibility-clean-20260724` 精确删除 306 个未跟踪 TypeScript 编译生成物，保留其 6 个部署脚本改动、计划、专项测试和 2 个运行时辅助源文件；另一个分支 `codex/process-runtime-deploy-compatibility` 的唯一提交 `9ed5bc1` 尚未等价进入主线，只登记为待独立评审的部署修复候选，不得直接合入或丢弃。Batch 3 已确认 `process-runtime-deployment` 无独有提交且 HEAD 为主线祖先，先仅移除其指向 `H:\ai-studybuddy\node_modules` 的 `node_modules.shared-deps` Junction，再用 `git worktree remove` 移除干净旧工作副本；主系统依赖目录和主线均已复查完好。下一门禁是为 `9ed5bc1` 的部署修复候选作独立继续/归档决定，并继续逐项审查暂停计划与历史隔离区；当前主线不被 Firewall/G2/ASR/Docker/WSL 拖住，用户电脑验收、S7 产品接入和 Phase 3 均不得写为完成。
+> **PROCESS-DIRTY-20260725 多 worktree 脏状态审计、归属判定与安全收口（执行中：目录归拢、Batch 1 学期版本无损收口、Batch 2 生成物清理、Batch 3 陈旧部署 worktree 清理及 `9ed5bc1` 部署候选收口已完成；历史 worktree / 暂停计划继续清理）**：行动计划 `.plans/process-dirty-state-remediation-plan.md`；本轮补充计划 `.plans/process-docs04-phase3-worktree-cleanup-20260725-plan.md`。2026-07-25 已将仓库内 worktree 和失联历史目录迁出主系统；`H:\ai-studybuddy\.worktrees` 已不存在。原脏工作区的学期版本 `8` 已保存到归档提交 `152d81fcb2775ae8e91ccbc24511cdcb478d97ff` 及保留的 `stash@{0}`，主系统保持干净 `master...origin/master`；版本 `9` 与迁移一致；相关 type-check、构建与全量测试 242/242 已通过。Batch 2 已从 `process-runtime-deploy-compatibility-clean-20260724` 精确删除 306 个未跟踪 TypeScript 编译生成物，并保留部署脚本改动、计划、专项测试和运行时辅助源文件用于后续归属审计；分支 `codex/process-runtime-deploy-compatibility` 的唯一提交 `9ed5bc1` 已通过 `b72e8b0 fix(deploy): 修复 PowerShell 兼容与恢复可写性` 等价审计收口并进入 `origin/master`，不再是未处理候选。Batch 3 已确认 `process-runtime-deployment` 无独有提交且 HEAD 为主线祖先，先仅移除其指向 `H:\ai-studybuddy\node_modules` 的 `node_modules.shared-deps` Junction，再用 `git worktree remove` 移除干净旧工作副本；主系统依赖目录和主线均已复查完好。本轮继续按“先审计、再登记、只移除干净且已有归属的 worktree”清理历史隔离区；已安全移除 `phase1-5-s7-mvp-docs-plan`、`process-dirty-state-remediation-plan`、`process-post-s7-docs-deploy-candidate-fix` 与 `process-runtime-deploy-compatibility-20260724` 四个旧 worktree，分支引用保留；`archive-pre-semester-cleanup-20260725`、`phase1-5-g2-windows11-revalidation-plan` 因有独有提交保留，`phase1-5-t02-asr-candidate-harness-plan`、`phase1-5-t02-whispercpp-formal-revalidation-plan`、`post-s7-user-machine-acceptance-plan`、`process-runtime-deploy-compatibility-clean-20260724` 因有未跟踪计划/证据或未提交部署候选内容保留待后续归属审计。当前主线不被完整 S7、G2/外部 ASR 主线、S3 Worker、Docker/WSL 或 Firewall 拖住，用户电脑验收仍不得写为完成。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -36,9 +36,9 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音转文字（S7-MVP）                | ✅ S7-MVP 已完成主线复验并推送 `origin/master`：本地受控 WAV → 同步 `whisper.cpp` → 可编辑文本 → 显式保存为 S2 文本资料；旧候选证据不等于完整 S7、G2、T02 主线、用户机验收或 Phase 3 |
+| Phase 1.5 | 课堂录音转文字（S7-MVP）                | ✅ S7-MVP 已完成主线复验并推送 `origin/master`：本地受控 WAV → 同步 `whisper.cpp` → 可编辑文本 → 显式保存为 S2 文本资料；旧候选证据不等于完整 S7、G2、T02 主线、用户机验收或 Phase 3 业务实现 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
-| Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
+| Phase 3   | 打磨与安全                              | 📝 2026-07-25 按用户要求启动治理/计划阶段；首批实施仍需独立计划和批准 |
 
 ---
 
@@ -879,16 +879,16 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 > **2026-07-24 远端主线确认**：`git push origin master` 与随后实时 `git ls-remote --heads origin master` 校验通过；Phase 2.5 运行环境重启与 Windows 使用机器部署准备已进入远端主线。因提交自身会改变 Git 哈希，文档不写死“最终哈希”，以交付说明中的实时 `git ls-remote` 输出为准。主仓库 `H:\ai-studybuddy` 仍停留在 `codex/phase1-5-g2-wsl-isolation-exec`，未提交的 `packages/backend/src/services/semester-access-service.ts` 仍未被本轮夹带。
 
-> **PROCESS-RUNTIME-06 PowerShell 兼容与恢复可写性候选收口（2026-07-25，验证通过，待合入主线）**：用户已明确要求处理 `9ed5bc1` 部署修复候选。本轮从最新 `origin/master` 创建分支 `codex/process-post-s7-docs-deploy-candidate-fix`，以 cherry-pick 审计方式纳入候选中仍有效的 PowerShell 5.1 兼容、运行时 helper、备份相对路径和恢复只读属性修复；同时保留主线 Node 24-only 部署基线，不恢复旧的 Node 20/22/24 宽松范围。验证通过：部署 PowerShell 兼容专项 `node --test packages/backend/test/deployment-powershell-compatibility.test.mjs`（6/6）、`pnpm type-check`、backend build、frontend build、隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-post-s7-docs-deploy-candidate-fix-tests-20260725` 下 `pnpm test`（backend 251/251）、`scripts/check-docs-governance.ps1`、`git diff --check`。首次未设置 `APP_DATA_ROOT` 的 `pnpm test` 因 `[CONFIG] MISSING_ENV APP_DATA_ROOT` 停止，已按规则用隔离目录重跑通过。本轮不处理用户电脑实机验收、`9ed5bc1` 之外的部署候选、G2/Firewall、Docker/WSL、真实 Provider、QQ SMTP、飞书、完整 S7 或 Phase 3。
+> **PROCESS-RUNTIME-06 PowerShell 兼容与恢复可写性候选收口（2026-07-25，已完成主线复验并推送 `origin/master`）**：用户已明确要求处理 `9ed5bc1` 部署修复候选。任务分支 `codex/process-post-s7-docs-deploy-candidate-fix` 从最新 `origin/master` 创建，以 cherry-pick 审计方式纳入候选中仍有效的 PowerShell 5.1 兼容、运行时 helper、备份相对路径和恢复只读属性修复；同时保留主线 Node 24-only 部署基线，不恢复旧的 Node 20/22/24 宽松范围。提交 `b72e8b0 fix(deploy): 修复 PowerShell 兼容与恢复可写性` 已进入 `origin/master`，因此 `9ed5bc1` 不再是未处理候选。验证通过：部署 PowerShell 兼容专项 `node --test packages/backend/test/deployment-powershell-compatibility.test.mjs`（6/6）、`pnpm type-check`、backend build、frontend build、隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\process-post-s7-docs-deploy-candidate-master-tests-20260725` 下 `pnpm test`（backend 251/251）、`scripts/check-docs-governance.ps1`、`git diff --check`。首次未设置 `APP_DATA_ROOT` 的 `pnpm test` 因 `[CONFIG] MISSING_ENV APP_DATA_ROOT` 停止，已按规则用隔离目录重跑通过。本轮不处理用户电脑实机验收、`9ed5bc1` 之外的部署候选、G2/Firewall、Docker/WSL、真实 Provider、QQ SMTP、飞书、完整 S7 或 Phase 3 业务实现。
 
 > **2026-07-24 开发机 Windows 原生 + Node 24 运行时基线（开发机基线已验证并推送 `origin/master`；非用户机验收）**：计划 `.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md` 已由任务分支 `codex/process-dev-machine-node24-runtime-baseline` fast-forward 合入独立主线集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`；原主工作区的未提交学期版本 8/9 改动及 S7/G2 文档未被覆盖。新的干净部署包 `H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01\deployment-package-node24-master` 在新的独立安装根 `H:\ai-studybuddy-runtime\dev-machine-node24-baseline-master-20260724-01` 中完成 `bootstrap-runtime.ps1` → `check-installation.ps1` → `test-ocr-runtime.ps1` → `start-production.ps1`（仅 `127.0.0.1:30127`）→ `/api/health` → `stop-production.ps1` → 脱敏数据安全检查；构建、bootstrap、安装检查、修正后的 OCR、停止和安全检查均为 exit `0`。启动脚本已输出本机回环地址；其日志包装因后台 Node 继承输出句柄超时，故以独立 `/api/health` 的 `success=true` 与停止后无 PID/关联 Node 残留确认启动/停止结果。Node 为 `v24.14.0`，Python 为 `3.10.19 x64`，OCR 合成中文 smoke 通过；主线 `pnpm type-check`、后端/前端构建、`pnpm test`（242/242）、文档治理和 `git diff --check` 均 exit `0`。当前运行时事实和命中的部署脚本已收紧为仅 Node 24；脱敏证据见 `.plans/evidence/process-dev-machine-node24-baseline-20260724-01.md`。**用户电脑安装运行仍为待目标机器到位后的独立实机验收门禁，当前不得宣称完成；ASR / Docker / WSL 继续独立暂缓，未进入产品实现。**
 
 ---
-## Phase 3：打磨与安全（暂缓）
+## Phase 3：打磨与安全（2026-07-25 启动治理/计划阶段）
 
-**状态**：用户于 2026-07-21 明确要求暂不进入 Phase 3；以下仅为历史候选方向，不构成计划批准或实施授权。
+**状态**：用户于 2026-07-25 明确要求“Phase 3 今天上”。当前解释为启动 Phase 3 治理/计划阶段；以下仍是候选方向，首批实施任务必须另建独立计划并获批准后再执行。
 
-**恢复门禁**：恢复 Phase 3 前必须重新确认产品范围并创建独立计划。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
+**实施门禁**：进入任何 Phase 3 业务实现前必须重新确认产品范围并创建独立计划。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
