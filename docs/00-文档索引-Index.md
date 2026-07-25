@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.47
+**版本**：v2.48
 **日期**：2026-07-25
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -42,7 +42,7 @@
 - **当前暂停项**：Phase 3 暂缓；Docker/WSL、ASR 隔离和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
 - `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。`H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
 - 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
-- **worktree 脏状态治理**：未提交状态不是产品完成或失败结论，也不等于可删除垃圾。当前安全收口计划为 `.plans/process-dirty-state-remediation-plan.md`，其索引和批准状态见 `docs/04`；任何语义改动、生成物或依赖残留都必须先分类、核对绝对路径并取得相应批准，不能用 `git clean`、`git reset --hard` 或覆盖 checkout 处理。
+- **worktree 脏状态与目录边界治理**：未提交状态不是产品完成或失败结论，也不等于可删除垃圾。当前安全收口计划为 `.plans/process-dirty-state-remediation-plan.md`，其索引和批准状态见 `docs/04`；唯一允许的新任务 worktree 根目录是 `H:\ai-studybuddy-worktrees`，`H:\ai-studybuddy` 内严禁创建或保留 `.worktrees` 根。任何语义改动、生成物或依赖残留都必须先分类、核对绝对路径并取得相应批准，不能用 `git clean`、`git reset --hard` 或覆盖 checkout 处理。
 
 ---
 
@@ -175,6 +175,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.48 | 2026-07-25 | 固化用户的主系统目录边界：`H:\ai-studybuddy` 内禁止任何 worktree 根，唯一的新任务 worktree 根为 `H:\ai-studybuddy-worktrees`；历史仓内 worktree 只可按批准清单迁出或安全处置。 |
 | v2.47 | 2026-07-25 | 登记多 worktree 脏状态的安全收口计划：语义差异、待审计划、生成物、依赖残留和外部证据必须分层治理；不以清理之名丢失内容，也不改变产品/用户机/S7 的既有边界。 |
 | v2.46 | 2026-07-25 | 收口产品目的、使用者、主线事实、S7 候选证据与产品接入边界；明确开发机 Node 24 已验证不等于用户电脑验收，并区分当前 H 盘开发机治理与历史绝对路径。 |
 | v2.44 | 2026-07-21 | Phase 1.5-T01：创建并登记 S7 课堂采集子系统 PRD，明确课堂录音经本地 ASR 转为纯文本并复用 S2 笔记管道；T02–T06 保持未启动，下一门禁为 T02 composer smoke 独立计划。 |

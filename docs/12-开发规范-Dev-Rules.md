@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发规范
 
-**版本**：v1.18
+**版本**：v1.19
 **日期**：2026-07-25
 **用途**：规定 AI StudyBuddy 的工具无关协作流程、分支/worktree、验证、证据、隐私和提交规则。`CLAUDE.md` 与 `AGENTS.md` 只保留入口摘要；完整规则以本文为准。
 
@@ -119,7 +119,7 @@ git checkout -b <task-branch>
 
 如主 checkout 有未提交变更，先确认所有权：属于本任务才继续；不属于本任务则停下，不得覆盖或夹带。
 
-有并行任务或长期任务时，优先使用隔离 worktree，避免污染主 checkout。创建 worktree 前必须检查目标目录不存在、分支不存在、主 checkout 是否只有预期变更；不得删除或覆盖用户改动。
+有并行任务或长期任务时，优先使用隔离 worktree，避免污染主 checkout。当前开发机的**唯一**任务 worktree 根目录是 `H:\ai-studybuddy-worktrees`；目标必须位于该目录内，严禁在 `<repo-root>`（当前为 `H:\ai-studybuddy`）内创建、恢复、复制或移动 `.worktrees`。创建 worktree 前必须检查目标目录不存在、分支不存在、主 checkout 是否只有预期变更；不得删除或覆盖用户改动。
 
 ### 5.4 分支提交与推送
 

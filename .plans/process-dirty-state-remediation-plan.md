@@ -208,3 +208,14 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
 4. 对 T02 计划、陈旧 worktree 和任何实际代码迁移分别确认。
 
 在这些批准之前，保留现状，不执行删除、重置、覆盖或业务版本修改。
+
+---
+
+## 9. 目录边界决定（2026-07-25，立即生效）
+
+用户已明确要求：`H:\ai-studybuddy` 是主系统目录，必须尽可能干净，**禁止作为 worktree 根目录或包含任何 `H:\ai-studybuddy\.worktrees\*` 工作树**。从本决定起：
+
+1. 唯一允许创建新任务 worktree 的当前开发机根目录是 `H:\ai-studybuddy-worktrees`；创建前必须确认目标在该根目录内，且不在 `<repo-root>` 内。
+2. 不得新建、恢复、复制或移动 worktree 到 `H:\ai-studybuddy\.worktrees`；已有的 1 个登记 worktree 和 15 个未登记旧目录只可按获批的清单迁出或安全处置。
+3. 历史文档/旧计划中出现的仓内 `.worktrees` 路径仅作为历史证据，不构成当前许可；当前规则以 `docs/06` 和 `docs/12` 为准。
+4. 此决定不授权删除：先完成只读归属判定，再由用户逐批批准 Git worktree 移动、无效残留清理或归档。

@@ -1,6 +1,6 @@
 # 仓库协作指南
 
-**版本**：v1.17
+**版本**：v1.18
 **日期**：2026-07-25
 
 本文件是通用 AI Agent 入口。完整、工具无关的协作规则见 `docs/12-开发规范-Dev-Rules.md`。
@@ -66,6 +66,7 @@ pnpm -r --filter backend run dev
 - 合并后必须在 `master` 重新运行要求的验证，再 `git push origin master`。只有 `origin/master` 包含该提交后，才可向用户报告任务完成。
 - 交付说明必须写清：任务分支名、提交哈希、是否已合并 `master`、是否已推送 `origin/master`、`docs/04` 更新位置。
 - 脏状态必须先在 `docs/04` 登记并按语义改动、计划、生成物、依赖残留或外部证据分层；未经精确路径核验和用户批准，不得用 `git clean`、`git reset --hard`、覆盖 checkout 或批量删除处理。
+- 当前开发机的新任务 worktree 只能创建在 `H:\ai-studybuddy-worktrees`；`<repo-root>`（本机 `H:\ai-studybuddy`）内禁止 `.worktrees` 根。历史仓内目录必须先审计并获批后迁出或处置，不能用文件系统删除替代 Git 管理。
 
 ## 编码与命名规范
 

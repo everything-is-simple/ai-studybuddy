@@ -1,6 +1,6 @@
 # AI StudyBuddy 本地目录与验证资产治理
 
-**版本**：v1.8
+**版本**：v1.9
 **状态**：已确认
 **日期**：2026-07-25
 **用途**：定义主系统、外部组件试炼场、运行数据、日志、临时文件和备份的唯一边界。本文件是 Windows 单机目录治理的单一事实来源（SoT）。
@@ -19,8 +19,8 @@
 
 | 路径 | 唯一职责 | 可以放 | 禁止放 |
 | ---- | -------- | ------ | ------ |
-| `H:\ai-studybuddy` | 主系统 Git 仓库 | `docs/`、`packages/`、`scripts/`、`.plans/`、正式测试和产品代码 | 真实学习资料、正式 SQLite、长期日志、模型缓存、密钥明文、部署运行数据 |
-| `H:\ai-studybuddy-worktrees` / `H:\ai-studybuddy\.worktrees` | 任务 worktree | 从最新 `master` 派生的任务分支、隔离实现 | 正式运行数据、密钥、模型缓存 |
+| `H:\ai-studybuddy` | 主系统 Git 仓库 | `docs/`、`packages/`、`scripts/`、`.plans/`、正式测试和产品代码 | 真实学习资料、正式 SQLite、长期日志、模型缓存、密钥明文、部署运行数据、任何 `.worktrees` 根或任务 worktree |
+| `H:\ai-studybuddy-worktrees` | **唯一**任务 worktree 根目录 | 从最新 `master` 派生的任务分支、隔离实现 | 主系统目录内 worktree、正式运行数据、密钥、模型缓存 |
 | `H:\ai-studybuddy-composer` | 外部组件/能力试炼场 | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码直接引用、真实学习资料、主仓库 workspace 配置 |
 | `H:\ai-studybuddy-data` | 开发机人工指定的数据根候选 | SQLite、`materials/`、受控导出/备份 | 源码、Git 元数据、密钥明文；E2E 不得复用 |
 | `H:\ai-studybuddy-day-study` | 人工学习工作区 | 用户自己创建或整理的资料副本 | 系统唯一数据源、应用数据库、自动迁移目标 |
@@ -29,6 +29,8 @@
 | `H:\ai-studybuddy-backup` | 只读阶段备份 | 源码阶段 ZIP、旧稿归档、恢复说明 | 当前 SoT 文档的直接编辑副本、密钥明文 |
 
 **路径解释规则**：本节的 `H:\ai-studybuddy*` 是**当前开发机**的目录治理事实，不是普通用户电脑必须存在的安装路径。跨机器文档应优先使用逻辑名称（`<repo-root>`、`<external-component-root>`、`<run-evidence-root>`、`<app-data-root>`）；正式使用机器的数据根采用 `%LOCALAPPDATA%\AIStudyBuddy`。旧记录中的 `I:\...` 仅为历史证据路径，不应被改写成当前安装承诺。
+
+**主系统清洁硬规则**：`H:\ai-studybuddy` 是主系统仓库，不得再创建、恢复、复制或移动任何 `H:\ai-studybuddy\.worktrees\*`。已存在的历史目录不因此自动删除；必须先完成归属审计，再按用户批准的精确清单使用 Git worktree 管理命令迁出登记 worktree，或安全处置无效残留。
 
 非正式目录说明：`H:\ai-studybuddy-t09-validation` 是历史/专项验证产物区，不是本轮要建立的正式系统目录；`H:\.pnpm-store` 是 pnpm 内容寻址缓存，不是 AI StudyBuddy 运行目录，不能作为部署包内容或验收数据源。
 
