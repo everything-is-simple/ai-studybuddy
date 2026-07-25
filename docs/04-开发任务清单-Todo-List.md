@@ -1,10 +1,12 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.87
-**日期**：2026-07-24
+**版本**：v1.88
+**日期**：2026-07-25
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送 `origin/master`；S1/S2/S3/S4/S5/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。Phase 3 按用户明确要求暂缓；Phase 1.5-T01 S7 PRD 已完成；T02 ASR composer smoke 仍为 `PARTIAL`，T03 FFmpeg Composer smoke 为 `PASS`，T04 ASR 后续能力验证仍为 `PARTIAL`。原 T02/T04 三门禁补证保持 `BLOCKED` 历史；R2 当前候选最小化修正已在用户批准的调整顺序下完成：G1 固定 revision=`PASS`，G3 no-speech 固定 16 项矩阵=`PASS`，G2 因定制版 Windows 10 的三个 Firewall profile 均禁用而保持历史 `BLOCKED`，总体为 `PARTIAL`。G2 跨平台可验证离线门禁语义修订已进入独立纯计划任务，计划仅定义平台无关证据契约，不改变 T02/T04 正式状态。本轮未修改永久 Firewall 策略，未用 offline/cache-only 冒充隔离证据，未创建/装配 `AuralConverter`，未修改业务代码，未启动 T05/T06；能力验证结果不等于生产接入资格。各阶段任务按单一责任拆分。Phase 2.5 运行环境重启与 Windows 使用机器部署准备已按五个独立工作包完成本地 master 合入复验和最终文档收口；随本轮 `git push origin master` 进入远端主线事实，最终远端哈希以交付说明和 `git ls-remote --heads origin master` 为准；其完成不改变 Phase 3 暂缓、S7 等待和 G2 历史门禁状态。
+> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 按用户明确要求暂缓。S7 仅完成 T01 PRD：T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均不等于 S7 产品接入或用户机验收；Schema、Adapter、API、Worker、前端及 T05–T06 未启动。G2 的历史/候选证据仅按其自身环境范围解释，不修改永久 Firewall 策略，不用 offline/cache-only 冒充隔离证据。
+
+> **DOCS-20260725 系统事实与文档状态收口（分支验证通过，待主线复验和推送）**：仅在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。分支验证：`scripts/check-docs-governance.ps1` 与 `git diff --check` 均退出码 `0`；最终完成结论仍以合入 `master`、主线复验和远端推送为准。
 
 > **Phase 1.5-T01 S7 PRD（2026-07-21，已批准并完成）**：行动计划 `.plans/phase1-5-t01-s7-prd-plan.md` 已由用户明确批准，计划检查点提交 `22636ab` 已推送任务分支 `codex/phase1-5-t01-s7-prd`。已创建 `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`，明确课堂录音 → 本地 ASR → 纯文本 `ConverterResult` → S2 `normalized_texts`/笔记生成管道，以及 composer、`AuralConverter`、后端/API、Job Worker、S2 与前端职责边界；本任务不含 ASR/FFmpeg smoke、Schema、API、Worker 或前端实现。验证：`scripts/check-docs-governance.ps1`、`git diff --check` 与 `git diff --cached --check` 均通过；T02–T06 保持未启动，下一门禁仅为 T02 独立计划。
 
@@ -32,7 +34,7 @@
 | Phase 0.7 | Windows 原生轻量底座与异步家长报告验证  | ✅ 开发机验收完成（HP 实机兼容性复测待机会执行，不阻塞 Phase 0.8） |
 | Phase 0.8 | 第一个可运行里程碑（S1 基础 + S2 核心） | ✅ 已完成（T09 隔离复验通过）                                      |
 | Phase 1   | 跑通完整学习闭环（S1+S2+S3+S4+S6 简版） | ✅ 已完成；S3 Worker 不属于当前 MVP |
-| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 已完成；T02/T04 能力验证均为 `PARTIAL`；T03 Composer smoke `PASS` 已合入并推送 `origin/master`；原三门禁补证执行为 `BLOCKED`；T02/T04-R2 当前候选最小化修正计划已完成 fresh-pass、执行待再次明确批准；T05–T06 未启动 |
+| Phase 1.5 | 课堂录音 ASR（S7）                      | ⚠️ T01 PRD 已完成；T02/T04 外部候选能力均为 `PARTIAL`，T03 Composer smoke 为 `PASS`；G2 等隔离证据只在各自环境范围内解释，未构成 S7 产品接入；Schema、Adapter、API、Worker、前端及 T05–T06 未启动 |
 | Phase 2   | 期末冲刺（S5）                          | ✅ T01–T06 与 POST-PHASE2 收口均已完成并推送 |
 | Phase 3   | 打磨与安全                              | ⏸️ 用户明确要求暂缓，未进入实施 |
 

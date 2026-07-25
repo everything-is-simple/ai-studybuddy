@@ -1,8 +1,8 @@
 # AI StudyBuddy 本地目录与验证资产治理
 
-**版本**：v1.6
+**版本**：v1.7
 **状态**：已确认
-**日期**：2026-07-23
+**日期**：2026-07-25
 **用途**：定义主系统、外部组件试炼场、运行数据、日志、临时文件和备份的唯一边界。本文件是 Windows 单机目录治理的单一事实来源（SoT）。
 
 ---
@@ -27,6 +27,8 @@
 | `H:\ai-studybuddy-logs` | 脱敏日志汇总 | 运行摘要、错误摘要、任务状态 | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
 | `H:\ai-studybuddy-tmp` | 可再生临时/验证空间 | OCR 切片、E2E `runs/<task-id>`、部署包 smoke、Playwright 证据 | SQLite 正式库、唯一备份、真实资料主副本 |
 | `H:\ai-studybuddy-backup` | 只读阶段备份 | 源码阶段 ZIP、旧稿归档、恢复说明 | 当前 SoT 文档的直接编辑副本、密钥明文 |
+
+**路径解释规则**：本节的 `H:\ai-studybuddy*` 是**当前开发机**的目录治理事实，不是普通用户电脑必须存在的安装路径。跨机器文档应优先使用逻辑名称（`<repo-root>`、`<external-component-root>`、`<run-evidence-root>`、`<app-data-root>`）；正式使用机器的数据根采用 `%LOCALAPPDATA%\AIStudyBuddy`。旧记录中的 `I:\...` 仅为历史证据路径，不应被改写成当前安装承诺。
 
 非正式目录说明：`H:\ai-studybuddy-t09-validation` 是历史/专项验证产物区，不是本轮要建立的正式系统目录；`H:\.pnpm-store` 是 pnpm 内容寻址缓存，不是 AI StudyBuddy 运行目录，不能作为部署包内容或验收数据源。
 

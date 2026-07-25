@@ -1,14 +1,14 @@
 # AI StudyBuddy 开发规范
 
-**版本**：v1.16
-**日期**：2026-07-21
+**版本**：v1.17
+**日期**：2026-07-25
 **用途**：规定 AI StudyBuddy 的工具无关协作流程、分支/worktree、验证、证据、隐私和提交规则。`CLAUDE.md` 与 `AGENTS.md` 只保留入口摘要；完整规则以本文为准。
 
 ---
 
 ## 一、适用范围与 SoT 优先级
 
-本文适用于所有会修改 `I:\ai-studybuddy` 主仓库的任务，包括文档、后端、前端、测试和脚本变更。当前单一事实来源顺序如下：
+本文适用于所有会修改当前主系统 Git 仓库的任务（本开发机映射为 `H:\ai-studybuddy`；跨机器表达优先使用 `<repo-root>`），包括文档、后端、前端、测试和脚本变更。当前单一事实来源顺序如下：
 
 1. `docs/00-文档索引-Index.md`：有效文档清单、文档门禁和触发状态。
 2. `docs/01-总PRD-产品需求-Product-Requirements.md` 与 `docs/02-七子系统地图-Scenario-Systems.md`：产品目标、MVP 边界和子系统边界。
@@ -24,7 +24,7 @@
 
 - Phase 0.8 已完成：S1 基础与 S2 核心已在主仓库实现，包含 SQLite 本地数据、资料上传/转换、AI 笔记、知识模块、前端最小页面和 T09 隔离复验。
 - S1、S2 PRD 已存在并已实现到 MVP 边界；不得再次创建同类 PRD。
-- S3 PRD 与 T03A–T03D、S4 PRD 与 T04A/T04B/T05、S6 PRD 与 T06A/T06B、T07 时间线和 T08 本机配置中心均已完成；T09A–T09E 学生端产品化、T12/M01/M02/M03 与 Post-M03 维护任务也已完成主线集成、复验和 `origin/master` 推送。Phase 2-T01–T06 已完成 S5 模拟考、确定性只读临考速背、确定性即时只读冲刺计划和工作台冲刺区，并已完成主线复验与推送；T04/T05/T06 不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；Phase 3 暂缓，S7 继续等待门禁，S3 Worker 不属于当前 MVP。
+- S3 PRD 与 T03A–T03D、S4 PRD 与 T04A/T04B/T05、S6 PRD 与 T06A/T06B、T07 时间线和 T08 本机配置中心均已完成；T09A–T09E 学生端产品化、T12/M01/M02/M03 与 Post-M03 维护任务也已完成主线集成、复验和 `origin/master` 推送。Phase 2-T01–T06 已完成 S5 模拟考、确定性只读临考速背、确定性即时只读冲刺计划和工作台冲刺区，并已完成主线复验与推送；T04/T05/T06 不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收；Phase 3 暂缓。S7 产品接入尚未开始，外部候选能力证据不得当作 Schema、Adapter、API、Worker、前端或用户机完成事实；S3 Worker 不属于当前 MVP。
 - Phase 1-T11 已完成考试确认、考试项目工作台、考试归属任务、多考试切换与只读邻近提示；不包含跨考试自动排程、智能任务平衡、模拟考或临考速背。
 - AI Provider Router 已支持多 Provider 配置和优先级故障转移：当前实现按 `priority` 升序尝试，首个成功即返回；这不是每次请求轮换 Provider。
 - Phase 1-T02 已在现有 Router 上完成 Provider 实例级健康熔断：连续失败第 5 次后冷却 10 分钟，支持恢复探测、全冷却稳定错误和严格脱敏日志；未增加数据库、环境变量或真实外部 Provider smoke。
@@ -205,7 +205,7 @@ git status --short --branch
 运行会写数据的命令前，优先设置隔离目录，例如：
 
 ```powershell
-$env:APP_DATA_ROOT = 'I:\ai-studybuddy-tmp\runs\<task-id>'
+$env:APP_DATA_ROOT = 'H:\ai-studybuddy-tmp\runs\<task-id>'
 pnpm -r --filter backend run dev
 ```
 
@@ -225,7 +225,7 @@ pnpm -r --filter backend run dev
 
 - 真实 API Key 只允许存在于本机 `.env.local` 或系统密钥管理中，不得进入文档、日志、截图、测试夹具或提交。
 - Provider 日志只能记录 provider 名称、模型、token、耗时、fallback、失败摘要和短哈希；不得记录请求正文、模型完整输出、base URL、key 或完整 UUID。
-- 正式数据目录和验证数据目录必须隔离；所有可重复验证优先使用 `I:\ai-studybuddy-tmp\runs\<task-id>`。
+- 正式数据目录和验证数据目录必须隔离；当前开发机的可重复验证优先使用 `H:\ai-studybuddy-tmp\runs\<task-id>`；其他机器按 `docs/06` 的逻辑数据根规则映射。
 - 人工补文、资料原文、考试名称、学生隐私和家长渠道地址默认视为敏感信息。
 
 ---

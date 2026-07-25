@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.45
-**日期**：2026-07-23
+**版本**：v2.46
+**日期**：2026-07-25
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -11,7 +11,7 @@
 | 编号 | 文档名 | 状态 | 用途 |
 | ---- | ------ | ---- | ---- |
 | 00 | [文档索引-Index.md](00-文档索引-Index.md) | ✅ 有效 | 本文件，文档导航、文档门禁和触发状态 |
-| 01 | [总PRD-产品需求-Product-Requirements.md](01-总PRD-产品需求-Product-Requirements.md) | ✅ 有效 | 产品目标、考试驱动学习闭环、七子系统总表、MVP 边界、AI 使用边界 |
+| 01 | [总PRD-产品需求-Product-Requirements.md](01-总PRD-产品需求-Product-Requirements.md) | ✅ 有效 | 系统为何存在、为谁而做、考试驱动学习闭环、MVP 与部署边界 |
 | 02 | [七子系统地图-Scenario-Systems.md](02-七子系统地图-Scenario-Systems.md) | ✅ 有效 | 七个场景子系统边界、共同业务对象、依赖关系、开发顺序 |
 | 03 | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md) | ✅ 有效 | S1 轻量 PRD，课程、考试、任务、StudyEvent 与时间线 |
 | 03b | [subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md](subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md) | ✅ 有效 | S2 轻量 PRD，资料上传/格式转换/AI 笔记/知识模块 |
@@ -34,12 +34,14 @@
 
 ---
 
-## 一点五、代码与试炼场边界
+## 一点五、先读事实层：为什么、为谁、什么已经完成
 
-- `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。
-- `H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
-- 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。
-- 试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
+- **产品目的与使用者**：`docs/01` 是首要入口。系统为一名在 Windows 本机学习的学生而做，帮助她把课程/考试目标、学习节奏、资料笔记、练习、错题和考前冲刺连成可持续闭环；家长不是系统操作者，只接收脱敏的异步学习摘要。
+- **已集成事实**：只有 `origin/master` 上的代码、`docs/04` 任务状态和主线复验共同构成“已完成”结论。当前 S1–S6 主线已完成；开发机 Windows 原生 + Node 24 部署基线已验证，但用户电脑的安装运行验收仍是未完成门禁。
+- **S7 与外部候选边界**：S7 PRD 已创建，但产品接入尚未开始。外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据不等于 Schema、Adapter、API、Worker、前端或用户机能力已完成。
+- **当前暂停项**：Phase 3 暂缓；Docker/WSL、ASR 隔离和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
+- `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。`H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
+- 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
 
 ---
 
@@ -53,7 +55,7 @@
 | S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
 | S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | ✅ Phase 2-T01–T06 与 POST-PHASE2 全系统验证、完整 E2E、文档对齐和主线复验均已完成并推送 | Phase 2 已触发并完成 |
 | S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | ✅ T06A 规则报告生成与 T06B 渠道推送已实现；真实渠道 smoke 非常规验证 | Phase 1 后期、准备正式发送家长报告前触发 |
-| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | ✅ Phase 1.5-T01 PRD 已创建；T02–T06 尚未启动 | Phase 1.5 已触发；后续任务分别走独立计划门禁 |
+| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | ⚠️ T01 PRD 已创建；T02/T04 候选能力验证为 `PARTIAL`、T03 Composer smoke 为 `PASS`；产品接入和 T05–T06 未启动 | 每一步仍须独立计划、批准与产品边界验收；候选证据不等于接入完成 |
 
 ---
 
@@ -138,7 +140,7 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B、T09C、T09D 与 T09E 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环、练习历史与归档学期只读查看，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；Phase 3 按用户要求暂缓；Phase 1.5-T01 已创建 S7 PRD，下一门禁仅为 T02 ASR composer smoke 独立计划，T02–T06 尚未启动，S3 Worker 不属于当前 MVP。
+4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收；Phase 3 按用户要求暂缓。S7 仅完成 PRD，T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于产品接入；Schema、Adapter、API、Worker、前端及 T05–T06 均未启动，S3 Worker 不属于当前 MVP。
 5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 计划、实现、主线集成、主线复验与 `origin/master` 推送已完成，验证隔离根 `I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
 
 ---
@@ -172,6 +174,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.46 | 2026-07-25 | 收口产品目的、使用者、主线事实、S7 候选证据与产品接入边界；明确开发机 Node 24 已验证不等于用户电脑验收，并区分当前 H 盘开发机治理与历史绝对路径。 |
 | v2.44 | 2026-07-21 | Phase 1.5-T01：创建并登记 S7 课堂采集子系统 PRD，明确课堂录音经本地 ASR 转为纯文本并复用 S2 笔记管道；T02–T06 保持未启动，下一门禁为 T02 composer smoke 独立计划。 |
 | v2.43 | 2026-07-21 | 同步 POST-PHASE2 分支与主线全量测试、完整 E2E、文档对齐和最终推送均已完成；Phase 3 继续暂缓。 |
 | v2.42 | 2026-07-21 | 同步 Phase 2-T01–T06 已完成主线复验并推送、POST-PHASE2 全系统验证与文档对齐进行中，以及 Phase 3 暂缓的当前状态。 |
