@@ -1,7 +1,7 @@
 # PHASE3-T02B 子进程环境最小化实施计划
 
 > **任务**：PHASE3-T02B：OCR 与 whisper.cpp 子进程环境继承边界
-> **状态**：用户已于 2026-07-26 明确批准实施；任务分支实现、独立审查、本机 `master` fast-forward 集成与主线复验已完成，尚未推送 `origin/master`。
+> **状态**：用户已于 2026-07-26 明确批准实施；任务分支实现、独立审查、本机 `master` fast-forward 集成、主线复验与 `origin/master` 推送已完成。
 > **任务分支**：`codex/phase3-t02b-subprocess-environment-boundary`
 > **基线**：`origin/master` `7f976a0`。
 
@@ -56,4 +56,4 @@
 - `git diff --check`：通过。
 - 本机 `master` 主线复验：`eeb9cb1` 已 fast-forward 集成到 `H:\ai-studybuddy` 的 `master`；使用 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-verify-20260726-01` 与 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-pnpm-test-20260726-01` 清空外部服务配置后验证通过：后端 build、T02B/OCR 专项 7/7、`pnpm type-check`、前端 Vitest 26 files / 139 tests、文档治理、`git diff --check` 和完整 `pnpm test`（后端 272/272）均通过；前端 build 仅既有 KaTeX chunk warning。
 
-结论：T02B 已完成任务分支实现、独立审查、本机 `master` 集成与主线复验；尚未推送 `origin/master`，不得宣称远端主线、T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。
+结论：T02B 已完成任务分支实现、独立审查、本机 `master` 集成、主线复验与 `origin/master` 推送；实现提交 `eeb9cb1` 与主线复验文档提交 `7281229` 已进入远端主线。不得宣称 T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。

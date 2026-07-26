@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.100
+**版本**：v1.101
 **日期**：2026-07-26
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -904,13 +904,13 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | ---- | -------- | ------------- |
 | PHASE3-T02 | `.plans/phase3-t02-security-privacy-baseline-audit-plan.md` | ✅ 基线审计计划已获批准；总体审计与全部修复未完成 |
 | PHASE3-T02A | `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md` | 🔄 任务分支验证完成，待主线集成；不等于 T02 完成 |
-| PHASE3-T02B | `.plans/phase3-t02b-subprocess-environment-boundary-plan.md` | 🔄 本机 `master` 集成与主线复验完成，待推送 `origin/master`；不等于 T02 完成 |
+| PHASE3-T02B | `.plans/phase3-t02b-subprocess-environment-boundary-plan.md` | ✅ 已推送 `origin/master`；T02B 切片完成，不等于 T02 完成 |
 
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；首个实施切片 T02A 已获单独批准并在独立任务分支实施中。批准计划或分支实现均不表示 Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 
 > **PHASE3-T02A 生产攻击面与统一错误边界详细实施（2026-07-26，任务分支已完成，待主线集成）**：外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02a-production-attack-surface-error-boundary-plan`，分支 `codex/phase3-t02a-production-attack-surface-error-boundary-plan`，计划路径 `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md`。本切片已在任务分支实现生产 `/api/dev*` 隔离、统一 JSON 错误边界、显式 `NODE_ENV=production` 和后端核心精确 `127.0.0.1` 回环校验；开发/测试模式保留 dev API，子进程测试显式声明 `NODE_ENV=test`。回归覆盖生产 JSON 404（无 `data`、无路径或 storage key）、畸形 JSON、全局 Multer 限制、未知异常、允许列表安全应用错误、非法 `NODE_ENV` 和非回环 `BACKEND_HOST` 拒绝。2026-07-26 使用仓库外隔离根 `H:\ai-studybuddy-tmp\runs\phase3-t02a-final-20260726-02` 验证通过：`pnpm type-check`、后端 build、六个专项测试文件 30/30、前端 build、`pnpm test`（后端 267/267）、文档治理和 diff 检查。独立复审已完成；未合入 `master`、未推送 `origin/master`，仍不得写成 T02A、Phase 3 安全审计或用户电脑安装验收完成。非范围仍包括用户电脑验收、OCR/ASR 子进程、日志、备份/ACL、完整 S7、G2、S3 Worker、Docker/WSL、Firewall 及真实外部服务。
 
-> **PHASE3-T02B OCR 与 whisper.cpp 子进程环境最小化（2026-07-26，本机主线集成与复验完成，待推送）**：计划路径 `.plans/phase3-t02b-subprocess-environment-boundary-plan.md`，任务分支 `codex/phase3-t02b-subprocess-environment-boundary`，实现提交 `eeb9cb1` 已 fast-forward 集成到本机 `master`。本切片实现 OCR/whisper.cpp 子进程正向环境 allowlist、OCR 子进程 stdout/stderr 回显收敛、whisper.cpp 显式 `env` 与测试注入 seam；不执行真实 OCR/ASR、Provider、SMTP、飞书或其他外部服务。2026-07-26 使用仓库外隔离根 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-verify-20260726-01` 与 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-pnpm-test-20260726-01`，在 Windows 原生 Node 24 上完成主线复验：后端 build 通过；T02B/OCR 专项 7/7 通过；`pnpm type-check` 通过；前端 Vitest 26 文件 / 139 测试通过；文档治理和 `git diff --check` 通过；完整 `pnpm test` 通过，后端 272/272，前端 build 仅既有 KaTeX chunk warning。独立审查已完成；尚未推送 `origin/master`，不得报告远端主线、T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。非范围仍包括日志轮转、备份/ACL、生产防火墙、Docker/WSL、完整 S7、G2、S3 Worker、用户电脑验收和真实外部服务。
+> **PHASE3-T02B OCR 与 whisper.cpp 子进程环境最小化（2026-07-26，已完成并推送 origin/master）**：计划路径 `.plans/phase3-t02b-subprocess-environment-boundary-plan.md`，任务分支 `codex/phase3-t02b-subprocess-environment-boundary`，实现提交 `eeb9cb1` 已 fast-forward 集成到本机 `master`。本切片实现 OCR/whisper.cpp 子进程正向环境 allowlist、OCR 子进程 stdout/stderr 回显收敛、whisper.cpp 显式 `env` 与测试注入 seam；不执行真实 OCR/ASR、Provider、SMTP、飞书或其他外部服务。2026-07-26 使用仓库外隔离根 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-verify-20260726-01` 与 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-pnpm-test-20260726-01`，在 Windows 原生 Node 24 上完成主线复验：后端 build 通过；T02B/OCR 专项 7/7 通过；`pnpm type-check` 通过；前端 Vitest 26 文件 / 139 测试通过；文档治理和 `git diff --check` 通过；完整 `pnpm test` 通过，后端 272/272，前端 build 仅既有 KaTeX chunk warning。独立审查已完成；实现提交 `eeb9cb1` 与主线复验文档提交 `7281229` 已推送 `origin/master`。T02B 切片完成；但不得报告 T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。非范围仍包括日志轮转、备份/ACL、生产防火墙、Docker/WSL、完整 S7、G2、S3 Worker、用户电脑验收和真实外部服务。
 
 ---
 

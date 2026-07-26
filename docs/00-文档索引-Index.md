@@ -1,6 +1,6 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.55
+**版本**：v2.56
 **日期**：2026-07-26
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
@@ -175,6 +175,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.56 | 2026-07-26 | PHASE3-T02B 已推送 `origin/master`：实现提交 `eeb9cb1` 与主线复验文档提交 `7281229` 已进入远端主线；随后更新本文档与 `docs/04`/计划文件为远端已推送状态。范围仍仅限 OCR/whisper.cpp 子进程环境最小化与安全输出回归，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
 | v2.55 | 2026-07-26 | PHASE3-T02B 已 fast-forward 集成到本机 `master` 并完成主线复验：Node 24、后端 build、T02B/OCR 专项 7/7、`pnpm type-check`、前端 Vitest 26 files / 139 tests、文档治理、`git diff --check` 和完整 `pnpm test`（后端 272/272）均通过；仅既有 KaTeX chunk warning。尚未推送 `origin/master`，不得宣称远端主线、T02、Phase 3、安全审计或用户电脑验收完成。 |
 | v2.54 | 2026-07-26 | 同步 PHASE3-T02B 任务分支实现、专项验证与独立审查完成：OCR/whisper.cpp 子进程改为正向环境 allowlist，OCR 错误输出脱敏；后端分拆全量、前端测试、type-check、文档治理和 diff 检查通过。完整 `pnpm test` 受本机既有代理/浏览器连接占用固定端口 `59402` 影响出现单项既有测试失败；未合入 `master` 或推送 `origin/master`，不得宣称 T02B、T02、Phase 3、安全审计或用户电脑验收完成。 |
 | v2.53 | 2026-07-26 | 登记 PHASE3-T02B 独立实施计划及其 `docs/04` 行动计划索引：范围只限 OCR 与 whisper.cpp 子进程环境最小化和安全输出回归；当前为任务分支验证/独立审查阶段，未合入 `master` 或推送 `origin/master`。 |
