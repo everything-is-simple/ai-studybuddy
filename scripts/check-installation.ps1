@@ -31,20 +31,20 @@ elseif (-not (Test-AIStudyBuddySupportedNodeVersion $node)) { Add-Check 'node' '
 else { Add-Check 'node' 'pass' $node.Raw }
 $envFile = $paths.EnvFile
 if (-not (Test-Path -LiteralPath $envFile -PathType Leaf)) {
-  Add-Check 'runtime-config' 'fail' $envFile
+  Add-Check 'runtime-config' 'fail' 'production env file missing'
 } else {
-  try { Import-AIStudyBuddyEnvFile $envFile; Add-Check 'runtime-config' 'pass' $envFile } catch { Add-Check 'runtime-config' 'fail' $_.Exception.Message }
+  try { Import-AIStudyBuddyEnvFile $envFile; Add-Check 'runtime-config' 'pass' 'production env loaded' } catch { Add-Check 'runtime-config' 'fail' $_.Exception.Message }
 }
-try { Assert-AIStudyBuddyLoopbackHost; Add-Check 'loopback-host' 'pass' $env:BACKEND_HOST } catch { Add-Check 'loopback-host' 'fail' $_.Exception.Message }
+try { Assert-AIStudyBuddyLoopbackHost; Add-Check 'loopback-host' 'pass' 'BACKEND_HOST loopback verified' } catch { Add-Check 'loopback-host' 'fail' $_.Exception.Message }
 if ($Port -gt 0) { $env:BACKEND_PORT = [string]$Port }
 if ([string]::IsNullOrWhiteSpace($env:BACKEND_PORT)) { $env:BACKEND_PORT = '3000' }
 if ([string]::IsNullOrWhiteSpace($env:APP_DATA_ROOT)) {
   Add-Check 'data-root-config' 'fail' 'APP_DATA_ROOT is missing.'
 } elseif ((Resolve-ComparePath $env:APP_DATA_ROOT) -ne (Resolve-ComparePath $paths.Data)) {
-  Add-Check 'data-root-config' 'fail' "APP_DATA_ROOT must be $($paths.Data)"
-} else { Add-Check 'data-root-config' 'pass' $paths.Data }
+  Add-Check 'data-root-config' 'fail' 'APP_DATA_ROOT must use the install data directory.'
+} else { Add-Check 'data-root-config' 'pass' 'APP_DATA_ROOT matches install data directory' }
 if (-not [string]::IsNullOrWhiteSpace($env:FRONTEND_STATIC_ROOT) -and (Resolve-ComparePath $env:FRONTEND_STATIC_ROOT) -ne (Resolve-ComparePath (Join-Path $paths.Backend 'public'))) {
-  Add-Check 'frontend-static-root' 'warn' $env:FRONTEND_STATIC_ROOT
+  Add-Check 'frontend-static-root' 'warn' 'FRONTEND_STATIC_ROOT does not match backend public directory'
 } else { Add-Check 'frontend-static-root' 'pass' 'backend/public' }
 $py = $null
 $pythonInfo = $null
@@ -54,7 +54,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:PYTHON_PATH)) {
 }
 if ($null -eq $py -or $py.Major -ne 3 -or $py.Minor -lt 10 -or $py.Minor -gt 12 -or -not $pythonInfo.Success -or [int]$pythonInfo.Data.bits -ne 64) {
   $bits = if ($pythonInfo -and $pythonInfo.Data) { [string]$pythonInfo.Data.bits } else { '' }
-  Add-Check 'python' 'fail' "$([string]$env:PYTHON_PATH); architecture=$bits"
+  Add-Check 'python' 'fail' "Python runtime check failed; architecture=$bits"
 } else {
   Add-Check 'python' 'pass' "$($py.Raw); x64"
 }

@@ -9,6 +9,50 @@ import fs from 'fs';
 
 export type NodeEnv = 'development' | 'test' | 'production';
 
+const ENV_KEY_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function createConfigError(code: string, message: string): Error {
+  const error = new Error(`[CONFIG] ${code} ${message}`);
+  error.stack = error.message;
+  return error;
+}
+
+function validateEnvFileContent(content: string): void {
+  const seen = new Set<string>();
+  const lines = content.split(/\r?\n/);
+  for (const [index, line] of lines.entries()) {
+    const lineNumber = index + 1;
+    if (/^\s*(#.*)?$/.test(line)) continue;
+    const match = /^\s*([^=\s]+)\s*=/.exec(line);
+    if (!match) {
+      throw createConfigError('INVALID_ENV_LINE', `line ${lineNumber}`);
+    }
+    const key = match[1];
+    if (!ENV_KEY_PATTERN.test(key)) {
+      throw createConfigError('INVALID_ENV_KEY', `line ${lineNumber}`);
+    }
+    const normalizedKey = key.toUpperCase();
+    if (seen.has(normalizedKey)) {
+      throw createConfigError('DUPLICATE_ENV_KEY', `${key} line ${lineNumber}`);
+    }
+    seen.add(normalizedKey);
+  }
+}
+
+function loadEnvFile(filePath: string): void {
+  let content: string;
+  try {
+    content = fs.readFileSync(filePath, 'utf8');
+  } catch {
+    throw createConfigError('ENV_FILE_UNREADABLE', 'env file');
+  }
+  validateEnvFileContent(content);
+  const parsed = dotenv.parse(content);
+  for (const [key, value] of Object.entries(parsed)) {
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
 // 从 monorepo 根目录读取 .env.local
 // tsx 运行时 __dirname 可能指向源文件目录，process.cwd() 更可靠
 const envCandidates = [
@@ -18,7 +62,7 @@ const envCandidates = [
 ];
 for (const p of envCandidates) {
   if (fs.existsSync(p)) {
-    dotenv.config({ path: p });
+    loadEnvFile(p);
     break;
   }
 }
@@ -26,7 +70,7 @@ for (const p of envCandidates) {
 function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value) {
-    throw new Error(`[CONFIG] MISSING_ENV ${key} not set in .env.local`);
+    throw createConfigError('MISSING_ENV', key);
   }
   return value;
 }
@@ -38,7 +82,7 @@ function readNumberEnv(key: string, fallback: number): number {
 function readBoundedNumberEnv(key: string, fallback: number, minimum: number, maximum: number): number {
   const value = Number(process.env[key] ?? fallback);
   if (!Number.isFinite(value) || value < minimum || value > maximum) {
-    throw new Error(`[CONFIG] INVALID_NUMBER ${key} must be between ${minimum} and ${maximum}`);
+    throw createConfigError('INVALID_NUMBER', `${key} range ${minimum}-${maximum}`);
   }
   return Math.floor(value);
 }
@@ -46,13 +90,13 @@ function readBoundedNumberEnv(key: string, fallback: number, minimum: number, ma
 function readNodeEnv(): NodeEnv {
   const value = process.env.NODE_ENV ?? 'development';
   if (value === 'development' || value === 'test' || value === 'production') return value;
-  throw new Error('[CONFIG] INVALID_NODE_ENV unsupported runtime mode');
+  throw createConfigError('INVALID_NODE_ENV', 'NODE_ENV unsupported runtime mode');
 }
 
 function readBackendHost(): '127.0.0.1' {
   const value = process.env.BACKEND_HOST ?? '127.0.0.1';
   if (value !== '127.0.0.1') {
-    throw new Error('[CONFIG] INVALID_BACKEND_HOST backend must listen on loopback');
+    throw createConfigError('INVALID_BACKEND_HOST', 'BACKEND_HOST must listen on loopback');
   }
   return value;
 }
@@ -89,7 +133,9 @@ function parseAiProviders(): ProviderConfig[] {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) {
+      throw createConfigError('INVALID_AI_PROVIDERS', 'AI_PROVIDERS must be a JSON array');
+    }
     return parsed.map((item, idx) => ({
       name: String(item.name ?? `provider-${idx}`),
       baseUrl: String(item.baseUrl ?? ''),
@@ -98,7 +144,7 @@ function parseAiProviders(): ProviderConfig[] {
       priority: Number(item.priority ?? 0),
     }));
   } catch {
-    throw new Error('[CONFIG] INVALID_AI_PROVIDERS AI_PROVIDERS must be a valid JSON array');
+    throw createConfigError('INVALID_AI_PROVIDERS', 'AI_PROVIDERS must be a JSON array');
   }
 }
 
@@ -106,16 +152,14 @@ function parseAiProviders(): ProviderConfig[] {
 const APP_DATA_ROOT = requireEnv('APP_DATA_ROOT');
 const resolvedRoot = path.resolve(APP_DATA_ROOT);
 
-// 确保数据根目录存在
-fs.mkdirSync(resolvedRoot, { recursive: true });
-
-// 校验可写
+// 确保数据根目录存在并校验可写；错误只暴露固定码和键名，不拼接路径或底层异常。
 try {
+  fs.mkdirSync(resolvedRoot, { recursive: true });
   const testFile = path.join(resolvedRoot, '.write-test');
   fs.writeFileSync(testFile, 'ok');
   fs.unlinkSync(testFile);
-} catch (e) {
-  throw new Error(`[CONFIG] DATA_ROOT_NOT_WRITABLE APP_DATA_ROOT=${resolvedRoot} ${e}`);
+} catch {
+  throw createConfigError('DATA_ROOT_NOT_WRITABLE', 'APP_DATA_ROOT');
 }
 
 

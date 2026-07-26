@@ -1,7 +1,7 @@
 # PHASE3-T02C 配置加载与环境错误脱敏实施计划
 
 > **任务**：PHASE3-T02C：配置加载、`.env`/运行环境解析与配置校验错误脱敏
-> **状态**：计划已创建并完成计划阶段审查，等待用户单独批准实施。当前不写业务代码、不创建未来 PRD、不执行真实外部服务。
+> **状态**：用户已批准实施；任务分支 `codex/phase3-t02c-env-error-redaction` 已完成实现、复验与独立审查，待主线集成/推送。不创建未来 PRD，不执行真实外部服务。
 > **基线**：`origin/master` `6507dd3`，已包含 PHASE3-T02A `7f976a0` 与 PHASE3-T02B `eeb9cb1`。
 
 ## 1. Summary
@@ -195,4 +195,26 @@ pnpm test
 - **与既有切片边界：通过。** 计划不重复 T02A 的 API 错误边界和生产 dev API 隔离，也不重复 T02B 的 OCR/whisper.cpp 子进程环境 allowlist。
 - **测试可证明性：通过。** 计划要求用合成哨兵证明“不泄露值”，并覆盖 thrown error、stdout、stderr、日志摘要和公开 API 错误。
 - **隐私边界：通过。** 计划不要求读取、打印或调用真实 Provider、SMTP、Webhook、OCR、whisper.cpp、正式数据或完整宿主环境。
-- **状态结论：** 当前仅完成 T02C 实施计划与计划阶段审查，等待用户单独批准实施；不得宣称 T02C 实施、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。
+- **状态结论：** 计划阶段审查通过；随后用户已单独批准实施。该计划阶段结论本身不等于 T02C 主线完成、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。
+
+## 8. 实施与独立审查结论
+
+### 8.1 已实施内容
+
+- `packages/backend/src/config/env.ts`：新增 `.env.local` 预校验，非法行、空 key、重复键只返回固定 `[CONFIG]` 错误码、键名与非值型行号；配置错误对象不携带 stack；`APP_DATA_ROOT` 创建/可写失败不拼接路径或底层异常；非法 `AI_PROVIDERS` 不回显原始 JSON、Provider URL 或 API Key。
+- `scripts/lib/AIStudyBuddy.Deployment.psm1`：`Import-AIStudyBuddyEnvFile` 对非法 env 行和重复键返回固定摘要；`Assert-AIStudyBuddyLoopbackHost` 不回显非法 `BACKEND_HOST` 值。
+- `scripts/check-installation.ps1`：配置加载、回环 host、数据根、前端静态根与 Python 运行时检查的摘要不再打印配置路径或变量值。
+- `packages/backend/test/env-error-redaction.test.mjs`、`packages/backend/test/config-validation-redaction.test.mjs`：使用无效合成哨兵覆盖 `.env.local`、PowerShell env 导入、`APP_DATA_ROOT`、`NODE_ENV`/`BACKEND_HOST`、`AI_PROVIDERS`、Provider/SMTP/Webhook 校验与连接失败摘要的“不泄露值”证明。
+
+### 8.2 复验证据
+
+- 先新增负向测试并运行，确认旧实现可被测试捕获：T02C 专项初始红灯，PowerShell env 行、非法 host 和数据根错误存在回显/stack 风险。
+- Windows 原生 Node 24 + 仓库外隔离根（文档证据不记录具体路径）：后端 build 通过；`test/env-error-redaction.test.mjs` 与 `test/config-validation-redaction.test.mjs` 共 7/7 通过。
+- 仓库外隔离根（文档证据不记录具体路径）：相邻回归 `test/env-boundary.test.mjs`、`test/config-api.test.mjs`、`test/connection-tester.test.mjs`、`test/production-attack-surface-error-boundary.test.mjs`、`test/subprocess-environment-boundary.test.mjs`、`test/deployment-powershell-compatibility.test.mjs` 共 40/40 通过。
+
+### 8.3 独立审查结论
+
+- **allow/deny 契约核对：通过。** 错误输出仅允许固定错误码、固定提示、配置键名、类别与非值型行号；未引入 Provider URL、API Key、SMTP、Webhook、`APP_DATA_ROOT` 值、绝对路径、完整宿主环境、raw parser message 或 stack 的外部回显。
+- **测试可证明性核对：通过。** 新增测试使用无效合成哨兵，并断言 thrown error、stdout、stderr、测试输出和公开 API JSON 响应中均不含哨兵值；测试没有 dump `process.env` 或完整配置对象。
+- **边界核对：通过。** 未重复 T02A 的生产 dev API/统一 API 错误边界，未重复 T02B 的 OCR/whisper.cpp 子进程环境 allowlist；未调用真实 OCR、whisper.cpp、Provider、SMTP、Webhook 或网络服务。
+- **状态核对：通过。** 当前只是任务分支实现、复验与独立审查完成，尚未合入 `master` 或推送 `origin/master`；不得宣称 T02C 主线完成、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。

@@ -95,10 +95,17 @@ function Get-AIStudyBuddyRelativePath {
 function Import-AIStudyBuddyEnvFile {
   param([string]$Path)
   if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return }
-  foreach ($line in Get-Content -LiteralPath $Path) {
+  try { $lines = @(Get-Content -LiteralPath $Path) } catch { throw '[CONFIG] ENV_FILE_UNREADABLE env file' }
+  $lineNumber = 0
+  $seen = @{}
+  foreach ($line in $lines) {
+    $lineNumber += 1
     if ($line -match '^\s*#' -or $line -match '^\s*$') { continue }
-    if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$') { throw "Invalid env line: $line" }
+    if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$') { throw "[CONFIG] INVALID_ENV_LINE line $lineNumber" }
     $name = $Matches[1]; $value = $Matches[2].Trim()
+    $normalizedName = $name.ToUpperInvariant()
+    if ($seen.ContainsKey($normalizedName)) { throw "[CONFIG] DUPLICATE_ENV_KEY $name line $lineNumber" }
+    $seen[$normalizedName] = $true
     if ($value.StartsWith('"') -and $value.EndsWith('"')) { $value = $value.Substring(1, $value.Length - 2) }
     $value = $value.Replace('%LOCALAPPDATA%', $env:LOCALAPPDATA)
     [Environment]::SetEnvironmentVariable($name, $value, 'Process')
@@ -107,7 +114,7 @@ function Import-AIStudyBuddyEnvFile {
 
 function Assert-AIStudyBuddyLoopbackHost {
   if ([string]::IsNullOrWhiteSpace($env:BACKEND_HOST)) { $env:BACKEND_HOST = '127.0.0.1' }
-  if ($env:BACKEND_HOST -ne '127.0.0.1') { throw "Production backend must bind to 127.0.0.1, got $($env:BACKEND_HOST)" }
+  if ($env:BACKEND_HOST -ne '127.0.0.1') { throw '[CONFIG] INVALID_BACKEND_HOST BACKEND_HOST must be 127.0.0.1' }
 }
 
 function Get-AIStudyBuddySecretFileMatches {
