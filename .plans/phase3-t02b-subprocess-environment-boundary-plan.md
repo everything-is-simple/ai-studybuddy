@@ -1,7 +1,7 @@
 # PHASE3-T02B 子进程环境最小化实施计划
 
 > **任务**：PHASE3-T02B：OCR 与 whisper.cpp 子进程环境继承边界
-> **状态**：用户已于 2026-07-26 明确批准实施；任务分支实现、专项验证与独立审查已完成，尚未合入 `master` 或推送 `origin/master`。
+> **状态**：用户已于 2026-07-26 明确批准实施；任务分支实现、独立审查、本机 `master` fast-forward 集成与主线复验已完成，尚未推送 `origin/master`。
 > **任务分支**：`codex/phase3-t02b-subprocess-environment-boundary`
 > **基线**：`origin/master` `7f976a0`。
 
@@ -54,6 +54,6 @@
 - `pnpm type-check`：通过（`phase3-t02b-type-check-20260726-02`）。
 - `powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1`：通过。
 - `git diff --check`：通过。
-- `pnpm test`：执行到后端全量阶段时，271/272 通过；失败项为既有 `production-attack-surface-error-boundary.test.mjs` 的 `development process retains development diagnostics`，原因定位为本机既有 `verge-mihomo`/Edge 连接占用该测试固定端口 `59402`，导致内置后端健康检查无法启动。该单文件在端口未被占用前曾于本分支第 7 批通过；未终止用户进程，未扩大修改既有端口策略。
+- 本机 `master` 主线复验：`eeb9cb1` 已 fast-forward 集成到 `H:\ai-studybuddy` 的 `master`；使用 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-verify-20260726-01` 与 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-pnpm-test-20260726-01` 清空外部服务配置后验证通过：后端 build、T02B/OCR 专项 7/7、`pnpm type-check`、前端 Vitest 26 files / 139 tests、文档治理、`git diff --check` 和完整 `pnpm test`（后端 272/272）均通过；前端 build 仅既有 KaTeX chunk warning。
 
-结论：T02B 任务分支的实现与独立审查完成，等待主线集成与 `origin/master` 推送复验；不得宣称 T02B、T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。
+结论：T02B 已完成任务分支实现、独立审查、本机 `master` 集成与主线复验；尚未推送 `origin/master`，不得宣称远端主线、T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。
