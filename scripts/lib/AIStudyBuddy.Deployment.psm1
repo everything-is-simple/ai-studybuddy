@@ -472,6 +472,29 @@ function Get-AIStudyBuddyDataFiles {
   return @($files | Sort-Object RelativePath)
 }
 
+function Get-AIStudyBuddyDataPayloadFiles {
+  param(
+    [Parameter(Mandatory)] [string]$PayloadRoot,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  $root = (Assert-AIStudyBuddyDataExistingDirectory -Path $PayloadRoot -Code $Code).FullName
+  $files = [System.Collections.Generic.List[object]]::new()
+  $pending = [System.Collections.Generic.Stack[string]]::new()
+  $pending.Push($root)
+  while ($pending.Count -gt 0) {
+    $current = $pending.Pop()
+    try { $children = @(Get-ChildItem -LiteralPath $current -Force -ErrorAction Stop) } catch { New-AIStudyBuddyDataBoundaryError $Code }
+    foreach ($child in $children) {
+      if (($child.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { New-AIStudyBuddyDataBoundaryError $Code }
+      if ($child.PSIsContainer) { $pending.Push($child.FullName); continue }
+      $item = Assert-AIStudyBuddyDataRegularFile -Path $child.FullName -Code $Code
+      try { $relative = Get-AIStudyBuddyRelativePath -BasePath $root -TargetPath $item.FullName } catch { New-AIStudyBuddyDataBoundaryError $Code }
+      $files.Add([pscustomobject]@{ FullName = $item.FullName; RelativePath = $relative.Replace('\','/'); Bytes = [int64]$item.Length })
+    }
+  }
+  return @($files | Sort-Object RelativePath)
+}
+
 function Get-AIStudyBuddyDataShortFingerprint {
   param([string]$Value)
   if ([string]::IsNullOrWhiteSpace($Value)) { return 'unknown' }
@@ -548,9 +571,12 @@ function Get-AIStudyBuddyValidatedBackup {
     $seen[$relative.ToUpperInvariant()] = $true; $totalBytes += $bytes
     $validated.Add([pscustomobject]@{ RelativePath = $relative; SourcePath = $source; Bytes = $bytes; Sha256 = $hash })
   }
-  $payloadFiles = Get-AIStudyBuddyDataFiles -DataRoot $payload -Code 'RESTORE_PAYLOAD_INVALID'
+  $payloadFiles = Get-AIStudyBuddyDataPayloadFiles -PayloadRoot $payload -Code 'RESTORE_PAYLOAD_INVALID'
   if ($payloadFiles.Count -ne $validated.Count) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
-  foreach ($payloadFile in $payloadFiles) { if (-not $seen.ContainsKey($payloadFile.RelativePath.Replace('/','\').ToUpperInvariant())) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' } }
+  foreach ($payloadFile in $payloadFiles) {
+    $payloadRelative = Test-AIStudyBuddyBackupRelativePath $payloadFile.RelativePath
+    if ($null -eq $payloadRelative -or -not $seen.ContainsKey($payloadRelative.ToUpperInvariant())) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
+  }
   return [pscustomobject]@{ BackupPath = $backup; PayloadPath = $payload; Entries = @($validated); TotalBytes = $totalBytes }
 }
 

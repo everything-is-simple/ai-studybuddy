@@ -16,6 +16,15 @@ function Assert-BoundaryError {
   try { & $Action 2>$null | Out-Null } catch { $caught = $_.Exception }
   if ($null -eq $caught -or $caught.Message -ne $Code) { throw 'ASSERTION_FAILED' }
 }
+function Copy-ValidBackupFixture {
+  param([Parameter(Mandatory)] [string]$Source, [Parameter(Mandatory)] [string]$Destination)
+  New-Item -ItemType Directory -Path (Join-Path $Destination 'payload\semesters') -Force | Out-Null
+  Copy-Item -LiteralPath (Join-Path $Source 'manifest.json') -Destination (Join-Path $Destination 'manifest.json') -Force
+  Copy-Item -LiteralPath (Join-Path $Source 'payload\studybuddy.db') -Destination (Join-Path $Destination 'payload\studybuddy.db') -Force
+  Get-ChildItem -LiteralPath (Join-Path $Source 'payload\semesters') -Force | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $Destination 'payload\semesters') -Recurse -Force
+  }
+}
 try {
   New-Item -ItemType Directory -Path $fixtureRoot -ErrorAction Stop | Out-Null
   $install = Join-Path $fixtureRoot 'install-root'
@@ -65,16 +74,32 @@ try {
   @{ format = 'ai-studybuddy-data-backup-v2'; createdAt = '2026-01-01T00:00:00.0000000Z'; files = @(@{ path = '../escape'; sha256 = ('0' * 64); bytes = 0 }) } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $malicious 'manifest.json') -Encoding utf8
   Assert-BoundaryError { & (Join-Path $PSScriptRoot 'restore-data.ps1') -InstallRoot $install -BackupPath $malicious -WhatIf } 'RESTORE_MANIFEST_INVALID'
 
+  $extraRootPayload = Join-Path $fixtureRoot 'extra-root-payload-backup'
+  Copy-ValidBackupFixture -Source $backup -Destination $extraRootPayload
+  Set-Content -LiteralPath (Join-Path $extraRootPayload 'payload\unexpected.txt') -Value 'synthetic extra payload file' -Encoding utf8
+  Assert-BoundaryError { & (Join-Path $PSScriptRoot 'restore-data.ps1') -InstallRoot $install -BackupPath $extraRootPayload -WhatIf } 'RESTORE_PAYLOAD_INVALID'
+
+  $extraNestedPayload = Join-Path $fixtureRoot 'extra-nested-payload-backup'
+  Copy-ValidBackupFixture -Source $backup -Destination $extraNestedPayload
+  Set-Content -LiteralPath (Join-Path $extraNestedPayload 'payload\semesters\term-a\unmanifested.txt') -Value 'synthetic nested extra payload file' -Encoding utf8
+  Assert-BoundaryError { & (Join-Path $PSScriptRoot 'restore-data.ps1') -InstallRoot $install -BackupPath $extraNestedPayload -WhatIf } 'RESTORE_PAYLOAD_INVALID'
+
   $reparseStatus = 'REPARSE_FIXTURE_UNSUPPORTED'
   $link = Join-Path $fixtureRoot 'reparse-output'
+  $linkCreated = $false
   try {
     New-Item -ItemType SymbolicLink -Path $link -Target $output -ErrorAction Stop | Out-Null
-    Assert-BoundaryError { & (Join-Path $PSScriptRoot 'backup-data.ps1') -InstallRoot $install -OutputRoot $link -Name 'blocked-link' } 'BACKUP_OUTPUT_REPARSE_POINT'
-    $reparseStatus = 'REPARSE_FIXTURE_OK'
+    $linkCreated = $true
   } catch {
-    if ($reparseStatus -eq 'REPARSE_FIXTURE_OK') { throw }
-  } finally {
-    if (Test-Path -LiteralPath $link) { [IO.Directory]::Delete($link, $false) }
+    $linkCreated = $false
+  }
+  if ($linkCreated) {
+    try {
+      Assert-BoundaryError { & (Join-Path $PSScriptRoot 'backup-data.ps1') -InstallRoot $install -OutputRoot $link -Name 'blocked-link' } 'BACKUP_OUTPUT_REPARSE_POINT'
+      $reparseStatus = 'REPARSE_FIXTURE_OK'
+    } finally {
+      if (Test-Path -LiteralPath $link) { [IO.Directory]::Delete($link, $false) }
+    }
   }
   Assert-TrueValue ((Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash -eq $sentinelHash)
   Write-Output "DATA_BOUNDARY_TEST_OK $reparseStatus acl=$($aclEvidence.Status)"
