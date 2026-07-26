@@ -54,6 +54,12 @@ AI StudyBuddy 当前生产形态是 Windows 本机应用：
 
 必须排除：`.git`、`node_modules`、`.env.local`、真实 API Key/SMTP 授权码/完整 Webhook、真实资料、正式 SQLite、WSL venv、pip/npm cache、OCR/ASR 大模型缓存、完整运行日志和 Playwright 证据。
 
+### 构建输出与 staging 边界
+
+`scripts\build-deployment-package.ps1` 只能接收**显式传入、已存在、为空且位于仓库外的受控输出根**。它拒绝仓库根、磁盘根、用户目录、`APP_DATA_ROOT`、与这些受保护根交叠的目录以及符号链接/junction 等重解析点；不得用相对路径或默认输出目录代替。脚本仅在该输出根内创建本次操作专属的 staging 子目录，并且只允许清理由该操作标识的 staging 子目录；不会递归删除输出根，也不会覆盖或删除同名既有 ZIP。
+
+构建前会按路径名和文件系统元数据拒绝 `.git`、`node_modules`/缓存、真实环境文件、正式数据库、日志、`tmp`、模型、备份或运行时目录，并以固定、脱敏的类别报告边界失败；错误不应回显绝对宿主路径、环境值、stack、原始命令输出或文件内容。该边界说明不构成真实打包、真实清理或用户电脑验收记录；这些操作须在单独批准的发布/验收流程中进行。
+
 ---
 
 ## 四、全新安装流程

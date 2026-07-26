@@ -168,4 +168,139 @@ function Invoke-AIStudyBuddyNodeRuntimeCheck {
   $error = if ($data.error) { [string]$data.error } else { '' }
   return [pscustomobject]@{ Success = ($exitCode -eq 0 -and $data.ok -eq $true); ExitCode = $exitCode; Data = $data; Error = $error }
 }
+function New-AIStudyBuddyPackageBoundaryError {
+  param([Parameter(Mandatory)] [string]$Code)
+  throw [System.InvalidOperationException]::new($Code)
+}
+
+function Get-AIStudyBuddyPackageBoundaryFullPath {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  if ([string]::IsNullOrWhiteSpace($Path)) { New-AIStudyBuddyPackageBoundaryError $Code }
+  try { return [IO.Path]::GetFullPath($Path) } catch { New-AIStudyBuddyPackageBoundaryError $Code }
+}
+
+function Test-AIStudyBuddyPackageBoundaryDescendant {
+  param(
+    [Parameter(Mandatory)] [string]$Candidate,
+    [Parameter(Mandatory)] [string]$Root
+  )
+  $candidatePath = [IO.Path]::GetFullPath($Candidate).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+  $rootPath = [IO.Path]::GetFullPath($Root).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+  if ([string]::IsNullOrWhiteSpace($rootPath)) { return $false }
+  return $candidatePath.StartsWith($rootPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Get-AIStudyBuddyPackageBoundaryDirectory {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$MissingCode,
+    [Parameter(Mandatory)] [string]$ReparseCode
+  )
+  if (-not (Test-Path -LiteralPath $Path -PathType Container)) { New-AIStudyBuddyPackageBoundaryError $MissingCode }
+  try { $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop } catch { New-AIStudyBuddyPackageBoundaryError $MissingCode }
+  if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { New-AIStudyBuddyPackageBoundaryError $ReparseCode }
+  return $item
+}
+
+function Assert-AIStudyBuddyPackageTreeWithoutReparsePoints {
+  param(
+    [Parameter(Mandatory)] [string]$Root,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  $pending = [System.Collections.Generic.Stack[string]]::new()
+  $pending.Push($Root)
+  while ($pending.Count -gt 0) {
+    $current = $pending.Pop()
+    try { $item = Get-Item -LiteralPath $current -Force -ErrorAction Stop } catch { New-AIStudyBuddyPackageBoundaryError $Code }
+    if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { New-AIStudyBuddyPackageBoundaryError $Code }
+    if ($item.PSIsContainer) {
+      try { $children = @(Get-ChildItem -LiteralPath $current -Force -ErrorAction Stop) } catch { New-AIStudyBuddyPackageBoundaryError $Code }
+      foreach ($child in $children) { $pending.Push($child.FullName) }
+    }
+  }
+}
+
+function New-AIStudyBuddyPackageBoundary {
+  param(
+    [Parameter(Mandatory)] [string]$RepoRoot,
+    [string]$OutputRoot,
+    [string[]]$AdditionalProtectedRoots = @()
+  )
+  $repoPath = Get-AIStudyBuddyPackageBoundaryFullPath -Path $RepoRoot -Code 'PACKAGE_OUTPUT_INVALID'
+  if ([string]::IsNullOrWhiteSpace($OutputRoot)) { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_OUTPUT_EMPTY' }
+  if ($OutputRoot -notmatch '^(?:[A-Za-z]:[\\/]|\\\\)') { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_OUTPUT_INVALID' }
+  $outputPath = Get-AIStudyBuddyPackageBoundaryFullPath -Path $OutputRoot -Code 'PACKAGE_OUTPUT_INVALID'
+  $outputItem = Get-AIStudyBuddyPackageBoundaryDirectory -Path $outputPath -MissingCode 'PACKAGE_OUTPUT_INVALID' -ReparseCode 'PACKAGE_OUTPUT_REPARSE_POINT'
+  $outputPath = $outputItem.FullName
+  $volumeRoot = [IO.Path]::GetPathRoot($outputPath)
+  if ([string]::Equals($outputPath.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar), $volumeRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar), [StringComparison]::OrdinalIgnoreCase)) {
+    New-AIStudyBuddyPackageBoundaryError 'PACKAGE_OUTPUT_PROTECTED_ROOT'
+  }
+  $protectedRoots = @($repoPath, [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile), $env:APP_DATA_ROOT) + @($AdditionalProtectedRoots)
+  foreach ($protectedRoot in $protectedRoots) {
+    if ([string]::IsNullOrWhiteSpace($protectedRoot)) { continue }
+    $protectedPath = Get-AIStudyBuddyPackageBoundaryFullPath -Path $protectedRoot -Code 'PACKAGE_OUTPUT_PROTECTED_ROOT'
+    if ([string]::Equals($outputPath, $protectedPath, [StringComparison]::OrdinalIgnoreCase) -or
+        (Test-AIStudyBuddyPackageBoundaryDescendant -Candidate $outputPath -Root $protectedPath) -or
+        (Test-AIStudyBuddyPackageBoundaryDescendant -Candidate $protectedPath -Root $outputPath)) {
+      New-AIStudyBuddyPackageBoundaryError 'PACKAGE_OUTPUT_PROTECTED_ROOT'
+    }
+  }
+  try { $existing = @(Get-ChildItem -LiteralPath $outputPath -Force -ErrorAction Stop) } catch { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_OUTPUT_INVALID' }
+  if ($existing.Count -ne 0) { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_OUTPUT_NOT_EMPTY' }
+  $stageParent = Join-Path $outputPath '.aistudybuddy-package-staging'
+  $operationId = [guid]::NewGuid().ToString('N')
+  $stagePath = Join-Path $stageParent $operationId
+  try {
+    New-Item -ItemType Directory -Path $stagePath -Force -ErrorAction Stop | Out-Null
+    $stageItem = Get-AIStudyBuddyPackageBoundaryDirectory -Path $stagePath -MissingCode 'PACKAGE_STAGE_CREATE_FAILED' -ReparseCode 'PACKAGE_STAGE_REPARSE_POINT'
+  } catch {
+    New-AIStudyBuddyPackageBoundaryError 'PACKAGE_STAGE_CREATE_FAILED'
+  }
+  return [pscustomobject]@{ OutputRoot = $outputPath; StageParent = $stageParent; StagePath = $stageItem.FullName; OperationId = $operationId }
+}
+
+function Remove-AIStudyBuddyPackageBoundaryStage {
+  param([Parameter(Mandatory)] [pscustomobject]$Boundary)
+  $outputPath = Get-AIStudyBuddyPackageBoundaryFullPath -Path ([string]$Boundary.OutputRoot) -Code 'PACKAGE_DELETE_TARGET_INVALID'
+  $stageParent = Get-AIStudyBuddyPackageBoundaryFullPath -Path ([string]$Boundary.StageParent) -Code 'PACKAGE_DELETE_TARGET_INVALID'
+  $stagePath = Get-AIStudyBuddyPackageBoundaryFullPath -Path ([string]$Boundary.StagePath) -Code 'PACKAGE_DELETE_TARGET_INVALID'
+  $operationId = [string]$Boundary.OperationId
+  if ([string]::IsNullOrWhiteSpace($operationId) -or
+      -not [string]::Equals((Split-Path $stageParent -Leaf), '.aistudybuddy-package-staging', [StringComparison]::Ordinal) -or
+      -not [string]::Equals((Split-Path $stagePath -Leaf), $operationId, [StringComparison]::OrdinalIgnoreCase) -or
+      -not (Test-AIStudyBuddyPackageBoundaryDescendant -Candidate $stageParent -Root $outputPath) -or
+      -not (Test-AIStudyBuddyPackageBoundaryDescendant -Candidate $stagePath -Root $stageParent)) {
+    New-AIStudyBuddyPackageBoundaryError 'PACKAGE_DELETE_TARGET_INVALID'
+  }
+  if (-not (Test-Path -LiteralPath $stagePath)) { return }
+  Assert-AIStudyBuddyPackageTreeWithoutReparsePoints -Root $stagePath -Code 'PACKAGE_DELETE_TARGET_REPARSE_POINT'
+  try { Remove-Item -LiteralPath $stagePath -Recurse -Force -ErrorAction Stop } catch { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_STAGE_DELETE_FAILED' }
+  if (Test-Path -LiteralPath $stageParent) {
+    try {
+      $remaining = @(Get-ChildItem -LiteralPath $stageParent -Force -ErrorAction Stop)
+      if ($remaining.Count -ne 0) { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_DELETE_TARGET_INVALID' }
+      Remove-Item -LiteralPath $stageParent -Force -ErrorAction Stop
+    } catch {
+      New-AIStudyBuddyPackageBoundaryError 'PACKAGE_STAGE_DELETE_FAILED'
+    }
+  }
+}
+
+function Assert-AIStudyBuddyPackageStagingContents {
+  param([Parameter(Mandatory)] [pscustomobject]$Boundary)
+  $stagePath = Get-AIStudyBuddyPackageBoundaryFullPath -Path ([string]$Boundary.StagePath) -Code 'PACKAGE_CONTENTS_INVALID'
+  if (-not (Test-Path -LiteralPath $stagePath -PathType Container)) { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_CONTENTS_INVALID' }
+  Assert-AIStudyBuddyPackageTreeWithoutReparsePoints -Root $stagePath -Code 'PACKAGE_CONTENTS_REPARSE_POINT'
+  $forbiddenNames = @('.git', 'node_modules', 'logs', 'tmp', 'models', 'backups', 'runtime', '.env', '.env.local', 'production.env')
+  try { $items = @(Get-ChildItem -LiteralPath $stagePath -Recurse -Force -ErrorAction Stop) } catch { New-AIStudyBuddyPackageBoundaryError 'PACKAGE_CONTENTS_INVALID' }
+  foreach ($item in $items) {
+    if ($forbiddenNames -contains $item.Name -or $item.Name -match '\.(?:sqlite|sqlite3|db|log)$') {
+      New-AIStudyBuddyPackageBoundaryError 'PACKAGE_CONTENTS_FORBIDDEN'
+    }
+  }
+}
 Export-ModuleMember -Function *-AIStudyBuddy*, Get-NodeVersionInfo, Get-PythonVersionInfo, Import-AIStudyBuddyEnvFile
