@@ -884,16 +884,16 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **2026-07-24 开发机 Windows 原生 + Node 24 运行时基线（开发机基线已验证并推送 `origin/master`；非用户机验收）**：计划 `.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md` 已由任务分支 `codex/process-dev-machine-node24-runtime-baseline` fast-forward 合入独立主线集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`；原主工作区的未提交学期版本 8/9 改动及 S7/G2 文档未被覆盖。新的干净部署包 `H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01\deployment-package-node24-master` 在新的独立安装根 `H:\ai-studybuddy-runtime\dev-machine-node24-baseline-master-20260724-01` 中完成 `bootstrap-runtime.ps1` → `check-installation.ps1` → `test-ocr-runtime.ps1` → `start-production.ps1`（仅 `127.0.0.1:30127`）→ `/api/health` → `stop-production.ps1` → 脱敏数据安全检查；构建、bootstrap、安装检查、修正后的 OCR、停止和安全检查均为 exit `0`。启动脚本已输出本机回环地址；其日志包装因后台 Node 继承输出句柄超时，故以独立 `/api/health` 的 `success=true` 与停止后无 PID/关联 Node 残留确认启动/停止结果。Node 为 `v24.14.0`，Python 为 `3.10.19 x64`，OCR 合成中文 smoke 通过；主线 `pnpm type-check`、后端/前端构建、`pnpm test`（242/242）、文档治理和 `git diff --check` 均 exit `0`。当前运行时事实和命中的部署脚本已收紧为仅 Node 24；脱敏证据见 `.plans/evidence/process-dev-machine-node24-baseline-20260724-01.md`。**用户电脑安装运行仍为待目标机器到位后的独立实机验收门禁，当前不得宣称完成；ASR / Docker / WSL 继续独立暂缓，未进入产品实现。**
 
 ---
-## Phase 3：打磨与安全（2026-07-25 启动治理/计划阶段）
+## Phase 3：打磨与安全（T02 基线审计切片实施中）
 
-**状态**：用户于 2026-07-25 明确要求“Phase 3 今天上”。当前解释为启动 Phase 3 治理/计划阶段；以下仍是候选方向，首批实施任务必须另建独立计划并获批准后再执行。
+**状态**：用户于 2026-07-25 明确要求启动 Phase 3；已批准的 T02 安全与隐私基线审计正在按独立切片实施。T02A–T02F 已各自完成主线复验并进入 `origin/master`；T02G 的合成夹具安全边界已在任务分支完成验证、等待独立审查和按 Git 门禁集成，尚未进入 `master`。T02 总体审计、真实机器操作与其余 Phase 3 候选任务仍未完成。
 
-**实施门禁**：进入任何 Phase 3 业务实现前必须重新确认产品范围并创建独立计划。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
+**实施门禁**：任何尚未获批的 Phase 3 实现仍须重新确认产品范围并创建独立计划；任务分支提交、合成夹具证据或单个切片完成均不等于 T02、Phase 3、生产上线或用户电脑验收完成。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
 | 1 | T01：S6 后续产品形态重新决策（历史候选：家长面板） | ⏸️ | 先决定是否继续保持异步脱敏报告；不得默认引入家长登录或 Web 面板 |
-| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A/T02B/T02C 切片均已推送 `origin/master` 并完成各自主线复验；T02D 秘密扫描安全证明边界已推送 `origin/master`；总体审计与全部修复仍未完成 |
+| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A–T02F 切片均已推送 `origin/master` 并完成各自主线复验；T02G 已在任务分支完成合成夹具安全边界验证，待审查/集成；总体审计、真实 ACL/backup/restore 与全部修复仍未完成 |
 | 3 | T03：性能基线 | ⏸️ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
 | 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
 | 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
@@ -909,7 +909,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02D | `.plans/phase3-t02d-secret-scan-deployment-package-plan.md` | ✅ 已推送 `origin/master`；T02D 切片完成，不等于 T02 完成 |
 | PHASE3-T02E | `.plans/phase3-t02e-deployment-output-delete-boundary-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02E 切片完成，不等于 T02 完成 |
 | PHASE3-T02F | `.plans/phase3-t02f-log-redaction-rotation-retention-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02F 切片完成不等于 T02 完成 |
-| PHASE3-T02G | .plans/phase3-t02g-windows-data-acl-backup-restore-plan.md | 🔄 实施中：已完成合成夹具的路径/ACL 只读证据、backup manifest 与 restore `-WhatIf` fail-closed 验证；真实 ACL、真实 backup/restore 及 restore 写入仍未获批准或实施，不等于 T02 完成 |
+| PHASE3-T02G | `.plans/phase3-t02g-windows-data-acl-backup-restore-plan.md` | 🔄 分支实施/待审查集成：提交 `b5c6783` 已完成合成夹具的路径/ACL 只读证据、backup manifest 与 restore `-WhatIf` fail-closed 验证并推送任务分支；尚未合入 `master`。真实 ACL、真实 backup/restore 及 restore 写入仍未获批准或实施，不等于 T02 完成 |
 
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；T02A 与 T02B 已作为独立切片进入远端主线并完成各自主线复验。批准计划或切片完成均不表示 T02 总体、Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 

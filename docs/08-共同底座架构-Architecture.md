@@ -2,7 +2,7 @@
 
 **版本**：v1.20
 **日期**：2026-07-23
-**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5 的 T02=`PARTIAL`、T03=`PASS`、T04=能力验证 `PARTIAL`（非 Adapter 装配）；G2 正式语义已采用、跨平台强证据待独立批准；Phase 3 暂缓
+**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5 的 T02=`PARTIAL`、T03=`PASS`、T04=能力验证 `PARTIAL`（非 Adapter 装配）；G2 正式语义已采用、跨平台强证据待独立批准；Phase 3 的 T02A–T02F 已进入 `origin/master`，T02G 仅完成任务分支的合成夹具安全边界验证、待审查集成
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---
@@ -191,7 +191,7 @@ PROCESS-RUNTIME-DEPLOY 后，生产运行采用单后端进程托管静态前端
 - `bootstrap-runtime.ps1` 执行目录创建、app 复制、生产 Node 依赖安装、OCR venv 安装和无密钥 `production.env` 生成；
 - `start-production.ps1` / `stop-production.ps1` 负责单进程启停和 PID/端口治理；
 - `check-installation.ps1` 只读检查 Windows、Node/Python、OCR、端口、健康接口、数据库状态、任务计划、密钥误携带和 E2E 目录误用；
-- `backup-data.ps1` / `restore-data.ps1` / `test-data-integrity.ps1` 当前只在合成夹具中验证：backup 要求显式的安装根外受控输出并写入最小 v2 manifest；restore 仅允许 `-WhatIf` 预检，真实恢复、恢复点和活动数据写入仍保持禁用，等待独立批准；
+- `backup-data.ps1` / `restore-data.ps1` / `test-data-integrity.ps1` 当前只在 T02G 任务分支的仓库外合成夹具中验证：backup 要求显式的安装根外受控输出并写入最小 v2 manifest；restore 仅允许 `-WhatIf` 预检，真实恢复、恢复点和活动数据写入仍保持禁用，等待独立批准与主线集成；
 - 家长报告任务计划只注册当前 Windows 用户任务，命令指向安装根 wrapper，不写死开发机路径。
 
 S7/ASR 仍停留在验证能力和 G2 门禁：Docker/WSL 可用于隔离验证或未来实验，但不进入本轮产品 API、Worker、前端或正式运行链路。

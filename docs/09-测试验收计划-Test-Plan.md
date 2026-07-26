@@ -253,7 +253,7 @@ G2 的验收对象是**可验证的操作系统级离线隔离**，而不是某�
 | Bootstrap | 使用机器安装根创建目录、复制 app、安装生产 Node 依赖、创建 OCR venv、生成无密钥 `production.env`；不依赖开发机盘符作为运行时 | 记录 InstallRoot、Node/Python 版本、venv 路径和无密钥声明 |
 | 生产启停 | 后端只监听 `127.0.0.1`；健康接口成功；前端 `/` 与 SPA fallback 返回 HTML；未知 `/api/*` 返回 JSON 404；停止后端口释放 | 记录 PID、端口、health JSON、HTTP 状态和 stop 结果 |
 | OCR smoke | RapidOCR 可导入；中文合成图、空白图、不存在路径、超时、Worker JSON 输出和临时清理通过；模型缓存不进源码 | 记录 `test-ocr-runtime.ps1` 输出和 RuntimeRoot |
-| 备份/恢复 | 白名单备份 `studybuddy.db`、学期库和 materials；排除 config/tmp/logs/models/secrets；manifest hash 通过；`-WhatIf` 不落盘；实际恢复生成 recovery point | 记录 backup path、payload 文件列表、integrity 输出、restore root |
+| 备份/恢复 | 当前仅 T02G 仓库外合成夹具：白名单 `studybuddy.db` 与 `semesters/`、v2 manifest/hash/路径验证、`-WhatIf` 不落盘；非 `-WhatIf` 固定拒绝 `RESTORE_WRITE_DISABLED`。真实备份、恢复点和恢复写入尚未获批/实施 | 记录 `scripts/test-data-boundary.ps1` 的合成夹具结果、完整性验证计数和无残留清理证据；不得记录真实 backup path、payload 文件列表或 restore root |
 | 配置/密钥 | 安装包和 Git 不携带真实密钥；AI/SMTP/飞书未配置时离线确定性主线可用，发送类能力不伪造成功 | 记录 `check-installation.ps1` secure-config、secret-files 和 plain-secret-config 检查 |
 | 任务计划 | 默认不注册真实发送；注册脚本以当前用户身份指向安装根 wrapper；卸载/注销不删学习数据 | 记录单测或 WhatIf/静态检查；真实发送另行验收 |
 | 安全网络 | 不新增防火墙规则，不绑定局域网，不暴露公网；日志不含 API Key、SMTP 授权码、完整 Webhook 或资料原文 | 记录端口监听和日志/密钥扫描 |

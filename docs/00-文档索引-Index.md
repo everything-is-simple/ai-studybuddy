@@ -39,7 +39,7 @@
 - **产品目的与使用者**：`docs/01` 是首要入口。系统为一名在 Windows 本机学习的学生而做，帮助她把课程/考试目标、学习节奏、资料笔记、练习、错题和考前冲刺连成可持续闭环；家长不是系统操作者，只接收脱敏的异步学习摘要。
 - **已集成事实**：只有 `origin/master` 上的代码、`docs/04` 任务状态和主线复验共同构成“已完成”结论。当前 S1–S6 主线已完成；开发机 Windows 原生 + Node 24 部署基线已验证，但用户电脑的安装运行验收仍是未完成门禁。
 - **S7 与外部候选边界**：S7-MVP 已完成主线复验并推送 `origin/master`：目标仅为受控 PCM WAV → 显式本机 `whisper.cpp` → 可编辑文本 → S2 文本资料。旧外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据仍不等于完整 S7、通用静音、G2、T02 主线、用户机能力或 Phase 3。
-- **当前治理/暂停项**：Phase 3 已按用户 2026-07-25 明确要求启动治理/计划阶段，首批实施仍需独立计划和批准；Docker/WSL、G2/外部 ASR 主线、完整 S7、S3 Worker 和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
+- **当前治理/实施项**：Phase 3 的 T02 安全与隐私基线审计已按独立计划和切片推进：T02A–T02F 已完成主线复验并进入 `origin/master`；T02G 已在任务分支完成合成夹具安全边界验证、尚待独立审查和集成，真实 ACL、真实 backup/restore 与恢复写入仍未批准或实施。T02 总体、Docker/WSL、G2/外部 ASR 主线、完整 S7、S3 Worker 和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
 - `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。`H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
 - 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
 - **worktree 脏状态与目录边界治理**：未提交状态不是产品完成或失败结论，也不等于可删除垃圾。当前安全收口计划为 `.plans/process-dirty-state-remediation-plan.md`，其索引和批准状态见 `docs/04`；唯一允许的新任务 worktree 根目录是 `H:\ai-studybuddy-worktrees`，`H:\ai-studybuddy` 内严禁创建或保留 `.worktrees` 根。任何语义改动、生成物或依赖残留都必须先分类、核对绝对路径并取得相应批准，不能用 `git clean`、`git reset --hard` 或覆盖 checkout 处理。
@@ -141,7 +141,7 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B、T09C、T09D 与 T09E 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环、练习历史与归档学期只读查看，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收；Phase 3 已按用户 2026-07-25 要求启动治理/计划阶段，首批实施仍需独立计划和批准。S7-MVP 已完成主线复验并推送 `origin/master`：它只覆盖受控 WAV、本机同步 `whisper.cpp`、可编辑文本及显式 S2 handoff；旧 T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于完整 S7、通用静音、G2 或用户机验收。S3 Worker 不属于当前 MVP。
+4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收。Phase 3 的 T02 基线审计已按独立计划推进：T02A–T02F 已进入 `origin/master`；T02G 合成夹具边界提交 `b5c6783` 仅位于任务分支，待审查/集成，且不授权真实 ACL、备份或恢复写入。S7-MVP 已完成主线复验并推送 `origin/master`：它只覆盖受控 WAV、本机同步 `whisper.cpp`、可编辑文本及显式 S2 handoff；旧 T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于完整 S7、通用静音、G2 或用户机验收。S3 Worker 不属于当前 MVP。
 5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 计划、实现、主线集成、主线复验与 `origin/master` 推送已完成，验证隔离根 `I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
 
 ---
@@ -175,6 +175,7 @@ git diff --check
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| v2.60 | 2026-07-26 | 同步 Phase 3 T02 实施事实：T02A–T02F 已各自完成主线复验并进入 `origin/master`；T02G 实现提交 `b5c6783` 已在任务分支完成合成夹具的路径/ACL 只读证据、v2 backup manifest 和 restore `-WhatIf` fail-closed 验证，正待独立审查/集成。该记录不表示 T02G、T02、Phase 3、安全审计、真实 ACL/备份/恢复、生产上线或用户电脑验收完成。 |
 | v2.59 | 2026-07-26 | PHASE3-T02C 实现提交 `3a0b6bf` 已安全 fast-forward 集成到本机 `master`，并完成主线复验：Windows 原生 Node 24、仓库外隔离根、后端 build、T02C 专项与 T02A/T02B 相邻边界测试共 47/47、`pnpm type-check`、前端测试、文档治理和 `git diff --check` 均通过；外部服务配置保持为空，未调用真实服务。实现、主线复验与文档状态提交已推送 `origin/master`，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
 | v2.58 | 2026-07-26 | 创建 PHASE3-T02C 配置加载与环境错误脱敏实施计划 `.plans/phase3-t02c-env-error-redaction-plan.md`，登记 `docs/04` Phase 3 行动计划索引；范围仅限 `.env`/运行环境解析、配置校验错误和脚本检查摘要的秘密回显边界。当前仅为计划已创建并完成计划阶段审查，等待用户单独批准实施，不等于 T02C 实施、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
 | v2.57 | 2026-07-26 | PHASE3-T02A 状态补正与最新主线复验：实现提交 `7f976a0` 已在 `origin/master` 历史中，本轮基于 `533e6f2` 确认无需额外合并并完成 Node 24 主线复验；后端 build、T02A 专项 16/16、`pnpm type-check`、前端 Vitest 26 files / 139 tests、完整 `pnpm test`（后端 272/272）、文档治理和 `git diff --check` 均通过。范围仍仅限生产攻击面与统一错误边界，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |

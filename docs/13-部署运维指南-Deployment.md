@@ -33,7 +33,7 @@ AI StudyBuddy 当前生产形态是 Windows 本机应用：
 ├─ logs\         脱敏运行日志
 ├─ tmp\          可清理临时文件
 ├─ models\       OCR/未来模型缓存，不进 Git/部署包/普通备份
-├─ backups\      带 manifest/hash 的只读备份和恢复点
+├─ backups\      预留给后续受控 manifest/hash 备份和恢复点；当前不执行真实用户数据备份/恢复
 └─ runtime\venv\ OCR Python 虚拟环境
 ```
 
