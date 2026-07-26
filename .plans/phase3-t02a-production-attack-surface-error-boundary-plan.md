@@ -1,5 +1,7 @@
 # PHASE3-T02A 生产攻击面与统一错误边界实施计划
 
+> **状态**：用户已批准并完成实施；实现提交 `7f976a0` 已位于 `origin/master` 历史中。本轮基于 `533e6f2` 完成最新主线复验与文档状态补正；T02A 切片完成，但不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在不扩大产品范围的前提下，收紧生产后端的开发路由攻击面、统一 API 异常响应、显式固定生产运行模式，并在后端配置层强制回环监听。
@@ -333,8 +335,12 @@ git status --short --branch
 - **隐私/秘密边界：通过。** 计划不要求读取、打印或持久化真实 Key、Provider URL、学生资料、课堂录音、正式运行数据或完整秘密环境。
 - **兼容性：通过。** 开发/测试 dev API 通过显式 `NODE_ENV` 保留；生产默认 fail-closed；既有 Origin、健康检查、静态资源和 SPA fallback 纳入回归。
 - **治理边界：通过。** 未授权完整 S7、G2、S3 Worker、Docker/WSL、Firewall、用户电脑验收或业务产品扩张；未把计划创建写成安全审计完成。
-- **状态结论：** 本文件只是 T02A 实施计划，**等待用户明确批准；批准前不得实施安全修复**。
+- **状态结论：** 计划已获用户批准并按范围实施；实现提交 `7f976a0` 已位于 `origin/master` 历史中，并于 2026-07-26 基于 `533e6f2` 完成最新主线复验。T02A 切片完成，但不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。
 
-## 8. 后续批准动作
+## 8. 主线集成与复验记录
 
-请批准或退回本 T02A 计划。只有收到明确批准后，才可在本 worktree 中按 Task 1→Task 5 实施；批准 T02A 也只授权本计划范围内的源码、测试和文档变更，不自动授权 T02 的其他切片。
+- 任务分支：`codex/phase3-t02a-production-attack-surface-error-boundary-plan`；外部 worktree：`H:\ai-studybuddy-worktrees\phase3-t02a-production-attack-surface-error-boundary-plan`。
+- 实现提交：`7f976a0 fix(phase3): 收紧生产攻击面与错误边界`；该提交已位于当前 `origin/master` 历史中。本轮基于 `533e6f2` 检查时确认无需额外 fast-forward、cherry-pick 或 merge，且未覆盖 T02B 已合入改动。
+- 最新主线复验：使用 `H:\ai-studybuddy-tmp\runs\phase3-t02a-master-verify-20260726-01` 和 `H:\ai-studybuddy-tmp\runs\phase3-t02a-master-pnpm-test-20260726-01`，清空 Provider、SMTP、Webhook 等外部服务配置，在 Windows 原生 Node 24 上通过后端 build、T02A 专项 16/16、`pnpm type-check`、前端 Vitest 26 files / 139 tests、文档治理、`git diff --check` 与完整 `pnpm test`（后端 272/272）。前端 build 仅既有 KaTeX chunk warning。
+- 未执行真实 OCR、真实 whisper.cpp、Provider、SMTP、Webhook 或其他真实外部服务。
+- 结论：T02A 切片已进入远端主线并完成最新主线复验；不得宣称 T02、Phase 3、安全审计、生产上线、用户电脑验收、日志轮转、备份/ACL、生产防火墙、Docker/WSL、完整 S7、G2 或 S3 Worker 完成。
