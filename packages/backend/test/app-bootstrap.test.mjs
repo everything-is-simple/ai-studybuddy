@@ -23,7 +23,7 @@ const service = {
 };
 
 test('createApp protects every API route and exposes config status to allowed origins', async (t) => {
-  const app = createApp({ configurationService: service, allowedOriginsRaw: undefined });
+  const app = createApp({ configurationService: service, allowedOriginsRaw: undefined, enableDevRoutes: false });
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));

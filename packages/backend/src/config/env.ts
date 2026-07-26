@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
+export type NodeEnv = 'development' | 'test' | 'production';
+
 // 从 monorepo 根目录读取 .env.local
 // tsx 运行时 __dirname 可能指向源文件目录，process.cwd() 更可靠
 const envCandidates = [
@@ -39,6 +41,20 @@ function readBoundedNumberEnv(key: string, fallback: number, minimum: number, ma
     throw new Error(`[CONFIG] INVALID_NUMBER ${key} must be between ${minimum} and ${maximum}`);
   }
   return Math.floor(value);
+}
+
+function readNodeEnv(): NodeEnv {
+  const value = process.env.NODE_ENV ?? 'development';
+  if (value === 'development' || value === 'test' || value === 'production') return value;
+  throw new Error('[CONFIG] INVALID_NODE_ENV unsupported runtime mode');
+}
+
+function readBackendHost(): '127.0.0.1' {
+  const value = process.env.BACKEND_HOST ?? '127.0.0.1';
+  if (value !== '127.0.0.1') {
+    throw new Error('[CONFIG] INVALID_BACKEND_HOST backend must listen on loopback');
+  }
+  return value;
 }
 
 export function getDocxZipLimits() {
@@ -116,8 +132,9 @@ export function getOcrWorkerEnvironment(options: { tempRoot: string; cacheRoot?:
 export const config = {
   appDataRoot: resolvedRoot,
 
+  nodeEnv: readNodeEnv(),
   backendPort: Number(process.env.BACKEND_PORT ?? 3000),
-  backendHost: process.env.BACKEND_HOST ?? '127.0.0.1',
+  backendHost: readBackendHost(),
   frontendStaticRoot: process.env.FRONTEND_STATIC_ROOT ?? '',
   // T05 仅供隔离验证注入固定时钟；未设置时服务使用真实当前时间。
   cramPlanNow: process.env.CRAM_PLAN_NOW ?? '',

@@ -15,6 +15,7 @@ async function main(): Promise<void> {
         configurationService,
         allowedOriginsRaw: config.configAllowedOrigins,
         staticRoot: config.frontendStaticRoot || path.resolve(__dirname, 'public'),
+        enableDevRoutes: config.nodeEnv === 'development' || config.nodeEnv === 'test',
       }),
     createWorker: () => new MaterialJobWorker(),
     port: config.backendPort,

@@ -18,7 +18,7 @@ const service = {
   testAndActivate: async () => ({ activated: false, test: { pass: false } }),
   retest: async () => null,
 };
-const app = createApp({ configurationService: service, staticRoot });
+const app = createApp({ configurationService: service, staticRoot, enableDevRoutes: false });
 const server = http.createServer(app);
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -42,7 +42,7 @@ test('production host serves assets and SPA fallback while preserving API JSON',
 });
 
 test('createApp without staticRoot keeps API-only behavior', async () => {
-  const apiOnly = http.createServer(createApp({ configurationService: service }));
+  const apiOnly = http.createServer(createApp({ configurationService: service, enableDevRoutes: false }));
   await new Promise((resolve) => apiOnly.listen(0, '127.0.0.1', resolve));
   const response = await fetch(`http://127.0.0.1:${apiOnly.address().port}/some-page`);
   assert.equal(response.status, 404);

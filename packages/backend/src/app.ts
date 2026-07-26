@@ -17,6 +17,7 @@ import studyRhythmRouter from './api/study-rhythm';
 import type { ConfigurationService } from './config/configuration-service';
 import type { TimetableRecognizer } from './services/semester-selector-service';
 import { createApiOriginPolicy, parseAllowedOrigins } from './middleware/api-origin-policy';
+import { apiErrorHandler, sendSafeApiError } from './middleware/api-error-handler';
 import { createConfigRouter } from './routes/config-routes';
 
 export function createApp(options: {
@@ -24,6 +25,7 @@ export function createApp(options: {
   allowedOriginsRaw?: string;
   timetableRecognizer?: TimetableRecognizer;
   staticRoot?: string;
+  enableDevRoutes?: boolean;
 }): Express {
   const app = express();
   app.use('/api', createApiOriginPolicy(parseAllowedOrigins(options.allowedOriginsRaw)));
@@ -38,10 +40,12 @@ export function createApp(options: {
   });
 
   app.use('/api/config', createConfigRouter(options.configurationService));
-  app.use('/api/dev', devRouter);
-  app.use('/api/dev/storage', storageDevRouter);
-  app.use('/api/dev/converter', converterDevRouter);
-  app.use('/api/dev/ai', aiDevRouter);
+  if (options.enableDevRoutes === true) {
+    app.use('/api/dev', devRouter);
+    app.use('/api/dev/storage', storageDevRouter);
+    app.use('/api/dev/converter', converterDevRouter);
+    app.use('/api/dev/ai', aiDevRouter);
+  }
   app.use('/api', createSemesterSelectorRouter({ recognizer: options.timetableRecognizer }));
   app.use('/api', studyRhythmRouter);
   app.use('/api', dailyStudyHomeRouter);
@@ -52,7 +56,7 @@ export function createApp(options: {
   app.use('/api', errorFixerRouter);
 
   app.use('/api', (_req, res) => {
-    res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'API route not found' } });
+    sendSafeApiError(res, 'NOT_FOUND');
   });
 
   const staticRoot = options.staticRoot;
@@ -65,6 +69,8 @@ export function createApp(options: {
       res.sendFile(indexPath);
     });
   }
+
+  app.use(apiErrorHandler);
 
   return app;
 }

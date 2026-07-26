@@ -28,6 +28,7 @@ const configurationService = {
 async function startApp(t) {
   const app = createApp({
     configurationService,
+    enableDevRoutes: false,
     timetableRecognizer: {
       recognize: async () => ({
         text: '周一 08:00-08:45 数学 101\n周三 10:00-10:45 英语 202',

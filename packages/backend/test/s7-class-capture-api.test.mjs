@@ -7,7 +7,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 const backendDir = path.resolve(import.meta.dirname, '..');
-let nextPort = 49800;
+let nextPort = 59500;
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-s7-api-'));
@@ -19,6 +19,7 @@ async function startBackend(t) {
       APP_DATA_ROOT: dataRoot,
       BACKEND_HOST: '127.0.0.1',
       BACKEND_PORT: String(port),
+      NODE_ENV: 'test',
       AI_PROVIDERS: '',
       AI_API_KEY: '',
       LOCAL_ASR_WHISPER_CLI_PATH: '',

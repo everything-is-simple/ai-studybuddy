@@ -19,6 +19,7 @@ async function startBackend(t) {
       APP_DATA_ROOT: dataRoot,
       BACKEND_HOST: '127.0.0.1',
       BACKEND_PORT: String(port),
+      NODE_ENV: 'test',
     },
     stdio: 'ignore',
   });

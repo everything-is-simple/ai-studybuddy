@@ -7,6 +7,7 @@ if (-not (Test-Path -LiteralPath $paths.EnvFile -PathType Leaf)) { throw "Runtim
 if (-not (Test-Path -LiteralPath (Join-Path $paths.Backend 'server.js') -PathType Leaf)) { throw 'Compiled backend server.js is missing.' }
 Import-AIStudyBuddyEnvFile $paths.EnvFile
 Assert-AIStudyBuddyLoopbackHost
+$env:NODE_ENV = 'production'
 if ($Port -gt 0) { $env:BACKEND_PORT = [string]$Port }
 if ([string]::IsNullOrWhiteSpace($env:BACKEND_PORT)) { $env:BACKEND_PORT = '3000' }
 $node = Get-NodeVersionInfo
