@@ -1,7 +1,7 @@
 # PHASE3-T02C 配置加载与环境错误脱敏实施计划
 
 > **任务**：PHASE3-T02C：配置加载、`.env`/运行环境解析与配置校验错误脱敏
-> **状态**：用户已批准实施；任务分支 `codex/phase3-t02c-env-error-redaction` 已完成实现、复验与独立审查，待主线集成/推送。不创建未来 PRD，不执行真实外部服务。
+> **状态**：主线集成与主线复验完成，待推送；任务分支 `codex/phase3-t02c-env-error-redaction` 的实现提交 `3a0b6bf` 已安全 fast-forward 集成到本机 `master`。不创建未来 PRD，不执行真实外部服务。
 > **基线**：`origin/master` `6507dd3`，已包含 PHASE3-T02A `7f976a0` 与 PHASE3-T02B `eeb9cb1`。
 
 ## 1. Summary
@@ -217,4 +217,10 @@ pnpm test
 - **allow/deny 契约核对：通过。** 错误输出仅允许固定错误码、固定提示、配置键名、类别与非值型行号；未引入 Provider URL、API Key、SMTP、Webhook、`APP_DATA_ROOT` 值、绝对路径、完整宿主环境、raw parser message 或 stack 的外部回显。
 - **测试可证明性核对：通过。** 新增测试使用无效合成哨兵，并断言 thrown error、stdout、stderr、测试输出和公开 API JSON 响应中均不含哨兵值；测试没有 dump `process.env` 或完整配置对象。
 - **边界核对：通过。** 未重复 T02A 的生产 dev API/统一 API 错误边界，未重复 T02B 的 OCR/whisper.cpp 子进程环境 allowlist；未调用真实 OCR、whisper.cpp、Provider、SMTP、Webhook 或网络服务。
-- **状态核对：通过。** 当前只是任务分支实现、复验与独立审查完成，尚未合入 `master` 或推送 `origin/master`；不得宣称 T02C 主线完成、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。
+- **状态核对：通过。** 主线集成与主线复验完成，待推送：实现提交 `3a0b6bf` 已安全 fast-forward 集成到本机 `master`；尚未推送 `origin/master`。不得宣称 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。
+
+### 8.4 主线复验与待推送状态
+
+- 在新的仓库外隔离数据根、Windows 原生 Node 24 与清空的外部服务配置下完成主线复验；未读取、打印、调用或验证真实 Provider、SMTP、Webhook、OCR 或 whisper.cpp 配置。
+- 后端 build、T02C 专项 7/7、相邻 T02A/T02B 边界回归 40/40（共 47/47）、`pnpm type-check`、前端测试、文档治理和 `git diff --check` 均通过。
+- 当前状态为“主线集成与主线复验完成，待推送”；本次仅登记本机主线事实，未推送 `master` 到 `origin/master`。
