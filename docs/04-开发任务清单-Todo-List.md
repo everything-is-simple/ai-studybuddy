@@ -1,7 +1,7 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.97
-**日期**：2026-07-25
+**版本**：v1.99
+**日期**：2026-07-26
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
 > 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 已按用户 2026-07-25 明确要求启动治理/计划阶段；首批 Phase 3 实施任务仍需独立计划和批准。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
@@ -897,9 +897,20 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 3 | T03：性能基线 | ⏸️ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
 | 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
 | 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
+
+### Phase 3 行动计划索引
+
+| 任务 | 计划文件 | 计划/实施状态 |
+| ---- | -------- | ------------- |
+| PHASE3-T02 | `.plans/phase3-t02-security-privacy-baseline-audit-plan.md` | ✅ 基线审计计划已获批准；总体审计与全部修复未完成 |
+| PHASE3-T02A | `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md` | 🔄 任务分支验证完成，待主线集成；不等于 T02 完成 |
+| PHASE3-T02B | `.plans/phase3-t02b-subprocess-environment-boundary-plan.md` | 🔄 任务分支实现与独立审查完成，待主线集成；不等于 T02 完成 |
+
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；首个实施切片 T02A 已获单独批准并在独立任务分支实施中。批准计划或分支实现均不表示 Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 
 > **PHASE3-T02A 生产攻击面与统一错误边界详细实施（2026-07-26，任务分支已完成，待主线集成）**：外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02a-production-attack-surface-error-boundary-plan`，分支 `codex/phase3-t02a-production-attack-surface-error-boundary-plan`，计划路径 `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md`。本切片已在任务分支实现生产 `/api/dev*` 隔离、统一 JSON 错误边界、显式 `NODE_ENV=production` 和后端核心精确 `127.0.0.1` 回环校验；开发/测试模式保留 dev API，子进程测试显式声明 `NODE_ENV=test`。回归覆盖生产 JSON 404（无 `data`、无路径或 storage key）、畸形 JSON、全局 Multer 限制、未知异常、允许列表安全应用错误、非法 `NODE_ENV` 和非回环 `BACKEND_HOST` 拒绝。2026-07-26 使用仓库外隔离根 `H:\ai-studybuddy-tmp\runs\phase3-t02a-final-20260726-02` 验证通过：`pnpm type-check`、后端 build、六个专项测试文件 30/30、前端 build、`pnpm test`（后端 267/267）、文档治理和 diff 检查。独立复审已完成；未合入 `master`、未推送 `origin/master`，仍不得写成 T02A、Phase 3 安全审计或用户电脑安装验收完成。非范围仍包括用户电脑验收、OCR/ASR 子进程、日志、备份/ACL、完整 S7、G2、S3 Worker、Docker/WSL、Firewall 及真实外部服务。
+
+> **PHASE3-T02B OCR 与 whisper.cpp 子进程环境最小化（2026-07-26，任务分支已完成，待主线集成）**：计划路径 `.plans/phase3-t02b-subprocess-environment-boundary-plan.md`，任务分支 `codex/phase3-t02b-subprocess-environment-boundary`。本切片已在任务分支实现 OCR/whisper.cpp 子进程正向环境 allowlist、OCR 子进程 stdout/stderr 回显收敛、whisper.cpp 显式 `env` 与测试注入 seam；不执行真实 OCR/ASR、Provider、SMTP、飞书或其他外部服务。2026-07-26 使用仓库外隔离根 `H:\ai-studybuddy-tmp\runs\phase3-t02b-*` 验证：后端 build 通过；后端 49 个测试文件按 8 批分拆运行全部通过，累计 272/272；T02B 专项 5/5 通过；前端 Vitest 26 文件 / 139 测试通过；`pnpm type-check`、文档治理和 `git diff --check` 通过。完整 `pnpm test` 执行到后端全量阶段时 271/272 通过，失败项为既有 `production-attack-surface-error-boundary.test.mjs` development 子测试受本机 `verge-mihomo`/Edge 连接占用固定端口 `59402` 影响；未终止用户进程，未扩大修改既有端口策略。独立审查已完成；尚未合入 `master` 或推送 `origin/master`，不得报告 T02B、T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。非范围仍包括日志轮转、备份/ACL、生产防火墙、Docker/WSL、完整 S7、G2、S3 Worker、用户电脑验收和真实外部服务。
 
 ---
 

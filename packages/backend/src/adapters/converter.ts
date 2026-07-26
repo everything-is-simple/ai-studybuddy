@@ -162,11 +162,14 @@ export class OcrConverter {
   ): Promise<{ ok: boolean; text?: string; charCount?: number; error?: string }> {
     return new Promise((resolve, reject) => {
       const child = spawn(this.pythonPath, [workerPath, imagePath], {
-        env: getOcrWorkerEnvironment({ tempRoot: this.tempRoot, cacheRoot: this.cacheRoot }),
+        env: getOcrWorkerEnvironment({
+          tempRoot: this.tempRoot,
+          cacheRoot: this.cacheRoot,
+          requiresPathLookup: !path.isAbsolute(this.pythonPath),
+        }),
       });
 
       let stdout = '';
-      let stderr = '';
       let timedOut = false;
       const timer = setTimeout(() => {
         timedOut = true;
@@ -177,13 +180,11 @@ export class OcrConverter {
         stdout += chunk.toString('utf8');
       });
 
-      child.stderr.on('data', (chunk: Buffer) => {
-        stderr += chunk.toString('utf8');
-      });
+      child.stderr.on('data', () => undefined);
 
-      child.on('error', (error) => {
+      child.on('error', () => {
         clearTimeout(timer);
-        reject(error);
+        reject(new Error('OCR 子进程无法启动'));
       });
 
       child.on('close', (code) => {
@@ -193,15 +194,15 @@ export class OcrConverter {
           return;
         }
         if (code !== 0) {
-          reject(new Error(`OCR 子进程退出码 ${code}：${stderr || 'unknown error'}`));
+          reject(new Error('OCR 子进程执行失败'));
           return;
         }
 
         try {
           const result = JSON.parse(stdout);
           resolve(result);
-        } catch (error) {
-          reject(new Error(`OCR 输出解析失败: ${stdout.slice(0, 200)}`));
+        } catch {
+          reject(new Error('OCR 输出格式无效'));
         }
       });
     });

@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { config } from '../../config/env';
+import { config, getWhisperCppEnvironment } from '../../config/env';
 import { getClassCaptureTmpDir } from '../../db/paths';
 
 export class WhisperCppAuralConverterError extends Error {
@@ -118,7 +118,10 @@ function getTranscriptFromJson(raw: string): string {
 }
 
 export class WhisperCppAuralConverter {
-  constructor(private readonly runtime: WhisperCppRuntime = runtimeFromConfig()) {}
+  constructor(
+    private readonly runtime: WhisperCppRuntime = runtimeFromConfig(),
+    private readonly spawnProcess: typeof spawn = spawn
+  ) {}
 
   async transcribe(file: AuralUploadedFile): Promise<AuralTranscript> {
     if (!file || file.size <= 0 || file.buffer.length <= 0) {
@@ -168,7 +171,11 @@ export class WhisperCppAuralConverter {
       };
       let child;
       try {
-        child = spawn(this.runtime.cliPath, args, { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
+        child = this.spawnProcess(this.runtime.cliPath, args, {
+          windowsHide: true,
+          stdio: ['ignore', 'ignore', 'pipe'],
+          env: getWhisperCppEnvironment({ tempRoot: path.dirname(inputPath) }),
+        });
       } catch {
         reject(new WhisperCppAuralConverterError('ASR_RUNTIME_UNAVAILABLE', 503, '本机课堂转写运行时无法启动'));
         return;

@@ -119,13 +119,43 @@ try {
 }
 
 
-export function getOcrWorkerEnvironment(options: { tempRoot: string; cacheRoot?: string }) {
-  return {
-    ...process.env,
-    ...(options.cacheRoot ? { OCR_CACHE_ROOT: options.cacheRoot } : {}),
-    TEMP: options.tempRoot,
-    TMP: options.tempRoot,
-  };
+function readParentEnvironmentValue(key: string): string | undefined {
+  const sourceKey = Object.keys(process.env).find((candidate) => candidate.toUpperCase() === key.toUpperCase());
+  const value = sourceKey ? process.env[sourceKey] : undefined;
+  return value ? value : undefined;
+}
+
+function addParentEnvironmentValue(environment: Record<string, string>, key: string): void {
+  const value = readParentEnvironmentValue(key);
+  if (value) environment[key] = value;
+}
+
+function createWindowsChildEnvironment(tempRoot: string): Record<string, string> {
+  const environment: Record<string, string> = { TEMP: tempRoot, TMP: tempRoot };
+  addParentEnvironmentValue(environment, 'SYSTEMROOT');
+  addParentEnvironmentValue(environment, 'WINDIR');
+  return environment;
+}
+
+export function getOcrWorkerEnvironment(options: {
+  tempRoot: string;
+  cacheRoot?: string;
+  requiresPathLookup?: boolean;
+}): Record<string, string> {
+  const environment = createWindowsChildEnvironment(options.tempRoot);
+  if (options.cacheRoot) {
+    environment.OCR_CACHE_ROOT = options.cacheRoot;
+    environment.XDG_CACHE_HOME = options.cacheRoot;
+  }
+  if (options.requiresPathLookup ?? true) {
+    addParentEnvironmentValue(environment, 'PATH');
+    addParentEnvironmentValue(environment, 'PATHEXT');
+  }
+  return environment;
+}
+
+export function getWhisperCppEnvironment(options: { tempRoot: string }): Record<string, string> {
+  return createWindowsChildEnvironment(options.tempRoot);
 }
 
 // ── 导出配置 ───────────────────────────────────────────────
