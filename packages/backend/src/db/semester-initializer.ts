@@ -10,6 +10,7 @@ import path from 'path';
 import type { DatabaseType } from './connection';
 import { checkpointAndClose } from './connection';
 import { initGlobalDbAtPath, initSemesterDbAtPath } from './migrations';
+import { createSiblingRuntimeLogBoundary, toSafeLogErrorCode, type SafeLogEntry } from '../utils/runtime-log-boundary';
 
 export interface SemesterInitializationInput {
   studentName: string;
@@ -107,29 +108,36 @@ export function validateSemesterInitializationInput(input: SemesterInitializatio
   };
 }
 
+export function createMaintenanceFailureLogEntry(
+  originalError: SemesterInitializationError,
+  cleanupErrors: readonly Error[]
+): SafeLogEntry {
+  return {
+    event: 'SEMESTER_INITIALIZATION_MAINTENANCE_FAILURE',
+    level: 'WARN',
+    errorCode: toSafeLogErrorCode({ code: originalError.code }, 'SEMESTER_INITIALIZATION_FAILED'),
+    cleanupErrorCount: cleanupErrors.length,
+    cleanupErrorCode: cleanupErrors.length === 0
+      ? null
+      : toSafeLogErrorCode(cleanupErrors[0], 'MAINTENANCE_CLEANUP_FAILED'),
+    timestamp: new Date().toISOString(),
+  };
+}
+
 function writeMaintenanceFailure(
   appDataRoot: string,
   originalError: SemesterInitializationError,
   cleanupErrors: readonly Error[]
 ): void {
   try {
-    const logDir = path.join(appDataRoot, 'logs');
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(
-      path.join(logDir, 'semester-init-failures.jsonl'),
-      `${JSON.stringify({
-        at: new Date().toISOString(),
-        code: originalError.code,
-        message: originalError.message,
-        cleanupErrors: cleanupErrors.map((error) => error.message),
-      })}\n`,
-      'utf8'
+    createSiblingRuntimeLogBoundary(appDataRoot).append(
+      'maintenance',
+      createMaintenanceFailureLogEntry(originalError, cleanupErrors)
     );
   } catch {
     // 最后一道维护日志失败时，仍保留原始初始化错误给调用方。
   }
 }
-
 function removeDirIfPresent(directory: string): void {
   if (fs.existsSync(directory)) {
     fs.rmSync(directory, { recursive: true, force: true });

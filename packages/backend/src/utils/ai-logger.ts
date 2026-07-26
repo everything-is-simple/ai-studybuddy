@@ -1,4 +1,5 @@
 import type { AiRequest, AiResponse } from '@ai-studybuddy/shared';
+import { toSafeLogErrorCode } from './runtime-log-boundary';
 
 export interface AiLogSuccessPayload {
   taskType: AiRequest['taskType'];
@@ -30,14 +31,13 @@ export interface AiLogger {
   recordCircuitClosed(payload: AiCircuitClosedPayload): void;
 }
 
-function extractErrorCode(error: Error): string {
-  const coded = error as { code?: string; status?: number };
-  return coded.code ?? String(coded.status ?? 'UNKNOWN_ERROR');
+function writeAllowedConsoleEntry(entry: Record<string, string | number | boolean | null | Array<{ provider: string; errorCode: string }>>): void {
+  console.log(JSON.stringify(entry));
 }
 
 export const aiLogger: AiLogger = {
   recordSuccess({ taskType, result, attemptedProviders }) {
-    const entry = {
+    writeAllowedConsoleEntry({
       level: 'INFO',
       event: 'AI_REQUEST_SUCCESS',
       taskType,
@@ -46,42 +46,40 @@ export const aiLogger: AiLogger = {
       tokenUsed: result.tokenUsed,
       latencyMs: result.latencyMs,
       fallbackUsed: result.fallbackUsed,
-      attemptedProviders,
+      attemptedProviders: attemptedProviders.map(({ provider, error }) => ({
+        provider,
+        errorCode: toSafeLogErrorCode({ code: error }),
+      })),
       timestamp: new Date().toISOString(),
-    };
-    console.log(JSON.stringify(entry));
+    });
   },
   recordFailure({ taskType, provider, error }) {
-    const entry = {
+    writeAllowedConsoleEntry({
       level: 'WARN',
       event: 'AI_REQUEST_FAILURE',
       taskType,
       provider,
-      errorCode: extractErrorCode(error),
-      errorMessage: error.message,
+      errorCode: toSafeLogErrorCode(error),
       timestamp: new Date().toISOString(),
-    };
-    console.log(JSON.stringify(entry));
+    });
   },
   recordCircuitOpened({ provider, cooldownStartedAt, cooldownEndsAt }) {
-    const entry = {
+    writeAllowedConsoleEntry({
       level: 'WARN',
       event: 'AI_PROVIDER_CIRCUIT_OPENED',
       provider,
       cooldownStartedAt,
       cooldownEndsAt,
       timestamp: new Date().toISOString(),
-    };
-    console.log(JSON.stringify(entry));
+    });
   },
   recordCircuitClosed({ provider, cooldownEndedAt }) {
-    const entry = {
+    writeAllowedConsoleEntry({
       level: 'INFO',
       event: 'AI_PROVIDER_CIRCUIT_CLOSED',
       provider,
       cooldownEndedAt,
       timestamp: new Date().toISOString(),
-    };
-    console.log(JSON.stringify(entry));
+    });
   },
 };

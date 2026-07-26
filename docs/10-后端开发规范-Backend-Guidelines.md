@@ -181,7 +181,7 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 
 ### 7.2 日志目录
 
-运行日志写入 `I:\ai-studybuddy-logs`，不进入主仓库 Git。
+运行日志只能写入与 `APP_DATA_ROOT` 不相交的、受控运行根同级 `logs/` 目录；不得写入 `APP_DATA_ROOT`、仓库、用户目录本身或磁盘根，也不进入主仓库 Git。日志根、允许子目录与可轮转/保留文件必须由显式 allowlist 管理；遇到空路径、越界、受保护根或符号链接/junction 等重解析点时必须拒绝。
 
 ### 7.3 错误日志格式
 
