@@ -893,7 +893,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
 | 1 | T01：S6 后续产品形态重新决策（历史候选：家长面板） | ⏸️ | 先决定是否继续保持异步脱敏报告；不得默认引入家长登录或 Web 面板 |
-| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A/T02B/T02C 切片均已推送 `origin/master` 并完成各自主线复验；T02D 秘密扫描安全证明边界计划已创建并待用户批准实施；总体审计与全部修复仍未完成 |
+| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A/T02B/T02C 切片均已推送 `origin/master` 并完成各自主线复验；T02D 秘密扫描安全证明边界已完成分支实现与验证，待主线集成；总体审计与全部修复仍未完成 |
 | 3 | T03：性能基线 | ⏸️ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
 | 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
 | 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
@@ -906,7 +906,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02A | `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02A 切片完成，不等于 T02 完成 |
 | PHASE3-T02B | `.plans/phase3-t02b-subprocess-environment-boundary-plan.md` | ✅ 已推送 `origin/master`；T02B 切片完成，不等于 T02 完成 |
 | PHASE3-T02C | `.plans/phase3-t02c-env-error-redaction-plan.md` | ✅ 已推送 `origin/master`；T02C 切片完成，不等于 T02 完成 |
-| PHASE3-T02D | `.plans/phase3-t02d-secret-scan-deployment-package-plan.md` | 📝 计划已创建并已完成独立审查，待用户明确批准实施；不等于 T02 完成 |
+| PHASE3-T02D | `.plans/phase3-t02d-secret-scan-deployment-package-plan.md` | ✅ 已完成分支实现、验证与独立审查，待主线集成；不等于 T02 完成 |
 
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；T02A 与 T02B 已作为独立切片进入远端主线并完成各自主线复验。批准计划或切片完成均不表示 T02 总体、Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 
@@ -915,6 +915,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **PHASE3-T02B OCR 与 whisper.cpp 子进程环境最小化（2026-07-26，已完成并推送 origin/master）**：计划路径 `.plans/phase3-t02b-subprocess-environment-boundary-plan.md`，任务分支 `codex/phase3-t02b-subprocess-environment-boundary`，实现提交 `eeb9cb1` 已 fast-forward 集成到本机 `master`。本切片实现 OCR/whisper.cpp 子进程正向环境 allowlist、OCR 子进程 stdout/stderr 回显收敛、whisper.cpp 显式 `env` 与测试注入 seam；不执行真实 OCR/ASR、Provider、SMTP、飞书或其他外部服务。2026-07-26 使用仓库外隔离根 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-verify-20260726-01` 与 `H:\ai-studybuddy-tmp\runs\phase3-t02b-master-pnpm-test-20260726-01`，在 Windows 原生 Node 24 上完成主线复验：后端 build 通过；T02B/OCR 专项 7/7 通过；`pnpm type-check` 通过；前端 Vitest 26 文件 / 139 测试通过；文档治理和 `git diff --check` 通过；完整 `pnpm test` 通过，后端 272/272，前端 build 仅既有 KaTeX chunk warning。独立审查已完成；实现提交 `eeb9cb1` 与主线复验文档提交 `7281229` 已推送 `origin/master`。T02B 切片完成；但不得报告 T02、Phase 3、安全审计、生产上线或用户电脑验收已完成。非范围仍包括日志轮转、备份/ACL、生产防火墙、Docker/WSL、完整 S7、G2、S3 Worker、用户电脑验收和真实外部服务。
 
 > **PHASE3-T02C 配置加载与环境错误脱敏实施证据（2026-07-26，已推送 origin/master）**：计划路径 `.plans/phase3-t02c-env-error-redaction-plan.md`，任务分支 `codex/phase3-t02c-env-error-redaction`，实现提交 `3a0b6bf` 已安全 fast-forward 集成到本机 `master`。本切片收口配置加载、`.env`/运行环境解析与配置校验错误的秘密回显边界：后端配置加载错误统一为固定 `[CONFIG]` 摘要且不带 stack；`.env.local` 与 PowerShell `production.env` 导入对非法行、空 key、重复键只暴露固定错误码、键名和非值型行号；`APP_DATA_ROOT` 不可写、非法 `NODE_ENV`/`BACKEND_HOST`、非法 `AI_PROVIDERS`、Provider/SMTP/Webhook 配置校验失败均不得回显 Provider URL/API Key、`AI_PROVIDERS` 原文、SMTP、Webhook、`APP_DATA_ROOT`、绝对路径、完整宿主环境、raw parser message 或 stack。新增 `packages/backend/test/env-error-redaction.test.mjs` 与 `packages/backend/test/config-validation-redaction.test.mjs`，使用无效合成哨兵证明 thrown error、stderr/stdout、测试输出与公开 API 错误不泄露值；不 dump `process.env`，不读取或调用真实 Provider/SMTP/Webhook/OCR/whisper.cpp。在 Windows 原生 Node 24 + 新的仓库外隔离根完成主线复验：后端 build 通过，T02C 专项 7/7 与相邻 T02A/T02B 边界回归 40/40（共 47/47）通过，`pnpm type-check`、前端测试、文档治理和 `git diff --check` 均通过；外部服务配置保持为空，未调用真实服务。实现、主线复验与文档状态提交均已推送 `origin/master`；不得报告 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。非范围仍包括日志轮转、备份/ACL、生产防火墙、Docker/WSL、完整 S7、G2、S3 Worker、用户电脑验收、打包输出目录递归删除保护和真实外部服务。
+> **PHASE3-T02D 仓库与部署包秘密扫描安全证明边界（2026-07-26，分支实现与验证完成，待主线集成）**：计划路径 `.plans/phase3-t02d-secret-scan-deployment-package-plan.md`，任务分支 `codex/phase3-t02d-secret-scan-plan`，实现提交 `06cc6b3`。用户已单独批准实施。新增 `scripts/lib/AIStudyBuddy.SecretScan.cjs`，仅消费显式的已跟踪相对路径清单；在内容读取前跳过敏感 env 文件、越界路径、符号链接、非文本和超限文件，并将文件访问/Git 清单/格式错误收敛为无 stack 的固定错误码。命中与格式化输出只含相对路径、稳定规则 ID、类别、非敏感行号和短指纹，不含命中原文、完整配置行、绝对路径、完整宿主环境或底层错误。新增 `packages/backend/test/secret-scan-boundary.test.mjs`，在仓库外临时 Git 夹具中动态生成无效合成哨兵，证明允许字段、敏感 env 候选读取前跳过、越界/缺失文件错误脱敏和序列化无哨兵泄露；专项 4/4 通过。Windows 原生 Node 24 分支验证通过 `pnpm type-check`、后端/前端 build、隔离 `pnpm test`（后端 283/283）与独立审查；未扫描本仓、真实部署包、用户目录、环境文件、正式数据或外部运行数据，也未调用 Provider、SMTP、Webhook、OCR、whisper.cpp 或网络服务。当前仅为分支完成，仍待按流程主线集成、主线复验和 `origin/master` 推送；不得报告 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。非范围包括打包输出目录递归删除保护、备份/恢复、ACL、日志轮转/清理、生产防火墙、Docker/WSL、完整 S7、G2、S3 Worker 和真实秘密扫描。
 
 ---
 
