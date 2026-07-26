@@ -909,6 +909,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02D | `.plans/phase3-t02d-secret-scan-deployment-package-plan.md` | ✅ 已推送 `origin/master`；T02D 切片完成，不等于 T02 完成 |
 | PHASE3-T02E | `.plans/phase3-t02e-deployment-output-delete-boundary-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02E 切片完成，不等于 T02 完成 |
 | PHASE3-T02F | `.plans/phase3-t02f-log-redaction-rotation-retention-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02F 切片完成不等于 T02 完成 |
+| PHASE3-T02G | .plans/phase3-t02g-windows-data-acl-backup-restore-plan.md | ⏳ 计划已创建、待审查/批准；实现未开始，不等于 T02 完成 |
 
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；T02A 与 T02B 已作为独立切片进入远端主线并完成各自主线复验。批准计划或切片完成均不表示 T02 总体、Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 
