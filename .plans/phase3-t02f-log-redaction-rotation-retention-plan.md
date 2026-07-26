@@ -1,10 +1,12 @@
 # PHASE3-T02F：运行日志脱敏、轮转与保留/清理安全边界——实施计划
 
-**状态**：用户已于 2026-07-26 批准实施；本地任务分支实现与验证已完成，待主线集成/复验
+**状态**：已完成本地主线集成与最新主线复验，待推送 `origin/master`
 **计划日期**：2026-07-26
 **计划分支**：`codex/phase3-t02f-log-redaction-rotation-retention-plan`
 **前置事实**：`origin/master` 已包含并推送 T02E 计划提交 `4b86ddd`、实施提交 `21680a06` 与主线复验登记 `7001fba`。T02E 切片完成不等于 PHASE3-T02 总体、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成；PHASE3-T02 总体审计仍在进行中。
 **计划创建时的性质（历史记录）**：计划提交 `19cdee6` 只建立并审查后续实施边界；当时未实施日志保护或修改代码。用户于 2026-07-26 单独批准实施后，本分支仅新增受控运行日志边界、最小日志调用改造、合成隔离测试和相应规范/状态对齐；未执行真实日志轮转、清理、递归删除、服务运行、部署流程、打包、扫描或网络调用。
+
+**本地主线复验记录（待推送）**：2026-07-26，已将 `19cdee6` 与 `07ce599` 从任务分支以 fast-forward 集成到本地 `master`。在仓库外隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\phase3-t02f-master-revalidation-20260726-01` 下完成 `pnpm type-check`、`pnpm -r --filter @ai-studybuddy/backend run build`、`node --test packages/backend/test/runtime-log-boundary.test.mjs`（5/5）、`node --test packages/backend/test/ai-router.test.mjs packages/backend/test/semester-initialization.test.mjs`（26/26）与 `pnpm test`（后端 291/291、前端测试阶段通过）；`powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1` 和 `git diff --check` 均通过。完整测试未启动真实服务，未执行真实部署、日志轮转、日志清理、递归删除或网络服务调用；前端构建仅出现既有 KaTeX bundle-size warning。该记录只说明 T02F 本地主线复验完成，尚未声明远端已推送，且不表示 PHASE3-T02 总体、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成。
 
 ---
 
