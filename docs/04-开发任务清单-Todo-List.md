@@ -886,14 +886,14 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 ---
 ## Phase 3：打磨与安全（T02 基线审计切片实施中）
 
-**状态**：用户于 2026-07-25 明确要求启动 Phase 3；已批准的 T02 安全与隐私基线审计正在按独立切片实施。T02A–T02F 已各自完成主线复验并进入 `origin/master`；T02G 的合成夹具安全边界已在任务分支完成验证、等待独立审查和按 Git 门禁集成，尚未进入 `master`。T02 总体审计、真实机器操作与其余 Phase 3 候选任务仍未完成。
+**状态**：用户于 2026-07-25 明确要求启动 Phase 3；已批准的 T02 安全与隐私基线审计正在按独立切片实施。T02A–T02G 已各自完成主线复验并进入 `origin/master`；T02G 仅完成仓库外合成夹具的安全边界实现与 P1 修复。T02 总体审计、真实机器操作与其余 Phase 3 候选任务仍未完成。
 
 **实施门禁**：任何尚未获批的 Phase 3 实现仍须重新确认产品范围并创建独立计划；任务分支提交、合成夹具证据或单个切片完成均不等于 T02、Phase 3、生产上线或用户电脑验收完成。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
 | 1 | T01：S6 后续产品形态重新决策（历史候选：家长面板） | ⏸️ | 先决定是否继续保持异步脱敏报告；不得默认引入家长登录或 Web 面板 |
-| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A–T02F 切片均已推送 `origin/master` 并完成各自主线复验；T02G 已在任务分支完成合成夹具安全边界验证，待审查/集成；总体审计、真实 ACL/backup/restore 与全部修复仍未完成 |
+| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A–T02G 切片均已推送 `origin/master` 并完成各自主线复验；T02G 仅完成仓库外合成夹具安全边界实现与 P1 修复；总体审计、真实 ACL/backup/restore 与全部修复仍未完成 |
 | 3 | T03：性能基线 | ⏸️ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
 | 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
 | 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
@@ -909,7 +909,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02D | `.plans/phase3-t02d-secret-scan-deployment-package-plan.md` | ✅ 已推送 `origin/master`；T02D 切片完成，不等于 T02 完成 |
 | PHASE3-T02E | `.plans/phase3-t02e-deployment-output-delete-boundary-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02E 切片完成，不等于 T02 完成 |
 | PHASE3-T02F | `.plans/phase3-t02f-log-redaction-rotation-retention-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02F 切片完成不等于 T02 完成 |
-| PHASE3-T02G | `.plans/phase3-t02g-windows-data-acl-backup-restore-plan.md` | 🔄 分支实施/待审查集成：提交 `b5c6783` 已完成合成夹具的路径/ACL 只读证据、backup manifest 与 restore `-WhatIf` fail-closed 验证并推送任务分支；尚未合入 `master`。真实 ACL、真实 backup/restore 及 restore 写入仍未获批准或实施，不等于 T02 完成 |
+| PHASE3-T02G | `.plans/phase3-t02g-windows-data-acl-backup-restore-plan.md` | ✅ 已在 `origin/master` 完成主线复验：计划、实现、文档同步与 P1 修复提交已独立审查、rebase、快进合并并推送（`6f5ecdd`）。仅覆盖仓库外合成夹具；真实 ACL、真实 backup/restore 及 restore 写入仍未获批准或实施，不等于 T02 完成 |
 
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；T02A 与 T02B 已作为独立切片进入远端主线并完成各自主线复验。批准计划或切片完成均不表示 T02 总体、Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 
@@ -922,7 +922,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **PHASE3-T02E 部署包输出与 staging 删除边界（2026-07-26，已在 `origin/master` 并完成最新主线复验）**：计划提交 `4b86ddd`、实施提交 `21680a06`，任务分支 `codex/phase3-t02e-deployment-output-delete-boundary-plan` 已在最新 `master` 上安全 fast-forward 集成。本切片仅约束 `build-deployment-package.ps1` 的显式、既存且为空的仓库外输出根：拒绝仓库根、磁盘根、用户目录、`APP_DATA_ROOT`、受保护根交叠和重解析点；staging 仅能在输出根下由本次操作创建的 GUID 子目录中进行受控递归清理，既不删除输出根，也不覆盖/删除既有 ZIP。打包前按路径/元数据拒绝 `.git`、依赖缓存、真实环境文件、数据库、日志、tmp、模型、备份或运行时目录；错误只输出固定、脱敏类别。2026-07-26 在最新 `master` 上完成复验：T02E 专项 3/3、现有部署 PowerShell 兼容测试 6/6、`pnpm type-check`、文档治理和 `git diff --check` 均通过；完整 `pnpm test` 使用新的仓库外隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\phase3-t02e-master-pnpm-test-20260726-01` 通过（后端 286/286，前端通过，仅既有 KaTeX chunk warning）。本轮未运行 `build-deployment-package.ps1`、真实部署包打包、真实部署包/秘密扫描、真实目录清理或真实递归删除，未读取真实数据，也未调用 Provider、SMTP、Webhook、OCR、whisper.cpp 或网络服务。独立审查已确认范围、拒绝条件、脱敏错误与非范围一致；T02E 切片完成不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。非范围仍包括 bootstrap/check/start/health/stop/backup/restore、备份/恢复、ACL、日志轮转/清理、生产防火墙、Docker/WSL、S7、G2、S3 Worker 与用户电脑验收。
 
 
-> **PHASE3-T02G Windows 运行目录、ACL 与 backup/restore 安全边界（2026-07-26，实施中）**：实施分支 `codex/phase3-t02g-windows-data-acl-backup-restore-implementation` 从最新 `origin/master` 的 `9c58e0a` 创建，并拣选已批准计划作为实现依据。当前仅实现并验证仓库外合成夹具：统一的绝对路径、受保护根、同卷与 reparse point fail-closed 分类；仅返回逻辑类别与短哈希的只读 ACL 证据；显式、安装根之外的 backup output、仅 `studybuddy.db`/`semesters` 白名单 payload、无 `sourceDataRoot` 的 v2 manifest；以及对 manifest/payload/hash/路径的 restore 预检。`restore-data.ps1 -WhatIf` 只验证且不落盘；任何真实 restore 写入均固定拒绝为 `RESTORE_WRITE_DISABLED`，等待独立的服务/计划任务停止、recovery point 和中断处理批准/实现。已执行 `powershell -ExecutionPolicy Bypass -File scripts/test-data-boundary.ps1`：合成路径和恶意 manifest 拒绝、manifest 脱敏、ACL 序列化不含夹具路径、`-WhatIf` 不改数据、受保护哨兵不变且夹具清理后无残留。当前环境无法创建符号链接夹具，测试明确记录 `REPARSE_FIXTURE_UNSUPPORTED`；因此不得将其表述为 reparse 实机证据，真实 ACL、真实备份、真实恢复、正式安装和用户电脑操作仍须分别批准。未触碰 T02E 部署包/staging 删除或 T02F 日志轮转/保留实现；本条不表示 T02G、T02、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成。
+> **PHASE3-T02G Windows 运行目录、ACL 与 backup/restore 安全边界（2026-07-26，已完成主线集成）**：实施分支 `codex/phase3-t02g-windows-data-acl-backup-restore-implementation` 从 `origin/master` 的 `9c58e0a` 创建，并以已批准计划作为实现依据；P1 修复与独立审查完成后已 rebase、快进合并、主线复验并推送 `origin/master`（`6f5ecdd`）。当前仅实现并验证仓库外合成夹具：统一的绝对路径、受保护根、同卷与 reparse point fail-closed 分类；仅返回逻辑类别与短哈希的只读 ACL 证据；显式、安装根之外的 backup output、仅 `studybuddy.db`/`semesters` 白名单 payload、无 `sourceDataRoot` 的 v2 manifest；以及对 manifest/payload/hash/路径的 restore 预检。`restore-data.ps1 -WhatIf` 只验证且不落盘；任何真实 restore 写入均固定拒绝为 `RESTORE_WRITE_DISABLED`，等待独立的服务/计划任务停止、recovery point 和中断处理批准/实现。已执行 `powershell -ExecutionPolicy Bypass -File scripts/test-data-boundary.ps1`：合成路径和恶意 manifest 拒绝、manifest 脱敏、ACL 序列化不含夹具路径、`-WhatIf` 不改数据、受保护哨兵不变且夹具清理后无残留。当前环境无法创建符号链接夹具，测试明确记录 `REPARSE_FIXTURE_UNSUPPORTED`；因此不得将其表述为 reparse 实机证据，真实 ACL、真实备份、真实恢复、正式安装和用户电脑操作仍须分别批准。未触碰 T02E 部署包/staging 删除或 T02F 日志轮转/保留实现；本条不表示 T02G、T02、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成。
 ---
 
 ## 任务状态说明
