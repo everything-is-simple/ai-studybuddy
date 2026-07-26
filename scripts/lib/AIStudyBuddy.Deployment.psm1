@@ -303,4 +303,255 @@ function Assert-AIStudyBuddyPackageStagingContents {
     }
   }
 }
+
+function New-AIStudyBuddyDataBoundaryError {
+  param([Parameter(Mandatory)] [string]$Code)
+  throw [System.InvalidOperationException]::new($Code)
+}
+
+function Get-AIStudyBuddyDataBoundaryFullPath {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  if ([string]::IsNullOrWhiteSpace($Path)) { New-AIStudyBuddyDataBoundaryError $Code }
+  $candidate = $Path.Trim()
+  if ($candidate -notmatch '^(?:[A-Za-z]:[\\/]|\\\\[^\\/]+[\\/][^\\/]+)') { New-AIStudyBuddyDataBoundaryError $Code }
+  if ($candidate -match '(^|[\\/])\.{1,2}([\\/]|$)') { New-AIStudyBuddyDataBoundaryError $Code }
+  try { return [IO.Path]::GetFullPath($candidate) } catch { New-AIStudyBuddyDataBoundaryError $Code }
+}
+
+function Test-AIStudyBuddyDataPathEqualOrDescendant {
+  param(
+    [Parameter(Mandatory)] [string]$Candidate,
+    [Parameter(Mandatory)] [string]$Root
+  )
+  $candidatePath = [IO.Path]::GetFullPath($Candidate).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+  $rootPath = [IO.Path]::GetFullPath($Root).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+  if ([string]::IsNullOrWhiteSpace($candidatePath) -or [string]::IsNullOrWhiteSpace($rootPath)) { return $false }
+  if ([string]::Equals($candidatePath, $rootPath, [StringComparison]::OrdinalIgnoreCase)) { return $true }
+  return $candidatePath.StartsWith($rootPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Assert-AIStudyBuddyDataPathWithoutReparsePoints {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  $current = [IO.Path]::GetFullPath($Path)
+  while (-not (Test-Path -LiteralPath $current)) {
+    $parent = Split-Path -Path $current -Parent
+    if ([string]::IsNullOrWhiteSpace($parent) -or [string]::Equals($parent, $current, [StringComparison]::OrdinalIgnoreCase)) { New-AIStudyBuddyDataBoundaryError $Code }
+    $current = $parent
+  }
+  while ($true) {
+    try { $item = Get-Item -LiteralPath $current -Force -ErrorAction Stop } catch { New-AIStudyBuddyDataBoundaryError $Code }
+    if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { New-AIStudyBuddyDataBoundaryError $Code }
+    $parent = Split-Path -Path $current -Parent
+    if ([string]::IsNullOrWhiteSpace($parent) -or [string]::Equals($parent, $current, [StringComparison]::OrdinalIgnoreCase)) { break }
+    $current = $parent
+  }
+}
+
+function Assert-AIStudyBuddyDataExistingDirectory {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  if (-not (Test-Path -LiteralPath $Path -PathType Container)) { New-AIStudyBuddyDataBoundaryError $Code }
+  Assert-AIStudyBuddyDataPathWithoutReparsePoints -Path $Path -Code $Code
+  try { return Get-Item -LiteralPath $Path -Force -ErrorAction Stop } catch { New-AIStudyBuddyDataBoundaryError $Code }
+}
+
+function Assert-AIStudyBuddyDataRegularFile {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { New-AIStudyBuddyDataBoundaryError $Code }
+  Assert-AIStudyBuddyDataPathWithoutReparsePoints -Path $Path -Code $Code
+  try { $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop } catch { New-AIStudyBuddyDataBoundaryError $Code }
+  if ($item.PSIsContainer -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) { New-AIStudyBuddyDataBoundaryError $Code }
+  return $item
+}
+
+function Assert-AIStudyBuddyDataTreeWithoutReparsePoints {
+  param(
+    [Parameter(Mandatory)] [string]$Root,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  Assert-AIStudyBuddyDataExistingDirectory -Path $Root -Code $Code | Out-Null
+  $pending = [System.Collections.Generic.Stack[string]]::new()
+  $pending.Push($Root)
+  while ($pending.Count -gt 0) {
+    $current = $pending.Pop()
+    try { $item = Get-Item -LiteralPath $current -Force -ErrorAction Stop } catch { New-AIStudyBuddyDataBoundaryError $Code }
+    if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { New-AIStudyBuddyDataBoundaryError $Code }
+    if ($item.PSIsContainer) {
+      try { $children = @(Get-ChildItem -LiteralPath $current -Force -ErrorAction Stop) } catch { New-AIStudyBuddyDataBoundaryError $Code }
+      foreach ($child in $children) { $pending.Push($child.FullName) }
+    }
+  }
+}
+
+function Get-AIStudyBuddyDataProtectedRoots {
+  param(
+    [Parameter(Mandatory)] [hashtable]$Paths,
+    [string[]]$AdditionalProtectedRoots = @()
+  )
+  $roots = @(
+    $Paths.Root, $Paths.App, $Paths.Config, $Paths.Data, $Paths.Logs, $Paths.Backups,
+    $Paths.Tmp, $Paths.Models, $Paths.Runtime, (Split-Path -Path $Paths.PidFile -Parent),
+    [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile), $env:APP_DATA_ROOT
+  ) + @($AdditionalProtectedRoots)
+  return @($roots | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
+}
+
+function Assert-AIStudyBuddyExternalDataOutputRoot {
+  param(
+    [Parameter(Mandatory)] [string]$OutputRoot,
+    [Parameter(Mandatory)] [hashtable]$Paths,
+    [string[]]$AdditionalProtectedRoots = @(),
+    [Parameter(Mandatory)] [string]$InvalidCode,
+    [Parameter(Mandatory)] [string]$ProtectedCode,
+    [Parameter(Mandatory)] [string]$ReparseCode,
+    [Parameter(Mandatory)] [string]$CrossVolumeCode
+  )
+  $outputPath = Get-AIStudyBuddyDataBoundaryFullPath -Path $OutputRoot -Code $InvalidCode
+  $volumeRoot = [IO.Path]::GetPathRoot($outputPath)
+  if ([string]::Equals($outputPath.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar), $volumeRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar), [StringComparison]::OrdinalIgnoreCase)) { New-AIStudyBuddyDataBoundaryError $ProtectedCode }
+  if (-not (Test-Path -LiteralPath $outputPath -PathType Container)) { New-AIStudyBuddyDataBoundaryError $InvalidCode }
+  Assert-AIStudyBuddyDataPathWithoutReparsePoints -Path $outputPath -Code $ReparseCode
+  try { $item = Get-Item -LiteralPath $outputPath -Force -ErrorAction Stop } catch { New-AIStudyBuddyDataBoundaryError $InvalidCode }
+  foreach ($protectedRoot in @(Get-AIStudyBuddyDataProtectedRoots -Paths $Paths -AdditionalProtectedRoots $AdditionalProtectedRoots)) {
+    try { $protectedPath = Get-AIStudyBuddyDataBoundaryFullPath -Path $protectedRoot -Code $ProtectedCode } catch { New-AIStudyBuddyDataBoundaryError $ProtectedCode }
+    $outputInsideProtected = Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $outputPath -Root $protectedPath
+    $protectedInsideOutput = Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $protectedPath -Root $outputPath
+    if ($outputInsideProtected -or $protectedInsideOutput) { New-AIStudyBuddyDataBoundaryError $ProtectedCode }
+  }
+  $dataVolume = [IO.Path]::GetPathRoot((Get-AIStudyBuddyDataBoundaryFullPath -Path $Paths.Data -Code $ProtectedCode))
+  if (-not [string]::Equals($volumeRoot, $dataVolume, [StringComparison]::OrdinalIgnoreCase)) { New-AIStudyBuddyDataBoundaryError $CrossVolumeCode }
+  return $item.FullName
+}
+
+function Get-AIStudyBuddyDataBackupName {
+  param([Parameter(Mandatory)] [string]$Name, [Parameter(Mandatory)] [string]$Code)
+  if ([string]::IsNullOrWhiteSpace($Name) -or $Name -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$' -or $Name -in @('.', '..')) { New-AIStudyBuddyDataBoundaryError $Code }
+  return $Name
+}
+
+function Get-AIStudyBuddyDataFiles {
+  param(
+    [Parameter(Mandatory)] [string]$DataRoot,
+    [Parameter(Mandatory)] [string]$Code
+  )
+  $root = (Assert-AIStudyBuddyDataExistingDirectory -Path $DataRoot -Code $Code).FullName
+  $files = [System.Collections.Generic.List[object]]::new()
+  $database = Join-Path $root 'studybuddy.db'
+  if (Test-Path -LiteralPath $database) {
+    $item = Assert-AIStudyBuddyDataRegularFile -Path $database -Code $Code
+    $files.Add([pscustomobject]@{ FullName = $item.FullName; RelativePath = 'studybuddy.db'; Bytes = [int64]$item.Length })
+  }
+  $semesters = Join-Path $root 'semesters'
+  if (Test-Path -LiteralPath $semesters) {
+    Assert-AIStudyBuddyDataExistingDirectory -Path $semesters -Code $Code | Out-Null
+    $pending = [System.Collections.Generic.Stack[string]]::new()
+    $pending.Push($semesters)
+    while ($pending.Count -gt 0) {
+      $current = $pending.Pop()
+      try { $children = @(Get-ChildItem -LiteralPath $current -Force -ErrorAction Stop) } catch { New-AIStudyBuddyDataBoundaryError $Code }
+      foreach ($child in $children) {
+        if (($child.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { New-AIStudyBuddyDataBoundaryError $Code }
+        if ($child.PSIsContainer) { $pending.Push($child.FullName); continue }
+        $item = Assert-AIStudyBuddyDataRegularFile -Path $child.FullName -Code $Code
+        $relative = Get-AIStudyBuddyRelativePath -BasePath $root -TargetPath $item.FullName
+        $files.Add([pscustomobject]@{ FullName = $item.FullName; RelativePath = $relative.Replace('\','/'); Bytes = [int64]$item.Length })
+      }
+    }
+  }
+  return @($files | Sort-Object RelativePath)
+}
+
+function Get-AIStudyBuddyDataShortFingerprint {
+  param([string]$Value)
+  if ([string]::IsNullOrWhiteSpace($Value)) { return 'unknown' }
+  $bytes = [Text.Encoding]::UTF8.GetBytes($Value)
+  $hash = [Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+  return (-join ($hash | ForEach-Object { $_.ToString('x2') })).Substring(0, 12)
+}
+
+function Get-AIStudyBuddyAclEvidence {
+  param(
+    [Parameter(Mandatory)] [string]$Path,
+    [Parameter(Mandatory)] [string]$LogicalCategory
+  )
+  if ([string]::IsNullOrWhiteSpace($LogicalCategory)) { New-AIStudyBuddyDataBoundaryError 'ACL_CATEGORY_INVALID' }
+  try { Assert-AIStudyBuddyDataExistingDirectory -Path $Path -Code 'ACL_PATH_INVALID' | Out-Null } catch {
+    return [pscustomobject]@{ Status = 'UNKNOWN'; Reason = 'ACL_PATH_INVALID'; LogicalCategory = $LogicalCategory; OwnerKind = 'UNKNOWN'; OwnerFingerprint = 'unknown'; InheritanceProtected = $null; Rules = @() }
+  }
+  try {
+    $acl = Get-Acl -LiteralPath $Path -ErrorAction Stop
+    $owner = [string]$acl.Owner
+    $rules = @($acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier]) | ForEach-Object {
+      $identity = [string]$_.IdentityReference.Value
+      [pscustomobject]@{
+        SubjectKind = if ($identity -match '^S-\d-') { 'SID' } elseif ($identity -match '\\') { 'ACCOUNT' } else { 'UNKNOWN' }
+        SubjectFingerprint = Get-AIStudyBuddyDataShortFingerprint $identity
+        AccessType = if ([string]$_.AccessControlType -eq 'Deny') { 'DENY' } elseif ([string]$_.AccessControlType -eq 'Allow') { 'ALLOW' } else { 'UNKNOWN' }
+        IsInherited = [bool]$_.IsInherited
+      }
+    })
+    return [pscustomobject]@{
+      Status = 'PASS'; Reason = 'ACL_READABLE'; LogicalCategory = $LogicalCategory
+      OwnerKind = if ($owner -match '^S-\d-') { 'SID' } elseif ($owner -match '\\') { 'ACCOUNT' } else { 'UNKNOWN' }
+      OwnerFingerprint = Get-AIStudyBuddyDataShortFingerprint $owner
+      InheritanceProtected = [bool]$acl.AreAccessRulesProtected; Rules = $rules
+    }
+  } catch {
+    return [pscustomobject]@{ Status = 'UNKNOWN'; Reason = 'ACL_UNREADABLE'; LogicalCategory = $LogicalCategory; OwnerKind = 'UNKNOWN'; OwnerFingerprint = 'unknown'; InheritanceProtected = $null; Rules = @() }
+  }
+}
+
+function Test-AIStudyBuddyBackupRelativePath {
+  param([Parameter(Mandatory)] [string]$RelativePath)
+  if ([string]::IsNullOrWhiteSpace($RelativePath) -or [IO.Path]::IsPathRooted($RelativePath) -or $RelativePath -match '(^|[\\/])\.{1,2}([\\/]|$)') { return $null }
+  $normalized = $RelativePath.Replace('/','\')
+  if ($normalized -notmatch '^(?:studybuddy\.db|semesters\\[^\\]+(?:\\[^\\]+)*)$') { return $null }
+  return $normalized
+}
+
+function Get-AIStudyBuddyValidatedBackup {
+  param([Parameter(Mandatory)] [string]$BackupPath)
+  $backup = Get-AIStudyBuddyDataBoundaryFullPath -Path $BackupPath -Code 'RESTORE_BACKUP_INVALID'
+  Assert-AIStudyBuddyDataTreeWithoutReparsePoints -Root $backup -Code 'RESTORE_BACKUP_REPARSE_POINT'
+  $manifestPath = Join-Path $backup 'manifest.json'
+  $payload = Join-Path $backup 'payload'
+  Assert-AIStudyBuddyDataRegularFile -Path $manifestPath -Code 'RESTORE_MANIFEST_INVALID' | Out-Null
+  Assert-AIStudyBuddyDataExistingDirectory -Path $payload -Code 'RESTORE_PAYLOAD_INVALID' | Out-Null
+  try { $manifest = Get-Content -LiteralPath $manifestPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop } catch { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+  $propertyNames = @($manifest.PSObject.Properties.Name)
+  if ($manifest.format -ne 'ai-studybuddy-data-backup-v2' -or $null -eq $manifest.files -or @($propertyNames | Where-Object { $_ -notin @('format','createdAt','files') }).Count -ne 0) { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+  $entries = @($manifest.files)
+  if ($entries.Count -eq 0 -or $entries.Count -gt 10000) { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+  $seen = @{}; $validated = [System.Collections.Generic.List[object]]::new(); [int64]$totalBytes = 0
+  foreach ($entry in $entries) {
+    $relative = Test-AIStudyBuddyBackupRelativePath ([string]$entry.path)
+    if ($null -eq $relative -or $seen.ContainsKey($relative.ToUpperInvariant()) -or [string]$entry.sha256 -notmatch '^[a-fA-F0-9]{64}$') { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+    try { [int64]$bytes = [int64]$entry.bytes } catch { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+    if ($bytes -lt 0 -or $totalBytes -gt (2147483648 - $bytes)) { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+    $source = [IO.Path]::GetFullPath((Join-Path $payload $relative))
+    if (-not (Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $source -Root $payload)) { New-AIStudyBuddyDataBoundaryError 'RESTORE_MANIFEST_INVALID' }
+    $item = Assert-AIStudyBuddyDataRegularFile -Path $source -Code 'RESTORE_PAYLOAD_INVALID'
+    if ([int64]$item.Length -ne $bytes) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
+    try { $hash = (Get-FileHash -LiteralPath $source -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant() } catch { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
+    if ($hash -ne ([string]$entry.sha256).ToLowerInvariant()) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
+    $seen[$relative.ToUpperInvariant()] = $true; $totalBytes += $bytes
+    $validated.Add([pscustomobject]@{ RelativePath = $relative; SourcePath = $source; Bytes = $bytes; Sha256 = $hash })
+  }
+  $payloadFiles = Get-AIStudyBuddyDataFiles -DataRoot $payload -Code 'RESTORE_PAYLOAD_INVALID'
+  if ($payloadFiles.Count -ne $validated.Count) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
+  foreach ($payloadFile in $payloadFiles) { if (-not $seen.ContainsKey($payloadFile.RelativePath.Replace('/','\').ToUpperInvariant())) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' } }
+  return [pscustomobject]@{ BackupPath = $backup; PayloadPath = $payload; Entries = @($validated); TotalBytes = $totalBytes }
+}
+
 Export-ModuleMember -Function *-AIStudyBuddy*, Get-NodeVersionInfo, Get-PythonVersionInfo, Import-AIStudyBuddyEnvFile

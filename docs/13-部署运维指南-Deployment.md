@@ -114,15 +114,16 @@ Node native 依赖（例如 `better-sqlite3`）需要匹配当前 Node 的预编
 
 ## 八、备份、恢复、升级与回滚
 
-普通备份采用白名单：全局 `studybuddy.db`、学期库、学期 `materials/` 等学习数据。备份排除 config 密钥、tmp、logs、models、缓存和 Playwright 证据。
+当前 T02G 只完成仓库外合成夹具验证，不授权真实用户数据、正式安装根或 ACL 操作。脚本仅白名单 `studybuddy.db` 与 `semesters/` 学习数据；不读取 config、tmp、logs、models、缓存或 Playwright 证据。backup 必须提供显式、既存、同卷且位于安装根之外的受控输出根；输出、manifest 和错误不得包含宿主数据根。
 
 ```powershell
-.\scripts\backup-data.ps1 -InstallRoot $installRoot
-.\scripts\test-data-integrity.ps1 -InstallRoot $installRoot -BackupPath <backup-path>
-.\scripts\restore-data.ps1 -InstallRoot $installRoot -BackupPath <backup-path> -WhatIf
+# 仅限已批准的合成夹具；不得替换为真实用户目录。
+.\scripts\backup-data.ps1 -InstallRoot $installRoot -OutputRoot <controlled-external-output-root>
+.\scripts\test-data-integrity.ps1 -BackupPath <synthetic-backup-path>
+.\scripts\restore-data.ps1 -InstallRoot $installRoot -BackupPath <synthetic-backup-path> -WhatIf
 ```
 
-实际恢复前必须停止后端和计划任务。实际恢复默认先在 `backups\recovery-<timestamp>` 保留恢复点，再复制备份 payload；备份 payload 故意为只读，但恢复后的活动数据文件会清除只读属性，确保 SQLite 和资料目录可继续写入。升级流程固定：停止后端和计划任务 → 生成只读备份 → 复制新应用包 → 运行 migration/健康检查 → 验收通过后切换；失败时保留旧应用包和旧数据库，不覆盖回滚源。
+`restore-data.ps1 -WhatIf` 只执行 manifest、payload、路径和 hash 预检，不创建目录、不复制文件、不改变属性。当前任何非 `-WhatIf` 恢复都会固定拒绝 `RESTORE_WRITE_DISABLED`：真实恢复尚未实现，必须另行批准服务/计划任务停止证据、recovery point、写入顺序、中断处理和目标机器。不得将本节或合成夹具结果表述为真实备份、真实恢复、ACL 修复、升级回滚、生产上线或用户电脑验收完成。
 
 ---
 

@@ -2,50 +2,23 @@
 param(
   [Parameter(Mandatory)] [string]$BackupPath,
   [string]$InstallRoot,
-  [switch]$SkipRecoveryPoint
+  [switch]$EnableWrite
 )
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'lib\AIStudyBuddy.Deployment.psm1') -Force -DisableNameChecking
 $paths = Get-AIStudyBuddyPaths $InstallRoot
-$backup = [IO.Path]::GetFullPath($BackupPath)
-$manifestPath = Join-Path $backup 'manifest.json'; $payload = Join-Path $backup 'payload'
-if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) { throw 'Backup manifest.json is missing.' }
-if (-not (Test-Path -LiteralPath $payload -PathType Container)) { throw 'Backup payload directory is missing.' }
-$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-if ($manifest.format -ne 'ai-studybuddy-data-backup-v1') { throw 'Unsupported backup format.' }
-$entries = @($manifest.files)
-foreach ($entry in $entries) {
-  $relative = [string]$entry.path
-  if ([IO.Path]::IsPathRooted($relative) -or $relative -match '(^|[/\\])\.\.([/\\]|$)' -or $relative -match '(^|[/\\])(?:config|tmp|backup|backups)([/\\]|$)') { throw "Unsafe backup path: $relative" }
-  $source = [IO.Path]::GetFullPath((Join-Path $payload ($relative -replace '/', '\')))
-  if (-not $source.StartsWith($payload.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw "Backup path escapes payload: $relative" }
-  if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "Backup file missing: $relative" }
-  $hash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant()
-  if ($hash -ne [string]$entry.sha256) { throw "Backup hash mismatch: $relative" }
-}
-if (-not $PSCmdlet.ShouldProcess($paths.Data, "Restore validated backup $backup")) {
-  Write-Output 'WhatIf: restore validated; no data changed.'
+$validated = Get-AIStudyBuddyValidatedBackup -BackupPath $BackupPath
+$target = Get-AIStudyBuddyDataBoundaryFullPath -Path $paths.Data -Code 'RESTORE_TARGET_INVALID'
+if (-not (Test-Path -LiteralPath $target -PathType Container)) { New-AIStudyBuddyDataBoundaryError 'RESTORE_TARGET_INVALID' }
+Assert-AIStudyBuddyDataPathWithoutReparsePoints -Path $target -Code 'RESTORE_TARGET_REPARSE_POINT'
+Assert-AIStudyBuddyDataTreeWithoutReparsePoints -Root $target -Code 'RESTORE_TARGET_REPARSE_POINT'
+$backupInsideTarget = Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $validated.BackupPath -Root $target
+$targetInsideBackup = Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $target -Root $validated.BackupPath
+if ($backupInsideTarget -or $targetInsideBackup) { New-AIStudyBuddyDataBoundaryError 'RESTORE_BACKUP_INVALID' }
+if (-not $PSCmdlet.ShouldProcess('logical-data-root', 'Restore validated backup')) {
+  Write-Output "RESTORE_VALIDATED_NO_WRITE files=$($validated.Entries.Count)"
   exit 0
 }
-$recovery = $null
-if (-not $SkipRecoveryPoint) {
-  $recovery = Join-Path $paths.Backups ('recovery-' + (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmss'))
-  if (Test-Path -LiteralPath $recovery) { throw "Recovery point exists: $recovery" }
-  New-Item -ItemType Directory -Force -Path $recovery | Out-Null
-  foreach ($relativeRoot in @('studybuddy.db','semesters')) {
-    $source = Join-Path $paths.Data $relativeRoot
-    if (Test-Path -LiteralPath $source) { Copy-Item -LiteralPath $source -Destination $recovery -Recurse -Force }
-  }
-}
-New-Item -ItemType Directory -Force -Path $paths.Data | Out-Null
-foreach ($entry in $entries) {
-  $relative = [string]$entry.path
-  $source = Join-Path $payload ($relative -replace '/', '\')
-  $destination = Join-Path $paths.Data ($relative -replace '/', '\')
-  New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent) | Out-Null
-  Copy-Item -LiteralPath $source -Destination $destination -Force
-  # Backups are intentionally read-only; active SQLite/material files must be writable after restore.
-  (Get-Item -LiteralPath $destination -Force).IsReadOnly = $false
-}
-Write-Output "Restore completed from: $backup"
-if ($recovery) { Write-Output "Recovery point retained at: $recovery" }
+# Real restore remains deliberately unavailable until a separately approved service-stop,
+# recovery-point, and interruption-handling implementation is reviewed.
+New-AIStudyBuddyDataBoundaryError 'RESTORE_WRITE_DISABLED'

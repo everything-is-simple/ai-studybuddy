@@ -191,7 +191,7 @@ PROCESS-RUNTIME-DEPLOY 后，生产运行采用单后端进程托管静态前端
 - `bootstrap-runtime.ps1` 执行目录创建、app 复制、生产 Node 依赖安装、OCR venv 安装和无密钥 `production.env` 生成；
 - `start-production.ps1` / `stop-production.ps1` 负责单进程启停和 PID/端口治理；
 - `check-installation.ps1` 只读检查 Windows、Node/Python、OCR、端口、健康接口、数据库状态、任务计划、密钥误携带和 E2E 目录误用；
-- `backup-data.ps1` / `restore-data.ps1` / `test-data-integrity.ps1` 只对白名单学习数据做 manifest/hash 备份、WhatIf 恢复预检、恢复点和完整性校验；
+- `backup-data.ps1` / `restore-data.ps1` / `test-data-integrity.ps1` 当前只在合成夹具中验证：backup 要求显式的安装根外受控输出并写入最小 v2 manifest；restore 仅允许 `-WhatIf` 预检，真实恢复、恢复点和活动数据写入仍保持禁用，等待独立批准；
 - 家长报告任务计划只注册当前 Windows 用户任务，命令指向安装根 wrapper，不写死开发机路径。
 
 S7/ASR 仍停留在验证能力和 G2 门禁：Docker/WSL 可用于隔离验证或未来实验，但不进入本轮产品 API、Worker、前端或正式运行链路。
