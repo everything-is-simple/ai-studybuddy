@@ -1,8 +1,8 @@
 # ALPHA-20260727：3 天真实使用冲刺与 Day 0 基线修复计划
 
-**版本**：v1.1
+**版本**：v1.2
 **日期**：2026-07-27（星期一）
-**状态**：🔄 已获本轮用户授权启动 Day 0；候选包 02 与任务分支最终全量回归已通过，待主线集成、复验和推送
+**状态**：🔄 Day 0 已完成主线复验并推送 `origin/master`；Day 1–3 尚未执行
 **任务分支**：`codex/alpha-20260727-day1-baseline-remediation`
 **worktree**：`H:\ai-studybuddy-worktrees\alpha-20260727-day1-baseline-remediation`
 **主线基线**：`origin/master` = `bd8f615fe735fae4968b4bdacfa945a84675e115`
@@ -96,7 +96,7 @@
 - 候选包 02 已在开发机全新隔离安装根完成 bootstrap、生产依赖、Python venv、OCR 依赖、安装检查和 OCR smoke；生产学期预览成功，人工确认后课程写入并经正式 API 读回，前端 200，生产 `/api/dev/init-semester` 为 404。合成课程表未被规则自动解析为结构化课程（0 条），真实课程表图片仍是目标机必测项。
 - 运行中 `check-installation.ps1` 的关键项通过；未注册家长报告任务为符合默认禁用边界的 warning。停止后 PID 文件、进程和监听端口均无残留。
 - 停机状态下主动数据完整性通过（2 文件）；外部白名单备份创建并通过完整性检查（2 文件、495616 字节）；`restore -WhatIf` 输出 `RESTORE_VALIDATED_NO_WRITE`；manifest 为 `ai-studybuddy-data-backup-v2` 且不含 `sourceDataRoot`。真实恢复写入仍固定禁用。
-- 上述证据只代表任务分支和开发机候选包；完成 rebase、快进合并、主线复验并推送 `origin/master` 前，Day 0 仍不标记完成；目标用户电脑未产生新鲜证据前不得宣称实机验收或上线。
+- 实现提交 `a5d2c80` 已快进合并到 `master`；任务分支与主线均在独立隔离数据根完成 type-check、双端 build/完整测试（后端 292/292）、E2E 21/21、文档治理和差异检查，并已推送 `origin/master`，因此 Day 0 收口完成。上述部署证据仍只代表开发机候选包；目标用户电脑未产生新鲜证据前不得宣称实机验收或上线。
 
 ---
 

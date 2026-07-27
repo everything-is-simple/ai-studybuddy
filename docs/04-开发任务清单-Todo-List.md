@@ -927,7 +927,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 顺序 | 任务 | 状态 | 单一责任 |
 | ---- | ---- | ---- | -------- |
-| 1 | ALPHA-D0：开发机主线基线与 P0 回归修复 | 🔄 | 候选包 02 与任务分支最终回归（后端 292/292、E2E 21/21）已通过；待 rebase、主线复验与推送 |
+| 1 | ALPHA-D0：开发机主线基线与 P0 回归修复 | ✅ | 实现提交 `a5d2c80` 已快进合并；任务分支与 `master` 均通过后端 292/292、E2E 21/21、type-check、双端 build、治理与差异检查，并已推送 `origin/master` |
 | 2 | ALPHA-D1：干净部署包与目标机安装 | ⏳ | 构建/扫描部署包，在目标 Windows 11 机器完成 bootstrap/check/start/health/stop |
 | 3 | ALPHA-D2：学生核心闭环实机验收 | ⏳ | 以隔离测试数据完成 S1–S6、S5 冲刺闭环和单 Provider 最小真实调用；S6 渠道/S7 为条件项 |
 | 4 | ALPHA-D3：阻塞修复、回归与 Alpha 交付 | ⏳ | 只修 P0/P1 Bug，完成重启读回、备份/预检、已知问题和快速上手 |
@@ -936,8 +936,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
-| ALPHA-20260727 | `.plans/alpha-20260727-three-day-real-use-sprint-plan.md` | 🔄 已获本轮用户授权；候选包 02 与任务分支最终回归通过，待主线收口 |
-> **ALPHA-20260727 3 天真实使用冲刺（候选包 02 与任务分支最终回归通过，待主线收口）**：行动计划 `.plans/alpha-20260727-three-day-real-use-sprint-plan.md`；任务分支 `codex/alpha-20260727-day1-baseline-remediation` 基于 `origin/master=bd8f615` 创建于外部 worktree。用户要求 3 天内进入真实使用、立即执行开发机全量测试并“修 Bug 不加 Feature”。初始基线中，`pnpm test` 因 T02G 后旧 PowerShell 兼容测试契约未同步而失败，`pnpm test:e2e` 为 16/21，5 项失败均因 E2E 专用服务器误禁用 `/api/dev/init-semester`；最小修复后 PowerShell 兼容专项 6/6、数据边界脚本、E2E 21/21、type-check 和双端 build 均通过。候选包 01 随后暴露新的生产 P0：独立 OCR smoke 成功，但学期预览因 `OcrTimetableRecognizer` 未传入生产 OCR runtime 配置而返回 `TIMETABLE_OCR_FAILED`；现已让 recognizer 使用 `PYTHON_PATH`、OCR 超时、临时目录和缓存目录配置，并新增 `semester-ocr-runtime-config.test.mjs`，专项与相邻 semester API 4/4 通过；最终完整 `pnpm test` 后端 292/292 通过。修复后的候选包 02（ZIP SHA256 `5393209D8F4BB154FA8ECC24A5C2266584C7F8CD9BDEF05A5BC569163A382AB3`）共 304 文件，禁止项和秘密模式命中均为 0；已在开发机全新隔离安装根完成 bootstrap、生产依赖、Python venv/OCR 依赖、OCR smoke、运行中安装检查、health、前端 200、生产 dev route 404、正式 API 学期/课程读回及 start/stop 无残留。合成课程表预览已不再失败，但自动规则解析为 0 条，人工确认补入课程后写入和读回成功；真实课程表图片仍是目标机必测项。停机状态下数据完整性 2 文件通过，外部白名单备份 2 文件/495616 字节通过，`restore -WhatIf` 输出 `RESTORE_VALIDATED_NO_WRITE`，manifest v2 且不含 `sourceDataRoot`；真实 restore 写入继续固定拒绝。数据边界环境为 `REPARSE_FIXTURE_UNSUPPORTED`，不得表述为 reparse 实机证据。当前仍需执行 rebase、快进合并、主线复验和 `origin/master` 推送；主仓未跟踪 HTML 材料继续保留且不提交。三天窗口为 2026-07-28（周二）至 2026-07-30（周四）；目标用户电脑未完成新鲜实机证据前，不得宣称用户电脑验收或生产上线完成。
+| ALPHA-20260727 | `.plans/alpha-20260727-three-day-real-use-sprint-plan.md` | 🔄 Day 0 已完成并推送 `origin/master`；Day 1–3 目标机安装、真实闭环与 Alpha 交付待执行 |
+> **ALPHA-20260727 3 天真实使用冲刺（Day 0 已在 `origin/master` 收口，Day 1–3 待执行）**：行动计划 `.plans/alpha-20260727-three-day-real-use-sprint-plan.md`；任务分支 `codex/alpha-20260727-day1-baseline-remediation` 基于 `origin/master=bd8f615` 创建于外部 worktree。用户要求 3 天内进入真实使用、立即执行开发机全量测试并“修 Bug 不加 Feature”。初始基线中，`pnpm test` 因 T02G 后旧 PowerShell 兼容测试契约未同步而失败，`pnpm test:e2e` 为 16/21，5 项失败均因 E2E 专用服务器误禁用 `/api/dev/init-semester`；最小修复后 PowerShell 兼容专项 6/6、数据边界脚本、E2E 21/21、type-check 和双端 build 均通过。候选包 01 随后暴露新的生产 P0：独立 OCR smoke 成功，但学期预览因 `OcrTimetableRecognizer` 未传入生产 OCR runtime 配置而返回 `TIMETABLE_OCR_FAILED`；现已让 recognizer 使用 `PYTHON_PATH`、OCR 超时、临时目录和缓存目录配置，并新增 `semester-ocr-runtime-config.test.mjs`，专项与相邻 semester API 4/4 通过；最终完整 `pnpm test` 后端 292/292 通过。修复后的候选包 02（ZIP SHA256 `5393209D8F4BB154FA8ECC24A5C2266584C7F8CD9BDEF05A5BC569163A382AB3`）共 304 文件，禁止项和秘密模式命中均为 0；已在开发机全新隔离安装根完成 bootstrap、生产依赖、Python venv/OCR 依赖、OCR smoke、运行中安装检查、health、前端 200、生产 dev route 404、正式 API 学期/课程读回及 start/stop 无残留。合成课程表预览已不再失败，但自动规则解析为 0 条，人工确认补入课程后写入和读回成功；真实课程表图片仍是目标机必测项。停机状态下数据完整性 2 文件通过，外部白名单备份 2 文件/495616 字节通过，`restore -WhatIf` 输出 `RESTORE_VALIDATED_NO_WRITE`，manifest v2 且不含 `sourceDataRoot`；真实 restore 写入继续固定拒绝。数据边界环境为 `REPARSE_FIXTURE_UNSUPPORTED`，不得表述为 reparse 实机证据。实现提交 `a5d2c80` 已快进合并到本地 `master`；任务分支与主线分别使用新的仓库外隔离根完成 type-check、双端 build/完整 `pnpm test`（后端 292/292）、E2E 21/21、文档治理和差异检查，并已推送 `origin/master`。主仓未跟踪 HTML 材料继续保留且未提交。三天窗口为 2026-07-28（周二）至 2026-07-30（周四）；目标用户电脑未完成新鲜实机证据前，不得宣称用户电脑验收或生产上线完成。
 ---
 
 ## 任务状态说明
