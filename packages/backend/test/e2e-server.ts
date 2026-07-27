@@ -26,7 +26,7 @@ async function main() {
       createApp({
         configurationService,
         allowedOriginsRaw: process.env.ALLOWED_API_ORIGINS,
-        enableDevRoutes: false,
+        enableDevRoutes: true,
         timetableRecognizer: fakeTimetableRecognizer,
       }),
     createWorker: () => new MaterialJobWorker(),

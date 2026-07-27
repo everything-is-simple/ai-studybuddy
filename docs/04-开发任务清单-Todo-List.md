@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.104
-**日期**：2026-07-26
+**版本**：v1.105
+**日期**：2026-07-27
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 已按用户 2026-07-25 明确要求启动治理/计划阶段；首批 Phase 3 实施任务仍需独立计划和批准。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
+> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 T02A–T02G 安全切片已各自完成主线复验并进入 `origin/master`，但 T02 总体、真实机器操作与其余 Phase 3 候选任务仍未完成。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
@@ -923,6 +923,21 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 
 > **PHASE3-T02G Windows 运行目录、ACL 与 backup/restore 安全边界（2026-07-26，已完成主线集成）**：实施分支 `codex/phase3-t02g-windows-data-acl-backup-restore-implementation` 从 `origin/master` 的 `9c58e0a` 创建，并以已批准计划作为实现依据；P1 修复与独立审查完成后已 rebase、快进合并、主线复验并推送 `origin/master`（`6f5ecdd`）。当前仅实现并验证仓库外合成夹具：统一的绝对路径、受保护根、同卷与 reparse point fail-closed 分类；仅返回逻辑类别与短哈希的只读 ACL 证据；显式、安装根之外的 backup output、仅 `studybuddy.db`/`semesters` 白名单 payload、无 `sourceDataRoot` 的 v2 manifest；以及对 manifest/payload/hash/路径的 restore 预检。`restore-data.ps1 -WhatIf` 只验证且不落盘；任何真实 restore 写入均固定拒绝为 `RESTORE_WRITE_DISABLED`，等待独立的服务/计划任务停止、recovery point 和中断处理批准/实现。已执行 `powershell -ExecutionPolicy Bypass -File scripts/test-data-boundary.ps1`：合成路径和恶意 manifest 拒绝、manifest 脱敏、ACL 序列化不含夹具路径、`-WhatIf` 不改数据、受保护哨兵不变且夹具清理后无残留。当前环境无法创建符号链接夹具，测试明确记录 `REPARSE_FIXTURE_UNSUPPORTED`；因此不得将其表述为 reparse 实机证据，真实 ACL、真实备份、真实恢复、正式安装和用户电脑操作仍须分别批准。未触碰 T02E 部署包/staging 删除或 T02F 日志轮转/保留实现；本条不表示 T02G、T02、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成。
+## POST-PHASE3：3 天 Alpha 真实使用冲刺
+
+| 顺序 | 任务 | 状态 | 单一责任 |
+| ---- | ---- | ---- | -------- |
+| 1 | ALPHA-D0：开发机主线基线与 P0 回归修复 | 🔄 | 候选包 02 与任务分支最终回归（后端 292/292、E2E 21/21）已通过；待 rebase、主线复验与推送 |
+| 2 | ALPHA-D1：干净部署包与目标机安装 | ⏳ | 构建/扫描部署包，在目标 Windows 11 机器完成 bootstrap/check/start/health/stop |
+| 3 | ALPHA-D2：学生核心闭环实机验收 | ⏳ | 以隔离测试数据完成 S1–S6、S5 冲刺闭环和单 Provider 最小真实调用；S6 渠道/S7 为条件项 |
+| 4 | ALPHA-D3：阻塞修复、回归与 Alpha 交付 | ⏳ | 只修 P0/P1 Bug，完成重启读回、备份/预检、已知问题和快速上手 |
+
+### Alpha 行动计划索引
+
+| 任务 | 计划文件 | 计划/实施状态 |
+| ---- | -------- | ------------- |
+| ALPHA-20260727 | `.plans/alpha-20260727-three-day-real-use-sprint-plan.md` | 🔄 已获本轮用户授权；候选包 02 与任务分支最终回归通过，待主线收口 |
+> **ALPHA-20260727 3 天真实使用冲刺（候选包 02 与任务分支最终回归通过，待主线收口）**：行动计划 `.plans/alpha-20260727-three-day-real-use-sprint-plan.md`；任务分支 `codex/alpha-20260727-day1-baseline-remediation` 基于 `origin/master=bd8f615` 创建于外部 worktree。用户要求 3 天内进入真实使用、立即执行开发机全量测试并“修 Bug 不加 Feature”。初始基线中，`pnpm test` 因 T02G 后旧 PowerShell 兼容测试契约未同步而失败，`pnpm test:e2e` 为 16/21，5 项失败均因 E2E 专用服务器误禁用 `/api/dev/init-semester`；最小修复后 PowerShell 兼容专项 6/6、数据边界脚本、E2E 21/21、type-check 和双端 build 均通过。候选包 01 随后暴露新的生产 P0：独立 OCR smoke 成功，但学期预览因 `OcrTimetableRecognizer` 未传入生产 OCR runtime 配置而返回 `TIMETABLE_OCR_FAILED`；现已让 recognizer 使用 `PYTHON_PATH`、OCR 超时、临时目录和缓存目录配置，并新增 `semester-ocr-runtime-config.test.mjs`，专项与相邻 semester API 4/4 通过；最终完整 `pnpm test` 后端 292/292 通过。修复后的候选包 02（ZIP SHA256 `5393209D8F4BB154FA8ECC24A5C2266584C7F8CD9BDEF05A5BC569163A382AB3`）共 304 文件，禁止项和秘密模式命中均为 0；已在开发机全新隔离安装根完成 bootstrap、生产依赖、Python venv/OCR 依赖、OCR smoke、运行中安装检查、health、前端 200、生产 dev route 404、正式 API 学期/课程读回及 start/stop 无残留。合成课程表预览已不再失败，但自动规则解析为 0 条，人工确认补入课程后写入和读回成功；真实课程表图片仍是目标机必测项。停机状态下数据完整性 2 文件通过，外部白名单备份 2 文件/495616 字节通过，`restore -WhatIf` 输出 `RESTORE_VALIDATED_NO_WRITE`，manifest v2 且不含 `sourceDataRoot`；真实 restore 写入继续固定拒绝。数据边界环境为 `REPARSE_FIXTURE_UNSUPPORTED`，不得表述为 reparse 实机证据。当前仍需执行 rebase、快进合并、主线复验和 `origin/master` 推送；主仓未跟踪 HTML 材料继续保留且不提交。三天窗口为 2026-07-28（周二）至 2026-07-30（周四）；目标用户电脑未完成新鲜实机证据前，不得宣称用户电脑验收或生产上线完成。
 ---
 
 ## 任务状态说明

@@ -65,16 +65,23 @@ test('deployment entry scripts use the shared runtime check module functions', a
   }
 });
 
-test('restore clears the read-only attribute carried by deliberately read-only backups', async () => {
+test('restore remains validation-only until write safety is separately approved', async () => {
   const restore = await readScript('restore-data.ps1');
-  assert.match(restore, /Copy-Item -LiteralPath \$source -Destination \$destination -Force/);
-  assert.match(restore, /Get-Item -LiteralPath \$destination -Force\)\.IsReadOnly = \$false/);
+  assert.match(restore, /CmdletBinding\(SupportsShouldProcess\)/);
+  assert.match(restore, /Get-AIStudyBuddyValidatedBackup\b/);
+  assert.match(restore, /\$PSCmdlet\.ShouldProcess\b/);
+  assert.match(restore, /RESTORE_VALIDATED_NO_WRITE/);
+  assert.match(restore, /RESTORE_WRITE_DISABLED/);
+  assert.doesNotMatch(restore, /Copy-Item\b/);
+  assert.doesNotMatch(restore, /\.IsReadOnly\s*=\s*\$false/);
 });
 
-test('backup script uses the shared Windows PowerShell 5.1 relative-path helper', async () => {
+test('backup script uses the shared Windows PowerShell 5.1 relative-path helper chain', async () => {
   const module = await readFile(path.join(scriptRoot, 'lib', 'AIStudyBuddy.Deployment.psm1'), 'utf8');
   const backup = await readScript('backup-data.ps1');
   assert.match(module, /function Get-AIStudyBuddyRelativePath\b/);
-  assert.match(backup, /Get-AIStudyBuddyRelativePath\b/);
+  assert.match(module, /function Get-AIStudyBuddyDataFiles\b[\s\S]*?Get-AIStudyBuddyRelativePath\b/);
+  assert.match(backup, /Get-AIStudyBuddyDataFiles\b/);
+  assert.doesNotMatch(module, /\[IO\.Path\]::GetRelativePath\b/);
   assert.doesNotMatch(backup, /\[IO\.Path\]::GetRelativePath\b/);
 });

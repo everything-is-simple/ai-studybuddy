@@ -5,7 +5,8 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { OcrConverter } from '../adapters/converter';
+import { OcrConverter, type OcrConverterOptions } from '../adapters/converter';
+import { config } from '../config/env';
 import type { DatabaseType } from '../db/connection';
 import { checkpointAndClose, openReadOnlyExistingDbAtPath } from '../db/connection';
 import { initGlobalDb, initSemesterDbAtPath, migrateSemesterDb, getAppliedVersion } from '../db/migrations';
@@ -37,9 +38,24 @@ export interface TimetableRecognizer {
   recognize(inputPath: string): Promise<{ text: string }>;
 }
 
+export function getTimetableOcrConverterOptions(): OcrConverterOptions {
+  return {
+    pythonPath: config.pythonPath,
+    timeoutMs: config.ocrTimeoutMs,
+    cacheRoot: config.ocrCacheRoot,
+    tempRoot: config.ocrTempRoot,
+  };
+}
+
 export class OcrTimetableRecognizer implements TimetableRecognizer {
+  private readonly converter: OcrConverter;
+
+  constructor(converter: OcrConverter = new OcrConverter(getTimetableOcrConverterOptions())) {
+    this.converter = converter;
+  }
+
   async recognize(inputPath: string): Promise<{ text: string }> {
-    const result = await new OcrConverter().convert(inputPath);
+    const result = await this.converter.convert(inputPath);
     if (!result.ok || !result.text) {
       throw new SemesterSelectorError('TIMETABLE_OCR_FAILED', 422, '课程表识别失败，请更换清晰图片后重试');
     }
