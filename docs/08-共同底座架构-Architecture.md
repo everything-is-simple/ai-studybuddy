@@ -1,8 +1,8 @@
 # AI StudyBuddy 共同底座架构 Architecture
 
-**版本**：v1.20
-**日期**：2026-07-23
-**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5 的 T02=`PARTIAL`、T03=`PASS`、T04=能力验证 `PARTIAL`（非 Adapter 装配）；G2 正式语义已采用、跨平台强证据待独立批准；Phase 3 的 T02A–T02G 已完成各自主线复验并进入 `origin/master`；T02G 仅覆盖仓库外合成夹具安全边界
+**版本**：v1.21
+**日期**：2026-07-27
+**状态**：Phase 0.7/0.8、Phase 1、Phase 2 S5 与 POST-PHASE2 已完成并推送；Phase 1.5 的 T02=`PARTIAL`、T03=`PASS`、T04=能力验证 `PARTIAL`（非 Adapter 装配）；G2 正式语义已采用、跨平台强证据待独立批准；Phase 3 的 T02A–T02G 已完成各自主线复验并进入 `origin/master`，T02G 仅覆盖仓库外合成夹具安全边界；用户于 2026-07-27 明确冻结 T02G 之后全部开发机 Phase 3 工作，T02 与 Phase 3 均未完成
 **原则**：孩子本机优先、按需运行、数据本地、父母异步接收脱敏报告；只定义当前产品需要的共同底座。
 
 ---

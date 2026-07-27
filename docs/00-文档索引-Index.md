@@ -1,7 +1,7 @@
 # AI StudyBuddy 文档索引
 
-**版本**：v2.59
-**日期**：2026-07-26
+**版本**：v2.60
+**日期**：2026-07-27
 **用途**：这是本项目所有设计文档的导航中心和单一事实来源（SoT）。AI Agent 和开发者在开始任何任务前，必须先读本文件。
 
 ---
@@ -39,7 +39,7 @@
 - **产品目的与使用者**：`docs/01` 是首要入口。系统为一名在 Windows 本机学习的学生而做，帮助她把课程/考试目标、学习节奏、资料笔记、练习、错题和考前冲刺连成可持续闭环；家长不是系统操作者，只接收脱敏的异步学习摘要。
 - **已集成事实**：只有 `origin/master` 上的代码、`docs/04` 任务状态和主线复验共同构成“已完成”结论。当前 S1–S6 主线已完成；开发机 Windows 原生 + Node 24 部署基线已验证，但用户电脑的安装运行验收仍是未完成门禁。
 - **S7 与外部候选边界**：S7-MVP 已完成主线复验并推送 `origin/master`：目标仅为受控 PCM WAV → 显式本机 `whisper.cpp` → 可编辑文本 → S2 文本资料。旧外部 ASR/FFmpeg 候选的能力卡、harness 或隔离证据仍不等于完整 S7、通用静音、G2、T02 主线、用户机能力或 Phase 3。
-- **当前治理/实施项**：Phase 3 的 T02 安全与隐私基线审计已按独立计划和切片推进：T02A–T02G 已完成各自主线复验并进入 `origin/master`；其中 T02G 仅完成仓库外合成夹具的安全边界实现，真实 ACL、真实 backup/restore 与恢复写入仍未批准或实施。T02 总体、Docker/WSL、G2/外部 ASR 主线、完整 S7、S3 Worker 和用户电脑验收均各自独立门禁，不拖延已完成的学生本机学习闭环。
+- **当前治理/实施项**：Phase 3 的 T02A–T02G 已完成各自批准范围的主线复验并进入 `origin/master`；其中 T02G 仅完成仓库外合成夹具的安全边界实现，真实 ACL、真实 backup/restore 与恢复写入仍未批准或实施。用户于 2026-07-27 明确将开发机上的全部 Phase 3 后续工作冻结在 T02G 边界；T02 总体及其余 Phase 3 任务均为暂停而非完成。Docker/WSL、G2/外部 ASR 主线、完整 S7、S3 Worker 和用户电脑验收仍是各自独立门禁。
 - `H:\ai-studybuddy` 是当前主系统 Git 仓库；这里只保存有效设计文档、正式实现和可审计结论。`H:\ai-studybuddy-composer` 是独立的本机组件试炼场，不加入主仓库 workspace，不作为主系统源码目录。
 - 试炼场中的 `.env.local`、`.venv`、`node_modules`、测试输出、真实凭据和临时素材不得复制或提交到主仓库。试炼场验证通过不等于产品已接入；必须先回填有效编号文档，再在主仓库按 Adapter/API/UI 边界重新实现。
 - **worktree 脏状态与目录边界治理**：未提交状态不是产品完成或失败结论，也不等于可删除垃圾。当前安全收口计划为 `.plans/process-dirty-state-remediation-plan.md`，其索引和批准状态见 `docs/04`；唯一允许的新任务 worktree 根目录是 `H:\ai-studybuddy-worktrees`，`H:\ai-studybuddy` 内严禁创建或保留 `.worktrees` 根。任何语义改动、生成物或依赖残留都必须先分类、核对绝对路径并取得相应批准，不能用 `git clean`、`git reset --hard` 或覆盖 checkout 处理。
@@ -141,7 +141,7 @@ git diff --check
 1. 重读 S1/S2/S3/S4 PRD 与最新验收结论；
 2. Phase 1-T00、T10、T02、T03、T11、T03A、T03B、T03C、T03D、T04、T04A、T04B、T05、T07、T08、T09A、T09B、T09C、T09D 与 T09E 已完成；S3 已完成 Schema、练习生成/提交批改 API、前端发起/作答/结果闭环、练习历史与归档学期只读查看，S4 已完成错题归档、错题改错前端与回流规则，T07 已在考试工作台展示当前课程近期时间线活动，T08 已提供本机配置中心与连接验收；
 3. S6 家长观察 PRD、T06A 规则报告生成和 T06B 渠道推送已完成并登记；T06B 使用 `report:<date>` 冻结脱敏快照，按 `report_key + channel` 去重和独立重试，SMTP/飞书均失败时保留本机脱敏 HTML 与固定错误摘要，真实渠道 smoke 仍不是常规验证依赖；
-4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收。Phase 3 的 T02 基线审计已按独立计划推进：T02A–T02G 已完成各自主线复验并进入 `origin/master`；T02G 的计划、实现、文档与 P1 修复均已完成独立审查、快进集成和主线验证，且不授权真实 ACL、备份或恢复写入。S7-MVP 已完成主线复验并推送 `origin/master`：它只覆盖受控 WAV、本机同步 `whisper.cpp`、可编辑文本及显式 S2 handoff；旧 T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于完整 S7、通用静音、G2 或用户机验收。S3 Worker 不属于当前 MVP。
+4. T09A–T09E、T12、M01、M02、M03 与 Post-M03 均已完成并进入远端主线；Phase 2-T01–T06 也已完成主线复验并推送，S5 当前包含模拟考、确定性只读临考速背、确定性即时只读冲刺计划和考试工作台冲刺区。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，用户电脑安装运行仍待目标机器验收。Phase 3 的 T02A–T02G 已完成各自主线复验并进入 `origin/master`；T02G 的计划、实现、文档与 P1 修复均已完成独立审查、快进集成和主线验证，且不授权真实 ACL、备份或恢复写入。用户于 2026-07-27 明确暂停 T02 剩余工作，并冻结 T02G 之后全部开发机 Phase 3 任务；T02 与 Phase 3 均未完成。S7-MVP 已完成主线复验并推送 `origin/master`：它只覆盖受控 WAV、本机同步 `whisper.cpp`、可编辑文本及显式 S2 handoff；旧 T02/T04 外部候选能力仍为 `PARTIAL`、T03 Composer smoke 为 `PASS`，不等于完整 S7、通用静音、G2 或用户机验收。S3 Worker 不属于当前 MVP。
 5. `docs/04` 的“Phase 1 行动计划索引”是任务与 `.plans/` 的对应 SoT；T09A 的 v4 计划、实现、主线复验和 `origin/master` 推送均已完成；前端维护任务 M01 也已完成：任务分支 `codex/phase1-m01-markmap-chunk-optimization` 的实现提交 `57b8612` 与验证证据提交 `6f5abcb` 已 fast-forward 合入 `master` 并推送 `origin/master`。主线复验通过文档治理、`git diff --check`、`pnpm type-check`、后端/前端 build、隔离 `pnpm test`（前端 64/64、后端 215/215）和专项 Playwright E2E（2/2）；`katex` 535.51 kB warning 仍是独立遗留项。T09B/T09C 已完成；T09D 计划、实现、独立复审修复、主线集成、主线复验与 `origin/master` 推送已完成；T09E 计划、实现、主线集成、主线复验与 `origin/master` 推送已完成，验证隔离根 `I:\ai-studybuddy-tmp\runs\phase1-t09e-master-verify-20260719-001`。
 
 ---

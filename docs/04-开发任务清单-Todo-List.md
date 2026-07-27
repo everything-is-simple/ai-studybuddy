@@ -1,10 +1,10 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.105
+**版本**：v1.106
 **日期**：2026-07-27
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
-> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 T02A–T02G 安全切片已各自完成主线复验并进入 `origin/master`，但 T02 总体、真实机器操作与其余 Phase 3 候选任务仍未完成。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
+> 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 T02A–T02G 安全切片已各自完成主线复验并进入 `origin/master`，但 T02 总体、真实机器操作与其余 Phase 3 候选任务仍未完成；用户已于 2026-07-27 明确将开发机上的全部 Phase 3 后续工作冻结在 T02G 边界。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
 
@@ -884,16 +884,16 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 > **2026-07-24 开发机 Windows 原生 + Node 24 运行时基线（开发机基线已验证并推送 `origin/master`；非用户机验收）**：计划 `.plans/process-dev-machine-windows-node24-runtime-baseline-plan.md` 已由任务分支 `codex/process-dev-machine-node24-runtime-baseline` fast-forward 合入独立主线集成 worktree `H:\ai-studybuddy-worktrees\process-runtime-master-integration-20260723`；原主工作区的未提交学期版本 8/9 改动及 S7/G2 文档未被覆盖。新的干净部署包 `H:\ai-studybuddy-tmp\runs\dev-machine-node24-baseline-master-20260724-01\deployment-package-node24-master` 在新的独立安装根 `H:\ai-studybuddy-runtime\dev-machine-node24-baseline-master-20260724-01` 中完成 `bootstrap-runtime.ps1` → `check-installation.ps1` → `test-ocr-runtime.ps1` → `start-production.ps1`（仅 `127.0.0.1:30127`）→ `/api/health` → `stop-production.ps1` → 脱敏数据安全检查；构建、bootstrap、安装检查、修正后的 OCR、停止和安全检查均为 exit `0`。启动脚本已输出本机回环地址；其日志包装因后台 Node 继承输出句柄超时，故以独立 `/api/health` 的 `success=true` 与停止后无 PID/关联 Node 残留确认启动/停止结果。Node 为 `v24.14.0`，Python 为 `3.10.19 x64`，OCR 合成中文 smoke 通过；主线 `pnpm type-check`、后端/前端构建、`pnpm test`（242/242）、文档治理和 `git diff --check` 均 exit `0`。当前运行时事实和命中的部署脚本已收紧为仅 Node 24；脱敏证据见 `.plans/evidence/process-dev-machine-node24-baseline-20260724-01.md`。**用户电脑安装运行仍为待目标机器到位后的独立实机验收门禁，当前不得宣称完成；ASR / Docker / WSL 继续独立暂缓，未进入产品实现。**
 
 ---
-## Phase 3：打磨与安全（T02 基线审计切片实施中）
+## Phase 3：打磨与安全（自 T02G 边界起暂停）
 
-**状态**：用户于 2026-07-25 明确要求启动 Phase 3；已批准的 T02 安全与隐私基线审计正在按独立切片实施。T02A–T02G 已各自完成主线复验并进入 `origin/master`；T02G 仅完成仓库外合成夹具的安全边界实现与 P1 修复。T02 总体审计、真实机器操作与其余 Phase 3 候选任务仍未完成。
+**状态**：用户曾于 2026-07-25 批准 T02 安全与隐私基线审计计划；T02A–T02G 已各自完成主线复验并进入 `origin/master`，其中 T02G 仅完成仓库外合成夹具的安全边界实现与 P1 修复。用户于 2026-07-27 明确要求到此为止：T02 总体转为暂停，开发机上的全部 Phase 3 后续工作冻结在 T02G 边界。总体审计、真实机器操作与其余 Phase 3 候选任务仍未完成。
 
-**实施门禁**：任何尚未获批的 Phase 3 实现仍须重新确认产品范围并创建独立计划；任务分支提交、合成夹具证据或单个切片完成均不等于 T02、Phase 3、生产上线或用户电脑验收完成。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
+**暂停门禁**：不再继续拆分或实施任何 T02 后续切片，也不启动 T03、T04、T05 或其他开发机 Phase 3 工作；不得把既有计划、单个切片、合成夹具证据或分支提交外推为 T02、Phase 3、真实机器操作、生产上线或用户电脑验收完成。未来如需恢复，必须由用户再次明确批准，并从届时最新 `master` 创建新的独立计划/任务分支。当前继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界；不得默认把历史候选的家长面板作为既定需求。
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
 | 1 | T01：S6 后续产品形态重新决策（历史候选：家长面板） | ⏸️ | 先决定是否继续保持异步脱敏报告；不得默认引入家长登录或 Web 面板 |
-| 2 | T02：安全与隐私基线审计 | 🔄 | 基线审计计划已于 2026-07-25 获用户明确批准；T02A–T02G 切片均已推送 `origin/master` 并完成各自主线复验；T02G 仅完成仓库外合成夹具安全边界实现与 P1 修复；总体审计、真实 ACL/backup/restore 与全部修复仍未完成 |
+| 2 | T02：安全与隐私基线审计 | ⏸️ | T02A–T02G 切片均已推送 `origin/master` 并完成各自主线复验；T02G 仅完成仓库外合成夹具安全边界实现与 P1 修复；总体审计、真实 ACL/backup/restore 与全部修复仍未完成，已按用户 2026-07-27 决定暂停 |
 | 3 | T03：性能基线 | ⏸️ | 建立响应时间/内存基线、Worker 并发优化、前端首屏 |
 | 4 | T04：备份与恢复 | ⏸️ | 自动定期备份、损坏检测、一键恢复验证 |
 | 5 | T05：日志规范化 | ⏸️ | 脱敏日志、分级输出、日志轮转与清理 |
@@ -902,7 +902,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 任务 | 计划文件 | 计划/实施状态 |
 | ---- | -------- | ------------- |
-| PHASE3-T02 | `.plans/phase3-t02-security-privacy-baseline-audit-plan.md` | ✅ 基线审计计划已获批准；总体审计与全部修复未完成 |
+| PHASE3-T02 | `.plans/phase3-t02-security-privacy-baseline-audit-plan.md` | ⏸️ 计划曾获批准，T02A–T02G 已实施；用户于 2026-07-27 暂停剩余总体审计与修复，T02 未完成 |
 | PHASE3-T02A | `.plans/phase3-t02a-production-attack-surface-error-boundary-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02A 切片完成，不等于 T02 完成 |
 | PHASE3-T02B | `.plans/phase3-t02b-subprocess-environment-boundary-plan.md` | ✅ 已推送 `origin/master`；T02B 切片完成，不等于 T02 完成 |
 | PHASE3-T02C | `.plans/phase3-t02c-env-error-redaction-plan.md` | ✅ 已推送 `origin/master`；T02C 切片完成，不等于 T02 完成 |
@@ -910,6 +910,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02E | `.plans/phase3-t02e-deployment-output-delete-boundary-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02E 切片完成，不等于 T02 完成 |
 | PHASE3-T02F | `.plans/phase3-t02f-log-redaction-rotation-retention-plan.md` | ✅ 已在 `origin/master` 并完成最新主线复验；T02F 切片完成不等于 T02 完成 |
 | PHASE3-T02G | `.plans/phase3-t02g-windows-data-acl-backup-restore-plan.md` | ✅ 已在 `origin/master` 完成主线复验：计划、实现、文档同步与 P1 修复提交已独立审查、rebase、快进合并并推送（`6f5ecdd`）。仅覆盖仓库外合成夹具；真实 ACL、真实 backup/restore 及 restore 写入仍未获批准或实施，不等于 T02 完成 |
+
+> **2026-07-27 Phase 3 暂停决定**：用户明确要求从 T02G 边界开始暂停开发机上的全部 Phase 3 后续工作。T02G 保留为“仓库外合成夹具范围已完成主线复验”的独立切片事实；该结论不表示真实 Windows ACL、真实 backup/restore、restore 写入、用户电脑实机证据或 T02 总体通过。自本决定起，不再继续拆分或实施任何 T02 后续切片（无论后续编号），不启动 T03/T04/T05，也不创建新的 Phase 3 实施计划。暂停不是完成；未来恢复须由用户再次明确批准，并另建届时适用的独立计划。 本次任务仅同步 `AGENTS.md`、`docs/00`、`docs/04`、`docs/08` 与 T02 总计划的状态措辞；任务分支已通过 `scripts/check-docs-governance.ps1`、`git diff --check` 和暂停边界一致性搜索，未运行或修改 ACL、备份/恢复、部署脚本、业务代码、服务或会写运行数据的测试。
 
 > **PHASE3-T02 安全与隐私基线审计计划（2026-07-25，计划已批准）**：计划路径 `.plans/phase3-t02-security-privacy-baseline-audit-plan.md`，任务分支 `codex/phase3-t02-security-privacy-baseline-audit-plan`，从最新 `origin/master` 创建于外部 worktree `H:\ai-studybuddy-worktrees\phase3-t02-security-privacy-baseline-audit-plan`。本轮只读检查配置秘密、数据/文件、API/错误、日志/隐私、S6/S7 和 Windows Node 24 部署脚本边界；当前未确认 P0，确认的 P1 候选包括生产无条件挂载 dev API、缺少全局 JSON 脱敏错误中间件与显式 `NODE_ENV=production`、后端核心未强制回环、OCR/whisper.cpp 子进程继承完整环境、env 非法行回显、打包输出目录递归删除缺少受控根保护，以及日志轮转/保留/脱敏边界未闭环。计划同时记录现有 DPAPI、回环 Origin、S6 聚合脱敏、S7 受控 WAV/临时清理/显式保存等正向控制，并拆分上线前 P1 与后续 P2/P3。**用户已于 2026-07-25 明确批准本基线审计计划；T02A 与 T02B 已作为独立切片进入远端主线并完成各自主线复验。批准计划或切片完成均不表示 T02 总体、Phase 3 安全审计、安全修复、上线验收或用户电脑安装验收完成。**
 
