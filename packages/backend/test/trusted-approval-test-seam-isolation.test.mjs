@@ -13,6 +13,7 @@ const definitionPaths = new Set([
   'scripts/lib/AIStudyBuddy.TrustedApproval.cjs',
   'scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs',
   'scripts/lib/AIStudyBuddy.NoFollow.cjs',
+  'scripts/lib/AIStudyBuddy.TrustAnchor.cjs',
 ]);
 const helperPath = 'packages/backend/test/helpers/trusted-approval-fixture.mjs';
 const scannerPath = 'packages/backend/test/trusted-approval-test-seam-isolation.test.mjs';
@@ -20,8 +21,9 @@ const helperConsumerPaths = new Set([
   'packages/backend/test/trusted-approval-contract.test.mjs',
   'packages/backend/test/verifier-integrity-gate.test.mjs',
   'packages/backend/test/nofollow-contract.test.mjs',
+  'packages/backend/test/trust-anchor-contract.test.mjs',
 ]);
-const providerModulePattern = /AIStudyBuddy\.[\s\S]{0,50}?(?:TrustedApproval|VerifierIntegrity|NoFollow)\.cjs/;
+const providerModulePattern = /AIStudyBuddy\.[\s\S]{0,50}?(?:TrustedApproval|VerifierIntegrity|NoFollow|TrustAnchor)\.cjs/;
 function staticStringValue(node) {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
   if (ts.isParenthesizedExpression(node)) return staticStringValue(node.expression);
@@ -89,6 +91,14 @@ test('no-follow production module contains no ordinary path or ACL fallback toke
   const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
   const source = readFileSync(join(root, 'scripts/lib/AIStudyBuddy.NoFollow.cjs'), 'utf8');
   for (const forbidden of [new RegExp('(?:node:)?f' + 's\\.readFile'), /lstat/, /stat/, /realpath/, /Get-Acl/, /Set-Acl/, /icacls/, /PowerShell/]) {
+    assert.equal(forbidden.test(source), false);
+  }
+});
+
+test('trust-anchor production module has no environment, path or fallback configuration token', () => {
+  const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
+  const source = readFileSync(join(root, 'scripts/lib/AIStudyBuddy.TrustAnchor.cjs'), 'utf8');
+  for (const forbidden of [/process\.env/, /APP_DATA_ROOT/, /Registry/, /readFile/, /realpath/, /Get-Acl/, /Set-Acl/]) {
     assert.equal(forbidden.test(source), false);
   }
 });

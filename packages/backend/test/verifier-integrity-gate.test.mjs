@@ -24,10 +24,12 @@ test('test integrity contract mismatch fails without provider detail leakage', (
   );
 });
 
-test('test integrity provider failure remains fail closed', () => {
-  const fixture = createApprovalFixture({ provider: () => { throw new Error('provider secret'); } });
+test('test integrity provider failure remains fail closed without provider detail leakage', () => {
+  let failProvider = false;
+  const fixture = createApprovalFixture({ provider: () => { if (failProvider) throw new Error('provider secret'); } });
+  failProvider = true;
   assert.throws(
     () => fixture.verifier.verifyTrustedApproval({ algorithm: 'Ed25519', recordBytes: fixture.recordBytes, signatureBytes: fixture.signatureBytes, expected: fixture.expected }),
-    (error) => assertFixedError(error, 'TRUSTED_VERIFIER_INTEGRITY_UNPROVEN')
+    (error) => assertFixedError(error, 'TRUSTED_VERIFIER_INTEGRITY_UNPROVEN', 'provider secret')
   );
 });

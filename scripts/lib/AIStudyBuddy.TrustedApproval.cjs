@@ -1,9 +1,9 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { requireTrustedVerifierIntegrity } = require('./AIStudyBuddy.VerifierIntegrity.cjs');
+const { requireTrustedVerifierIntegrity, __TEST_ONLY_requireTrustedVerifierIntegrity } = require('./AIStudyBuddy.VerifierIntegrity.cjs');
+const { __TEST_ONLY_describeTrustedApprovalAnchor, __TEST_ONLY_acquireTrustedApprovalAnchor } = require('./AIStudyBuddy.TrustAnchor.cjs');
 
-const RESERVED_KEY_ID = 'asb-phase3-t02-approval-ed25519-v1';
 const FIELD_NAMES = Object.freeze([
   'format',
   'keyId',
@@ -77,7 +77,7 @@ function assertExactRecordBytes(recordBytes) {
     values[name] = value;
   }
 
-  if (values.keyId !== RESERVED_KEY_ID) return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+  if (!/^[A-Za-z0-9._-]{1,96}$/.test(values.keyId)) return fail('TRUSTED_APPROVAL_SCHEMA_INVALID');
   if (
     values.format !== 'ASB-TA1' ||
     !/^[A-Za-z0-9._-]{1,96}$/.test(values.policyId) ||
@@ -176,80 +176,84 @@ function readSyntheticInput(input) {
   }
 }
 
-function rethrowFixedIntegrityError(error) {
+function rethrowFixedPrerequisiteError(error) {
+  let code;
   try {
-    if (error?.code === 'TRUSTED_VERIFIER_CONTRACT_MISMATCH') {
-      return fail('TRUSTED_VERIFIER_CONTRACT_MISMATCH');
-    }
+    code = error?.code;
   } catch {
-    // Never expose a caller-controlled error or proxy failure.
+    return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
   }
-  return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+  switch (code) {
+    case 'TRUSTED_VERIFIER_CONTRACT_MISMATCH':
+    case 'TRUSTED_ANCHOR_INVALID':
+    case 'TRUSTED_ANCHOR_BINDING_MISMATCH':
+    case 'TRUSTED_ANCHOR_REVOKED_OR_ROLLBACK':
+    case 'TRUSTED_ANCHOR_UNAVAILABLE':
+    case 'TRUSTED_RELEASE_EVIDENCE_UNPROVEN':
+      return fail(code);
+    default:
+      return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+  }
+}
+
+function acquireSyntheticPrerequisites(trustAnchor, integrity) {
+  let anchorBinding;
+  try {
+    anchorBinding = __TEST_ONLY_describeTrustedApprovalAnchor(trustAnchor);
+  } catch (error) {
+    return rethrowFixedPrerequisiteError(error);
+  }
+
+  let anchor;
+  try {
+    anchor = __TEST_ONLY_acquireTrustedApprovalAnchor(trustAnchor, {
+      requiredContractVersion: '1',
+      requiredKeyId: anchorBinding.keyId,
+      requiredFingerprint: anchorBinding.fingerprint,
+      requiredMetadataVersion: anchorBinding.metadataVersion,
+      requiredReleaseIdentity: anchorBinding.releaseIdentity,
+    });
+  } catch (error) {
+    return rethrowFixedPrerequisiteError(error);
+  }
+
+  try {
+    __TEST_ONLY_requireTrustedVerifierIntegrity(integrity, {
+      requiredContractVersion: '1',
+      anchorKeyId: anchor.keyId,
+      anchorFingerprint: anchor.fingerprint,
+      anchorMetadataVersion: anchor.metadataVersion,
+      releaseIdentity: anchor.releaseIdentity,
+    });
+  } catch (error) {
+    return rethrowFixedPrerequisiteError(error);
+  }
+  return anchor;
 }
 
 function __TEST_ONLY_createTrustedApprovalVerifier(options) {
-  let publicKey;
-  let testKeyId;
+  let trustAnchor;
   let integrity;
   try {
-    publicKey = options?.publicKey;
-    testKeyId = options?.testKeyId;
-    integrity = options?.integrity;
-  } catch {
-    return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
-  }
-  try {
-    if (
-      !(publicKey instanceof crypto.KeyObject) ||
-      publicKey.type !== 'public' ||
-      publicKey.asymmetricKeyType !== 'ed25519' ||
-      typeof testKeyId !== 'string' ||
-      !/^asb-test-[a-z0-9-]+$/.test(testKeyId) ||
-      testKeyId === RESERVED_KEY_ID
-    ) {
-      return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
-    }
-  } catch {
-    return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
-  }
-
-  let verificationKey;
-  try {
-    const spkiDer = publicKey.export({ format: 'der', type: 'spki' });
-    verificationKey = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
-    if (!(verificationKey instanceof crypto.KeyObject) || verificationKey.type !== 'public' || verificationKey.asymmetricKeyType !== 'ed25519') {
-      return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
-    }
-  } catch {
-    return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
-  }
-
-  let integrityGate;
-  try {
-    integrityGate = integrity?.requireTrustedVerifierIntegrity;
-    if (typeof integrityGate !== 'function') return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+    if (!options || typeof options !== 'object' || Array.isArray(options)) return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+    trustAnchor = options.trustAnchor;
+    integrity = options.integrity;
   } catch {
     return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
   }
 
+  acquireSyntheticPrerequisites(trustAnchor, integrity);
   return Object.freeze({
     verifyTrustedApproval(input) {
-      try {
-        integrityGate({ requiredContractVersion: '1' });
-      } catch (error) {
-        return rethrowFixedIntegrityError(error);
-      }
+      const anchor = acquireSyntheticPrerequisites(trustAnchor, integrity);
       const fields = readSyntheticInput(input);
       if (fields.algorithm !== 'Ed25519') return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
       if (!Buffer.isBuffer(fields.signatureBytes) || fields.signatureBytes.length !== 64) {
         return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
       }
       const record = assertExactRecordBytes(fields.recordBytes);
-      try {
-        if (!crypto.verify(null, record.recordBytes, verificationKey, fields.signatureBytes)) {
-          return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
-        }
-      } catch {
+      if (record.values.keyId !== anchor.keyId) return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+      if (!anchor.verify(record.recordBytes, fields.signatureBytes)) {
         return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
       }
       assertExpected(fields.expected, record);

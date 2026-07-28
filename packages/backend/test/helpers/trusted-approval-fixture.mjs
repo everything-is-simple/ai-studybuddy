@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { generateKeyPairSync, randomBytes, sign } from 'node:crypto';
+import { createHash, generateKeyPairSync, randomBytes, sign } from 'node:crypto';
 
 const require = createRequire(import.meta.url);
 const { __TEST_ONLY_createTrustedApprovalVerifier } = require('../../../../scripts/lib/AIStudyBuddy.TrustedApproval.cjs');
 const { __TEST_ONLY_createVerifierIntegrity } = require('../../../../scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs');
+const { __TEST_ONLY_createTrustedApprovalAnchor, __TEST_ONLY_describeTrustedApprovalAnchor } = require('../../../../scripts/lib/AIStudyBuddy.TrustAnchor.cjs');
 const { __TEST_ONLY_createNoFollowReader } = require('../../../../scripts/lib/AIStudyBuddy.NoFollow.cjs');
 
-export const RESERVED_KEY_ID = 'asb-phase3-t02-approval-ed25519-v1';
+const DEFAULT_TEST_KEY_ID = 'asb-test-fixture-key';
 
 export function createSentinel() {
   return randomBytes(18).toString('hex');
@@ -16,7 +17,7 @@ export function createSentinel() {
 export function createRecord(overrides = {}) {
   const values = {
     format: 'ASB-TA1',
-    keyId: RESERVED_KEY_ID,
+    keyId: DEFAULT_TEST_KEY_ID,
     policyId: 'phase3.t02.approval',
     purpose: 'T02-R1',
     fullCommit: '0123456789abcdef0123456789abcdef01234567',
@@ -34,18 +35,44 @@ export function createRecord(overrides = {}) {
   return Buffer.from(`${names.map((name) => `${name}=${values[name]}`).join('\n')}\n`, 'ascii');
 }
 
-export function createApprovalFixture(overrides = {}) {
+export function createTrustAnchorFixture(overrides = {}) {
   const generated = generateKeyPairSync('ed25519');
   const publicKey = overrides.publicKey ?? generated.publicKey;
   const privateKey = overrides.privateKey ?? generated.privateKey;
-  const integrity = overrides.integrity ?? __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1', provider: overrides.provider });
-  const verifier = __TEST_ONLY_createTrustedApprovalVerifier({
+  let fingerprint;
+  try {
+    const spkiDer = publicKey.export({ format: 'der', type: 'spki' });
+    fingerprint = createHash('sha256').update(spkiDer).digest('hex');
+  } catch {
+    fingerprint = '0'.repeat(64);
+  }
+  const anchor = __TEST_ONLY_createTrustedApprovalAnchor({
     publicKey,
-    testKeyId: 'asb-test-fixture-key',
+    keyId: overrides.testKeyId ?? DEFAULT_TEST_KEY_ID,
+    fingerprint: overrides.anchorFingerprint ?? fingerprint,
+    metadataVersion: overrides.anchorMetadataVersion ?? 'asb-test-anchor-v1',
+    releaseIdentity: overrides.releaseIdentity ?? 'asb-test-release-v1',
+    contractVersion: overrides.anchorContractVersion ?? '1',
+  });
+  return { publicKey, privateKey, anchor, binding: __TEST_ONLY_describeTrustedApprovalAnchor(anchor) };
+}
+
+export function createApprovalFixture(overrides = {}) {
+  const anchorFixture = overrides.anchorFixture ?? createTrustAnchorFixture(overrides);
+  const integrity = overrides.integrity ?? __TEST_ONLY_createVerifierIntegrity({
+    contractVersion: '1',
+    anchorKeyId: anchorFixture.binding.keyId,
+    anchorFingerprint: anchorFixture.binding.fingerprint,
+    anchorMetadataVersion: anchorFixture.binding.metadataVersion,
+    releaseIdentity: anchorFixture.binding.releaseIdentity,
+    provider: overrides.provider,
+  });
+  const verifier = __TEST_ONLY_createTrustedApprovalVerifier({
+    trustAnchor: overrides.trustAnchor ?? anchorFixture.anchor,
     integrity,
   });
-  const recordBytes = createRecord(overrides.record);
-  const signatureBytes = sign(null, recordBytes, privateKey);
+  const recordBytes = createRecord({ keyId: anchorFixture.binding.keyId, ...(overrides.record ?? {}) });
+  const signatureBytes = sign(null, recordBytes, anchorFixture.privateKey);
   const expected = {
     policyId: 'phase3.t02.approval',
     purpose: 'T02-R1',
@@ -56,26 +83,32 @@ export function createApprovalFixture(overrides = {}) {
     artifactContentIdentity: `sha256:${'b'.repeat(64)}`,
     ...(overrides.expected ?? {}),
   };
-  return { verifier, recordBytes, signatureBytes, expected };
+  return { verifier, recordBytes, signatureBytes, expected, anchorFixture, integrity };
 }
 
 export function createInvalidKeyFactoryAttempt() {
   const { publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-  const integrity = __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1' });
-  return () => __TEST_ONLY_createTrustedApprovalVerifier({
-    publicKey,
-    testKeyId: 'asb-test-invalid-key',
-    integrity,
-  });
+  return () => createTrustAnchorFixture({ publicKey });
 }
 
 export function createShapedKeyFactoryAttempt() {
-  const integrity = __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1' });
-  return () => __TEST_ONLY_createTrustedApprovalVerifier({
-    publicKey: { type: 'public', asymmetricKeyType: 'ed25519' },
-    testKeyId: 'asb-test-shaped-key',
-    integrity,
+  return () => createTrustAnchorFixture({ publicKey: { type: 'public', asymmetricKeyType: 'ed25519' } });
+}
+
+export function createFingerprintMismatchAttempt() {
+  return () => createTrustAnchorFixture({ anchorFingerprint: '0'.repeat(64) });
+}
+
+export function createIntegrityBindingMismatchAttempt() {
+  const anchorFixture = createTrustAnchorFixture();
+  const integrity = __TEST_ONLY_createVerifierIntegrity({
+    contractVersion: '1',
+    anchorKeyId: anchorFixture.binding.keyId,
+    anchorFingerprint: '0'.repeat(64),
+    anchorMetadataVersion: anchorFixture.binding.metadataVersion,
+    releaseIdentity: anchorFixture.binding.releaseIdentity,
   });
+  return () => __TEST_ONLY_createTrustedApprovalVerifier({ trustAnchor: anchorFixture.anchor, integrity });
 }
 
 export function createTransparentProxyApprovalFixture() {
