@@ -213,6 +213,17 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
     return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
   }
 
+  let verificationKey;
+  try {
+    const spkiDer = publicKey.export({ format: 'der', type: 'spki' });
+    verificationKey = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
+    if (!(verificationKey instanceof crypto.KeyObject) || verificationKey.type !== 'public' || verificationKey.asymmetricKeyType !== 'ed25519') {
+      return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+    }
+  } catch {
+    return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+  }
+
   let integrityGate;
   try {
     integrityGate = integrity?.requireTrustedVerifierIntegrity;
@@ -235,7 +246,7 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
       }
       const record = assertExactRecordBytes(fields.recordBytes);
       try {
-        if (!crypto.verify(null, record.recordBytes, publicKey, fields.signatureBytes)) {
+        if (!crypto.verify(null, record.recordBytes, verificationKey, fields.signatureBytes)) {
           return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
         }
       } catch {

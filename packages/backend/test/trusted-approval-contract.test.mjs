@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRequire } from 'node:module';
-import { createApprovalFixture, createInvalidKeyFactoryAttempt, createShapedKeyFactoryAttempt, createRecord, createSentinel, assertFixedError } from './helpers/trusted-approval-fixture.mjs';
+import { createApprovalFixture, createInvalidKeyFactoryAttempt, createShapedKeyFactoryAttempt, createTransparentProxyApprovalFixture, createRecord, createSentinel, assertFixedError } from './helpers/trusted-approval-fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const { verifyTrustedApproval } = require('../../../scripts/lib/AIStudyBuddy.TrustedApproval.cjs');
@@ -62,6 +62,8 @@ test('test factory requires a real Ed25519 KeyObject and synthetic input getters
   const sentinel = createSentinel();
   assert.throws(() => createInvalidKeyFactoryAttempt()(), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_KEY_UNTRUSTED', sentinel));
   assert.throws(() => createShapedKeyFactoryAttempt()(), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_KEY_UNTRUSTED', sentinel));
+  const proxiedFixture = createTransparentProxyApprovalFixture();
+  assert.doesNotThrow(() => proxiedFixture.verifier.verifyTrustedApproval({ algorithm: 'Ed25519', recordBytes: proxiedFixture.recordBytes, signatureBytes: proxiedFixture.signatureBytes, expected: proxiedFixture.expected }));
   const fixture = createApprovalFixture();
   const input = new Proxy({}, { get() { throw new Error(sentinel); } });
   assert.throws(() => fixture.verifier.verifyTrustedApproval(input), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_RECORD_INVALID', sentinel));

@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.109
+**版本**：v1.110
 **日期**：2026-07-28
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -895,7 +895,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 计划 | 文件 | 状态 |
 | ---- | ---- | ---- |
 | PHASE3-REOPEN-HIGH-WEIGHT-20260728 | `.plans/phase3-reopen-high-weight-20260728-plan.md` | 📝 已创建，待独立审查与实施确认；仅计划/清单同步，未开始实现 |
-| PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728 | `.plans/phase3-t02-common-trusted-approval-nofollow-implementation-20260728-plan.md` | 🧪 实施分支完成共同接口与合成测试，并已修复两轮源码审查共 6 项 P1：定向 15/15、type-check、前后端 build、隔离全量 test（backend 307/307）通过；无 production trust anchor、production 固定 fail-closed；待最终源码独立复审与主线集成；不授权真实 R1/R2 |
+| PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728 | `.plans/phase3-t02-common-trusted-approval-nofollow-implementation-20260728-plan.md` | 🧪 实施分支完成共同接口与合成测试，并已处置三轮源码审查 P1（含 KeyObject SPKI 重新导入和 AST 静态 marker 检查）：最新定向回归通过；此前 type-check、前后端 build、隔离全量 test（backend 307/307）通过；无 production trust anchor、production 固定 fail-closed；待最终源码独立复审与主线集成；不授权真实 R1/R2 |
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |

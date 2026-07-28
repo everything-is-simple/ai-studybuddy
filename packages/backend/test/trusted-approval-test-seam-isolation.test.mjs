@@ -3,6 +3,10 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const ts = require('typescript');
 
 const MARKER = '__TEST_ONLY_';
 const definitionPaths = new Set([
@@ -18,21 +22,32 @@ const helperConsumerPaths = new Set([
   'packages/backend/test/nofollow-contract.test.mjs',
 ]);
 const providerModulePattern = /AIStudyBuddy\.[\s\S]{0,50}?(?:TrustedApproval|VerifierIntegrity|NoFollow)\.cjs/;
-const simpleStringConcatenationPattern = /(['\"`])([^'\"\r\n]*)\1\s*\+\s*(['\"`])([^'\"\r\n]*)\3/g;
+function staticStringValue(node) {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isParenthesizedExpression(node)) return staticStringValue(node.expression);
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    const left = staticStringValue(node.left);
+    const right = staticStringValue(node.right);
+    return left === undefined || right === undefined ? undefined : left + right;
+  }
+  return undefined;
+}
+
+function containsComputedFactoryMarker(source) {
+  const sourceFile = ts.createSourceFile('tracked-source.js', source, ts.ScriptTarget.ES2022, false, ts.ScriptKind.JS);
+  let found = false;
+  const inspect = (node) => {
+    const expression = ts.isElementAccessExpression(node) ? node.argumentExpression : ts.isComputedPropertyName(node) ? node.expression : undefined;
+    if (expression !== undefined && staticStringValue(expression)?.includes(MARKER)) found = true;
+    if (!found) ts.forEachChild(node, inspect);
+  };
+  inspect(sourceFile);
+  return found;
+}
 
 function trackedSources(root) {
   const raw = execFileSync('git', ['ls-files', '-z', '--', 'scripts', 'packages'], { cwd: root, encoding: 'buffer' });
   return raw.toString('utf8').split('\0').filter((file) => /\.(?:cjs|js|mjs)$/.test(file));
-}
-
-function containsComputedFactoryMarker(source) {
-  let folded = source;
-  let previous;
-  do {
-    previous = folded;
-    folded = folded.replace(simpleStringConcatenationPattern, (_match, quote, left, _nextQuote, right) => `${quote}${left}${right}${quote}`);
-  } while (folded !== previous);
-  return folded.includes(MARKER);
 }
 
 function assertSourcePolicy(relativePath, source) {
@@ -58,6 +73,8 @@ test('test-only factories are isolated to the exact tracked-source allowlist', (
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const x = module['__TEST' + '_ONLY_factory'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const module = require('./AIStudyBuddy.' + 'TrustedApproval.cjs'); module['__TEST' + '_ONLY_factory'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const factory = module['__TE' + 'ST_ONLY_createTrustedApprovalVerifier'];"));
+  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"));
+  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "module['__TEST' /* split */ + '_ONLY_createTrustedApprovalVerifier'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "export * from './helpers/trusted-approval-fixture.mjs';"));
 });
 

@@ -35,7 +35,9 @@ export function createRecord(overrides = {}) {
 }
 
 export function createApprovalFixture(overrides = {}) {
-  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  const generated = generateKeyPairSync('ed25519');
+  const publicKey = overrides.publicKey ?? generated.publicKey;
+  const privateKey = overrides.privateKey ?? generated.privateKey;
   const integrity = overrides.integrity ?? __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1', provider: overrides.provider });
   const verifier = __TEST_ONLY_createTrustedApprovalVerifier({
     publicKey,
@@ -74,6 +76,11 @@ export function createShapedKeyFactoryAttempt() {
     testKeyId: 'asb-test-shaped-key',
     integrity,
   });
+}
+
+export function createTransparentProxyApprovalFixture() {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  return createApprovalFixture({ publicKey: new Proxy(publicKey, {}), privateKey });
 }
 
 export function createMemoryBackend(options = {}) {
