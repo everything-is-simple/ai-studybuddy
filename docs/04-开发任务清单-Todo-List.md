@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.116
+**版本**：v1.117
 **日期**：2026-07-29
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -898,7 +898,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728 | `.plans/phase3-t02-common-trusted-approval-nofollow-implementation-20260728-plan.md` | ✅ 已完成共同接口与合成测试、最终独立审查（P0=0、P1=0）、主线复验并推送 `origin/master`；无 production trust anchor、production 仍固定 fail-closed；不授权真实 R1/R2 |
 | PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-PLAN-20260728 | `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | ✅ 计划已独立审查通过（P0=0、P1=0）；只定义最小前提，计划本身未写入真实三元组或授权 R1/R2 |
 | PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-20260728 | `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | ✅ 最小共同接口与合成测试、首轮 P1 最小修复、第二次独立源码复审（P0=0、P1=0）及主线复验均已在此前提交进入 `origin/master`；截至 `28aa2931`，`origin/master` 已包含该实现及其验证记录；production 仍固定 fail-closed，未配置真实三元组、未接入 R1/R2 |
-| PHASE3-PERSONAL-MINIMUM-REBASELINE-20260729 | `.plans/phase3-personal-minimum-rebaseline-20260729-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；只为既有 11 项提出合并交付切片与 trust-anchor 决策选项，不改变旧 WBS 完成口径、不授权真实操作；仍待用户决定是否采用重定标方式；T01、T02-R5、T03、T05-4 仅为未来候选，不因本计划自动纳入 |
+| PHASE3-PERSONAL-MINIMUM-REBASELINE-20260729 | `.plans/phase3-personal-minimum-rebaseline-20260729-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；用户已于 2026-07-28 采用个人版最小闭环；当前仅按既有 11 项的 P1～P5 顺序制定实施计划，不授权真实操作；T01、T02-R5、T03、T05-4 仅为未来候选，不因本计划自动纳入 |
+| PHASE3-P1-R1-R2-CONTROLLED-READONLY-PLAN-20260728 | `.plans/phase3-p1-r1-r2-controlled-readonly-20260728-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；仅为 T02-R1/T02-R2 制定同一准备窗口的最小受控只读实施计划，不实施、不运行真实操作 |
 
 > **PHASE3-T02 主线脏状态归档（2026-07-29，已完成）**：主线 `H:\ai-studybuddy` 的未跟踪目录 `.trae-html-share-packages/` 与 `alpha-sprint-plan/` 已按用户明确批准完整移出主目录，归档到受控 `H:\backup\ai-studybuddy-archives\20260729-phase3-t02-master-untracked-archive` 批次。移动前已解析并校验源与目标路径；本任务未读取目录内容、未删除、未覆盖；移动后已确认两项源路径不再存在。可继续核验主线干净状态并快进集成本任务分支。
 
