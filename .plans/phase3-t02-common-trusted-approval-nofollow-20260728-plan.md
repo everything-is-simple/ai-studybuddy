@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 读取最小计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728
-**状态**：📝 仅计划，待独立审查；不授权任何实现、真实读取或修复
+**状态**：📝 第一轮独立审查为有条件通过；已修订 P1，待第二位独立审查者复审；不授权任何实现、真实读取或修复
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-plan`（仅本计划和 `docs/04` 索引）
 **触发原因**：T02-R1 的外置 approval record 尚无可信信任锚且对 record / manifest / 包候选文件存在 check-then-read 间隙；T02-R2 的真实根与安全描述符读取同样要求同一 no-follow 句柄。两项 P1 共同阻断 R1 真实签收和 R2 真实 ACL 采证。
@@ -54,10 +54,11 @@
 签名覆盖序列化规范明确的完整 payload，至少包含：
 
 - `approvalVersion`、`approvalId`、`policyId=PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`、`purpose`（仅 `T02-R1` 或 `T02-R2`）；
-- 签发者 key ID、签发时间、不可延展的 `notBefore`/`expiresAt` 窗口、一次性 nonce/序列号和明确的撤销/过期语义；
-- 完整 Git commit、工具/安全读取契约版本和仅限该 purpose 的调用预算；
+- 签发者 key ID、签发时间、不可延展的 `notBefore`/`expiresAt` 窗口、不可变 `approvalId`/关联序列号和明确的撤销/过期语义；
+- 完整 Git commit、工具/安全读取契约版本和仅限该 purpose 的授权操作类型；
 - 不回显的 `scopeBinding`：由后续安全打开操作从同一句柄取得并比较的本地卷身份、对象文件 ID、规范化路径摘要、逻辑类别/包根摘要及允许的 artifact 元数据；
-- R1 专用的单一候选包 scope 与批准的仓库提交绑定；R2 专用的机器/安装实例**不透明别名**、安装根身份和固定六类逻辑类别绑定；
+- **R1 强制内容身份**：签名 payload 必须包含版本化 `artifactContentIdentity`（算法、canonicalization version、条目数和完整 package fingerprint / canonical entry-list digest）。该 digest 只能由实际交给扫描器的同一批、同一已验证 handle 的字节流边读边生成；不得在扫描前后按路径重新 hash。对象 ID、卷 ID 或路径摘要不能替代此内容身份。比较失败、读取期间内容不稳定、字节流不能完成身份验证或任何条目未被同流消费时，必须清空全部扫描/签收结果并 fail-closed；现有 manifest 缺少身份字段时仍固定 `SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH`，不修改部署包脚本或 manifest；
+- R1 专用的单一候选包 scope、批准仓库提交和上述内容身份绑定；R2 专用的机器/安装实例**不透明别名**、安装根身份和固定六类逻辑类别绑定；
 - 不含秘密值、资料原文、完整主机名、用户名、绝对路径、原始 ACL 或可作为输出的敏感内容。
 
 记录文件及 signature 文件的路径不构成信任来源；通过固定公钥验证、purpose、时窗、提交、契约版本、scopeBinding 与本地句柄身份同时匹配才可被接受。任何字段未知、重复、超长、非规范编码、算法/key ID 不匹配、签名无效、时钟/时窗无法证明、撤销状态不可证明或绑定不匹配，均返回固定脱敏错误码并停止。
@@ -65,6 +66,10 @@
 ### 4.2 私钥与轮换的运行前提
 
 签名私钥必须位于独立受控签发环境，不能保存在仓库、部署包、测试夹具、普通运行配置、环境变量或批准记录旁。后续实现计划必须明确算法、最小密钥长度、签发人职责、双人复核、丢失/泄露处置和公钥轮换版本；测试只能通过依赖注入使用与生产公钥完全分离的测试键，生产入口不得提供测试键覆盖开关。
+
+**授权重放语义（明确选择）**：在没有独立、受认证且原子消费/回滚可检测的审批服务前，批准记录不是一次性令牌；`approvalId`/关联序列号只用于审计关联，不承诺本地 nonce 消费或调用预算。签名记录只能在其很短、不可延展的窗口内，针对完全相同的 purpose、commit、scopeBinding 和只读操作类型重复使用；它不得授权写入、ACL 修复、备份/恢复、服务/计划任务操作，也不得被复用于 R1/R2 之间。若产品需要真正的一次性授权，必须另立计划，采用独立认证的原子消费机制并审查并发、掉电恢复和回滚检测；不得临时增加本地可回滚消费文件。
+
+**验证器完整性前提**：固定公钥只有在验证器本身来自受认证、不可由普通调用者替换的发布物时才是可信锚。批准记录的 `tool/security-contract version` 必须与运行中的验证器身份/完整性证明相符；若运行形态不能证明验证器版本/完整性（包括可任意修改的脚本、二进制、依赖或公钥常量），必须返回 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN` 并停止，不得把签名校验结果称为“不可伪造的批准”。本计划不实现代码签名、安装器或发布链；后续共同实现计划必须将验证器完整性作为外部前置条件，而开发工作树只能运行合成夹具。
 
 本地时钟不是密码学信任根：若运行环境无法按批准流程确认当前时间可信，或检测到显著回拨/不一致，必须 fail-closed；不得因“签名正确”绕过时窗。无可信撤销渠道时只允许很短、不可延展的批准窗口，并将离线撤销局限作为 P1 残余风险记录。
 
@@ -88,9 +93,9 @@
 
 1. 从可信本地卷锚点逐段 no-follow 打开，而非先解析字符串后重新按普通路径打开；
 2. 验证对象类型、非 reparse、卷身份、最终路径/对象 ID、父子关系和 scopeBinding；
-3. 在同一仍持有的 handle 上读取文件字节，或读取目录安全描述符；
-4. 在读后从同一 handle 复核对象 ID/卷身份及允许根关系；
-5. 任一步不可原子证明、发生替换、锁定/共享语义不足、对象消失或平台能力不足时关闭 handle、清空内容并 fail-closed。
+3. 在同一仍持有的 handle 上读取文件字节，或读取目录安全描述符；R1 文件读取必须把该**同一流**同时交给扫描器和版本化内容指纹计算，形成签名记录要求的 canonical entry-list digest；
+4. 在读后从同一 handle 复核对象 ID/卷身份及允许根关系；R1 还必须在扫描流闭合前完成内容身份比较，不能以读前/读后路径 hash 替代；
+5. 任一步不可原子证明、发生替换、锁定/共享语义不足、对象消失、内容身份不符或平台能力不足时关闭 handle、清空内容和全部部分扫描结论并 fail-closed。
 
 禁止把“读取后再次 `lstat`”“普通 `readFile`/`Get-Acl`”“比较路径字符串”“仅禁止最终 symlink”作为等价替代。
 
@@ -102,7 +107,7 @@ Windows 实现必须由经过独立代码审查的低层 helper 提供逐组件�
 
 ### 6.3 对 R1/R2 的限定接入
 
-- **R1**：approval record、detached signature、正式 manifest 与每一候选包文件都必须通过该抽象读取；仓库候选仍只来自 `git ls-files -z`，后续 R1 不得将“安全打开”扩展为读取未跟踪目录或全盘发现。现有 manifest 缺少身份字段时继续以 `SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH` 停止，绝不手改 manifest 绕过。
+- **R1**：approval record、detached signature、正式 manifest 与每一候选包文件都必须通过该抽象读取；签名的 `artifactContentIdentity` 必须由实际馈入扫描器的同一 verified-handle 流生成并在签收前匹配，单独的文件 ID/路径摘要或扫描前后路径 hash 均不放行。仓库候选仍只来自 `git ls-files -z`，后续 R1 不得将“安全打开”扩展为读取未跟踪目录或全盘发现。现有 manifest 缺少身份字段时继续以 `SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH` 停止，绝不手改 manifest 绕过。
 - **R2**：只允许从批准安装实例推导 `config`、`data`、`logs`、`backups`、`tmp`、`models` 六个根本身；同一目录 handle 读取安全描述符。不得递归、读取子项、读取内容、计算 hash、调用服务/计划任务 API、备份/恢复或 ACL 写入。有效访问继续固定 `EFFECTIVE_ACCESS_UNKNOWN`。
 
 ## 7. 合成测试与静态验证矩阵
@@ -112,13 +117,13 @@ Windows 实现必须由经过独立代码审查的低层 helper 提供逐组件�
 | 类别 | 最小用例 | 预期 |
 | --- | --- | --- |
 | 签名信任锚 | 有效测试签名；篡改 payload/signature；错误 key ID/算法；替换公钥；重复/未知字段；编码不规范 | 仅合法生产格式可验证；其余固定码、无回显 |
-| 时窗与用途 | 过期、未生效、时钟不可证明、错误 policy/purpose、提交/契约版本不符、nonce 重放 | 全部 fail-closed；不能把 R1 record 用于 R2 或反向使用 |
-| scope 绑定 | 不同包根/文件 ID/卷/路径摘要；R2 错误实例别名或非六类类别；缺失绑定 | 拒绝，绝不依据用户传入路径放行 |
-| no-follow 与 TOCTOU | 最终项及中间项 symlink/junction/reparse；approval/manifest/候选文件在打开后替换；目录重命名；句柄身份改变 | 关闭句柄、清空读取值、固定错误；不存在普通路径回退 |
+| 时窗与用途 | 过期、未生效、时钟不可证明、错误 policy/purpose、提交/契约版本不符、跨 purpose 复用；同一短窗口内的完全相同只读重复运行 | 前者全部 fail-closed；后者只在显式选择的短时窗、相同只读 scope 内允许，不能把 R1 record 用于 R2 或反向使用 |
+| scope 与内容绑定 | 不同包根/文件 ID/卷/路径摘要；R2 错误实例别名或非六类类别；缺失绑定；R1 对象 ID 不变但句柄打开后原地改写字节 | 拒绝，绝不依据用户传入路径放行；R1 的同流内容 fingerprint 不匹配时清空全部部分结论 |
+| no-follow 与 TOCTOU | 最终项及中间项 symlink/junction/reparse；approval/manifest/候选文件在打开后替换；目录重命名；句柄身份改变；扫描流内容不稳定 | 关闭句柄、清空读取值和部分扫描结论、固定错误；不存在普通路径回退 |
 | 卷分类 | UNC、扩展 UNC、映射网络盘、`SUBST`、目录挂载点、remote/unknown/removable/重定向器模拟、无法取证 API | `REMOTE_OR_UNPROVEN_VOLUME` 或固定拒绝码；无盘符/设备路径输出 |
 | R1 接入边界 | Git 已跟踪清单与合成包条目；未跟踪候选、目录发现、manifest 身份缺失 | 未跟踪不读取；身份缺失继续 `SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH` |
 | R2 接入边界 | 固定六类根；静态源码 denylist（递归、内容读取、ACL 写、服务/计划任务、备份/恢复） | 仅六类根可达；禁止项不存在；有效访问未知 |
-| 能力缺失与脱敏 | 无 native helper、不支持 no-follow、权限/共享失败、异常注入、超长/含换行输入 | `NOFOLLOW_HANDLE_UNSUPPORTED` 或固定码；无原始输出 |
+| 能力缺失与脱敏 | 无 native helper、不支持 no-follow、验证器完整性不可证明、权限/共享失败、异常注入、超长/含换行输入 | `NOFOLLOW_HANDLE_UNSUPPORTED`、`TRUSTED_VERIFIER_INTEGRITY_UNPROVEN` 或固定码；无原始输出 |
 
 后续共同实现的最低验证为：相关定向测试、既有边界测试、`scripts/check-docs-governance.ps1`、`git diff --check`；若实现触及 Node/PowerShell 共享库，再按规范运行 type-check、相关构建和隔离 `APP_DATA_ROOT` 的测试。测试通过只证明合成契约，不构成真实 R1/R2 证据。
 
@@ -138,18 +143,20 @@ Windows 实现必须由经过独立代码审查的低层 helper 提供逐组件�
 2. 现有 R1 的 record、manifest、候选文件安全读取仍有 TOCTOU；R2 的 no-follow 读取同样尚未实现。
 3. Windows 逐组件句柄相对 no-follow helper 的可行性、可审计性和故障注入测试尚未证明；无法证明即永久 fail-closed，不得用路径 API 降级。
 4. 当前部署包 manifest 缺少 R1 所需的 `buildCommit` 与 `packageFingerprint` 身份契约；本计划明确不修改它，因此 R1 真实签收仍被正确阻断。
-5. 离线签名记录的撤销与本机时间可信度有限；需要短时窗、签发流程和未来独立的撤销/时钟治理决定，不能静默假设可信。
+5. 离线签名记录的撤销与本机时间可信度有限；共同契约明确选择短时窗、可重复的只读授权而非伪造“一次性 nonce”。真正的一次性消费、撤销服务或时钟治理必须未来独立决定，不能静默假设可信。
 6. R2 的批准机器/安装实例和六类真实根尚未提供；没有其独立、签名绑定批准，R2 不得读取。
+7. 受认证验证器发布物/完整性证明尚未实现或验收；在此前提不可证明时必须 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`，不能开始真实 R1/R2。
 
 ## 9. 独立审查重点
 
 独立审查必须确认：
 
 - 推荐方案确实以固定公钥 detached signature 为唯一必需信任锚，且不依赖普通调用者可改的目录/配置/环境变量；
-- record 的 scopeBinding、purpose、时窗、提交和版本不能被重放或跨 R1/R2 复用；
+- record 的 scopeBinding、purpose、时窗、提交和版本不能跨 R1/R2 复用；明确短时窗同 scope 的只读重复语义，且不虚构未实现的一次性消费；
 - Windows 规则明确拒绝 UNC、映射盘、重定向器、`SUBST`/挂载点不确定性和所有 reparse，而非仅检查字符串；
-- no-follow 契约要求从同一 handle 验证并读取，且覆盖中间路径，不把 `lstat + readFile`、`Get-Acl` 或“读后再检查”误作关闭 TOCTOU；
+- no-follow 契约要求从同一 handle 验证并读取，且覆盖中间路径；R1 必须在实际扫描的同一流上生成并比较内容身份，不把 `lstat + readFile`、`Get-Acl`、路径 hash 或“读后再检查”误作关闭 TOCTOU；
 - 计划未改变 manifest 契约、未加入真实读取/扫描/ACL 操作、未触及 T04/T05 或未跟踪目录；
+- 固定公钥依赖受认证验证器发布物的完整性前提，并在该前提不可证明时 fail-closed；
 - 测试不会将合成密钥或夹具结果表述为真实签收/真实机器证据；
 - 是否仍有 P0 或需要 P1 修改，并给出精确章节和最小修复建议。
 
@@ -162,3 +169,12 @@ Windows 实现必须由经过独立代码审查的低层 helper 提供逐组件�
 5. **真实 R1 签收** 与 **真实 R2 ACL 采证**：均须在各自接入通过独立复审后，获得各自精确 artifact/机器、实例、窗口、签名批准和运行前复核；任何 P1/P0 结论触发新的最小修复/处置计划，而非当场写入修复。
 
 在上述批准前，Wave 0 仍处于“计划存在、真实操作未获准且被共同 P1 阻断”的状态。
+## 11. 第一轮独立审查 P1 最小修订（2026-07-28）
+
+本节记录第一轮独立审查的三个计划级 P1 及其在第 4、6、7、8、9 节的最小修订；与此前表述冲突时，以本节及已修订条文为准。修订不授权共同实现或任何真实操作。
+
+1. **R1 同流内容身份**：`artifactContentIdentity` 必须由签名 payload 绑定，并在 R1 实际交给扫描器的同一已验证 handle 流上边读边计算和比对。文件/卷 ID、路径摘要和 manifest 存在不能替代；原地改写、内容不稳定或 digest 不匹配均清空结果。当前 manifest 身份缺失仍 fail-closed，不改部署包契约。
+2. **重放语义**：共同契约明确选择“短时窗、可重复、完全相同 scope 的只读授权”，不声称离线签名 record 是一次性令牌，也不引入未获批的本地消费状态。真正一次性授权须由未来独立、受认证且原子消费的服务/日志方案解决。
+3. **验证器完整性**：生产信任锚的外部前提是受认证、不可由普通调用者替换的验证器发布物；运行时不能证明版本/完整性时固定 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`。此计划只登记前提，不实现发布链、代码签名或安装器。
+
+完成这些文档修订后仍须由**另一位独立审查者**复审；在复审通过和用户另行批准共同实现切片前，所有既有 P1、真实 R1/R2、T04/T05 和写入操作继续停止。

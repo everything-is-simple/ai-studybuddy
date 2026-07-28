@@ -895,7 +895,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | 计划 | 文件 | 状态 |
 | ---- | ---- | ---- |
 | PHASE3-REOPEN-HIGH-WEIGHT-20260728 | `.plans/phase3-reopen-high-weight-20260728-plan.md` | 📝 已创建，待独立审查与实施确认；仅计划/清单同步，未开始实现 |
-| PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728 | `.plans/phase3-t02-common-trusted-approval-nofollow-20260728-plan.md` | 📝 已创建，待独立审查；仅定义 T02-R1/R2 的共同可信批准与 no-follow 契约，不授权实现或真实操作 |
+| PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728 | `.plans/phase3-t02-common-trusted-approval-nofollow-20260728-plan.md` | 📝 已按第一轮独立审查 P1 修订，待第二位独立审查者复审；仅定义 T02-R1/R2 的共同可信批准与 no-follow 契约，不授权实现或真实操作 |
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
