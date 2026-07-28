@@ -28,9 +28,9 @@ function fail(code) {
   throw error;
 }
 
-function verifyTrustedApproval(input) {
+function verifyTrustedApproval(_input) {
   requireTrustedVerifierIntegrity({ requiredContractVersion: '1' });
-  return input;
+  return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
 }
 
 function isAscii(bytes) {
@@ -143,11 +143,49 @@ function createCapability() {
   return Object.freeze({ [Symbol('trusted-approval')]: true });
 }
 
+function readSyntheticInput(input) {
+  try {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return fail('TRUSTED_APPROVAL_RECORD_INVALID');
+    return {
+      algorithm: input.algorithm,
+      signatureBytes: input.signatureBytes,
+      recordBytes: input.recordBytes,
+      expected: input.expected,
+    };
+  } catch {
+    return fail('TRUSTED_APPROVAL_RECORD_INVALID');
+  }
+}
+
+function rethrowFixedApprovalError(error, fallbackCode) {
+  if (error instanceof Error && typeof error.code === 'string' && error.code.startsWith('TRUSTED_APPROVAL_')) {
+    throw error;
+  }
+  return fail(fallbackCode);
+}
+
 function __TEST_ONLY_createTrustedApprovalVerifier(options) {
-  const publicKey = options?.publicKey;
-  const testKeyId = options?.testKeyId;
-  const integrity = options?.integrity;
-  if (!publicKey || typeof testKeyId !== 'string' || !/^asb-test-[a-z0-9-]+$/.test(testKeyId) || testKeyId === RESERVED_KEY_ID) {
+  let publicKey;
+  let testKeyId;
+  let integrity;
+  try {
+    publicKey = options?.publicKey;
+    testKeyId = options?.testKeyId;
+    integrity = options?.integrity;
+  } catch {
+    return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+  }
+  try {
+    if (
+      publicKey?.type !== 'public' ||
+      publicKey?.asymmetricKeyType !== 'ed25519' ||
+      typeof testKeyId !== 'string' ||
+      !/^asb-test-[a-z0-9-]+$/.test(testKeyId) ||
+      testKeyId === RESERVED_KEY_ID
+    ) {
+      return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+    }
+  } catch {
     return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
   }
   if (!integrity || typeof integrity.requireTrustedVerifierIntegrity !== 'function') {
@@ -157,16 +195,24 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
   return Object.freeze({
     verifyTrustedApproval(input) {
       integrity.requireTrustedVerifierIntegrity({ requiredContractVersion: '1' });
-      if (!input || typeof input !== 'object' || Array.isArray(input)) return fail('TRUSTED_APPROVAL_RECORD_INVALID');
-      if (input.algorithm !== 'Ed25519') return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
-      if (!Buffer.isBuffer(input.signatureBytes) || input.signatureBytes.length !== 64) {
+      const fields = readSyntheticInput(input);
+      if (fields.algorithm !== 'Ed25519') return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
+      if (!Buffer.isBuffer(fields.signatureBytes) || fields.signatureBytes.length !== 64) {
         return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
       }
-      const record = assertExactRecordBytes(input.recordBytes);
-      if (!crypto.verify(null, record.recordBytes, publicKey, input.signatureBytes)) {
+      const record = assertExactRecordBytes(fields.recordBytes);
+      try {
+        if (!crypto.verify(null, record.recordBytes, publicKey, fields.signatureBytes)) {
+          return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
+        }
+      } catch {
         return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
       }
-      assertExpected(input.expected, record);
+      try {
+        assertExpected(fields.expected, record);
+      } catch (error) {
+        return rethrowFixedApprovalError(error, 'TRUSTED_APPROVAL_RECORD_INVALID');
+      }
       return createCapability();
     },
   });

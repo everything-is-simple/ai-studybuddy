@@ -57,6 +57,16 @@ export function createApprovalFixture(overrides = {}) {
   return { verifier, recordBytes, signatureBytes, expected };
 }
 
+export function createInvalidKeyFactoryAttempt() {
+  const { publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const integrity = __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1' });
+  return () => __TEST_ONLY_createTrustedApprovalVerifier({
+    publicKey,
+    testKeyId: 'asb-test-invalid-key',
+    integrity,
+  });
+}
+
 export function createMemoryBackend(options = {}) {
   const state = {
     metadata: {

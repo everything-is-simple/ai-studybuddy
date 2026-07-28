@@ -28,21 +28,25 @@ test('synthetic reader accepts local fixed objects and returns an independent co
 
 test('synthetic reader rejects remote/reparse and replacement races with zero delivery', () => {
   const sentinel = createSentinel();
-  for (const metadata of [
-    { volumeKind: 'unc' },
-    { volumeKind: 'mapped-remote' },
-    { volumeKind: 'subst' },
-    { volumeKind: 'unknown' },
-    { reparse: true },
-  ]) {
-    const { reader } = createSyntheticReader({ metadata });
-    const expected = metadata.reparse ? 'NOFOLLOW_REPARSE_RISK' : (metadata.volumeKind === 'unknown' ? 'NOFOLLOW_LOCAL_VOLUME_UNPROVEN' : 'NOFOLLOW_REMOTE_OR_UNPROVEN_VOLUME');
-    assert.throws(() => reader.openVerifiedPath({ locator: sentinel, expectedKind: 'file' }), (error) => assertFixedError(error, expected, sentinel));
+  const remoteKinds = ['remote', 'unc', 'mapped-remote', 'subst', 'mup', 'lanmanredirector', 'webdavredirector', 'rdbss'];
+  const unprovenKinds = ['removable', 'cdrom', 'ram', 'unknown', 'mount-point'];
+  for (const volumeKind of remoteKinds) {
+    const { reader } = createSyntheticReader({ metadata: { volumeKind } });
+    assert.throws(() => reader.openVerifiedPath({ locator: sentinel, expectedKind: 'file' }), (error) => assertFixedError(error, 'NOFOLLOW_REMOTE_OR_UNPROVEN_VOLUME', sentinel));
   }
-  const { reader, state } = createSyntheticReader({ onVerify(current) { if (current.verifyCalls === 2) current.metadata.contentVersion = 'changed'; } });
-  const opened = reader.openVerifiedPath({ locator: 'synthetic', expectedKind: 'file' });
-  assert.throws(() => reader.readVerifiedFile({ opened, maxBytes: 1024 }), (error) => assertFixedError(error, 'NOFOLLOW_HANDLE_IDENTITY_CHANGED'));
-  assert.equal(state.closed.length, 1);
+  for (const volumeKind of unprovenKinds) {
+    const { reader } = createSyntheticReader({ metadata: { volumeKind } });
+    assert.throws(() => reader.openVerifiedPath({ locator: sentinel, expectedKind: 'file' }), (error) => assertFixedError(error, 'NOFOLLOW_LOCAL_VOLUME_UNPROVEN', sentinel));
+  }
+  const reparse = createSyntheticReader({ metadata: { reparse: true } });
+  assert.throws(() => reparse.reader.openVerifiedPath({ locator: sentinel, expectedKind: 'file' }), (error) => assertFixedError(error, 'NOFOLLOW_REPARSE_RISK', sentinel));
+
+  for (const field of ['objectId', 'parentId', 'contentVersion']) {
+    const { reader, state } = createSyntheticReader({ onVerify(current) { if (current.verifyCalls === 2) current.metadata[field] = `${field}-changed`; } });
+    const opened = reader.openVerifiedPath({ locator: 'synthetic', expectedKind: 'file' });
+    assert.throws(() => reader.readVerifiedFile({ opened, maxBytes: 1024 }), (error) => assertFixedError(error, 'NOFOLLOW_HANDLE_IDENTITY_CHANGED'));
+    assert.equal(state.closed.length, 1);
+  }
 });
 
 test('synthetic reader rejects read limits and supports directory descriptor contract only', () => {

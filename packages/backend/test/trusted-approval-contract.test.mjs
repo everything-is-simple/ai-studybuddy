@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRequire } from 'node:module';
-import { createApprovalFixture, createRecord, createSentinel, assertFixedError } from './helpers/trusted-approval-fixture.mjs';
+import { createApprovalFixture, createInvalidKeyFactoryAttempt, createRecord, createSentinel, assertFixedError } from './helpers/trusted-approval-fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const { verifyTrustedApproval } = require('../../../scripts/lib/AIStudyBuddy.TrustedApproval.cjs');
@@ -56,4 +56,12 @@ test('strict record parser rejects CRLF, duplicate-like schema and invalid signa
     () => fixture.verifier.verifyTrustedApproval({ algorithm: 'Ed25519', recordBytes: fixture.recordBytes, signatureBytes: Buffer.alloc(63), expected: fixture.expected }),
     (error) => assertFixedError(error, 'TRUSTED_APPROVAL_SIGNATURE_INVALID')
   );
+});
+
+test('test factory requires an Ed25519 public key and synthetic input getters remain redacted', () => {
+  const sentinel = createSentinel();
+  assert.throws(() => createInvalidKeyFactoryAttempt()(), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_KEY_UNTRUSTED', sentinel));
+  const fixture = createApprovalFixture();
+  const input = new Proxy({}, { get() { throw new Error(sentinel); } });
+  assert.throws(() => fixture.verifier.verifyTrustedApproval(input), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_RECORD_INVALID', sentinel));
 });
