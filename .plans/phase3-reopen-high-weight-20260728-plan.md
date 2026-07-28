@@ -23,7 +23,7 @@
 | 1 | T05-1 全链路日志脱敏 | 真实 backup/restore 前先阻断秘密、资料原文、绝对路径和外部响应泄露 | T02F 日志安全底座；T04-1/2 的事件面 |
 | 1 | T05-2 日志等级、事件与允许字段规范 | 真实 backup/restore 前使脱敏和诊断规则可执行、可审查 | T05-1 |
 | 2 | T04-3 一键恢复与真实恢复演练 | 真实恢复写入、服务/计划任务停止、recovery point、状态机与回滚是数据安全核心 | T04-1、T04-2、T05-1、T05-2；批准的合成/目标机器 |
-| 2 | T02-R3 真实备份/恢复安全复核 | 对 T04 的目标机写入前检查点和最终证据作独立安全签收；不能由实现者自证 | T04-1～T04-3 |
+| 2 | T02-R3 真实备份/恢复安全复核 | 对 T04 的目标机写入前检查点和最终证据作独立安全签收；不能由实现者自证 | T04-1、T04-2、T05-1、T05-2；已审查的 T04-3 独立计划与 pre-write 证据（R3-prewrite 放行后才可真实写入） |
 | 2 | T05-3 日志轮转与容量上限 | 防止长期运行日志无限增长；本轮到达容量时 fail-closed，不隐含 T05-4 保留/清理 | T05-1、T05-2 |
 | 3 | T02-R4 学生核心流程失败反馈矩阵 | 面向用户的错误反馈不得泄露内部信息，且应可操作 | T02A/T02C；T05-1 可并行收口 |
 | 4 | T02-R6 T02 总体回归与完成验收 | 只有 P0=0、P1 全修复、Windows 证据和文档一致，才能关闭 T02 | Wave 0～3；既有 T02A～T02G |
@@ -47,7 +47,11 @@
 2. 先写测试和验收矩阵，再写实现；后端接口优先使用真实 SQLite 集成测试，不 mock DB。
 3. 所有会写数据的验证必须设置仓库外 `APP_DATA_ROOT`，使用唯一 task-id；不得触及真实学生数据。
 4. T02-R2 的真实 Windows ACL 工作只允许只读采证，完成结果只能是脱敏事实、风险结论与是否需要最小修复的建议；不得把发现 P1 自动扩展为 ACL 写入。任何 `Set-Acl`、`icacls`、owner/DACL/SACL/继承变更均须另建最小修复任务，取得精确目标机器/逻辑目录的额外批准，并先具备当前 ACL 脱敏证据、最小授权矩阵、回滚和复验。不得改 Firewall、组策略、注册表或永久安全策略。
-5. 真实恢复写入必须使用 fail-closed 状态机：用户对精确目标 Windows 机器、安装实例、逻辑 data 根和时间窗口再次批准；同一构建/同一安装实例的 Alpha D1 安装、检查、启动、健康、停止基础证据已通过；服务、相关计划任务和其他写入者均有“无 PID、无监听、无锁定/写入者”的脱敏停止证据；manifest/hash/允许路径/regular file/reparse/数量大小/磁盘空间/同卷与活动 data 根均预检通过；recovery point 在 payload 写入前创建并用清单/hash 验证。payload 必须先写入新的受控 staging 区并验证，随后才可按明确顺序切换；不得边验证边覆盖活动数据。任一中断、写入失败、hash 不符或状态未知均进入 `RESTORE_RECOVERY_REQUIRED`，不得自动启动服务、继续写入或跳过回滚。回滚必须恢复已验证的 recovery point、复核保护哨兵；恢复后还须验证 SQLite 完整性、manifest/hash、允许资料范围、关键只读 API/应用读取、服务重启健康与无越界变更。未满足任一条件时保持 `RESTORE_WRITE_DISABLED`，不得绕过。
+5. 真实恢复写入必须使用 fail-closed 状态机：用户对精确目标 Windows 机器、安装实例、逻辑 data 根和时间窗口再次批准；同一构建/同一安装实例的 Alpha D1 安装、检查、启动、健康、停止基础证据已通过；服务、相关计划任务和其他写入者均有“无 PID、无监听、无锁定/写入者”的脱敏停止证据；manifest/hash/允许路径/regular file/reparse/数量大小/磁盘空间/同卷与活动 data 根均预检通过；recovery point 在 payload 写入前创建并用清单/hash 验证。payload 必须先写入新的受控 staging 区并验证，随后才可按明确顺序切换；不得边验证边覆盖活动数据。未满足任一条件时保持 `RESTORE_WRITE_DISABLED`，不得绕过。
+   - T04-3 独立实施计划必须在任何非 `-WhatIf` 写入前定义、实现并测试持久化、可审计的状态序列：`RESTORE_WRITE_DISABLED` → `PREWRITE_APPROVED` → `WRITERS_QUIESCED` → `PRECHECK_PASSED` → `RECOVERY_POINT_VERIFIED` → `STAGING_WRITTEN_AND_VERIFIED` → `CUTOVER_IN_PROGRESS` → `POST_RESTORE_VERIFICATION` → `RESTORE_COMPLETED`。状态记录和证据只可使用允许字段与脱敏摘要，不得记录绝对路径、原始 manifest、资料名或秘密。
+   - 在每个不可原子阶段前必须写入受控、非活动 data 根中的脱敏中断标记，并明确切换写入顺序、每一步允许的前置状态、成功后的下一状态和失败出口；不得以“已复制部分 payload”推断活动数据安全。
+   - 任一进程/主机重启、进程终止、磁盘或复制写入失败、hash 不符、状态记录缺失或无法确认状态，均必须转入 `RESTORE_RECOVERY_REQUIRED`。重启后的默认行为是保持所有写入者和服务停止、拒绝继续/重试/自动启动；仅经独立审查复核、人工确认并按受控处置路径才可进入 `ROLLBACK_IN_PROGRESS` → `ROLLBACK_VERIFIED`。recovery point 回滚或其验证失败必须进入最终 fail-closed 的 `RESTORE_MANUAL_ESCALATION`，不得恢复服务。
+   - 只有 `RESTORE_COMPLETED` 或 `ROLLBACK_VERIFIED` 且 SQLite、manifest/hash、允许资料范围、关键只读 API/应用读取、保护哨兵和无越界变更均通过后，才可依照独立批准的启动步骤恢复服务。
 6. T02-R1 的扫描输入仅限 Git 已跟踪文件清单和已获批准、已识别的候选部署包根；不得递归扫描整个工作区、用户目录或未知目录，且不得读取/枚举未跟踪路径 `H:\ai-studybuddy\.trae-html-share-packages\` 与 `H:\ai-studybuddy\alpha-sprint-plan\`。秘密扫描、日志、错误、截图和文档只保存规则名、经审核的程序相对路径或稳定文件 ID/逻辑类别、脱敏指纹、错误码、短哈希、耗时和摘要；对可能含姓名、资料标题或其他敏感信息的路径不得原样输出。绝不输出秘密值、原始资料、完整 UUID、绝对宿主路径、Provider 原始响应、原始终端 transcript、PowerShell 原始命令、ACL 原文/完整 SID、环境变量行或 manifest 原文。
 7. T04-1 必须在独立实施计划中明确自动定期机制；如使用 Windows 计划任务，须验收任务身份、运行账户最小权限、动作路径、工作目录、环境输入、重复触发/并发互斥、失败可见性和禁用/停止方式；如不使用计划任务，须证明等效的停用、并发和恢复前置控制。T04-3 必须以可验证证据证明该自动写入机制已经停止，不能仅凭配置推断。
 8. 每个任务完成前必须运行适用的 `pnpm type-check`、后端/前端 build、测试、文档治理、`git diff --check`；涉及页面/运行流的任务必须浏览器验收；合入 `master` 后必须复验并推送 `origin/master`。
@@ -79,10 +83,10 @@
 
 **目的**：在先有数据保护与日志门禁的前提下，完成可拒绝危险状态的恢复演练和独立安全复核；不把容量控制扩展为未纳入的保留/清理。
 
-- **T04-3**：先在批准的合成数据根完成受控写入演练；目标 Windows 机器写入前必须通过独立 pre-write checkpoint：用户再次批准精确机器、安装实例、逻辑 data 根和时间窗口；同一构建/安装实例的 Alpha D1 基础证据通过；服务、计划任务与其他写入者均已停止；Gate B、预检和 recovery point 均已通过。payload 先进入新的受控 staging 区并经验证，随后按明确顺序切换；中断、写入失败、hash 不符或状态未知必须进入 `RESTORE_RECOVERY_REQUIRED`，不自动启动服务或继续写入。回滚恢复已验证 recovery point 并复核保护哨兵；恢复后验证 SQLite、manifest/hash、允许资料范围、关键只读读取、重启健康与无越界变更。目标机真实写入不满足任一条件时保持 `RESTORE_WRITE_DISABLED`。
-- **T02-R3**：由非 T04 实现者在目标机写入前复核 pre-write checkpoint，并在演练后独立复核受控根、白名单、manifest/hash、停止证据、recovery point、写入顺序、中断处理、回滚、恢复后完整性和无泄露证据；任一 P1 未闭合不得签收。
+- **T04-3**：先在批准的合成数据根完成受控写入演练；目标 Windows 机器写入前必须通过独立 pre-write checkpoint：用户再次批准精确机器、安装实例、逻辑 data 根和时间窗口；同一构建/安装实例的 Alpha D1 基础证据通过；服务、计划任务与其他写入者均已停止；Gate B、R3-prewrite、预检和 recovery point 均已通过。独立实施计划必须落实本计划第 50 行的持久化状态机、中断标记、不可原子阶段、重启默认行为和回滚/人工升级出口。payload 先进入新的受控 staging 区并经验证，随后才按状态机允许的顺序切换；不满足任一状态转换条件、中断、写入失败、hash 不符或状态未知时均保持/进入 `RESTORE_RECOVERY_REQUIRED`，不得自动启动服务、继续写入或跳过回滚。回滚恢复已验证 recovery point 并复核保护哨兵；恢复后验证 SQLite、manifest/hash、允许资料范围、关键只读读取、重启健康与无越界变更。目标机真实写入不满足任一条件时保持 `RESTORE_WRITE_DISABLED`。
+- **T02-R3**：同一任务含两个不可替代的独立门。**R3-prewrite** 由非 T04 实现者在任何目标 Windows 机器非 `-WhatIf` backup/restore 写入前，复核已审查的 T04-3 独立计划、精确目标机批准、Gate B、停止证据、状态机/中断标记、预检、recovery point 与日志允许字段契约；未签收则 T04-3 必须保持 `RESTORE_WRITE_DISABLED`。**R3-postrestore** 仅在演练结束、恢复后完整性或已验证回滚证据齐备后，独立复核受控根、白名单、manifest/hash、写入顺序、中断处理、回滚、恢复后完整性和无泄露证据；任一 P1 未闭合不得完成最终签收。
 - **T05-3**：只验收轮转与容量上限。到达容量时必须以可见、安全失败停止新增日志；不得删除历史文件、配置保留期或宣称完成安全清理，T05-4 仍保持独立未完成。
-- **Gate**：真实 restore 具有受控写入、回滚和恢复后完整性证据；独立复核无 P1 未闭合；重复启动、错误和轮转不无限增长，且不删除受保护或历史日志文件。
+- **Gate**：R3-prewrite 已在目标机真实写入前独立签收，真实 restore 具有受控写入、状态机/中断记录、回滚和恢复后完整性证据，且 R3-postrestore 独立复核无 P1 未闭合；重复启动、错误和轮转不无限增长，且不删除受保护或历史日志文件。
 
 ### Wave 3：学生可操作且脱敏的失败反馈（T02-R4）
 
