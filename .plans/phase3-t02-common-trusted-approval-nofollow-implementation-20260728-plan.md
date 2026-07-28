@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：🛠️ 已根据前两轮独立审查修订，待第三位独立审查；不授权真实 R1/R2 操作
+**状态**：🛠️ 已根据前三轮独立审查修订，待第四位独立审查；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -125,18 +125,18 @@ createNoFollowReader()
 返回的方法仅允许：
 
 ```js
-openVerifiedPath({ locator, expectedObjectKind, expectedScopeBinding })
-readVerifiedFile({ handle, maxBytes })
-readVerifiedDirectorySecurityDescriptor({ handle })
-closeVerifiedHandle({ handle })
+openVerifiedPath(input)
+readVerifiedFile(input)
+readVerifiedDirectorySecurityDescriptor(input)
+closeVerifiedHandle(input)
 ```
 
-- API 将路径视作不可信 locator；生产 API 没有 platform 或 backend 注入参数，平台只能由模块内部确定；且不可在无 backend 时将 locator 交给 `fs.readFile`、`lstat`、`stat`、`realpath`、PowerShell 或其他路径 API。
+- API 将路径视作不可信 locator；生产 API 没有 platform 或 backend 注入参数，平台只能由模块内部确定；且不可在无 backend 时将 locator 交给 `fs.readFile`、`lstat`、`stat`、`realpath`、PowerShell 或其他路径 API。生产 unsupported reader 的四个方法均必须使用不解构的单一 `input`（或等价地完全无参数）；每个方法在任何 `input` 类型检查、属性读取、枚举、解构、展开、日志、错误格式化、backend 调用或路径操作之前，固定抛出 `NOFOLLOW_HANDLE_UNSUPPORTED`。
 - backend 必须逐组件从已验证的本地卷锚点 no-follow 打开，并从**同一 handle**返回对象种类、reparse 状态、卷类型/设备类别、对象 ID、父子关系、字节流或目录安全描述符及读后身份复核。facade 不得接受“先检查、后普通读取”的 backend 声明。
 - Windows 策略对 UNC/扩展 UNC、remote/removable/CD-ROM/RAM/unknown、`SUBST`、目录挂载点、Mup/LanmanRedirector/WebDavRedirector/Rdbss 或任何无法证明的设备映射拒绝；任一中间/最终 reparse 也拒绝。只允许 backend 已证明为 local fixed volume 的结果。
 - `readVerifiedFile` 必须在同一 handle 上先读取到私有缓冲、在交付任意字节前后复核 object ID、父子关系和不可变 `contentVersion`；仅当所有复核一致且未超过 `maxBytes` 时才返回一份新复制的完整 `Buffer`。任何替换、内容不稳定、读超限、锁定/共享不确定或 backend 能力不足均清空私有缓冲、关闭 handle 并失败；不得返回 bytes、stream、partial result、object ID、contentVersion 或可复用 handle。R1 同流 fingerprint 的实际 tee 由后续 R1 adoption 完成，本切片只暴露不可降级的 bytes/identity contract。
 - `readVerifiedDirectorySecurityDescriptor` 仅定义接口，不接入 `Get-Acl` 或真实目录；其未来成功语义也必须先私有完整读取、前后 identity/contentVersion 复核后才交付完整新复制字节。无 native backend 时固定 `NOFOLLOW_HANDLE_UNSUPPORTED`。
-- 本切片的生产 backend 为明确 unsupported。测试仅通过未文档化、非生产契约的 `__TEST_ONLY_*` factory 创建内存合成 reader；所有非测试目录静态禁止导入该 factory，且它不允许 Node/PowerShell 文件系统 fallback。
+- 本切片的生产 backend 为明确 unsupported：不得触发 `Proxy`/getter、不得调用 backend、不得返回 bytes/stream/partial result/handle。只有测试通过未文档化、非生产契约的 `__TEST_ONLY_*` factory 创建内存合成 reader 后，才可在进入合成 backend 时校验 `input` 字段；所有非测试目录静态禁止导入该 factory，且它不允许 Node/PowerShell 文件系统 fallback。
 
 ## 5. 固定失败码与可观察性
 
@@ -163,7 +163,7 @@ closeVerifiedHandle({ handle })
 | R1 内容身份 | 算法/version/entry-count/digest 不符；内容 ID 缺失；对象 ID 相同但合成流字节变动 | `TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH`，无部分成功 capability |
 | verifier gate | 生产无注册能力、contract 不符、测试 provider 抛错/返回自由文本；生产调用附加伪造 object/`Symbol`/冻结 capability、`Proxy`、`recordBytes`/`expected` getter 或抛错 getter；仅 `__TEST_ONLY_*` 测试 factory 成功 | 生产默认 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`；不得触发 getter/Proxy；附加调用参数不可改变拒绝；无 provider 数据回显 |
 | 本地卷策略 | UNC/扩展 UNC、mapped remote、`SUBST`、mount point、Mup/Lanman/WebDav/Rdbss、removable/unknown、local fixed | 非 local fixed 一律固定拒绝；不得输出路径/盘符/设备名 |
-| no-follow 组件链 | 中间或最终 reparse、对象种类错、父子关系断裂、打开后替换、读后 ID/`contentVersion` 改变、超限、生产 backend 缺失、生产调用提供参数 | 清空缓存/结果、关闭合成 handle、固定 `NOFOLLOW_*`；失败零字节/零 stream/零可复用 handle 交付，且无普通路径 fallback |
+| no-follow 组件链 | 中间或最终 reparse、对象种类错、父子关系断裂、打开后替换、读后 ID/`contentVersion` 改变、超限；生产 unsupported reader 收到参数、`Proxy` 或抛错 getter；生产 backend 缺失 | 合成失败清空缓存/结果、关闭合成 handle、固定 `NOFOLLOW_*`；生产 unsupported 不触发 getter/backend 且固定 `NOFOLLOW_HANDLE_UNSUPPORTED`；任何失败均零字节/零 stream/零可复用 handle 交付，且无普通路径 fallback |
 | R2 只读接口 | 合成目录 descriptor 请求、无 backend、试图请求内容读取/递归/ACL 写操作 | 仅接口 contract；无 backend 拒绝；源码静态 denylist 不出现 `Get-Acl`/`Set-Acl`/`icacls`/服务/计划任务/备份恢复命令 |
 | test seam、范围与输出 | 仅 helper allowlist 可导入 `__TEST_ONLY_*`；Git 已跟踪 source 的静态 import/require/re-export/dynamic-require 检查；不改 R1/R2/deployment/packaging 文件；所有错误含哨兵 | 改动集精确、输出无泄露、合成结果不表述为真实证据 |
 
@@ -173,7 +173,7 @@ closeVerifiedHandle({ handle })
 
 1. 先取得维护者外部交付并核验的生产 public SPKI/keyId/fingerprint；缺任一项立即停止。再新增第 4.0 节 exact record parser/签名模块与测试辅助夹具；在无 verifier identity 时保持拒绝，生产 API 不接受任何测试 key/resolver，测试只能通过 allowlist helper 的闭包隔离非契约 factory。
 2. 新增 verifier integrity gate，先完成生产默认拒绝、test-seam isolation 静态检查与测试 direct injection；确认 `verifyTrustedApproval(input)` 不解构、在读取任何调用方字段前无条件调用 gate，并用 Proxy/getter 回归证明。
-3. 新增 no-follow facade、拒绝表和内存合成 backend；生产 API 必须为无参数，先验证路径 API 完全没有 fallback、失败零字节交付和非测试目录不能导入测试 factory，再测试逐组件/同 handle 状态机。
+3. 新增 no-follow facade、拒绝表和内存合成 backend；生产 reader factory 与四个 reader 方法都必须为不解构边界，先验证 unsupported facade 在任何 input/Proxy/getter/backend 访问前固定拒绝、路径 API 完全没有 fallback、失败零字节交付和非测试目录不能导入测试 factory，再测试逐组件/同 handle 状态机。
 4. 只运行合成测试；不得调用 R1/R2 入口或真实 PowerShell ACL API。
 5. 完成定向测试、全量所需检查、文档治理与 diff 检查；更新 `docs/04` 仅登记“共同接口/合成测试完成（如实际完成）”，绝不勾选 R1/R2 或真实采证。
 6. 若任何测试需要真实 Windows 目录、真实 record、真实 ACL、动态编译 native helper、代码签名、发布物、额外依赖或改动 R1/R2 文件，立即停止并另立计划；不得把阻塞用 mock 绕过后声称 backend 已实现。
@@ -230,4 +230,6 @@ closeVerifiedHandle({ handle })
 - **首轮作者修订**：删除生产 `verifierIntegrity` 与 platform/backend 注入，改为内部 gate / 无参 facade；固定 record raw-byte 语法、signature 输入及窗口；明确 trust anchor 材料来源、标识、指纹和无运行时轮换；限定 security fixture 为内存并定义失败零字节交付。
 - **第二轮独立只读审查（2026-07-28，提交 `a9aa0a47`）**：结论“不通过”。发现 P0：生产 API 示例的参数解构可能在 gate 前触发 getter/Proxy；P1：`__TEST_ONLY_*` 静态检查未区分 factory 定义者、唯一导入 helper 与扫描器。
 - **本次作者最小修订**：将生产入口固定为不解构的 `verifyTrustedApproval(input)`，规定 gate 必须在任何调用方字段访问前执行，并加入 Proxy/getter 回归；将 test seam 门禁改为四角色精确 allowlist。
-- **当前要求**：必须由不同于前两轮审查者的第三位独立审查者重新只读审查。复审通过前，不得批准或实施本计划，更不得运行真实 R1/R2。
+- **第三轮独立只读审查（2026-07-28，提交 `6231a28e`）**：结论“有条件通过”，无 P0；P1 指出 production unsupported no-follow reader 的方法示例仍可能因参数解构在固定拒绝前触发 getter/Proxy。
+- **本次作者最小修订**：四个生产 no-follow 方法改为不解构的单一 `input`，并规定在任何调用方属性访问、backend 调用或路径操作前固定抛 `NOFOLLOW_HANDLE_UNSUPPORTED`；测试矩阵加入 Proxy/getter/零交付回归。
+- **当前要求**：必须由不同于前三轮审查者的第四位独立审查者重新只读审查该 P1。复审通过前，不得批准或实施本计划，更不得运行真实 R1/R2。
