@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { lstat, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
+const repositoryRootForTest = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const {
   createSecretSignoffSummary,
   executeSecretScanSignoff,
@@ -33,6 +35,7 @@ async function createFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'studybuddy-t02r1-'));
   const repositoryRoot = path.join(root, 'repository');
   const packageRoot = path.join(root, 'candidate-package');
+  const approvalRecordPath = path.join(root, 'approval-record.json');
   await mkdir(repositoryRoot, { recursive: true });
   await mkdir(packageRoot, { recursive: true });
   await writeFile(path.join(repositoryRoot, 'tracked.txt'), 'safe tracked content\n', 'utf8');
@@ -44,7 +47,17 @@ async function createFixture() {
   const approvedCommit = runGit(repositoryRoot, ['rev-parse', 'HEAD']).toLowerCase();
   await writeFile(path.join(packageRoot, 'deployment-manifest.json'), JSON.stringify({ buildCommit: approvedCommit, packageFingerprint: metadata.packageFingerprint }), 'utf8');
   await writeFile(path.join(packageRoot, 'app.txt'), 'safe candidate content\n', 'utf8');
-  return { root, repositoryRoot, packageRoot, approvedCommit };
+  await writeFile(approvalRecordPath, JSON.stringify({
+    schema: 'ai-studybuddy-t02-r1-approval-v1',
+    artifactId: metadata.artifactId,
+    approvedCommit,
+    packageFingerprint: metadata.packageFingerprint,
+    approvalWindowId: metadata.approvalWindowId,
+    windowStartsAtUtc: '2026-07-28T00:00:00.000Z',
+    windowEndsAtUtc: '2026-07-29T00:00:00.000Z',
+    packageRoot,
+  }), 'utf8');
+  return { root, repositoryRoot, packageRoot, approvalRecordPath, approvedCommit };
 }
 
 function assertDoesNotLeak(value, ...forbidden) {
@@ -76,12 +89,21 @@ test('R1 signoff validates metadata schemas without echoing rejected input', () 
   }
 });
 
-test('R1 signoff locks the full approved commit and rejects tracked staged or unstaged changes', async () => {
+test('R1 signoff locks the full approved commit and rejects tracked staged and unstaged changes', async () => {
   const fixture = await createFixture();
-  const sentinel = `invalid-r1-${randomUUID()}`;
+  const stagedSentinel = `invalid-r1-staged-${randomUUID()}`;
+  const unstagedSentinel = `invalid-r1-unstaged-${randomUUID()}`;
   try {
     verifyApprovedGitState(fixture.repositoryRoot, fixture.approvedCommit);
-    await writeFile(path.join(fixture.repositoryRoot, 'tracked.txt'), sentinel, 'utf8');
+    await writeFile(path.join(fixture.repositoryRoot, 'tracked.txt'), stagedSentinel, 'utf8');
+    runGit(fixture.repositoryRoot, ['add', 'tracked.txt']);
+    assert.throws(
+      () => verifyApprovedGitState(fixture.repositoryRoot, fixture.approvedCommit),
+      (error) => error.code === 'SECRET_SCAN_TRACKED_CHANGES_PRESENT' && error.message === 'SECRET_SCAN_TRACKED_CHANGES_PRESENT'
+    );
+    try { verifyApprovedGitState(fixture.repositoryRoot, fixture.approvedCommit); } catch (error) { assertDoesNotLeak(JSON.stringify(error), stagedSentinel, 'tracked.txt'); }
+    runGit(fixture.repositoryRoot, ['reset', '--hard', 'HEAD']);
+    await writeFile(path.join(fixture.repositoryRoot, 'tracked.txt'), unstagedSentinel, 'utf8');
     assert.throws(
       () => verifyApprovedGitState(fixture.repositoryRoot, fixture.approvedCommit),
       (error) => error.code === 'SECRET_SCAN_TRACKED_CHANGES_PRESENT' && error.message === 'SECRET_SCAN_TRACKED_CHANGES_PRESENT'
@@ -130,8 +152,8 @@ test('R1 synthetic repository and package can produce a fully redacted pass summ
   try {
     const summary = await executeSecretScanSignoff({
       repositoryRoot: fixture.repositoryRoot,
-      packageRoot: fixture.packageRoot,
-      metadata: { ...metadata, approvedCommit: fixture.approvedCommit },
+      approvalRecordPath: fixture.approvalRecordPath,
+      now: () => Date.parse('2026-07-28T12:00:00.000Z'),
     });
     assert.equal(summary.resultCode, 'SECRET_SCAN_SIGNOFF_PASSED');
     assert.equal(summary.approvedCommitShort, fixture.approvedCommit.slice(0, 12));
@@ -154,8 +176,8 @@ test('R1 rejects candidate package roots within the repository and mismatched ma
     await assert.rejects(
       () => executeSecretScanSignoff({
         repositoryRoot: fixture.repositoryRoot,
-        packageRoot: fixture.packageRoot,
-        metadata: { ...metadata, approvedCommit: fixture.approvedCommit },
+        approvalRecordPath: fixture.approvalRecordPath,
+        now: () => Date.parse('2026-07-28T12:00:00.000Z'),
       }),
       (error) => error.code === 'SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH' && error.message === 'SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH'
     );
@@ -171,4 +193,94 @@ test('R1 summary rejects empty input groups and reports a fixed non-pass code', 
     packageReport: zeroReport(),
   });
   assert.equal(summary.resultCode, 'SECRET_SCAN_INPUT_EMPTY');
+});
+test('R1 validates the package root before any manifest read', async () => {
+  const fixture = await createFixture();
+  let manifestRead = false;
+  try {
+    await writeFile(fixture.approvalRecordPath, JSON.stringify({
+      schema: 'ai-studybuddy-t02-r1-approval-v1', artifactId: metadata.artifactId,
+      approvedCommit: fixture.approvedCommit, packageFingerprint: metadata.packageFingerprint,
+      approvalWindowId: metadata.approvalWindowId, windowStartsAtUtc: '2026-07-28T00:00:00.000Z',
+      windowEndsAtUtc: '2026-07-29T00:00:00.000Z', packageRoot: fixture.repositoryRoot,
+    }), 'utf8');
+    await assert.rejects(
+      () => executeSecretScanSignoff({
+        repositoryRoot: fixture.repositoryRoot,
+        approvalRecordPath: fixture.approvalRecordPath,
+        now: () => Date.parse('2026-07-28T12:00:00.000Z'),
+        packageReadFile: async () => { manifestRead = true; return readFile('unreachable', 'utf8'); },
+      }),
+      (error) => error.code === 'SECRET_SCAN_PACKAGE_ROOT_INVALID' && error.message === 'SECRET_SCAN_PACKAGE_ROOT_INVALID'
+    );
+    assert.equal(manifestRead, false);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('R1 rejects a package subdirectory whose resolved target leaves the approved root', async () => {
+  const fixture = await createFixture();
+  const outside = await mkdtemp(path.join(os.tmpdir(), 'studybuddy-t02r1-outside-'));
+  try {
+    await mkdir(path.join(fixture.packageRoot, 'nested'), { recursive: true });
+    await writeFile(path.join(fixture.packageRoot, 'nested', 'inside.txt'), 'safe\n', 'utf8');
+    await assert.rejects(
+      () => executeSecretScanSignoff({
+        repositoryRoot: fixture.repositoryRoot,
+        approvalRecordPath: fixture.approvalRecordPath,
+        now: () => Date.parse('2026-07-28T12:00:00.000Z'),
+        packageRealpath: async (candidate) => candidate.endsWith(`${path.sep}nested`) ? outside : (await import('node:fs/promises')).realpath(candidate),
+      }),
+      (error) => error.code === 'SECRET_SCAN_PACKAGE_REPARSE_RISK' && error.message === 'SECRET_SCAN_PACKAGE_REPARSE_RISK'
+    );
+  } finally {
+    await rm(outside, { recursive: true, force: true });
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('R1 requires a complete external approval record and binds its candidate root without leakage', async () => {
+  const fixture = await createFixture();
+  const sentinel = `invalid/r1-approval-${randomUUID()}`;
+  try {
+    await writeFile(fixture.approvalRecordPath, JSON.stringify({ schema: 'ai-studybuddy-t02-r1-approval-v1', packageRoot: sentinel }), 'utf8');
+    await assert.rejects(
+      () => executeSecretScanSignoff({ repositoryRoot: fixture.repositoryRoot, approvalRecordPath: fixture.approvalRecordPath, now: () => Date.parse('2026-07-28T12:00:00.000Z') }),
+      (error) => error.code === 'SECRET_SCAN_APPROVAL_RECORD_INVALID' && error.message === 'SECRET_SCAN_APPROVAL_RECORD_INVALID'
+    );
+    try { await executeSecretScanSignoff({ repositoryRoot: fixture.repositoryRoot, approvalRecordPath: fixture.approvalRecordPath, now: () => Date.parse('2026-07-28T12:00:00.000Z') }); } catch (error) { assertDoesNotLeak(JSON.stringify(error), sentinel); }
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('R1 rejects a physically aliased candidate root that resolves inside its repository', async () => {
+  const fixture = await createFixture();
+  try {
+    await assert.rejects(
+      () => executeSecretScanSignoff({
+        repositoryRoot: fixture.repositoryRoot,
+        approvalRecordPath: fixture.approvalRecordPath,
+        now: () => Date.parse('2026-07-28T12:00:00.000Z'),
+        packageRealpath: async (candidate) => path.resolve(candidate) === path.resolve(fixture.packageRoot) ? fixture.repositoryRoot : (await import('node:fs/promises')).realpath(candidate),
+      }),
+      (error) => ['SECRET_SCAN_PACKAGE_ROOT_INVALID', 'SECRET_SCAN_PACKAGE_REPARSE_RISK'].includes(error.code) && error.message === error.code
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('R1 executable rejects a caller-supplied repository root before scanning', () => {
+  const sentinel = `invalid/r1-repository-${randomUUID()}`;
+  const result = spawnSync(process.execPath, [
+    path.join(repositoryRootForTest, 'scripts', 'confirm-secret-scan-signoff.cjs'),
+    '--repository-root', sentinel,
+    '--approval-record', sentinel,
+  ], { encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 2);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(JSON.parse(result.stdout), { resultCode: 'SECRET_SCAN_SIGNOFF_FAILED' });
+  assertDoesNotLeak(result.stdout, sentinel);
 });

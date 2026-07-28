@@ -9,7 +9,7 @@ function fixedResult(resultCode) {
 
 function parseArguments(argv) {
   const values = new Map();
-  const allowed = new Set(['--repository-root', '--package-root', '--artifact-id', '--approved-commit', '--package-fingerprint', '--approval-window-id']);
+  const allowed = new Set(['--approval-record']);
   for (let index = 0; index < argv.length; index += 2) {
     const key = argv[index];
     const value = argv[index + 1];
@@ -29,14 +29,8 @@ async function main() {
   try {
     values = parseArguments(process.argv.slice(2));
     const summary = await executeSecretScanSignoff({
-      repositoryRoot: path.resolve(values.get('--repository-root')),
-      packageRoot: values.get('--package-root'),
-      metadata: {
-        artifactId: values.get('--artifact-id'),
-        approvedCommit: values.get('--approved-commit'),
-        packageFingerprint: values.get('--package-fingerprint'),
-        approvalWindowId: values.get('--approval-window-id'),
-      },
+      repositoryRoot: path.resolve(__dirname, '..'),
+      approvalRecordPath: values.get('--approval-record'),
     });
     process.stdout.write(`${JSON.stringify(summary)}\n`);
     process.exitCode = summary.resultCode === 'SECRET_SCAN_SIGNOFF_PASSED' ? 0 : 2;

@@ -236,6 +236,7 @@ const SHORT_HEX_RE = /^[a-f0-9]{12}$/;
 const ARTIFACT_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$/;
 const APPROVAL_WINDOW_RE = /^[A-Z][A-Z0-9_-]{7,31}$/;
 const PACKAGE_MANIFEST_NAME = 'deployment-manifest.json';
+const APPROVAL_RECORD_SCHEMA = 'ai-studybuddy-t02-r1-approval-v1';
 
 function normalizeSignoffMetadata({ artifactId, approvedCommit, packageFingerprint, approvalWindowId } = {}) {
   if (
@@ -317,6 +318,7 @@ async function scanSecretSignoffBoundary({ rootDir, candidates, ...options } = {
   let findingCount = 0;
   for (const candidate of normalizedCandidates) {
     try {
+      if (typeof options.candidateGuard === 'function') await options.candidateGuard(candidate);
       const report = await scanSecretBoundary({ rootDir, trackedFiles: [candidate], ...options });
       const reason = getBlockedReason(report);
       if (reason) {
@@ -330,6 +332,10 @@ async function scanSecretSignoffBoundary({ rootDir, candidates, ...options } = {
     } catch (error) {
       if (error?.code === 'SECRET_SCAN_FILE_ACCESS_FAILED') {
         blocked.unreadable += 1;
+        continue;
+      }
+      if (error?.code === 'SECRET_SCAN_PACKAGE_REPARSE_RISK') {
+        blocked.symlink += 1;
         continue;
       }
       throw error;
@@ -414,28 +420,123 @@ function isPathEqualOrDescendant(candidate, root) {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
-async function listApprovedPackageFiles({ packageRoot, repositoryRoot, opendir = fs.opendir, lstat = fs.lstat } = {}) {
-  if (!packageRoot || !repositoryRoot) throw createBoundaryError('SECRET_SCAN_INVALID_INPUT');
+function isLocalAbsolutePath(candidate) {
+  return typeof candidate === 'string' && path.isAbsolute(candidate) && !candidate.startsWith('\\\\') && !candidate.startsWith('//');
+}
+
+async function assertApprovedPackageRoot({ packageRoot, repositoryRoot, lstat = fs.lstat, realpath = fs.realpath } = {}) {
+  if (!isLocalAbsolutePath(packageRoot) || !isLocalAbsolutePath(repositoryRoot)) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
+  }
   const root = path.resolve(packageRoot);
   const repo = path.resolve(repositoryRoot);
   if (isPathEqualOrDescendant(root, repo) || isPathEqualOrDescendant(repo, root)) {
     throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
   }
   let rootInfo;
-  try { rootInfo = await lstat(root); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID'); }
-  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) {
+  let realRoot;
+  let realRepositoryRoot;
+  try {
+    rootInfo = await lstat(root);
+    if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) throw new Error('unsafe');
+    realRoot = await realpath(root);
+    realRepositoryRoot = await realpath(repo);
+  } catch {
     throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
   }
+  if (isPathEqualOrDescendant(realRoot, realRepositoryRoot) || isPathEqualOrDescendant(realRepositoryRoot, realRoot)) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
+  }
+  return { root, realRoot };
+}
+
+function parseApprovalRecord(raw, { now = Date.now } = {}) {
+  let record;
+  try { record = JSON.parse(raw); } catch { throw createBoundaryError('SECRET_SCAN_APPROVAL_RECORD_INVALID'); }
+  const expectedKeys = new Set([
+    'schema', 'artifactId', 'approvedCommit', 'packageFingerprint', 'approvalWindowId',
+    'windowStartsAtUtc', 'windowEndsAtUtc', 'packageRoot',
+  ]);
+  if (
+    !record || typeof record !== 'object' || Array.isArray(record) ||
+    Object.keys(record).length !== expectedKeys.size || Object.keys(record).some((key) => !expectedKeys.has(key)) ||
+    record.schema !== APPROVAL_RECORD_SCHEMA || !isLocalAbsolutePath(record.packageRoot)
+  ) {
+    throw createBoundaryError('SECRET_SCAN_APPROVAL_RECORD_INVALID');
+  }
+  const startsAt = Date.parse(record.windowStartsAtUtc);
+  const endsAt = Date.parse(record.windowEndsAtUtc);
+  if (!Number.isFinite(startsAt) || !Number.isFinite(endsAt) || endsAt <= startsAt || now() < startsAt || now() > endsAt) {
+    throw createBoundaryError('SECRET_SCAN_APPROVAL_WINDOW_INVALID');
+  }
+  return { packageRoot: path.resolve(record.packageRoot), metadata: normalizeSignoffMetadata(record) };
+}
+
+async function readApprovedSignoffRecord({ approvalRecordPath, repositoryRoot, readFile = fs.readFile, lstat = fs.lstat, realpath = fs.realpath, now = Date.now } = {}) {
+  if (!isLocalAbsolutePath(approvalRecordPath) || !isLocalAbsolutePath(repositoryRoot)) {
+    throw createBoundaryError('SECRET_SCAN_APPROVAL_RECORD_INVALID');
+  }
+  const recordPath = path.resolve(approvalRecordPath);
+  const repo = path.resolve(repositoryRoot);
+  if (isPathEqualOrDescendant(recordPath, repo)) throw createBoundaryError('SECRET_SCAN_APPROVAL_RECORD_INVALID');
+  let info;
+  let realRecordPath;
+  let realRepositoryRoot;
+  let raw;
+  try {
+    info = await lstat(recordPath);
+    if (!info.isFile() || info.isSymbolicLink()) throw new Error('unsafe');
+    realRecordPath = await realpath(recordPath);
+    realRepositoryRoot = await realpath(repo);
+    if (isPathEqualOrDescendant(realRecordPath, realRepositoryRoot)) throw new Error('unsafe');
+    raw = await readFile(recordPath, 'utf8');
+  } catch {
+    throw createBoundaryError('SECRET_SCAN_APPROVAL_RECORD_INVALID');
+  }
+  const approval = parseApprovalRecord(raw, { now });
+  if (isPathEqualOrDescendant(realRecordPath, approval.packageRoot) || isPathEqualOrDescendant(approval.packageRoot, realRecordPath)) {
+    throw createBoundaryError('SECRET_SCAN_APPROVAL_RECORD_INVALID');
+  }
+  return approval;
+}
+
+async function assertApprovedPackageEntry({ approvedPackageRoot, relativePath, expectedDirectory, lstat = fs.lstat, realpath = fs.realpath } = {}) {
+  if (!approvedPackageRoot?.root || !approvedPackageRoot?.realRoot) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
+  }
+  const absolutePath = resolveCandidate(approvedPackageRoot.root, relativePath);
+  let info;
+  let physicalPath;
+  try {
+    info = await lstat(absolutePath);
+    if (info.isSymbolicLink() || (expectedDirectory && !info.isDirectory())) throw new Error('unsafe');
+    physicalPath = await realpath(absolutePath);
+  } catch {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_REPARSE_RISK');
+  }
+  if (!isPathEqualOrDescendant(physicalPath, approvedPackageRoot.realRoot)) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_REPARSE_RISK');
+  }
+  return { absolutePath, info };
+}
+
+async function listApprovedPackageFiles({ packageRoot, repositoryRoot, approvedPackageRoot, opendir = fs.opendir, lstat = fs.lstat, realpath = fs.realpath } = {}) {
+  const approved = approvedPackageRoot || await assertApprovedPackageRoot({ packageRoot, repositoryRoot, lstat, realpath });
   const pending = [''];
   const candidates = [];
   while (pending.length > 0) {
     const relativeDirectory = pending.pop();
-    const absoluteDirectory = relativeDirectory ? resolveCandidate(root, relativeDirectory) : root;
+    const directoryEntry = relativeDirectory
+      ? await assertApprovedPackageEntry({ approvedPackageRoot: approved, relativePath: relativeDirectory, expectedDirectory: true, lstat, realpath })
+      : { absolutePath: approved.root };
     let directory;
-    try { directory = await opendir(absoluteDirectory); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_LIST_FAILED'); }
+    try { directory = await opendir(directoryEntry.absolutePath); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_LIST_FAILED'); }
     for await (const entry of directory) {
       const relativePath = toRelativePath(relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name);
-      if (entry.isDirectory() && !entry.isSymbolicLink()) {
+      let entryInfo;
+      try { entryInfo = await lstat(resolveCandidate(approved.root, relativePath)); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_LIST_FAILED'); }
+      if (entryInfo.isDirectory() && !entryInfo.isSymbolicLink()) {
+        await assertApprovedPackageEntry({ approvedPackageRoot: approved, relativePath, expectedDirectory: true, lstat, realpath });
         pending.push(relativePath);
       } else {
         candidates.push(relativePath);
@@ -445,18 +546,25 @@ async function listApprovedPackageFiles({ packageRoot, repositoryRoot, opendir =
   return candidates.sort();
 }
 
-async function readApprovedPackageManifest({ packageRoot, approvedCommit, packageFingerprint, readFile = fs.readFile, lstat = fs.lstat } = {}) {
-  if (!packageRoot || typeof approvedCommit !== 'string' || !FULL_COMMIT_RE.test(approvedCommit) || typeof packageFingerprint !== 'string' || !SHORT_HEX_RE.test(packageFingerprint)) {
+async function readApprovedPackageManifest({ approvedPackageRoot, approvedCommit, packageFingerprint, readFile = fs.readFile, lstat = fs.lstat, realpath = fs.realpath } = {}) {
+  if (!approvedPackageRoot || typeof approvedCommit !== 'string' || !FULL_COMMIT_RE.test(approvedCommit) || typeof packageFingerprint !== 'string' || !SHORT_HEX_RE.test(packageFingerprint)) {
     throw createBoundaryError('SECRET_SCAN_SIGNOFF_METADATA_INVALID');
   }
-  const manifestPath = resolveCandidate(packageRoot, PACKAGE_MANIFEST_NAME);
+  let manifestPath;
   let info;
   let raw;
   try {
-    info = await lstat(manifestPath);
-    if (!info.isFile() || info.isSymbolicLink()) throw new Error('unsafe');
+    ({ absolutePath: manifestPath, info } = await assertApprovedPackageEntry({
+      approvedPackageRoot,
+      relativePath: PACKAGE_MANIFEST_NAME,
+      expectedDirectory: false,
+      lstat,
+      realpath,
+    }));
+    if (!info.isFile()) throw new Error('unsafe');
     raw = await readFile(manifestPath, 'utf8');
-  } catch {
+  } catch (error) {
+    if (error?.code === 'SECRET_SCAN_PACKAGE_REPARSE_RISK') throw error;
     throw createBoundaryError('SECRET_SCAN_PACKAGE_MANIFEST_INVALID');
   }
   let manifest;
@@ -466,21 +574,62 @@ async function readApprovedPackageManifest({ packageRoot, approvedCommit, packag
   }
 }
 
-async function executeSecretScanSignoff({ repositoryRoot, packageRoot, metadata, runGit = spawnSync } = {}) {
-  const safeMetadata = normalizeSignoffMetadata(metadata);
+async function executeSecretScanSignoff({
+  repositoryRoot,
+  approvalRecordPath,
+  runGit = spawnSync,
+  packageLstat = fs.lstat,
+  approvalRecordReadFile = fs.readFile,
+  packageReadFile = fs.readFile,
+  packageOpendir = fs.opendir,
+  packageRealpath = fs.realpath,
+  now = Date.now,
+} = {}) {
+  const approval = await readApprovedSignoffRecord({
+    approvalRecordPath,
+    repositoryRoot,
+    readFile: approvalRecordReadFile,
+    lstat: packageLstat,
+    realpath: packageRealpath,
+    now,
+  });
+  const safeMetadata = approval.metadata;
   verifyApprovedGitState(repositoryRoot, safeMetadata.approvedCommit, { runGit });
+  const approvedPackageRoot = await assertApprovedPackageRoot({
+    packageRoot: approval.packageRoot,
+    repositoryRoot,
+    lstat: packageLstat,
+    realpath: packageRealpath,
+  });
   await readApprovedPackageManifest({
-    packageRoot,
+    approvedPackageRoot,
     approvedCommit: safeMetadata.approvedCommit,
     packageFingerprint: safeMetadata.packageFingerprint,
+    readFile: packageReadFile,
+    lstat: packageLstat,
+    realpath: packageRealpath,
   });
   const repositoryCandidates = listGitTrackedFiles(repositoryRoot, { runGit });
-  const packageCandidates = await listApprovedPackageFiles({ packageRoot, repositoryRoot });
+  const packageCandidates = await listApprovedPackageFiles({
+    approvedPackageRoot,
+    opendir: packageOpendir,
+    lstat: packageLstat,
+    realpath: packageRealpath,
+  });
   const repositoryReport = await scanSecretSignoffBoundary({ rootDir: repositoryRoot, candidates: repositoryCandidates });
-  const packageReport = await scanSecretSignoffBoundary({ rootDir: packageRoot, candidates: packageCandidates });
+  const packageReport = await scanSecretSignoffBoundary({
+    rootDir: approvedPackageRoot.root,
+    candidates: packageCandidates,
+    candidateGuard: async (relativePath) => assertApprovedPackageEntry({
+      approvedPackageRoot,
+      relativePath,
+      expectedDirectory: false,
+      lstat: packageLstat,
+      realpath: packageRealpath,
+    }),
+  });
   return createSecretSignoffSummary({ metadata: safeMetadata, repositoryReport, packageReport });
 }
-
 module.exports = {
   MAX_TEXT_FILE_BYTES,
   SIGNOFF_SCANNER_VERSION,
@@ -492,5 +641,8 @@ module.exports = {
   normalizeSignoffMetadata,
   scanSecretBoundary,
   scanSecretSignoffBoundary,
+  assertApprovedPackageRoot,
+  parseApprovalRecord,
+  readApprovedSignoffRecord,
   verifyApprovedGitState,
 };
