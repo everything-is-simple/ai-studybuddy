@@ -33,8 +33,14 @@ function staticStringValue(node) {
   return undefined;
 }
 
-function containsComputedFactoryMarker(source) {
-  const sourceFile = ts.createSourceFile('tracked-source.js', source, ts.ScriptTarget.ES2022, false, ts.ScriptKind.JS);
+function scriptKindFor(relativePath) {
+  if (/\.tsx$/.test(relativePath)) return ts.ScriptKind.TSX;
+  if (/\.(?:ts|cts|mts)$/.test(relativePath)) return ts.ScriptKind.TS;
+  return ts.ScriptKind.JS;
+}
+
+function containsComputedFactoryMarker(source, relativePath) {
+  const sourceFile = ts.createSourceFile(relativePath, source, ts.ScriptTarget.ES2022, false, scriptKindFor(relativePath));
   let found = false;
   const inspect = (node) => {
     const expression = ts.isElementAccessExpression(node) ? node.argumentExpression : ts.isComputedPropertyName(node) ? node.expression : undefined;
@@ -47,7 +53,7 @@ function containsComputedFactoryMarker(source) {
 
 function trackedSources(root) {
   const raw = execFileSync('git', ['ls-files', '-z', '--', 'scripts', 'packages'], { cwd: root, encoding: 'buffer' });
-  return raw.toString('utf8').split('\0').filter((file) => /\.(?:cjs|js|mjs)$/.test(file));
+  return raw.toString('utf8').split('\0').filter((file) => /\.(?:cjs|js|mjs|cts|ts|mts|tsx)$/.test(file));
 }
 
 function assertSourcePolicy(relativePath, source) {
@@ -58,7 +64,7 @@ function assertSourcePolicy(relativePath, source) {
     return;
   }
   assert.equal(source.includes(MARKER), false, `unexpected factory marker: ${relativePath}`);
-  assert.equal(containsComputedFactoryMarker(source), false, `computed factory marker: ${relativePath}`);
+  assert.equal(containsComputedFactoryMarker(source, relativePath), false, `computed factory marker: ${relativePath}`);
   if (!helperConsumerPaths.has(relativePath)) {
     assert.equal(source.includes('trusted-approval-fixture'), false, `unexpected fixture helper reference: ${relativePath}`);
   }
@@ -75,6 +81,7 @@ test('test-only factories are isolated to the exact tracked-source allowlist', (
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const factory = module['__TE' + 'ST_ONLY_createTrustedApprovalVerifier'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "module['__TEST' /* split */ + '_ONLY_createTrustedApprovalVerifier'];"));
+  assert.throws(() => assertSourcePolicy('packages/backend/src/rogue.ts', "const factory = module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "export * from './helpers/trusted-approval-fixture.mjs';"));
 });
 
