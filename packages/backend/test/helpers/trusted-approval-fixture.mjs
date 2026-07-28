@@ -36,7 +36,7 @@ export function createRecord(overrides = {}) {
 
 export function createApprovalFixture(overrides = {}) {
   const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-  const integrity = __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1', provider: overrides.provider });
+  const integrity = overrides.integrity ?? __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1', provider: overrides.provider });
   const verifier = __TEST_ONLY_createTrustedApprovalVerifier({
     publicKey,
     testKeyId: 'asb-test-fixture-key',
@@ -63,6 +63,15 @@ export function createInvalidKeyFactoryAttempt() {
   return () => __TEST_ONLY_createTrustedApprovalVerifier({
     publicKey,
     testKeyId: 'asb-test-invalid-key',
+    integrity,
+  });
+}
+
+export function createShapedKeyFactoryAttempt() {
+  const integrity = __TEST_ONLY_createVerifierIntegrity({ contractVersion: '1' });
+  return () => __TEST_ONLY_createTrustedApprovalVerifier({
+    publicKey: { type: 'public', asymmetricKeyType: 'ed25519' },
+    testKeyId: 'asb-test-shaped-key',
     integrity,
   });
 }

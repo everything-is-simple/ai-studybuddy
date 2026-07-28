@@ -118,9 +118,29 @@ function assertExactRecordBytes(recordBytes) {
 }
 
 function assertExpected(expected, record) {
-  if (!expected || typeof expected !== 'object' || Array.isArray(expected)) {
+  let validExpected;
+  try {
+    validExpected = Boolean(expected) && typeof expected === 'object' && !Array.isArray(expected);
+  } catch {
     return fail('TRUSTED_APPROVAL_RECORD_INVALID');
   }
+  if (!validExpected) return fail('TRUSTED_APPROVAL_RECORD_INVALID');
+
+  const readExpectedString = (name) => {
+    try {
+      return String(expected[name]);
+    } catch {
+      return fail('TRUSTED_APPROVAL_RECORD_INVALID');
+    }
+  };
+  const readExpectedNow = () => {
+    try {
+      return expected.nowEpochMs;
+    } catch {
+      return fail('TRUSTED_APPROVAL_RECORD_INVALID');
+    }
+  };
+
   const values = record.values;
   const checks = [
     ['policyId', 'TRUSTED_APPROVAL_POLICY_MISMATCH'],
@@ -131,14 +151,13 @@ function assertExpected(expected, record) {
     ['artifactContentIdentity', 'TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH'],
   ];
   for (const [name, code] of checks) {
-    if (String(expected[name]) !== values[name]) return fail(code);
+    if (readExpectedString(name) !== values[name]) return fail(code);
   }
-  const nowEpochMs = expected.nowEpochMs;
+  const nowEpochMs = readExpectedNow();
   if (!Number.isSafeInteger(nowEpochMs) || nowEpochMs < Number(values.notBeforeEpochMs) || nowEpochMs > Number(values.notAfterEpochMs)) {
     return fail('TRUSTED_APPROVAL_TIME_WINDOW_INVALID');
   }
 }
-
 function createCapability() {
   return Object.freeze({ [Symbol('trusted-approval')]: true });
 }
@@ -157,11 +176,15 @@ function readSyntheticInput(input) {
   }
 }
 
-function rethrowFixedApprovalError(error, fallbackCode) {
-  if (error instanceof Error && typeof error.code === 'string' && error.code.startsWith('TRUSTED_APPROVAL_')) {
-    throw error;
+function rethrowFixedIntegrityError(error) {
+  try {
+    if (error?.code === 'TRUSTED_VERIFIER_CONTRACT_MISMATCH') {
+      return fail('TRUSTED_VERIFIER_CONTRACT_MISMATCH');
+    }
+  } catch {
+    // Never expose a caller-controlled error or proxy failure.
   }
-  return fail(fallbackCode);
+  return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
 }
 
 function __TEST_ONLY_createTrustedApprovalVerifier(options) {
@@ -177,8 +200,9 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
   }
   try {
     if (
-      publicKey?.type !== 'public' ||
-      publicKey?.asymmetricKeyType !== 'ed25519' ||
+      !(publicKey instanceof crypto.KeyObject) ||
+      publicKey.type !== 'public' ||
+      publicKey.asymmetricKeyType !== 'ed25519' ||
       typeof testKeyId !== 'string' ||
       !/^asb-test-[a-z0-9-]+$/.test(testKeyId) ||
       testKeyId === RESERVED_KEY_ID
@@ -188,13 +212,22 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
   } catch {
     return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
   }
-  if (!integrity || typeof integrity.requireTrustedVerifierIntegrity !== 'function') {
+
+  let integrityGate;
+  try {
+    integrityGate = integrity?.requireTrustedVerifierIntegrity;
+    if (typeof integrityGate !== 'function') return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+  } catch {
     return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
   }
 
   return Object.freeze({
     verifyTrustedApproval(input) {
-      integrity.requireTrustedVerifierIntegrity({ requiredContractVersion: '1' });
+      try {
+        integrityGate({ requiredContractVersion: '1' });
+      } catch (error) {
+        return rethrowFixedIntegrityError(error);
+      }
       const fields = readSyntheticInput(input);
       if (fields.algorithm !== 'Ed25519') return fail('TRUSTED_APPROVAL_KEY_UNTRUSTED');
       if (!Buffer.isBuffer(fields.signatureBytes) || fields.signatureBytes.length !== 64) {
@@ -208,11 +241,7 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
       } catch {
         return fail('TRUSTED_APPROVAL_SIGNATURE_INVALID');
       }
-      try {
-        assertExpected(fields.expected, record);
-      } catch (error) {
-        return rethrowFixedApprovalError(error, 'TRUSTED_APPROVAL_RECORD_INVALID');
-      }
+      assertExpected(fields.expected, record);
       return createCapability();
     },
   });

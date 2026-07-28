@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRequire } from 'node:module';
-import { createApprovalFixture, createInvalidKeyFactoryAttempt, createRecord, createSentinel, assertFixedError } from './helpers/trusted-approval-fixture.mjs';
+import { createApprovalFixture, createInvalidKeyFactoryAttempt, createShapedKeyFactoryAttempt, createRecord, createSentinel, assertFixedError } from './helpers/trusted-approval-fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const { verifyTrustedApproval } = require('../../../scripts/lib/AIStudyBuddy.TrustedApproval.cjs');
@@ -58,10 +58,48 @@ test('strict record parser rejects CRLF, duplicate-like schema and invalid signa
   );
 });
 
-test('test factory requires an Ed25519 public key and synthetic input getters remain redacted', () => {
+test('test factory requires a real Ed25519 KeyObject and synthetic input getters remain redacted', () => {
   const sentinel = createSentinel();
   assert.throws(() => createInvalidKeyFactoryAttempt()(), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_KEY_UNTRUSTED', sentinel));
+  assert.throws(() => createShapedKeyFactoryAttempt()(), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_KEY_UNTRUSTED', sentinel));
   const fixture = createApprovalFixture();
   const input = new Proxy({}, { get() { throw new Error(sentinel); } });
   assert.throws(() => fixture.verifier.verifyTrustedApproval(input), (error) => assertFixedError(error, 'TRUSTED_APPROVAL_RECORD_INVALID', sentinel));
+});
+
+test('synthetic verifier recreates fixed errors for expected and integrity Proxy failures', () => {
+  const expectedSentinel = createSentinel();
+  const expectedFixture = createApprovalFixture();
+  const hostileExpected = new Proxy(expectedFixture.expected, {
+    get() {
+      const error = new Error(expectedSentinel);
+      error.code = 'TRUSTED_APPROVAL_POLICY_MISMATCH';
+      throw error;
+    },
+  });
+  assert.throws(
+    () => expectedFixture.verifier.verifyTrustedApproval({
+      algorithm: 'Ed25519', recordBytes: expectedFixture.recordBytes, signatureBytes: expectedFixture.signatureBytes, expected: hostileExpected,
+    }),
+    (error) => assertFixedError(error, 'TRUSTED_APPROVAL_RECORD_INVALID', expectedSentinel)
+  );
+
+  const getterSentinel = createSentinel();
+  const hostileIntegrity = new Proxy({}, { get() { throw new Error(getterSentinel); } });
+  assert.throws(() => createApprovalFixture({ integrity: hostileIntegrity }), (error) => assertFixedError(error, 'TRUSTED_VERIFIER_INTEGRITY_UNPROVEN', getterSentinel));
+
+  const methodSentinel = createSentinel();
+  const methodFixture = createApprovalFixture({
+    integrity: Object.freeze({
+      requireTrustedVerifierIntegrity() {
+        throw new Error(methodSentinel);
+      },
+    }),
+  });
+  assert.throws(
+    () => methodFixture.verifier.verifyTrustedApproval({
+      algorithm: 'Ed25519', recordBytes: methodFixture.recordBytes, signatureBytes: methodFixture.signatureBytes, expected: methodFixture.expected,
+    }),
+    (error) => assertFixedError(error, 'TRUSTED_VERIFIER_INTEGRITY_UNPROVEN', methodSentinel)
+  );
 });

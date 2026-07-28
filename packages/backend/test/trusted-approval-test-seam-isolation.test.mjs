@@ -18,11 +18,21 @@ const helperConsumerPaths = new Set([
   'packages/backend/test/nofollow-contract.test.mjs',
 ]);
 const providerModulePattern = /AIStudyBuddy\.[\s\S]{0,50}?(?:TrustedApproval|VerifierIntegrity|NoFollow)\.cjs/;
-const computedMarkerPattern = /__TEST\s*['"`]\s*\+\s*['"`]_ONLY/;
+const simpleStringConcatenationPattern = /(['\"`])([^'\"\r\n]*)\1\s*\+\s*(['\"`])([^'\"\r\n]*)\3/g;
 
 function trackedSources(root) {
   const raw = execFileSync('git', ['ls-files', '-z', '--', 'scripts', 'packages'], { cwd: root, encoding: 'buffer' });
   return raw.toString('utf8').split('\0').filter((file) => /\.(?:cjs|js|mjs)$/.test(file));
+}
+
+function containsComputedFactoryMarker(source) {
+  let folded = source;
+  let previous;
+  do {
+    previous = folded;
+    folded = folded.replace(simpleStringConcatenationPattern, (_match, quote, left, _nextQuote, right) => `${quote}${left}${right}${quote}`);
+  } while (folded !== previous);
+  return folded.includes(MARKER);
 }
 
 function assertSourcePolicy(relativePath, source) {
@@ -33,7 +43,7 @@ function assertSourcePolicy(relativePath, source) {
     return;
   }
   assert.equal(source.includes(MARKER), false, `unexpected factory marker: ${relativePath}`);
-  assert.equal(computedMarkerPattern.test(source), false, `computed factory marker: ${relativePath}`);
+  assert.equal(containsComputedFactoryMarker(source), false, `computed factory marker: ${relativePath}`);
   if (!helperConsumerPaths.has(relativePath)) {
     assert.equal(source.includes('trusted-approval-fixture'), false, `unexpected fixture helper reference: ${relativePath}`);
   }
@@ -47,6 +57,7 @@ test('test-only factories are isolated to the exact tracked-source allowlist', (
   for (const relativePath of sources) assertSourcePolicy(relativePath, readFileSync(join(root, relativePath), 'utf8'));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const x = module['__TEST' + '_ONLY_factory'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const module = require('./AIStudyBuddy.' + 'TrustedApproval.cjs'); module['__TEST' + '_ONLY_factory'];"));
+  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const factory = module['__TE' + 'ST_ONLY_createTrustedApprovalVerifier'];"));
   assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "export * from './helpers/trusted-approval-fixture.mjs';"));
 });
 

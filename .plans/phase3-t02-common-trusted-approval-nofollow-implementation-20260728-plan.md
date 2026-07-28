@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：🧪 实施分支已完成共同接口与合成验证，并完成首次源码审查 P1 修复及回归；无 production trust anchor、production 固定 fail-closed；待最终源码独立复审与主线集成；不授权真实 R1/R2 操作
+**状态**：🧪 实施分支已完成共同接口与合成验证，并完成两轮源码审查 P1 修复及回归；无 production trust anchor、production 固定 fail-closed；待最终源码独立复审与主线集成；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -240,3 +240,4 @@ closeVerifiedHandle(input)
 - **无 production trust anchor 修订的独立复核（2026-07-28）**：首轮结论“有条件通过”，P0=0；发现 P1：文件范围表和实施步骤残留“先提供 production anchor 才能开始”的旧前置，与用户修订冲突。最小修复提交 `bb74a2c` 删除两处冲突表述；复核结论“通过”，P0=0、P1=0。该复核只授权本计划的共同接口与合成测试，绝不授权 production trust anchor、真实 R1/R2 或其他后续切片。
 - **本分支实现与验证记录（2026-07-28，首次源码独立审查前）**：新增三项共同 CJS 模块与四组进程内合成测试；production approval verifier 固定在读取调用方 input 前抛 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`，production no-follow reader 四个方法固定在读取 input 前抛 `NOFOLLOW_HANDLE_UNSUPPORTED`。定向 Node 测试 13/13、`pnpm type-check`、backend/frontend build 与隔离 `APP_DATA_ROOT` 的全量 `pnpm test`（backend 305/305）均通过。未运行真实扫描、ACL、record、候选包、manifest 或用户数据读取。
 - **首次源码独立审查与 P1 修复回归（2026-07-28，待最终源码独立复审）**：审查结论“有条件通过”，P0=0、P1=4；最小修复为：production verifier gate 后不再返回 caller input；测试 verifier 仅接受 Ed25519 public key，getter/Proxy 与 crypto 异常均映射为固定脱敏错误；test-seam 扫描改为精确角色 allowlist，允许合同测试导入公开 API 但仍拒绝直接/计算式 factory 访问和 helper 重导出；no-follow 合成覆盖 remote/UNC/mapped/SUBST/MUP/Lanman/WebDav/Rdbss/removable/cdrom/ram/unknown/mount-point/reparse 及 objectId、parentId、contentVersion 三类替换竞争。定向 Node 测试 14/14、`pnpm type-check`、backend/frontend build 与隔离 `APP_DATA_ROOT` 的全量 `pnpm test`（backend 306/306）均通过。未读取或执行真实 R1/R2、真实 ACL/record/候选包/manifest/用户数据；仍待最终独立源码复审。
+- **第二轮源码独立审查与 P1 修复回归（2026-07-28，待最终源码独立复审）**：审查结论“有条件通过”，P0=0、P1=2；最小修复为：test-only approval factory 现在只接受真实 `crypto.KeyObject` 的 Ed25519 public key，形状伪造键固定拒绝；`expected` getter/Proxy 与 integrity getter/运行期方法异常均重新构造固定脱敏错误，绝不保留 caller 控制的 message/stack；test-seam 扫描对相邻静态字符串拼接重复折叠后检测 `__TEST_ONLY_`，新增 `__TE` + `ST_ONLY_` 绕过回归。定向 Node 测试 15/15、`pnpm type-check`、backend/frontend build 与隔离 `APP_DATA_ROOT` 的全量 `pnpm test`（backend 307/307）均通过。未读取或执行真实 R1/R2、真实 ACL/record/候选包/manifest/用户数据；仍待最终独立源码复审。
