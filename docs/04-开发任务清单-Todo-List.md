@@ -1,6 +1,6 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.114
+**版本**：v1.115
 **日期**：2026-07-29
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
@@ -898,6 +898,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728 | `.plans/phase3-t02-common-trusted-approval-nofollow-implementation-20260728-plan.md` | ✅ 已完成共同接口与合成测试、最终独立审查（P0=0、P1=0）、主线复验并推送 `origin/master`；无 production trust anchor、production 仍固定 fail-closed；不授权真实 R1/R2 |
 | PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-PLAN-20260728 | `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | ✅ 计划已独立审查通过（P0=0、P1=0）；只定义最小前提，计划本身未写入真实三元组或授权 R1/R2 |
 | PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-20260728 | `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | 🧪 最小共同接口与合成测试已在任务分支完成；首轮 P1 已最小修复，第二次独立源码复审通过（P0=0、P1=0），待主线集成；production 仍固定 fail-closed，未配置真实三元组、未接入 R1/R2 |
+
+> **PHASE3-T02 主线脏状态归档（2026-07-29，已完成）**：主线 `H:\ai-studybuddy` 的未跟踪目录 `.trae-html-share-packages/` 与 `alpha-sprint-plan/` 已按用户明确批准完整移出主目录，归档到受控 `H:\backup\ai-studybuddy-archives\20260729-phase3-t02-master-untracked-archive` 批次。移动前已解析并校验源与目标路径；本任务未读取目录内容、未删除、未覆盖；移动后已确认两项源路径不再存在。可继续核验主线干净状态并快进集成本任务分支。
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
