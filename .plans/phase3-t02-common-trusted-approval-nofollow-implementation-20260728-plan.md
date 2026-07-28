@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：🛠️ 已根据首轮独立审查修订，待第二位独立审查；不授权真实 R1/R2 操作
+**状态**：🛠️ 已根据前两轮独立审查修订，待第三位独立审查；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -65,8 +65,12 @@
 - 固定公钥的实际 SPKI DER 与 SHA-256 指纹必须来自维护者经外部可信渠道交付并核验的公钥材料；本计划不生成、推断或用测试 key 代替生产信任锚。材料未提供或指纹不匹配时，**停止实施**，不得自行选择任何生产 key。
 - 本切片不支持运行时 key rotation。任何生产 key、`keyId`、算法或指纹的变更均需新的最小计划、独立审查、用户批准和 source review；旧 key 不得在本切片中保留为 fallback。测试 key 只允许 `asb-test-*` namespace，且测试必须断言其不能等于生产 `keyId`。
 - 已文档化的生产 API 不接受 key、resolver、identity、provider、backend、platform 或 capability 参数；它们不读取 CLI、环境变量、普通配置、网络或路径。生产函数必须先执行内部 integrity gate，因此在本切片一律 fail-closed。
-- 可测试性仅由每个 CJS 模块内未文档化的 `__TEST_ONLY_*` factory 提供，用于建立与生产闭包分离的动态 test-key/test-provider/in-memory-backend 实例；它**不属于生产契约**，不能改变已文档化生产函数的行为。唯一允许直接导入这些 factory 的文件是 `packages/backend/test/helpers/trusted-approval-fixture.mjs`；三个 contract test 只能导入该 helper，不能直接导入 factory。
-- 必须新增 `trusted-approval-test-seam-isolation.test.mjs`。它只用 `git ls-files -z -- scripts packages` 取得 Git 已跟踪的 `.cjs/.js/.mjs` 文件（绝不枚举未跟踪目录），并检查：除上述 helper 外，任何文件出现 `__TEST_ONLY_`、fixture helper 路径、test backend 路径、对 factory 的 `require`/`import`/re-export 均失败；上述三个共同 CJS 模块的已文档化生产函数不得接受、调用或沿执行路径暴露测试 factory；factory 只能以精确 `__TEST_ONLY_*` 名称由 helper 引用；共同模块内对 factory 的动态/计算式 require 一律失败。该静态检查是防误接入门禁，不声称可抵御能够任意修改受审源码的攻击者。
+- 可测试性仅由三个共同 CJS 模块内未文档化的精确 `__TEST_ONLY_*` factory 提供，用于建立与生产闭包分离的动态 test-key/test-provider/in-memory-backend 实例；它**不属于生产契约**，不能改变已文档化生产函数的行为。角色 allowlist 固定如下：
+  1. 只有 `scripts/lib/AIStudyBuddy.TrustedApproval.cjs`、`scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs`、`scripts/lib/AIStudyBuddy.NoFollow.cjs` 可以**定义并导出**各自精确命名的 `__TEST_ONLY_*` factory；各自的已文档化生产函数不得接受、调用或沿执行路径暴露这些 factory。
+  2. 只有 `packages/backend/test/helpers/trusted-approval-fixture.mjs` 可以**直接 import/require**并调用这些 factory；三个 contract test 只能导入该 helper，不能直接导入 factory。
+  3. 只有 `packages/backend/test/trusted-approval-test-seam-isolation.test.mjs` 可以作为**扫描器**保留匹配字面量，但不得 import、调用或 re-export factory。
+  4. 其余任何 Git 已跟踪 `.cjs/.js/.mjs` 文件一律不得包含 factory 标识、fixture helper/test-backend 路径，或对 factory 的直接/计算式 `require`、`import`、re-export。
+- 必须新增 `trusted-approval-test-seam-isolation.test.mjs`。它只用 `git ls-files -z -- scripts packages` 取得 Git 已跟踪的 `.cjs/.js/.mjs` 文件（绝不枚举未跟踪目录），按上述角色 allowlist 检查 source；共同 CJS 模块内对 factory 的动态/计算式 require 一律失败。该静态检查是防误接入门禁，不声称可抵御能够任意修改受审源码的攻击者。
 - record 是严格 ASCII 字节序列，总长 `1..2048` 字节：无 BOM、无 NUL、无 CR/LF 以外控制字节、无前后空白、仅 `\n` 换行且最后一个字节必须为 `\n`。它必须恰好有下列行、顺序固定、每个字段只出现一次，且无空行或未知字段：
 
   ```text
@@ -90,27 +94,15 @@
 仅暴露以下内部 API（命名可等价调整，语义不得放宽）：
 
 ```js
-verifyTrustedApproval({
-  recordBytes,
-  signatureBytes,
-  expected: {
-    policyId,
-    purpose,
-    fullCommit,
-    contractVersion,
-    nowEpochMs,
-    expectedScopeBinding,
-    expectedArtifactContentIdentity,
-  },
-})
+verifyTrustedApproval(input)
 ```
 
-- `recordBytes` 和 `signatureBytes` 只能由未来 R1/R2 接入层的 no-follow verified handle 提供；本切片测试只传内存字节，库本身不得按路径打开文件。
+- 生产入口必须是**不解构**的单一 `input` 参数。函数体的第一条有效语句必须是模块内部固定调用 `requireTrustedVerifierIntegrity({ requiredContractVersion: "1" })`；在 gate 成功前不得检查 `input` 类型、枚举/读取其属性、解构、展开、日志化或触碰 `recordBytes`、`signatureBytes`、`expected`。gate 成功后才验证 `input` 的精确字段全集并读取它们。`recordBytes` 和 `signatureBytes` 只能由未来 R1/R2 接入层的 no-follow verified handle 提供；本切片测试只传内存字节，库本身不得按路径打开文件。
 - 生产验证器只能使用第 4.0 节固定且已指纹核验的唯一 trust anchor；不得从 CLI、环境变量、record、配置、网络或调用参数替换。测试动态生成的专用密钥只能存在于第 4.0 节定义的闭包隔离测试实例。
 - parser 必须按第 4.0 节 raw-byte 规则拒绝重复字段、未知字段、非 ASCII/非规范 UTF-8、超长值、非法标识符、算法/key ID 不匹配及所有自由文本字段；签名输入就是第 4.0 节完整 canonical `recordBytes`；验证前后都不得回显原始值。
 - R1 的 `artifactContentIdentity` 必须包含算法、canonicalization version、entry count 和 package fingerprint / canonical entry-list digest；本库仅比较已由同一 verified-handle 扫描流产生的值，绝不自行按路径 hash。
 - 授权模型固定为短时窗、可重复、完全相同 scope 的只读授权；`approvalId` 仅作关联，不实现 nonce 消费、调用预算或可回滚本地状态。跨 purpose、commit、scope、contract 或时窗的复用一律拒绝。
-- 生产 `verifyTrustedApproval` 必须在解析调用参数、读取 `expected` 或接受任何附加字段前，于模块内部无条件调用 `requireTrustedVerifierIntegrity({ requiredContractVersion: "1" })`；随后才比较 record/expected 的 `contractVersion`。本切片因未有注册入口而固定失败。额外字段、伪造 object/`Symbol`/冻结 capability 都不得改变为成功。只有闭包隔离的测试实例可构造 synthetic integrity 成功路径。成功只返回不可 JSON 序列化、冻结的 capability；失败只抛固定 `TRUSTED_APPROVAL_*` 或 gate 码，`message === code`。
+- production gate 的上述调用必须在任何 JavaScript 参数解构、getter/`Proxy` property access、type check 或错误格式化前完成；随后才比较 record/expected 的 `contractVersion`。本切片因未有注册入口而固定失败。额外字段、伪造 object/`Symbol`/冻结 capability，以及会抛错的 `Proxy`/getter 都不得改变为成功、触发 getter 或泄露底层异常。只有闭包隔离的测试实例可构造 synthetic integrity 成功路径。成功只返回不可 JSON 序列化、冻结的 capability；失败只抛固定 `TRUSTED_APPROVAL_*` 或 gate 码，`message === code`。
 
 ### 4.2 `AIStudyBuddy.VerifierIntegrity.cjs`
 
@@ -169,7 +161,7 @@ closeVerifiedHandle({ handle })
 | 严格 record schema | 第 4.0 节每个字段的缺失/重复/顺序错、非法 ASCII/UTF-8、BOM/CRLF/空白、超长、数字 alias、错误 policy/purpose/commit/contract、非 64-byte signature | 固定 `TRUSTED_APPROVAL_*`，不回显原输入；对每条规范至少一正一反内存 fixture |
 | 时窗与重复语义 | 过期、未生效、不可证明的时间、R1→R2 复用、scope 不同；相同短时窗同 scope 的只读重复 | 前者拒绝；后者明确允许且不创建消费状态 |
 | R1 内容身份 | 算法/version/entry-count/digest 不符；内容 ID 缺失；对象 ID 相同但合成流字节变动 | `TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH`，无部分成功 capability |
-| verifier gate | 生产无注册能力、contract 不符、测试 provider 抛错/返回自由文本；生产调用附加伪造 object/`Symbol`/冻结 capability；仅 `__TEST_ONLY_*` 测试 factory 成功 | 生产默认 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`；附加调用参数不可改变拒绝；无 provider 数据回显 |
+| verifier gate | 生产无注册能力、contract 不符、测试 provider 抛错/返回自由文本；生产调用附加伪造 object/`Symbol`/冻结 capability、`Proxy`、`recordBytes`/`expected` getter 或抛错 getter；仅 `__TEST_ONLY_*` 测试 factory 成功 | 生产默认 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`；不得触发 getter/Proxy；附加调用参数不可改变拒绝；无 provider 数据回显 |
 | 本地卷策略 | UNC/扩展 UNC、mapped remote、`SUBST`、mount point、Mup/Lanman/WebDav/Rdbss、removable/unknown、local fixed | 非 local fixed 一律固定拒绝；不得输出路径/盘符/设备名 |
 | no-follow 组件链 | 中间或最终 reparse、对象种类错、父子关系断裂、打开后替换、读后 ID/`contentVersion` 改变、超限、生产 backend 缺失、生产调用提供参数 | 清空缓存/结果、关闭合成 handle、固定 `NOFOLLOW_*`；失败零字节/零 stream/零可复用 handle 交付，且无普通路径 fallback |
 | R2 只读接口 | 合成目录 descriptor 请求、无 backend、试图请求内容读取/递归/ACL 写操作 | 仅接口 contract；无 backend 拒绝；源码静态 denylist 不出现 `Get-Acl`/`Set-Acl`/`icacls`/服务/计划任务/备份恢复命令 |
@@ -180,7 +172,7 @@ closeVerifiedHandle({ handle })
 ## 7. 实施步骤与停止条件
 
 1. 先取得维护者外部交付并核验的生产 public SPKI/keyId/fingerprint；缺任一项立即停止。再新增第 4.0 节 exact record parser/签名模块与测试辅助夹具；在无 verifier identity 时保持拒绝，生产 API 不接受任何测试 key/resolver，测试只能通过 allowlist helper 的闭包隔离非契约 factory。
-2. 新增 verifier integrity gate，先完成生产默认拒绝、test-seam isolation 静态检查与测试 direct injection；确认 `verifyTrustedApproval` 不接收 integrity 参数且在模块内部无条件调用 gate。
+2. 新增 verifier integrity gate，先完成生产默认拒绝、test-seam isolation 静态检查与测试 direct injection；确认 `verifyTrustedApproval(input)` 不解构、在读取任何调用方字段前无条件调用 gate，并用 Proxy/getter 回归证明。
 3. 新增 no-follow facade、拒绝表和内存合成 backend；生产 API 必须为无参数，先验证路径 API 完全没有 fallback、失败零字节交付和非测试目录不能导入测试 factory，再测试逐组件/同 handle 状态机。
 4. 只运行合成测试；不得调用 R1/R2 入口或真实 PowerShell ACL API。
 5. 完成定向测试、全量所需检查、文档治理与 diff 检查；更新 `docs/04` 仅登记“共同接口/合成测试完成（如实际完成）”，绝不勾选 R1/R2 或真实采证。
@@ -235,5 +227,7 @@ closeVerifiedHandle({ handle })
 ## 11. 独立审查与修订记录
 
 - **首轮独立只读审查（2026-07-28，提交 `ea766f3f`）**：结论“不通过”。发现 P0：生产 `verifyTrustedApproval` 仍接收 `verifierIntegrity` 调用参数，可能伪造 integrity 前提；另有 P1：record 格式不足够确定、test seam allowlist/静态门禁未具体化、生产 platform 参数与零字节失败语义未固定、临时目录措辞冲突、生产 trust anchor 标识与轮换规则不足。
-- **本次作者最小修订**：删除生产 `verifierIntegrity` 与 platform/backend 注入，改为内部 gate / 无参 facade；固定 record raw-byte 语法、signature 输入及窗口；明确 trust anchor 材料来源、标识、指纹和无运行时轮换；增加唯一 helper allowlist 与 Git 已跟踪 source 静态检查；限定 security fixture 为内存并定义失败零字节交付。
-- **当前要求**：必须由不同于首轮审查者的第二位独立审查者重新只读审查。复审通过前，不得批准或实施本计划，更不得运行真实 R1/R2。
+- **首轮作者修订**：删除生产 `verifierIntegrity` 与 platform/backend 注入，改为内部 gate / 无参 facade；固定 record raw-byte 语法、signature 输入及窗口；明确 trust anchor 材料来源、标识、指纹和无运行时轮换；限定 security fixture 为内存并定义失败零字节交付。
+- **第二轮独立只读审查（2026-07-28，提交 `a9aa0a47`）**：结论“不通过”。发现 P0：生产 API 示例的参数解构可能在 gate 前触发 getter/Proxy；P1：`__TEST_ONLY_*` 静态检查未区分 factory 定义者、唯一导入 helper 与扫描器。
+- **本次作者最小修订**：将生产入口固定为不解构的 `verifyTrustedApproval(input)`，规定 gate 必须在任何调用方字段访问前执行，并加入 Proxy/getter 回归；将 test seam 门禁改为四角色精确 allowlist。
+- **当前要求**：必须由不同于前两轮审查者的第三位独立审查者重新只读审查。复审通过前，不得批准或实施本计划，更不得运行真实 R1/R2。
