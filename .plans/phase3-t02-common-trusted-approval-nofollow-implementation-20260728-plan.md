@@ -44,7 +44,7 @@
 
 | 文件 | 变更 | 单一责任 |
 | --- | --- | --- |
-| `scripts/lib/AIStudyBuddy.TrustedApproval.cjs` | 新增 | 严格 approval envelope schema、唯一固定 Ed25519 公钥验证、detached signature 验证、purpose/policy/commit/contract/time/scope/content-identity 比对；只返回内部冻结的非序列化 approval capability 或固定错误码。 |
+| `scripts/lib/AIStudyBuddy.TrustedApproval.cjs` | 新增 | 严格 approval envelope schema、测试闭包内 Ed25519 detached-signature 验证契约；production 不配置任何 trust anchor、固定 fail-closed；purpose/policy/commit/contract/time/scope/content-identity 比对；只返回内部冻结的非序列化 approval capability 或固定错误码。 |
 | `scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs` | 新增 | 验证器完整性 gate；生产 API 不接受 CLI/环境变量/配置或调用参数提供的 identity，缺少外部受认证 provider 时固定拒绝；测试仅通过非契约测试缝直接注入。 |
 | `scripts/lib/AIStudyBuddy.NoFollow.cjs` | 新增 | 平台无关的逐组件 no-follow handle 抽象、Windows 卷类别拒绝策略、同 handle 读/复核状态机与**默认 unsupported backend**；生产 API 无 backend 注入入口，禁止调用 `fs.readFile`、`realpath`、`Get-Acl` 或路径式降级。 |
 | `packages/backend/test/trusted-approval-contract.test.mjs` | 新增 | 内存测试密钥、签名篡改、精确 canonical record、短时窗重复只读、purpose/commit/scope/content-identity、production gate 与脱敏测试。 |
@@ -171,7 +171,7 @@ closeVerifiedHandle(input)
 
 ## 7. 实施步骤与停止条件
 
-1. 先取得维护者外部交付并核验的生产 public SPKI/keyId/fingerprint；缺任一项立即停止。再新增第 4.0 节 exact record parser/签名模块与测试辅助夹具；在无 verifier identity 时保持拒绝，生产 API 不接受任何测试 key/resolver，测试只能通过 allowlist helper 的闭包隔离非契约 factory。
+1. 不获取、不写入、不核验 production SPKI/keyId/fingerprint。先新增第 4.0 节 exact record parser/签名模块与测试辅助夹具；production `verifyTrustedApproval(input)` 必须先经第 4.2 节 gate 固定拒绝 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`。测试动态 key 仅可通过 allowlist helper 的闭包隔离、非契约 `__TEST_ONLY_*` factory 使用，绝不得成为 production fallback。
 2. 新增 verifier integrity gate，先完成生产默认拒绝、test-seam isolation 静态检查与测试 direct injection；确认 `verifyTrustedApproval(input)` 不解构、在读取任何调用方字段前无条件调用 gate，并用 Proxy/getter 回归证明。
 3. 新增 no-follow facade、拒绝表和内存合成 backend；生产 reader factory 与四个 reader 方法都必须为不解构边界，先验证 unsupported facade 在任何 input/Proxy/getter/backend 访问前固定拒绝、路径 API 完全没有 fallback、失败零字节交付和非测试目录不能导入测试 factory，再测试逐组件/同 handle 状态机。
 4. 只运行合成测试；不得调用 R1/R2 入口或真实 PowerShell ACL API。
