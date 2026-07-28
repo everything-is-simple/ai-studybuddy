@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：📝 用户已于 2026-07-28 批准实施并修订为“不写入生产 trust anchor、production 固定 fail-closed”；该修订待独立只读复核后实施；不授权真实 R1/R2 操作
+**状态**：🧪 实施分支已完成共同接口与合成验证；无 production trust anchor、production 固定 fail-closed；待源码独立审查与主线集成；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -236,3 +236,6 @@ closeVerifiedHandle(input)
 - **当前状态**：计划已通过独立审查，现仅待用户单项实施批准；该通过不等于实施批准，不授权真实 R1/R2、真实 ACL、真实 record/候选包/manifest 读取或任何后续真实操作。
 
 - **用户批准的最小修订（2026-07-28，待本轮独立只读复核）**：用户明确批准本次不写入 production trust anchor；production verifier 在 production 环境固定 fail-closed；仅实现共同接口、进程内合成夹具与测试专用动态密钥测试；不得接入或执行真实 T02-R1/T02-R2。production trust anchor 配置、发布完整性认证以及 R1/R2 接入留待后续单独计划、独立审查和逐项批准。本修订删除“缺少三元组即停止全部实现”的要求，但绝不放宽 production 固定拒绝、测试/生产隔离或真实操作禁令。
+
+- **无 production trust anchor 修订的独立复核（2026-07-28）**：首轮结论“有条件通过”，P0=0；发现 P1：文件范围表和实施步骤残留“先提供 production anchor 才能开始”的旧前置，与用户修订冲突。最小修复提交 `bb74a2c` 删除两处冲突表述；复核结论“通过”，P0=0、P1=0。该复核只授权本计划的共同接口与合成测试，绝不授权 production trust anchor、真实 R1/R2 或其他后续切片。
+- **本分支实现与验证记录（2026-07-28，待源码独立审查）**：新增三项共同 CJS 模块与四组进程内合成测试；production approval verifier 固定在读取调用方 input 前抛 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`，production no-follow reader 四个方法固定在读取 input 前抛 `NOFOLLOW_HANDLE_UNSUPPORTED`。定向 Node 测试 13/13、`pnpm type-check`、backend/frontend build 与隔离 `APP_DATA_ROOT` 的全量 `pnpm test`（backend 305/305）均通过。未运行真实扫描、ACL、record、候选包、manifest 或用户数据读取。
