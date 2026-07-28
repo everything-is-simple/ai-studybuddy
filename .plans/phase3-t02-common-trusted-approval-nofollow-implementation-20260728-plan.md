@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：✅ 已通过第四位独立审查，待用户单项实施批准；不授权真实 R1/R2 操作
+**状态**：📝 用户已于 2026-07-28 批准实施并修订为“不写入生产 trust anchor、production 固定 fail-closed”；该修订待独立只读复核后实施；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -12,7 +12,7 @@
 
 在不运行任何真实 R1 秘密扫描或 R2 ACL 读取的前提下，实现并测试三项共同**底座接口**：
 
-1. 固定公钥 detached signature 的严格批准记录验证；
+1. 严格 detached-signature 批准记录 schema/验证契约及测试专用动态密钥验证；production 不配置 production trust anchor，固定 fail-closed；
 2. 受认证验证器完整性不可证明时的 fail-closed gate；
 3. Windows 本地卷/UNC/映射盘/reparse 拒绝和逐组件、同一 handle no-follow 读取的抽象接口与合成适配器。
 
@@ -61,9 +61,9 @@
 
 ### 4.0 信任锚、生产/test 隔离与确定性 record 格式
 
-- **生产信任锚**只有一个：`keyId = asb-phase3-t02-approval-ed25519-v1`、算法 `Ed25519`、SPKI DER 的固定 Base64 字面量，以及该 DER 的固定小写 SHA-256 指纹。三者必须在 `AIStudyBuddy.TrustedApproval.cjs` 同时作为不可由运行时替换的常量；私钥绝不进入仓库、日志、fixture、环境变量或测试输出。
-- 固定公钥的实际 SPKI DER 与 SHA-256 指纹必须来自维护者经外部可信渠道交付并核验的公钥材料；本计划不生成、推断或用测试 key 代替生产信任锚。材料未提供或指纹不匹配时，**停止实施**，不得自行选择任何生产 key。
-- 本切片不支持运行时 key rotation。任何生产 key、`keyId`、算法或指纹的变更均需新的最小计划、独立审查、用户批准和 source review；旧 key 不得在本切片中保留为 fallback。测试 key 只允许 `asb-test-*` namespace，且测试必须断言其不能等于生产 `keyId`。
+- **本次不写入生产信任锚**：不会在 `AIStudyBuddy.TrustedApproval.cjs` 中写入生产 SPKI DER Base64、公钥指纹或其他 production key 材料；`keyId = asb-phase3-t02-approval-ed25519-v1` 仅保留为严格 record schema 的预留固定标识，绝不表示已配置或可用的生产密钥。私钥绝不进入仓库、日志、fixture、环境变量或测试输出。
+- production trust anchor 的实际 SPKI DER、SHA-256 指纹和受控交付验证不属于本次实施；缺失时 production API 必须保持固定拒绝，且不得自行生成、推断、选择或用测试 key 代替生产信任锚。后续仅可在独立计划、独立审查和用户单项批准后配置。
+- 本切片不支持 production key、运行时 key rotation 或 production key fallback。未来任何 production key、`keyId`、算法或指纹配置均需新的最小计划、独立审查、用户批准和 source review。测试 key 只允许 `asb-test-*` namespace，且测试必须断言其不能等于预留 production `keyId`。
 - 已文档化的生产 API 不接受 key、resolver、identity、provider、backend、platform 或 capability 参数；它们不读取 CLI、环境变量、普通配置、网络或路径。生产函数必须先执行内部 integrity gate，因此在本切片一律 fail-closed。
 - 可测试性仅由三个共同 CJS 模块内未文档化的精确 `__TEST_ONLY_*` factory 提供，用于建立与生产闭包分离的动态 test-key/test-provider/in-memory-backend 实例；它**不属于生产契约**，不能改变已文档化生产函数的行为。角色 allowlist 固定如下：
   1. 只有 `scripts/lib/AIStudyBuddy.TrustedApproval.cjs`、`scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs`、`scripts/lib/AIStudyBuddy.NoFollow.cjs` 可以**定义并导出**各自精确命名的 `__TEST_ONLY_*` factory；各自的已文档化生产函数不得接受、调用或沿执行路径暴露这些 factory。
@@ -98,7 +98,7 @@ verifyTrustedApproval(input)
 ```
 
 - 生产入口必须是**不解构**的单一 `input` 参数。函数体的第一条有效语句必须是模块内部固定调用 `requireTrustedVerifierIntegrity({ requiredContractVersion: "1" })`；在 gate 成功前不得检查 `input` 类型、枚举/读取其属性、解构、展开、日志化或触碰 `recordBytes`、`signatureBytes`、`expected`。gate 成功后才验证 `input` 的精确字段全集并读取它们。`recordBytes` 和 `signatureBytes` 只能由未来 R1/R2 接入层的 no-follow verified handle 提供；本切片测试只传内存字节，库本身不得按路径打开文件。
-- 生产验证器只能使用第 4.0 节固定且已指纹核验的唯一 trust anchor；不得从 CLI、环境变量、record、配置、网络或调用参数替换。测试动态生成的专用密钥只能存在于第 4.0 节定义的闭包隔离测试实例。
+- production 验证器在本切片没有配置、读取或选择任何 trust anchor：它必须先由第 4.2 节 gate 固定拒绝，绝不接受来自 CLI、环境变量、record、配置、网络或调用参数的 key。测试动态生成的专用密钥只能存在于第 4.0 节定义的闭包隔离测试实例。
 - parser 必须按第 4.0 节 raw-byte 规则拒绝重复字段、未知字段、非 ASCII/非规范 UTF-8、超长值、非法标识符、算法/key ID 不匹配及所有自由文本字段；签名输入就是第 4.0 节完整 canonical `recordBytes`；验证前后都不得回显原始值。
 - R1 的 `artifactContentIdentity` 必须包含算法、canonicalization version、entry count 和 package fingerprint / canonical entry-list digest；本库仅比较已由同一 verified-handle 扫描流产生的值，绝不自行按路径 hash。
 - 授权模型固定为短时窗、可重复、完全相同 scope 的只读授权；`approvalId` 仅作关联，不实现 nonce 消费、调用预算或可回滚本地状态。跨 purpose、commit、scope、contract 或时窗的复用一律拒绝。
@@ -157,7 +157,7 @@ closeVerifiedHandle(input)
 
 | 类别 | 合成用例 | 必须断言 |
 | --- | --- | --- |
-| 固定公钥/签名 | 有效动态测试键；payload/signature 单字节篡改；错误 key ID/算法；试图通过 record/环境/调用参数替换 key，或由非测试文件导入 `__TEST_ONLY_*` factory | 仅精确测试文件可用；生产固定 key 不可替换；无敏感回显 |
+| 签名测试/production 拒绝 | 有效动态测试键；payload/signature 单字节篡改；错误 key ID/算法；试图通过 record/环境/调用参数替换 key，或由非测试文件导入 `__TEST_ONLY_*` factory | 仅精确测试文件可用；production 未配置 key 且固定拒绝；无敏感回显 |
 | 严格 record schema | 第 4.0 节每个字段的缺失/重复/顺序错、非法 ASCII/UTF-8、BOM/CRLF/空白、超长、数字 alias、错误 policy/purpose/commit/contract、非 64-byte signature | 固定 `TRUSTED_APPROVAL_*`，不回显原输入；对每条规范至少一正一反内存 fixture |
 | 时窗与重复语义 | 过期、未生效、不可证明的时间、R1→R2 复用、scope 不同；相同短时窗同 scope 的只读重复 | 前者拒绝；后者明确允许且不创建消费状态 |
 | R1 内容身份 | 算法/version/entry-count/digest 不符；内容 ID 缺失；对象 ID 相同但合成流字节变动 | `TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH`，无部分成功 capability |
@@ -196,14 +196,14 @@ closeVerifiedHandle(input)
 3. R2 尚未接入共同库，也没有签名绑定的目标机器/安装实例/六类根；
 4. 离线 record 的撤销和本机时间可信度仍有限；真正一次性授权仍需独立受认证原子消费方案；
 5. 合成适配器可验证接口状态机，不能证明 Windows 内核级逐组件 no-follow 语义或真实机器 ACL 结果。
-6. 生产 trust anchor 的真实材料依赖维护者外部交付；本计划不生成私钥或把测试 key 升格为生产 key。
+6. production trust anchor、其受控交付和 release integrity 认证被明确留到后续切片；本计划不生成私钥、不写入 production public key，也不把测试 key 升格为生产 key。
 
 ## 9. 独立审查重点
 
 独立审查必须检查：
 
 - 文件清单是否精确，且没有改动 R1/R2/deployment/manifest/T04/T05；
-- 固定公钥、测试 key、authenticated identity provider、test backend 是否完全隔离，生产是否默认为 fail-closed；
+- 测试 key、authenticated identity provider、test backend 是否完全隔离；本次是否确实未写入 production trust anchor，且 production 是否默认为 fail-closed；
 - record parser 是否处理 duplicate/unknown/encoding/canonicalization，且签名与 policy/purpose/commit/contract/time/scope/content identity 全部绑定；
 - “短时窗可重复只读”是否清楚替代一次性消费承诺，未偷偷引入本地可回滚状态；
 - no-follow facade 是否完全禁止 `fs.readFile`、`realpath`、普通 `Get-Acl` 与最终项-only 的降级方案，且中间 reparse、网络/映射卷、身份变化均拒绝；
@@ -234,3 +234,5 @@ closeVerifiedHandle(input)
 - **本次作者最小修订**：四个生产 no-follow 方法改为不解构的单一 `input`，并规定在任何调用方属性访问、backend 调用或路径操作前固定抛 `NOFOLLOW_HANDLE_UNSUPPORTED`；测试矩阵加入 Proxy/getter/零交付回归。
 - **第四轮独立只读审查（2026-07-28，提交 `e232e6c8`）**：结论“通过”，P0=0、P1=0。确认 production unsupported no-follow reader 的四个方法均为不解构边界，先于任何调用方字段访问固定拒绝 `NOFOLLOW_HANDLE_UNSUPPORTED`；Proxy/getter、零 backend 调用和零交付回归已纳入测试矩阵。
 - **当前状态**：计划已通过独立审查，现仅待用户单项实施批准；该通过不等于实施批准，不授权真实 R1/R2、真实 ACL、真实 record/候选包/manifest 读取或任何后续真实操作。
+
+- **用户批准的最小修订（2026-07-28，待本轮独立只读复核）**：用户明确批准本次不写入 production trust anchor；production verifier 在 production 环境固定 fail-closed；仅实现共同接口、进程内合成夹具与测试专用动态密钥测试；不得接入或执行真实 T02-R1/T02-R2。production trust anchor 配置、发布完整性认证以及 R1/R2 接入留待后续单独计划、独立审查和逐项批准。本修订删除“缺少三元组即停止全部实现”的要求，但绝不放宽 production 固定拒绝、测试/生产隔离或真实操作禁令。
