@@ -229,4 +229,268 @@ function formatScanSummary(report) {
   });
 }
 
-module.exports = { MAX_TEXT_FILE_BYTES, formatScanSummary, listGitTrackedFiles, scanSecretBoundary };
+
+const SIGNOFF_SCANNER_VERSION = 't02-r1-signoff-v1';
+const FULL_COMMIT_RE = /^[a-f0-9]{40}$/;
+const SHORT_HEX_RE = /^[a-f0-9]{12}$/;
+const ARTIFACT_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$/;
+const APPROVAL_WINDOW_RE = /^[A-Z][A-Z0-9_-]{7,31}$/;
+const PACKAGE_MANIFEST_NAME = 'deployment-manifest.json';
+
+function normalizeSignoffMetadata({ artifactId, approvedCommit, packageFingerprint, approvalWindowId } = {}) {
+  if (
+    typeof artifactId !== 'string' || !ARTIFACT_ID_RE.test(artifactId) ||
+    typeof approvedCommit !== 'string' || !FULL_COMMIT_RE.test(approvedCommit) ||
+    typeof packageFingerprint !== 'string' || !SHORT_HEX_RE.test(packageFingerprint) ||
+    typeof approvalWindowId !== 'string' || !APPROVAL_WINDOW_RE.test(approvalWindowId)
+  ) {
+    throw createBoundaryError('SECRET_SCAN_SIGNOFF_METADATA_INVALID');
+  }
+  return { artifactId, approvedCommit, packageFingerprint, approvalWindowId };
+}
+
+function runSilentGit(rootDir, args, runGit) {
+  let result;
+  try {
+    result = runGit('git', ['-C', rootDir, ...args], {
+      encoding: 'buffer',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+  } catch {
+    throw createBoundaryError('SECRET_SCAN_GIT_STATE_UNVERIFIABLE');
+  }
+  if (!result || typeof result.status !== 'number') {
+    throw createBoundaryError('SECRET_SCAN_GIT_STATE_UNVERIFIABLE');
+  }
+  return result;
+}
+
+function verifyApprovedGitState(rootDir, approvedCommit, { runGit = spawnSync } = {}) {
+  if (!rootDir || typeof approvedCommit !== 'string' || !FULL_COMMIT_RE.test(approvedCommit)) {
+    throw createBoundaryError('SECRET_SCAN_SIGNOFF_METADATA_INVALID');
+  }
+  const verified = runSilentGit(rootDir, ['rev-parse', '--verify', `${approvedCommit}^{commit}`], runGit);
+  const head = runSilentGit(rootDir, ['rev-parse', '--verify', 'HEAD'], runGit);
+  if (verified.status !== 0 || head.status !== 0 || !Buffer.isBuffer(head.stdout)) {
+    throw createBoundaryError('SECRET_SCAN_GIT_STATE_UNVERIFIABLE');
+  }
+  if (head.stdout.toString('utf8').trim() !== approvedCommit) {
+    throw createBoundaryError('SECRET_SCAN_APPROVED_COMMIT_MISMATCH');
+  }
+  const staged = runSilentGit(rootDir, ['diff', '--quiet', '--cached', approvedCommit, '--'], runGit);
+  const unstaged = runSilentGit(rootDir, ['diff', '--quiet', approvedCommit, '--'], runGit);
+  if (staged.status === 1 || unstaged.status === 1) {
+    throw createBoundaryError('SECRET_SCAN_TRACKED_CHANGES_PRESENT');
+  }
+  if (staged.status !== 0 || unstaged.status !== 0) {
+    throw createBoundaryError('SECRET_SCAN_GIT_STATE_UNVERIFIABLE');
+  }
+}
+
+function getBlockedReason(report) {
+  for (const key of ['sensitive', 'nonText', 'symlink', 'oversize']) {
+    if (report.skipped[key] === 1) return key;
+  }
+  return null;
+}
+
+function createEmptyBlocked() {
+  return { sensitive: 0, nonText: 0, symlink: 0, oversize: 0, unreadable: 0 };
+}
+
+function createEmptyRuleCounts() {
+  return Object.fromEntries(RULES.map((rule) => [rule.id, 0]));
+}
+
+async function scanSecretSignoffBoundary({ rootDir, candidates, ...options } = {}) {
+  if (!rootDir || !Array.isArray(candidates)) {
+    throw createBoundaryError('SECRET_SCAN_INVALID_INPUT');
+  }
+  const normalizedCandidates = candidates.map(toRelativePath);
+  if (new Set(normalizedCandidates).size !== normalizedCandidates.length) {
+    throw createBoundaryError('SECRET_SCAN_INVALID_INPUT');
+  }
+  const blocked = createEmptyBlocked();
+  const ruleCounts = createEmptyRuleCounts();
+  let scannedFiles = 0;
+  let findingCount = 0;
+  for (const candidate of normalizedCandidates) {
+    try {
+      const report = await scanSecretBoundary({ rootDir, trackedFiles: [candidate], ...options });
+      const reason = getBlockedReason(report);
+      if (reason) {
+        blocked[reason] += 1;
+        continue;
+      }
+      if (report.scannedFiles !== 1) throw createBoundaryError('SECRET_SCAN_INVALID_REPORT');
+      scannedFiles += 1;
+      findingCount += report.findingCount;
+      for (const finding of report.findings) ruleCounts[finding.ruleId] += 1;
+    } catch (error) {
+      if (error?.code === 'SECRET_SCAN_FILE_ACCESS_FAILED') {
+        blocked.unreadable += 1;
+        continue;
+      }
+      throw error;
+    }
+  }
+  const blockedInputCount = Object.values(blocked).reduce((sum, value) => sum + value, 0);
+  if (scannedFiles + blockedInputCount !== normalizedCandidates.length) {
+    throw createBoundaryError('SECRET_SCAN_INVALID_REPORT');
+  }
+  return {
+    inputCount: normalizedCandidates.length,
+    scannedFiles,
+    blockedInputCount,
+    blocked,
+    findingCount,
+    ruleCounts,
+  };
+}
+
+function normalizeSignoffScanReport(report) {
+  const blockedKeys = ['sensitive', 'nonText', 'symlink', 'oversize', 'unreadable'];
+  if (
+    !report ||
+    !isNonNegativeInteger(report.inputCount) ||
+    !isNonNegativeInteger(report.scannedFiles) ||
+    !isNonNegativeInteger(report.blockedInputCount) ||
+    !isNonNegativeInteger(report.findingCount) ||
+    !report.blocked ||
+    !report.ruleCounts ||
+    blockedKeys.some((key) => !isNonNegativeInteger(report.blocked[key])) ||
+    RULES.some((rule) => !isNonNegativeInteger(report.ruleCounts[rule.id]))
+  ) {
+    throw createBoundaryError('SECRET_SCAN_INVALID_REPORT');
+  }
+  const calculatedBlocked = blockedKeys.reduce((sum, key) => sum + report.blocked[key], 0);
+  const calculatedFindings = RULES.reduce((sum, rule) => sum + report.ruleCounts[rule.id], 0);
+  if (
+    calculatedBlocked !== report.blockedInputCount ||
+    calculatedFindings !== report.findingCount ||
+    report.inputCount !== report.scannedFiles + report.blockedInputCount
+  ) {
+    throw createBoundaryError('SECRET_SCAN_INVALID_REPORT');
+  }
+  return {
+    inputCount: report.inputCount,
+    scannedFiles: report.scannedFiles,
+    blockedInputCount: report.blockedInputCount,
+    findingCount: report.findingCount,
+    blocked: Object.fromEntries(blockedKeys.map((key) => [key, report.blocked[key]])),
+    ruleCounts: Object.fromEntries(RULES.map((rule) => [rule.id, report.ruleCounts[rule.id]])),
+  };
+}
+
+function createSecretSignoffSummary({ metadata, repositoryReport, packageReport } = {}) {
+  const safeMetadata = normalizeSignoffMetadata(metadata);
+  const repository = normalizeSignoffScanReport(repositoryReport);
+  const packageScan = normalizeSignoffScanReport(packageReport);
+  const allReports = [repository, packageScan];
+  const findingCount = allReports.reduce((sum, report) => sum + report.findingCount, 0);
+  const blockedInputCount = allReports.reduce((sum, report) => sum + report.blockedInputCount, 0);
+  const resultCode = repository.inputCount === 0 || packageScan.inputCount === 0
+    ? 'SECRET_SCAN_INPUT_EMPTY'
+    : findingCount > 0
+      ? 'T02_P0_SECRET_SCAN_HIT'
+      : blockedInputCount > 0
+        ? 'BLOCKED_UNSCANNED_INPUT'
+        : 'SECRET_SCAN_SIGNOFF_PASSED';
+  return {
+    scannerVersion: SIGNOFF_SCANNER_VERSION,
+    artifactId: safeMetadata.artifactId,
+    approvedCommitShort: safeMetadata.approvedCommit.slice(0, 12),
+    packageFingerprint: safeMetadata.packageFingerprint,
+    approvalWindowId: safeMetadata.approvalWindowId,
+    resultCode,
+    repository,
+    package: packageScan,
+  };
+}
+
+function isPathEqualOrDescendant(candidate, root) {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+async function listApprovedPackageFiles({ packageRoot, repositoryRoot, opendir = fs.opendir, lstat = fs.lstat } = {}) {
+  if (!packageRoot || !repositoryRoot) throw createBoundaryError('SECRET_SCAN_INVALID_INPUT');
+  const root = path.resolve(packageRoot);
+  const repo = path.resolve(repositoryRoot);
+  if (isPathEqualOrDescendant(root, repo) || isPathEqualOrDescendant(repo, root)) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
+  }
+  let rootInfo;
+  try { rootInfo = await lstat(root); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID'); }
+  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_ROOT_INVALID');
+  }
+  const pending = [''];
+  const candidates = [];
+  while (pending.length > 0) {
+    const relativeDirectory = pending.pop();
+    const absoluteDirectory = relativeDirectory ? resolveCandidate(root, relativeDirectory) : root;
+    let directory;
+    try { directory = await opendir(absoluteDirectory); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_LIST_FAILED'); }
+    for await (const entry of directory) {
+      const relativePath = toRelativePath(relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name);
+      if (entry.isDirectory() && !entry.isSymbolicLink()) {
+        pending.push(relativePath);
+      } else {
+        candidates.push(relativePath);
+      }
+    }
+  }
+  return candidates.sort();
+}
+
+async function readApprovedPackageManifest({ packageRoot, approvedCommit, packageFingerprint, readFile = fs.readFile, lstat = fs.lstat } = {}) {
+  if (!packageRoot || typeof approvedCommit !== 'string' || !FULL_COMMIT_RE.test(approvedCommit) || typeof packageFingerprint !== 'string' || !SHORT_HEX_RE.test(packageFingerprint)) {
+    throw createBoundaryError('SECRET_SCAN_SIGNOFF_METADATA_INVALID');
+  }
+  const manifestPath = resolveCandidate(packageRoot, PACKAGE_MANIFEST_NAME);
+  let info;
+  let raw;
+  try {
+    info = await lstat(manifestPath);
+    if (!info.isFile() || info.isSymbolicLink()) throw new Error('unsafe');
+    raw = await readFile(manifestPath, 'utf8');
+  } catch {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_MANIFEST_INVALID');
+  }
+  let manifest;
+  try { manifest = JSON.parse(raw); } catch { throw createBoundaryError('SECRET_SCAN_PACKAGE_MANIFEST_INVALID'); }
+  if (manifest?.buildCommit !== approvedCommit || manifest?.packageFingerprint !== packageFingerprint) {
+    throw createBoundaryError('SECRET_SCAN_PACKAGE_MANIFEST_MISMATCH');
+  }
+}
+
+async function executeSecretScanSignoff({ repositoryRoot, packageRoot, metadata, runGit = spawnSync } = {}) {
+  const safeMetadata = normalizeSignoffMetadata(metadata);
+  verifyApprovedGitState(repositoryRoot, safeMetadata.approvedCommit, { runGit });
+  await readApprovedPackageManifest({
+    packageRoot,
+    approvedCommit: safeMetadata.approvedCommit,
+    packageFingerprint: safeMetadata.packageFingerprint,
+  });
+  const repositoryCandidates = listGitTrackedFiles(repositoryRoot, { runGit });
+  const packageCandidates = await listApprovedPackageFiles({ packageRoot, repositoryRoot });
+  const repositoryReport = await scanSecretSignoffBoundary({ rootDir: repositoryRoot, candidates: repositoryCandidates });
+  const packageReport = await scanSecretSignoffBoundary({ rootDir: packageRoot, candidates: packageCandidates });
+  return createSecretSignoffSummary({ metadata: safeMetadata, repositoryReport, packageReport });
+}
+
+module.exports = {
+  MAX_TEXT_FILE_BYTES,
+  SIGNOFF_SCANNER_VERSION,
+  createSecretSignoffSummary,
+  executeSecretScanSignoff,
+  formatScanSummary,
+  listApprovedPackageFiles,
+  listGitTrackedFiles,
+  normalizeSignoffMetadata,
+  scanSecretBoundary,
+  scanSecretSignoffBoundary,
+  verifyApprovedGitState,
+};
