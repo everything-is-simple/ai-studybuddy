@@ -901,8 +901,11 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-PERSONAL-MINIMUM-REBASELINE-20260729 | `.plans/phase3-personal-minimum-rebaseline-20260729-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；用户已于 2026-07-28 采用个人版最小闭环；当前仅按既有 11 项的 P1～P5 顺序制定实施计划，不授权真实操作；T01、T02-R5、T03、T05-4 仅为未来候选，不因本计划自动纳入 |
 | PHASE3-P1-R1-R2-CONTROLLED-READONLY-PLAN-20260728 | `.plans/phase3-p1-r1-r2-controlled-readonly-20260728-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；仅为 T02-R1/T02-R2 制定同一准备窗口的最小受控只读实施计划，不实施、不运行真实操作 |
 | PHASE3-P1-R1-R2-CONTROLLED-READONLY-IMPLEMENTATION-20260728 | `.plans/phase3-p1-r1-r2-controlled-readonly-20260728-plan.md` | ✅ 共同 synthetic-only 受控只读接口、合成验证与最终独立源码审查均完成（P0=0、P1=0）；未运行真实 R1/R2、未读取真实目标，production verifier 仍固定 fail-closed |
+| PHASE3-P2-MINIMUM-DATA-PROTECTION-PLAN-20260729 | `.plans/phase3-p2-minimum-data-protection-plan-20260729-plan.md` | 📝 已创建，待独立审查；仅规划 T04-1/T04-2/T04-3/T02-R3 的个人版最小数据保护闭环，不修改代码、不运行真实备份/校验/恢复或读取真实数据 |
 
 > **PHASE3-P1 R1/R2 共同受控只读接口与合成测试（2026-07-28，已完成分支验证与独立源码审查）**：实施分支 `codex/phase3-p1-r1-r2-controlled-readonly-implementation` 仅修改 `.plans/`、`docs/04`、R1 synthetic-only boundary 与合成测试、R2 synthetic-only 证据函数、两个无真实目标参数的 runner 及合成 PowerShell 测试。R1 仅接受模块私有 `WeakSet` 登记的纯内存 reader，外部 reader 在打开前固定拒绝；R2 仅在 `-SyntheticFixture` 下使用内存证据，固定六类逻辑类别并对卷、reparse、身份、deny/继承/有效访问及前后变化 fail-closed。已通过 R1/no-follow/测试隔离定向测试 15/15、R2 synthetic 测试、`pnpm type-check`、后端/前端 build、隔离 `APP_DATA_ROOT` 下 `pnpm test`（后端 315/315）、文档治理和差异检查；最终独立源码审查结论为通过（P0=0、P1=0）。未运行真实秘密扫描或 ACL 读取，未读取真实候选包/审批/manifest/用户数据，未修改 production trust-anchor/verifier/no-follow gate、部署构建/manifest、T04/T05、备份恢复、ACL 修复、服务或计划任务。该完成不等于 T02、真实 R1/R2、用户机器验收或 Phase 3 完成；真实操作仍须逐项另行计划、审查和用户批准。
+
+> **PHASE3-P2 最小数据保护闭环计划（2026-07-28 创建；计划 ID 按用户指定保留 20260729，待独立审查）**：已创建 `.plans/phase3-p2-minimum-data-protection-plan-20260729-plan.md`，范围严格限于 T04-1（受控备份）、T04-2（完整性检查）、T04-3（只读恢复预检及未来写恢复 Gate 设计）和 T02-R3（同一实现的边界复核）。本轮只写计划与任务清单，未修改业务/测试/构建/部署代码，未运行或读取真实备份、数据、manifest、候选包或用户目录；非 `-WhatIf` 恢复继续必须是 `RESTORE_WRITE_DISABLED`，真实备份、真实校验和真实恢复写入均须在后续独立审查、逐项批准的切片中处理。不得将本计划或任何合成夹具写成真实备份、可以恢复、T02 或 Phase 3 完成。
 
 > **PHASE3-T02 主线脏状态归档（2026-07-29，已完成）**：主线 `H:\ai-studybuddy` 的未跟踪目录 `.trae-html-share-packages/` 与 `alpha-sprint-plan/` 已按用户明确批准完整移出主目录，归档到受控 `H:\backup\ai-studybuddy-archives\20260729-phase3-t02-master-untracked-archive` 批次。移动前已解析并校验源与目标路径；本任务未读取目录内容、未删除、未覆盖；移动后已确认两项源路径不再存在。可继续核验主线干净状态并快进集成本任务分支。
 
