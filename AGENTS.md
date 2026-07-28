@@ -1,7 +1,7 @@
 # 仓库协作指南
 
-**版本**：v1.19
-**日期**：2026-07-27
+**版本**：v1.20
+**日期**：2026-07-28
 
 本文件是通用 AI Agent 入口。完整、工具无关的协作规则见 `docs/12-开发规范-Dev-Rules.md`。
 
@@ -15,7 +15,7 @@
 - `docs/`：有效设计、任务、测试和规范文档。
 - `.plans/`：已批准或待批准的任务计划。
 
-Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，但用户电脑安装运行仍待目标机器验收。Phase 3 已按用户 2026-07-27 的决定冻结在 T02G 边界：T02A–T02G 仅按各自批准范围保留已完成证据，T02 总体、真实 ACL/backup/restore、restore 写入、用户电脑实机证据及后续 T03/T04/T05 均未完成且暂停；未经用户再次明确批准和新计划，不得继续任何开发机 Phase 3 工作。S7 产品接入尚未开始，外部候选能力不等于 Schema、Adapter、API、Worker、前端或用户机完成。
+Phase 0.8 已完成，S1 基础与 S2 核心已实现。Phase 1 的 S1/S2/S3/S4/S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护任务均已完成主线复验并推送 `origin/master`；S3 Worker 不属于当前 MVP。Phase 2-T01–T06 已全部完成主线复验并推送：S5 现有能力包括模拟考 Schema/生成/作答/结果、确定性只读临考速背、确定性即时只读冲刺计划，以及考试工作台冲刺区集成；T04/T05/T06 不引入持久化 `CramPlan`、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；开发机 Windows 原生 + Node 24 基线已验证，但用户电脑安装运行仍待目标机器验收。用户于 2026-07-28 重新开放 Phase 3，但仅纳入高权重必做项恢复计划 `PHASE3-REOPEN-HIGH-WEIGHT-20260728`：T02-R1、T02-R2、T04-1～T04-3、T02-R3、T05-1～T05-3、T02-R4、T02-R6。它们仍须独立审查、逐项计划、验证、主线复验和推送；T02 总体、真实 ACL/backup/restore、restore 写入、用户电脑实机证据及未纳入的 T01、T02-R5、T03 均未完成。完整 S7 产品接入尚未开始，外部候选能力不等于 Schema、Adapter、API、Worker、前端或用户机完成。
 
 ## 必读顺序
 
@@ -87,7 +87,7 @@ pnpm -r --filter backend run dev
 5. 满足则创建并同步更新索引。
 6. 提交前运行 `scripts/check-docs-governance.ps1`。
 
-当前状态：S1/S2/S3/S4/S5/S6 PRD 均已创建；Phase 1 与 Phase 2-T01–T06 已完成主线集成、复验和 `origin/master` 推送。S5 的 T04 临考速背、T05 冲刺计划和 T06 工作台冲刺区均为确定性只读/即时聚合边界，不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；Phase 3 已按用户 2026-07-27 的决定冻结在 T02G 边界，T02 总体及全部后续任务均暂停而非完成；恢复前必须取得用户再次明确批准并创建新计划。S7 继续等待门禁，S3 Worker 不属于当前 MVP。
+当前状态：S1/S2/S3/S4/S5/S6 PRD 均已创建；Phase 1 与 Phase 2-T01–T06 已完成主线集成、复验和 `origin/master` 推送。S5 的 T04 临考速背、T05 冲刺计划和 T06 工作台冲刺区均为确定性只读/即时聚合边界，不新增持久化计划、StudyEvent、Worker 或真实 AI 调用。POST-PHASE2 全系统验证、完整 E2E、文档对齐与主线复验均已完成并推送 `origin/master`；Phase 3 的高权重必做恢复计划已于 2026-07-28 创建，11 项纳入任务尚待独立审查和逐项实施；T02 总体及其他未纳入任务仍未完成。S7-MVP 已完成，完整 S7 继续等待独立门禁，S3 Worker 不属于当前 MVP。
 
 ## 标准 16 步流程摘要
 
