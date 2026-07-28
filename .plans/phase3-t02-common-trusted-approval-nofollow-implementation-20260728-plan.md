@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：🛠️ 已根据前三轮独立审查修订，待第四位独立审查；不授权真实 R1/R2 操作
+**状态**：✅ 已通过第四位独立审查，待用户单项实施批准；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -232,4 +232,5 @@ closeVerifiedHandle(input)
 - **本次作者最小修订**：将生产入口固定为不解构的 `verifyTrustedApproval(input)`，规定 gate 必须在任何调用方字段访问前执行，并加入 Proxy/getter 回归；将 test seam 门禁改为四角色精确 allowlist。
 - **第三轮独立只读审查（2026-07-28，提交 `6231a28e`）**：结论“有条件通过”，无 P0；P1 指出 production unsupported no-follow reader 的方法示例仍可能因参数解构在固定拒绝前触发 getter/Proxy。
 - **本次作者最小修订**：四个生产 no-follow 方法改为不解构的单一 `input`，并规定在任何调用方属性访问、backend 调用或路径操作前固定抛 `NOFOLLOW_HANDLE_UNSUPPORTED`；测试矩阵加入 Proxy/getter/零交付回归。
-- **当前要求**：必须由不同于前三轮审查者的第四位独立审查者重新只读审查该 P1。复审通过前，不得批准或实施本计划，更不得运行真实 R1/R2。
+- **第四轮独立只读审查（2026-07-28，提交 `e232e6c8`）**：结论“通过”，P0=0、P1=0。确认 production unsupported no-follow reader 的四个方法均为不解构边界，先于任何调用方字段访问固定拒绝 `NOFOLLOW_HANDLE_UNSUPPORTED`；Proxy/getter、零 backend 调用和零交付回归已纳入测试矩阵。
+- **当前状态**：计划已通过独立审查，现仅待用户单项实施批准；该通过不等于实施批准，不授权真实 R1/R2、真实 ACL、真实 record/候选包/manifest 读取或任何后续真实操作。
