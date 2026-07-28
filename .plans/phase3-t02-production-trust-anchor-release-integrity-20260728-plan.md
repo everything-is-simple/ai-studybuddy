@@ -2,7 +2,7 @@
 
 **计划 ID**：`PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-PLAN-20260728`
 **日期**：2026-07-28
-**状态**：✅ 用户已单项批准的最小共同接口与合成验证已完成；独立源码复审通过（P0=0、P1=0），待主线集成。production 未配置 trust anchor，仍固定 fail-closed；不授权真实 R1/R2 操作
+**状态**：✅ 用户已单项批准的最小共同接口与合成验证已完成；独立源码复审通过（P0=0、P1=0），已在此前提交进入 `origin/master`；截至 `28aa2931`，`origin/master` 已包含该实现及其验证记录。production 未配置 trust anchor，仍固定 fail-closed；不授权真实 R1/R2 操作
 **前置事实**：`PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728` 已进入 `origin/master`。生产 `verifyTrustedApproval` 和 production no-follow API 均固定 fail-closed；没有 production trust anchor、发布完整性认证、真实 R1/R2 接入或真实操作。
 
 ---
@@ -287,11 +287,11 @@ packages/backend/test/helpers/trust-anchor-*.mjs      (候选新增)
 
 ---
 
-## 11. 已批准最小实施记录（待最终独立源码审查）
+## 11. 已批准最小实施记录（最终独立源码审查已完成）
 
 - **用户实施批准**：用户已明确批准 `PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-20260728`。本记录只覆盖下列共同接口与仓库内合成测试，不代表 production trust anchor、经认证 release/install identity、release descriptor transport、native Windows no-follow、真实 R1/R2 接入或任何真实操作已完成。
 - **实际代码范围**：新增 `scripts/lib/AIStudyBuddy.TrustAnchor.cjs`；最小修改 `scripts/lib/AIStudyBuddy.TrustedApproval.cjs` 与 `scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs`；新增 `packages/backend/test/trust-anchor-contract.test.mjs`，并最小更新既有共同接口夹具、合同测试与 test-only seam 隔离测试。未修改 `scripts/build-deployment-package.ps1`、部署 manifest/metadata、`AIStudyBuddy.NoFollow.cjs`、R1/R2 入口、业务/前端文件、T04/T05、ACL、备份/恢复、服务或计划任务。
 - **production fail-closed 事实**：production `requireTrustedApprovalAnchor` 在读取任何调用方字段前固定返回 `TRUSTED_ANCHOR_UNAVAILABLE`；production `verifyTrustedApproval` 仍先要求 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`，没有 caller/provider/config/environment/ACL/hash fallback。没有 production 三元组或经认证 release identity 被写入、生成、读取或提交。
 - **合成覆盖**：测试专用的进程内 Ed25519 key 仅用于验证严格 SPKI DER 导出、SHA-256 小写 fingerprint、Ed25519 算法、anchor metadata/release identity/integrity binding、签名篡改、指纹篡改、错误脱敏、Proxy/getter、动态 provider 失败和 test-only factory 隔离。合成结果不证明真实 key、真实 release、真实 Windows identity 或真实 R1/R2。
 - **首轮独立源码审查与最小修复**：独立只读审查结论为“有条件通过”（P0=0、P1=1）；唯一 P1 是合成 verifier 未将记录 `keyId` 与实际合成 anchor `keyId` 显式绑定。已仅在 test-only 合成路径修复为验签前固定比较二者，并把夹具默认记录标识改为 `asb-test-*`；新增“签名有效、其余 binding 正确但 `keyId` 不匹配”固定拒绝用例。production `verifyTrustedApproval` 继续在读取 caller input 前固定拒绝。
-- **当前验证**：P1 修复后的定向共同接口合同测试 15/15 通过；此前 `pnpm type-check`、backend build、frontend build 以及设置隔离 `APP_DATA_ROOT` 的全量 `pnpm test` 已通过（backend 311/311）。修复后的第二次独立只读源码复审已通过（P0=0、P1=0）；可进入提交、推送及主线集成收口步骤，但在 `origin/master` 包含提交前不得表述为主线完成。
+- **当前验证**：P1 修复后的定向共同接口合同测试 15/15 通过；此前 `pnpm type-check`、backend build、frontend build 以及设置隔离 `APP_DATA_ROOT` 的全量 `pnpm test` 已通过（backend 311/311）。修复后的第二次独立只读源码复审已通过（P0=0、P1=0）；已完成提交、推送和主线集成收口；`origin/master` 已包含提交，但这不改变 production 仍固定 fail-closed、未配置真实三元组、未接入 R1/R2 的事实。
