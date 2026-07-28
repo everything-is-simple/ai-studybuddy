@@ -886,7 +886,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 ---
 ## Phase 3：打磨与安全（高权重必做项恢复规划中）
 
-**状态**：用户于 2026-07-28 明确撤销 2026-07-27 的全面暂停决定，授权重新开放 Phase 3，但只恢复“必须做且高权重”的工作。T02A–T02G 已各自完成主线复验并进入 `origin/master`；T02G 只完成仓库外合成夹具安全边界和 P1 修复，真实 ACL、真实备份/恢复、总体审计与其余候选工作仍未完成。新的高权重恢复计划已创建，等待独立审查与用户对计划内容的实施确认；本轮尚未开始业务实现。
+**状态**：用户于 2026-07-28 明确撤销 2026-07-27 的全面暂停决定，授权重新开放 Phase 3，但只恢复“必须做且高权重”的工作；同日已明确批准按 `PHASE3-REOPEN-HIGH-WEIGHT-20260728` 从 Wave 0 开始。T02A–T02G 已各自完成主线复验并进入 `origin/master`；T02G 只完成仓库外合成夹具安全边界和 P1 修复，真实 ACL、真实备份/恢复、总体审计与其余候选工作仍未完成。Wave 0 的 T02-R1 已创建逐项实施计划，仍待独立审查与单项批准；本轮尚未开始业务实现。
 
 **恢复范围门禁**：仅规划 T02-R1、T02-R2、T04-1～T04-3、T02-R3、T05-1～T05-3、T02-R4、T02-R6 共 11 个高权重必做项，按 Wave 0～4 顺序执行。T01、T02-R5、T03 和所有条件触发项不在本轮实施范围；继续保持“家长不登录、无公网入口、无家长 Web 面板”的边界。不得把既有计划、单个切片、合成夹具证据或分支提交外推为 T02、Phase 3、真实机器操作、生产上线或用户电脑验收完成。
 
@@ -894,7 +894,8 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 | 计划 | 文件 | 状态 |
 | ---- | ---- | ---- |
-| PHASE3-REOPEN-HIGH-WEIGHT-20260728 | `.plans/phase3-reopen-high-weight-20260728-plan.md` | 📝 已创建，待独立审查与实施确认；仅计划/清单同步，未开始实现 |
+| PHASE3-REOPEN-HIGH-WEIGHT-20260728 | `.plans/phase3-reopen-high-weight-20260728-plan.md` | ✅ 已获用户 Wave 0 启动确认；逐项计划/审查与实施仍按各 Gate 执行 |
+| PHASE3-T02-R1-REAL-SECRET-SCAN-20260728 | `.plans/phase3-t02r1-real-secret-scan-signoff-plan.md` | 📝 已创建，待独立审查与单项实施批准；未扫描真实仓库或候选包 |
 
 | 顺序 | 候选任务 | 状态 | 单一责任 |
 | ---- | -------- | ---- | -------- |
@@ -942,7 +943,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | T02 | T02E 部署输出与递归删除边界 | 打包输出、staging、覆盖和递归删除只能作用于明确受控根，危险路径 fail-closed | **必做** | ✅ 已完成并进入 `origin/master` | T02 总计划 Slice 3；`.plans/phase3-t02e-deployment-output-delete-boundary-plan.md` |
 | T02 | T02F 日志安全边界底座 | 建立运行日志 allowlist、脱敏、轮转、保留/清理的合成安全边界 | **必做** | ✅ 已完成并进入 `origin/master`；不等于 T05 整体完成 | T02 总计划 Slice 3；`.plans/phase3-t02f-log-redaction-rotation-retention-plan.md` |
 | T02 | T02G Windows 数据、ACL、备份/恢复合成边界 | 建立路径保护、只读 ACL 契约、白名单备份 manifest/hash 与 restore `-WhatIf` 预检；真实写入固定拒绝 | **必做** | ✅ 已完成仓库外合成夹具范围并进入 `origin/master`；真实操作未完成 | T02 总计划 Slice 3；`.plans/phase3-t02g-windows-data-acl-backup-restore-plan.md` G1–G5 |
-| T02 | T02-R1 正式仓库与实际部署包秘密扫描签收 | 仅对 Git 已跟踪文件清单和已批准、已识别候选部署包根执行受控扫描；复核命中并形成不泄露秘密值、敏感文件名或原始输出的签收证据。记录 artifact ID、构建提交短哈希、包 SHA-256 短指纹和批准时间窗口，不扫描整个工作区或未跟踪目录 | **必做** | 📝 Wave 0：高权重恢复计划已创建，待独立审查与实施确认；未完成签收 | `PHASE3-REOPEN-HIGH-WEIGHT-20260728` Wave 0；T02 总计划 §6.1、Slice 2 和 §8；T02D 计划的“合成夹具不等于真实扫描”边界 |
+| T02 | T02-R1 正式仓库与实际部署包秘密扫描签收 | 仅对 Git 已跟踪文件清单和已批准、已识别候选部署包根执行受控扫描；复核命中并形成不泄露秘密值、敏感文件名或原始输出的签收证据。记录 artifact ID、构建提交短哈希、包 SHA-256 短指纹和批准时间窗口，不扫描整个工作区或未跟踪目录 | **必做** | 📝 Wave 0：逐项计划 `PHASE3-T02-R1-REAL-SECRET-SCAN-20260728` 已创建，待独立审查与单项批准；未扫描真实仓库或候选包，未完成签收 | `PHASE3-T02-R1-REAL-SECRET-SCAN-20260728`；上位 `PHASE3-REOPEN-HIGH-WEIGHT-20260728` Wave 0；T02D 合成夹具不等于真实扫描边界 |
 | T02 | T02-R2 真实 Windows 目录与 ACL 证据 | 在批准机器只读取 config/data/logs/backups/tmp/models 的 ACL、继承、可写范围与 reparse 风险；仅以当前交互用户、当前用户计划任务、SYSTEM、Administrators、其他本地用户、未知主体、deny ACE、继承状态、有效访问未知等固定脱敏分类输出风险结论及是否需要最小 ACL 修复的建议。任何 ACL 修复须另建、另批最小任务并回滚/复验 | **必做** | 📝 Wave 0：高权重恢复计划已创建，待独立审查与实施确认；仅允许后续只读采证 | `PHASE3-REOPEN-HIGH-WEIGHT-20260728` Wave 0；T02 总计划数据/部署范围、Slice 3、§8；T02G 计划 G2/G5 与“真实操作另批”门禁 |
 | T02 | T02-R3 真实备份/恢复安全复核 | 同一任务含 R3-prewrite 与 R3-postrestore 两个独立门：任何目标机非 `-WhatIf` backup/restore 写入前，非 T04 实现者必须签收精确目标机批准、停止证据、状态机/中断标记、预检、recovery point 与脱敏输出契约；演练后再独立复核受控根、白名单、manifest/hash、写入/中断/回滚和完整性。任一 P1 未闭合不得签收 | **必做** | 📝 Wave 2：高权重恢复计划已创建；仍受 R3-prewrite/R3-postrestore 独立门约束 | `PHASE3-REOPEN-HIGH-WEIGHT-20260728` Wave 2；T02 总计划数据边界、Slice 3、§8；T02G 计划 G3/G4；`docs/13-部署运维指南-Deployment.md`“备份、恢复、升级与回滚” |
 | T02 | T02-R4 学生核心流程失败反馈矩阵 | S1/S2/S3/S4/S5/S7 核心路径覆盖输入错误、不存在、未配置、超时/下游失败、未知异常与重试建议，前端只显示可操作的脱敏中文信息 | **必做** | 📝 Wave 3：高权重恢复计划已创建，待前置 Wave 验证后实施 | T02 总计划 Slice 4 与 §8 第 7 项 |
