@@ -1,7 +1,7 @@
 # AI StudyBuddy 开发任务清单
 
-**版本**：v1.117
-**日期**：2026-07-29
+**版本**：v1.118
+**日期**：2026-07-28
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
 > 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 T02A–T02G 安全切片已各自完成主线复验并进入 `origin/master`，但 T02 总体、真实机器操作与其余 Phase 3 候选任务仍未完成；用户于 2026-07-28 明确重新开放 Phase 3，但仅按 `PHASE3-REOPEN-HIGH-WEIGHT-20260728` 推进 11 个高权重必做项；计划已创建并等待独立审查与逐项实施。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
@@ -900,6 +900,9 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 | PHASE3-T02-PRODUCTION-TRUST-ANCHOR-RELEASE-INTEGRITY-20260728 | `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | ✅ 最小共同接口与合成测试、首轮 P1 最小修复、第二次独立源码复审（P0=0、P1=0）及主线复验均已在此前提交进入 `origin/master`；截至 `28aa2931`，`origin/master` 已包含该实现及其验证记录；production 仍固定 fail-closed，未配置真实三元组、未接入 R1/R2 |
 | PHASE3-PERSONAL-MINIMUM-REBASELINE-20260729 | `.plans/phase3-personal-minimum-rebaseline-20260729-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；用户已于 2026-07-28 采用个人版最小闭环；当前仅按既有 11 项的 P1～P5 顺序制定实施计划，不授权真实操作；T01、T02-R5、T03、T05-4 仅为未来候选，不因本计划自动纳入 |
 | PHASE3-P1-R1-R2-CONTROLLED-READONLY-PLAN-20260728 | `.plans/phase3-p1-r1-r2-controlled-readonly-20260728-plan.md` | ✅ 已独立审查通过（P0=0、P1=0）；仅为 T02-R1/T02-R2 制定同一准备窗口的最小受控只读实施计划，不实施、不运行真实操作 |
+| PHASE3-P1-R1-R2-CONTROLLED-READONLY-IMPLEMENTATION-20260728 | `.plans/phase3-p1-r1-r2-controlled-readonly-20260728-plan.md` | ✅ 共同 synthetic-only 受控只读接口、合成验证与最终独立源码审查均完成（P0=0、P1=0）；未运行真实 R1/R2、未读取真实目标，production verifier 仍固定 fail-closed |
+
+> **PHASE3-P1 R1/R2 共同受控只读接口与合成测试（2026-07-28，已完成分支验证与独立源码审查）**：实施分支 `codex/phase3-p1-r1-r2-controlled-readonly-implementation` 仅修改 `.plans/`、`docs/04`、R1 synthetic-only boundary 与合成测试、R2 synthetic-only 证据函数、两个无真实目标参数的 runner 及合成 PowerShell 测试。R1 仅接受模块私有 `WeakSet` 登记的纯内存 reader，外部 reader 在打开前固定拒绝；R2 仅在 `-SyntheticFixture` 下使用内存证据，固定六类逻辑类别并对卷、reparse、身份、deny/继承/有效访问及前后变化 fail-closed。已通过 R1/no-follow/测试隔离定向测试 15/15、R2 synthetic 测试、`pnpm type-check`、后端/前端 build、隔离 `APP_DATA_ROOT` 下 `pnpm test`（后端 315/315）、文档治理和差异检查；最终独立源码审查结论为通过（P0=0、P1=0）。未运行真实秘密扫描或 ACL 读取，未读取真实候选包/审批/manifest/用户数据，未修改 production trust-anchor/verifier/no-follow gate、部署构建/manifest、T04/T05、备份恢复、ACL 修复、服务或计划任务。该完成不等于 T02、真实 R1/R2、用户机器验收或 Phase 3 完成；真实操作仍须逐项另行计划、审查和用户批准。
 
 > **PHASE3-T02 主线脏状态归档（2026-07-29，已完成）**：主线 `H:\ai-studybuddy` 的未跟踪目录 `.trae-html-share-packages/` 与 `alpha-sprint-plan/` 已按用户明确批准完整移出主目录，归档到受控 `H:\backup\ai-studybuddy-archives\20260729-phase3-t02-master-untracked-archive` 批次。移动前已解析并校验源与目标路径；本任务未读取目录内容、未删除、未覆盖；移动后已确认两项源路径不再存在。可继续核验主线干净状态并快进集成本任务分支。
 

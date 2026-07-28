@@ -2,7 +2,7 @@
 
 **计划 ID**：`PHASE3-P1-R1-R2-CONTROLLED-READONLY-PLAN-20260728`
 **日期**：2026-07-28
-**状态**：✅ 已独立审查通过（P0=0、P1=0）；本文件仅制定后续实施计划，不实现、不接入、不运行真实 R1/R2
+**状态**：✅ 计划、共同受控只读接口与合成验证均已完成；最终独立源码审查通过（P0=0、P1=0）。仍不接入或运行真实 R1/R2
 **父计划**：`PHASE3-PERSONAL-MINIMUM-REBASELINE-20260729`
 **映射任务**：`T02-R1`、`T02-R2`。
 
@@ -205,15 +205,31 @@ R2 每类目录只能输出固定逻辑类别、允许主体分类、继承/有�
 只有计划独立审查通过后，用户才可分别决定是否批准下列其中一项；两项均只授权**实现和合成验证**，不授权真实操作：
 
 ```text
-批准按 PHASE3-P1-R1-R2-CONTROLLED-READONLY-IMPLEMENTATION-20260729 实现 R1/R2 的共同受控只读接口与合成测试；不运行真实 R1/R2。
+批准按 PHASE3-P1-R1-R2-CONTROLLED-READONLY-IMPLEMENTATION-20260728 实现 R1/R2 的共同受控只读接口与合成测试；不运行真实 R1/R2。
 ```
 
 实施、独立源码审查、主线集成和用户再次明确批准后，才可分别考虑：
 
 ```text
-批准按 PHASE3-T02-R1-REAL-SECRET-SCAN-20260729 在明确制品和时间窗口运行一次 R1 脱敏只读扫描。
+批准按 PHASE3-T02-R1-REAL-SECRET-SCAN-20260728 在明确制品和时间窗口运行一次 R1 脱敏只读扫描。
 ```
 
 ```text
-批准按 PHASE3-T02-R2-WINDOWS-ACL-EVIDENCE-20260729 在明确机器和时间窗口运行一次 R2 脱敏只读 ACL 证据采集。
+批准按 PHASE3-T02-R2-WINDOWS-ACL-EVIDENCE-20260728 在明确机器和时间窗口运行一次 R2 脱敏只读 ACL 证据采集。
 ```
+
+
+---
+
+## 10. 实施、合成验证与独立源码审查事实（2026-07-28）
+
+`PHASE3-P1-R1-R2-CONTROLLED-READONLY-IMPLEMENTATION-20260728` 仅实现了共同的 **synthetic-only** 接口与测试：
+
+- R1 仅接受模块内部 `WeakSet` 登记、仅处理调用方提供内存字节的合成 reader；任意未登记 reader 在打开前固定拒绝 `R1_NOFOLLOW_RISK`，不具备文件系统、Git、路径发现或环境变量读取能力；
+- R2 仅接受 `-SyntheticFixture` 与内存 `SyntheticEvidence`；六类逻辑类别、固定本地卷、非 reparse、前后安装/对象/父对象/内容/描述符身份，以及前后主体/deny/继承/有效访问均 fail-closed；
+- 两个 PowerShell runner 无真实目标参数；未带 `-SyntheticFixture` 固定拒绝 `P1_REAL_OPERATION_DISABLED`；
+- 未修改 production trust anchor/verifier/no-follow gate、部署构建/manifest、真实 R1/R2 入口、T04/T05、备份/恢复、ACL 修复、服务或计划任务。
+
+验证：Node 语法检查、R1/no-follow/测试隔离定向测试 15/15、`scripts/test-phase3-p1-controlled-readonly.ps1`、`pnpm type-check`、后端/前端 build、隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\phase3-p1-controlled-readonly-20260728` 下的 `pnpm test`（后端 315/315）、文档治理与 `git diff --check` 均通过。独立源码复审复核结论为 **通过（P0=0、P1=0）**；审查只读且没有运行任何真实操作。
+
+这些结果只证明共同合成边界可用，**不证明真实秘密扫描、真实 ACL 读取、production trust anchor 配置、用户机器验收或 Phase 3 完成**。后续真实 R1/R2 仍必须分别制定接入/真实操作计划、独立审查并由用户单项批准。

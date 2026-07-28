@@ -503,6 +503,65 @@ function Get-AIStudyBuddyDataShortFingerprint {
   return (-join ($hash | ForEach-Object { $_.ToString('x2') })).Substring(0, 12)
 }
 
+
+function New-AIStudyBuddyP1ControlledReadonlyError {
+  param([Parameter(Mandatory)] [string]$Code)
+  throw [System.InvalidOperationException]::new($Code)
+}
+
+function Get-AIStudyBuddyP1ControlledAclEvidence {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)] [string]$LogicalCategory,
+    [object]$SyntheticEvidence,
+    [switch]$SyntheticFixture
+  )
+
+  $allowedCategories = @('config', 'data', 'logs', 'backups', 'tmp', 'models')
+  if ($allowedCategories -notcontains $LogicalCategory) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_LOGICAL_SCOPE_INVALID' }
+  if (-not $SyntheticFixture) { New-AIStudyBuddyP1ControlledReadonlyError 'P1_REAL_OPERATION_DISABLED' }
+  if ($null -eq $SyntheticEvidence) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_NOFOLLOW_RISK' }
+
+  try {
+    $before = $SyntheticEvidence.Before
+    $after = $SyntheticEvidence.After
+    if ($null -eq $before -or $null -eq $after) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_NOFOLLOW_RISK' }
+    foreach ($sample in @($before, $after)) {
+      if (@('unc', 'mapped-remote', 'remote') -contains [string]$sample.VolumeKind) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_UNC_OR_MAPPED_VOLUME' }
+      if ($sample.VolumeKind -ne 'local-fixed') { New-AIStudyBuddyP1ControlledReadonlyError 'R2_NONFIXED_VOLUME' }
+      if ([bool]$sample.Reparse) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_NOFOLLOW_RISK' }
+      foreach ($property in @('InstallInstanceId', 'ObjectId', 'ParentId', 'ContentVersion', 'DescriptorIdentity')) {
+        if ([string]::IsNullOrWhiteSpace([string]$sample.$property)) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_NOFOLLOW_RISK' }
+      }
+    }
+    foreach ($property in @('InstallInstanceId', 'ObjectId', 'ParentId', 'ContentVersion', 'DescriptorIdentity')) {
+      if ([string]$before.$property -ne [string]$after.$property) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_NOFOLLOW_RISK' }
+    }
+    $allowedSubjectKinds = @('CURRENT_USER', 'LOCAL_SYSTEM', 'ADMINISTRATORS')
+    foreach ($sample in @($before, $after)) {
+      if ($allowedSubjectKinds -notcontains [string]$sample.OwnerKind) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_UNKNOWN_PRINCIPAL' }
+      $sampleSubjectKinds = @($sample.SubjectKinds)
+      if ($sampleSubjectKinds.Count -eq 0 -or @($sampleSubjectKinds | Where-Object { $allowedSubjectKinds -notcontains [string]$_ }).Count -gt 0) {
+        New-AIStudyBuddyP1ControlledReadonlyError 'R2_UNKNOWN_PRINCIPAL'
+      }
+      if ([bool]$sample.HasDenyAce -or [bool]$sample.InheritanceException) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_DENY_OR_INHERITANCE_RISK' }
+      if (-not [bool]$sample.EffectiveAccessKnown) { New-AIStudyBuddyP1ControlledReadonlyError 'R2_EFFECTIVE_ACCESS_UNKNOWN' }
+    }
+    $subjectKinds = @($before.SubjectKinds)
+    return [pscustomobject]@{
+      Status = 'SYNTHETIC_PASS'
+      ContractVersion = 'phase3-p1-controlled-readonly-v1'
+      LogicalCategory = $LogicalCategory
+      OwnerKind = [string]$before.OwnerKind
+      SubjectKinds = @($subjectKinds | Sort-Object -Unique)
+    }
+  } catch [System.InvalidOperationException] {
+    throw
+  } catch {
+    New-AIStudyBuddyP1ControlledReadonlyError 'R2_NOFOLLOW_RISK'
+  }
+}
+
 function Get-AIStudyBuddyAclEvidence {
   param(
     [Parameter(Mandatory)] [string]$Path,
