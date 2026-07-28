@@ -1,7 +1,7 @@
 # T02 共同可信批准与 no-follow 最小实施计划
 
 **计划编号**：PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-IMPLEMENTATION-20260728
-**状态**：🧪 实施分支已完成共同接口与合成验证，并完成三轮源码审查 P1 处置及回归；无 production trust anchor、production 固定 fail-closed；待最终源码独立复审与主线集成；不授权真实 R1/R2 操作
+**状态**：✅ 共同接口与合成验证已完成最终独立源码审查、主线复验并推送 `origin/master`；无 production trust anchor，production 仍固定 fail-closed；不授权真实 R1/R2 操作
 **创建日期**：2026-07-28
 **任务分支**：`codex/phase3-t02-common-trusted-approval-implementation-plan`（仅计划和 `docs/04` 索引）
 **前置计划**：已通过第二位独立审查的 `PHASE3-T02-COMMON-TRUSTED-APPROVAL-NOFOLLOW-20260728`，位于已推送提交 `23f2e20` 的 `codex/phase3-t02-common-trusted-approval-plan`；该前置计划未合入 `master`，本计划仅引用其已审查契约，不复制或合并其文件。
@@ -243,3 +243,5 @@ closeVerifiedHandle(input)
 - **第二轮源码独立审查与 P1 修复回归（2026-07-28，待最终源码独立复审）**：审查结论“有条件通过”，P0=0、P1=2；最小修复为：test-only approval factory 现在只接受真实 `crypto.KeyObject` 的 Ed25519 public key，形状伪造键固定拒绝；`expected` getter/Proxy 与 integrity getter/运行期方法异常均重新构造固定脱敏错误，绝不保留 caller 控制的 message/stack；test-seam 扫描对相邻静态字符串拼接重复折叠后检测 `__TEST_ONLY_`，新增 `__TE` + `ST_ONLY_` 绕过回归。定向 Node 测试 15/15、`pnpm type-check`、backend/frontend build 与隔离 `APP_DATA_ROOT` 的全量 `pnpm test`（backend 307/307）均通过。未读取或执行真实 R1/R2、真实 ACL/record/候选包/manifest/用户数据；仍待最终独立源码复审。
 - **第三轮源码独立审查 P1 处置（2026-07-28，待最终源码独立复审）**：审查提出透明 `Proxy<KeyObject>` 与括号/注释分隔静态拼接两项 P1。运行时证实 Node 24 的透明 Proxy 对 `instanceof`、native key type、export 与 verify 均与 target 等价，JavaScript 无可靠 Proxy 身份检测；因此测试 verifier 在检查 Ed25519 public `KeyObject` 后立即导出 SPKI DER 并 native 重新导入为新的 `KeyObject`，不保留调用方对象。test-seam 由正则改用现有 TypeScript AST，对普通静态字符串、括号和 `+` 递归求值，覆盖括号分组与注释分隔的 computed marker。新增合成回归通过；仍需最终独立源码复审。
 - **第四轮源码独立审查 P1 处置（2026-07-28，待最终源码独立复审）**：独立只读复审 `e38a7b8` 结论“有条件通过”，P0=0、P1=1：test-seam 的受控 `git ls-files` 扫描此前仅包含 JS/CJS/MJS，遗漏已跟踪 TypeScript/TSX 源。最小修复将扩展名白名单扩展为 `cjs/js/mjs/cts/ts/mts/tsx`，并依据扩展名用 TypeScript AST 的 JS/TS/TSX 模式解析；新增 `.ts` 嵌套静态 computed marker 回归。该修复仍只扫描已跟踪源码，未读取未跟踪目录或真实数据；修复后必须重跑隔离合成合同测试并进行最终独立复审。
+
+- **最终源码独立审查、主线复验与集成（2026-07-28）**：最终独立只读审查结论“通过”，P0=0、P1=0。针对共同接口的隔离合成合同测试 15/15 通过；主线 `pnpm type-check`、隔离 `APP_DATA_ROOT` 的全量 `pnpm test`（backend 307/307）、文档治理检查与 `git diff --check` 均通过。该切片已快进合并并推送 `origin/master`，主线提交 `9938b576760cfcea42887ac5a77e4fdf006bfd65`。上述仅证明共同接口和仓库内合成验证；不代表 production trust anchor 或发布完整性认证已配置，也不授权或执行真实 T02-R1、真实 T02-R2、真实 ACL、真实审批记录/候选包/manifest 或用户数据读取。
