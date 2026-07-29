@@ -66,6 +66,7 @@ describe('T05 冲刺计划页面', () => {
     ({ container, root } = renderPage());
     await flush();
     expect(container!.textContent).toContain('期末考试 的冲刺计划');
+    expect(container!.textContent).toContain('7 月 21 日');
     expect(container!.textContent).toContain('考试前任务');
     expect(container!.textContent).toContain('薄弱点证据');
     expect(linkHref(container!, '前往复习')).toBe('/exams/exam-1');

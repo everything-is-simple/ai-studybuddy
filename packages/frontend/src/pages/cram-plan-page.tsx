@@ -21,7 +21,7 @@ const SOURCE_LABELS: Record<CramPlanSuggestionDto['sourceKind'], string> = {
 };
 
 function formatDate(date: string): string {
-  const [, month = '', day = ''] = date.match(/^(\d{4})-(\d{2})-(\d{2})$/) ?? [];
+  const [, , month = '', day = ''] = date.match(/^(\d{4})-(\d{2})-(\d{2})$/) ?? [];
   return month && day ? `${Number(month)} 月 ${Number(day)} 日` : date;
 }
 
