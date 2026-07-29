@@ -5,6 +5,7 @@ import {
   getConfigurationStatus,
   retestConfiguration,
   testAndActivate,
+  testSingleProvider,
   type AiProviderPreset,
   type ChannelStatus,
   type ConfigurationPresets,
@@ -12,10 +13,28 @@ import {
   type CustomAiCandidate,
   type OfficialAiCandidate,
   type ProviderPresetGroup,
+  type ProviderTestAttempt,
 } from '../api/configuration-api';
 
 type ConfigChannel = 'ai' | 'smtp' | 'feishu';
 type ProviderDraft = Omit<OfficialAiCandidate, 'priority'> | Omit<CustomAiCandidate, 'priority'>;
+
+/**
+ * 卡片草稿。官方 Provider 只用 apiKey + model；
+ * 中转站还要填 baseUrls（多个候选地址），测通后 resolvedBaseUrl 记录实际可用的那个。
+ */
+interface ProviderCardDraft {
+  apiKey: string;
+  model: string;
+  baseUrls: string[];
+  resolvedBaseUrl?: string;
+}
+
+const blankCardDraft = (preset: AiProviderPreset): ProviderCardDraft => ({
+  apiKey: '',
+  model: preset.defaultModel,
+  baseUrls: preset.requiresBaseUrl ? [''] : [preset.baseUrl],
+});
 
 interface SmtpForm {
   host: string;
@@ -52,15 +71,15 @@ const channelLabels: Record<ConfigChannel, string> = {
 const providerGroupLabels: Record<ProviderPresetGroup, string> = {
   international: '国外主流',
   mainland: '国内主流',
-  alternative: '国内外备选',
+  relay: '中转站',
 };
 
-const providerGroupOrder: ProviderPresetGroup[] = ['international', 'mainland', 'alternative'];
+const providerGroupOrder: ProviderPresetGroup[] = ['mainland', 'international', 'relay'];
 
 export default function SettingsPage() {
   const [status, setStatus] = useState<ConfigurationStatus | null>(null);
   const [presets, setPresets] = useState<ConfigurationPresets>(emptyPresets);
-  const [officialDrafts, setOfficialDrafts] = useState<Record<string, { apiKey: string; model: string }>>({});
+  const [officialDrafts, setOfficialDrafts] = useState<Record<string, ProviderCardDraft>>({});
   const [fallbackProviders, setFallbackProviders] = useState<ProviderDraft[]>([]);
   const [customProvider, setCustomProvider] = useState<CustomProviderForm>(blankCustomProvider);
   const [smtp, setSmtp] = useState<SmtpForm>(blankSmtp);
@@ -113,6 +132,7 @@ export default function SettingsPage() {
 
   function clearSecretFields(channel: ConfigChannel) {
     if (channel === 'ai') {
+      // 只清 Key。地址不是敏感信息，重填一遍很烦，保留。
       setOfficialDrafts((current) => Object.fromEntries(Object.entries(current).map(([id, draft]) => [id, { ...draft, apiKey: '' }])));
       setFallbackProviders([]);
       setCustomProvider((current) => ({ ...current, apiKey: '' }));
@@ -121,20 +141,29 @@ export default function SettingsPage() {
     if (channel === 'feishu') setFeishu({ webhookUrl: '' });
   }
 
-  function updateOfficialDraft(preset: AiProviderPreset, patch: Partial<{ apiKey: string; model: string }>) {
+  function updateOfficialDraft(preset: AiProviderPreset, patch: Partial<ProviderCardDraft>) {
     setOfficialDrafts((current) => ({
       ...current,
-      [preset.id]: { apiKey: current[preset.id]?.apiKey ?? '', model: current[preset.id]?.model ?? preset.defaultModel, ...patch },
+      [preset.id]: { ...blankCardDraft(preset), ...current[preset.id], ...patch },
     }));
   }
 
   function addOfficialProvider(preset: AiProviderPreset) {
-    const draft = officialDrafts[preset.id] ?? { apiKey: '', model: preset.defaultModel };
+    const draft = officialDrafts[preset.id] ?? blankCardDraft(preset);
     if (!draft.apiKey.trim()) {
       setMessage((old) => ({ ...old, ai: '请先粘贴 API Key' }));
       return;
     }
-    setFallbackProviders((current) => [...current, { kind: 'official', presetId: preset.id, apiKey: draft.apiKey, model: draft.model }]);
+    // 中转站必须带上测试通过的那个地址，否则后端不知道该请求哪里。
+    const baseUrl = preset.requiresBaseUrl ? draft.resolvedBaseUrl : undefined;
+    if (preset.requiresBaseUrl && !baseUrl) {
+      setMessage((old) => ({ ...old, ai: '请先测试中转站，通过后才能加入 fallback' }));
+      return;
+    }
+    setFallbackProviders((current) => [
+      ...current,
+      { kind: 'official', presetId: preset.id, ...(baseUrl ? { baseUrl } : {}), apiKey: draft.apiKey, model: draft.model },
+    ]);
     updateOfficialDraft(preset, { apiKey: '' });
   }
 
@@ -194,7 +223,7 @@ export default function SettingsPage() {
           return <section className="provider-preset-group" key={group} aria-label={providerGroupLabels[group]}>
             <h3>{providerGroupLabels[group]}</h3>
             <div className="provider-preset-grid">
-              {providers.map((preset) => <ProviderPresetCard key={preset.id} preset={preset} draft={officialDrafts[preset.id] ?? { apiKey: '', model: preset.defaultModel }} onChange={(patch) => updateOfficialDraft(preset, patch)} onAdd={() => addOfficialProvider(preset)} />)}
+              {providers.map((preset) => <ProviderPresetCard key={preset.id} preset={preset} draft={officialDrafts[preset.id] ?? blankCardDraft(preset)} onChange={(patch) => updateOfficialDraft(preset, patch)} onAdd={() => addOfficialProvider(preset)} />)}
             </div>
           </section>;
         })}
@@ -231,16 +260,110 @@ export default function SettingsPage() {
   );
 }
 
-function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProviderPreset; draft: { apiKey: string; model: string }; onChange: (patch: Partial<{ apiKey: string; model: string }>) => void; onAdd: () => void }) {
+function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProviderPreset; draft: ProviderCardDraft; onChange: (patch: Partial<ProviderCardDraft>) => void; onAdd: () => void }) {
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; models?: string[]; error?: string; resolvedBaseUrl?: string; attempts?: ProviderTestAttempt[] } | null>(null);
+
   const unavailable = preset.availability !== 'available' || preset.protocol !== 'openai-compatible';
+  const needsBaseUrl = preset.requiresBaseUrl === true;
+  const maxBaseUrls = preset.maxBaseUrls ?? 1;
+  const baseUrls = draft.baseUrls.length > 0 ? draft.baseUrls : [needsBaseUrl ? '' : preset.baseUrl];
+  const filledBaseUrls = baseUrls.map((url) => url.trim()).filter(Boolean);
+  const canTest = Boolean(draft.apiKey.trim()) && (needsBaseUrl ? filledBaseUrls.length > 0 : true);
+
+  // 改地址或改 Key 都会让上一次的测试结果失效，必须重测。
+  const invalidateTest = () => setTestResult(null);
+
+  const updateBaseUrl = (index: number, value: string) => {
+    invalidateTest();
+    onChange({ baseUrls: baseUrls.map((url, position) => (position === index ? value : url)), resolvedBaseUrl: undefined });
+  };
+
+  const addBaseUrl = () => {
+    invalidateTest();
+    onChange({ baseUrls: [...baseUrls, ''], resolvedBaseUrl: undefined });
+  };
+
+  const removeBaseUrl = (index: number) => {
+    invalidateTest();
+    onChange({ baseUrls: baseUrls.filter((_, position) => position !== index), resolvedBaseUrl: undefined });
+  };
+
+  const handleTest = async () => {
+    if (!draft.apiKey.trim()) {
+      setTestResult({ success: false, error: '请先填写 API Key' });
+      return;
+    }
+    if (needsBaseUrl && filledBaseUrls.length === 0) {
+      setTestResult({ success: false, error: '请先填写至少一个 API 请求地址' });
+      return;
+    }
+
+    setTesting(true);
+    setTestResult(null);
+
+    try {
+      const result = await testSingleProvider({
+        name: preset.displayName,
+        baseUrls: needsBaseUrl ? filledBaseUrls : [preset.baseUrl],
+        apiKey: draft.apiKey,
+        // 中转站首测时留空，让后端从对方 /models 探测。
+        model: needsBaseUrl ? '' : draft.model,
+      });
+
+      const models = result.supportedModels.length > 0 ? result.supportedModels : preset.modelSuggestions;
+      setTestResult({ success: true, models, resolvedBaseUrl: result.resolvedBaseUrl, attempts: result.attempts });
+      onChange({
+        resolvedBaseUrl: result.resolvedBaseUrl,
+        // 探测出的模型列表里不含当前选中值时，回落到第一个可用模型。
+        ...(models.length > 0 && !models.includes(draft.model) ? { model: models[0] } : {}),
+      });
+    } catch (error) {
+      setTestResult({ success: false, error: error instanceof Error ? error.message : '测试失败' });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const availableModels = testResult?.success && testResult.models ? testResult.models : preset.modelSuggestions;
+
   return <article className="provider-preset-card">
     <h4>{preset.displayName}</h4>
     <p>{preset.description}</p>
-    <p className="provider-base-url"><span>官方 API 地址</span><code>{preset.baseUrl}</code></p>
+    {!needsBaseUrl && <p className="provider-base-url"><span>官方 API 地址</span><code>{preset.baseUrl}</code></p>}
     {unavailable ? <button type="button" disabled>{preset.displayName}（后续适配）</button> : <>
-      <label>模型<select data-testid={`official-${preset.id}-model`} value={draft.model} onChange={(event) => onChange({ model: event.target.value })}>{preset.modelSuggestions.map((model) => <option key={model} value={model}>{model}</option>)}</select></label>
-      <SecretInput label="API Key" visibilityLabel={`${preset.displayName} API Key`} placeholder="已保存的 Key 不会回显；输入新值才替换" testId={`official-${preset.id}-api-key`} value={draft.apiKey} onChange={(apiKey) => onChange({ apiKey })} />
-      <button type="button" className="button-secondary" onClick={onAdd}>加入 fallback</button>
+      {needsBaseUrl && <fieldset className="relay-base-urls">
+        <legend>API 请求地址（可填多个，逐个尝试）</legend>
+        {baseUrls.map((url, index) => <div className="relay-base-url-row" key={index}>
+          <input
+            data-testid={`official-${preset.id}-base-url-${index}`}
+            type="text"
+            inputMode="url"
+            placeholder={index === 0 ? 'https://你的中转站/v1' : '备用地址（可留空）'}
+            value={url}
+            onChange={(event) => updateBaseUrl(index, event.target.value)}
+            aria-label={`${preset.displayName} 请求地址 ${index + 1}`}
+          />
+          {baseUrls.length > 1 && <button type="button" className="button-secondary" aria-label={`移除${preset.displayName}请求地址 ${index + 1}`} onClick={() => removeBaseUrl(index)}>移除</button>}
+        </div>)}
+        {baseUrls.length < maxBaseUrls && <button type="button" className="button-secondary" data-testid={`official-${preset.id}-add-base-url`} onClick={addBaseUrl}>加一个备用地址</button>}
+      </fieldset>}
+      <SecretInput label="API Key" visibilityLabel={`${preset.displayName} API Key`} placeholder="已保存的 Key 不会回显；输入新值才替换" testId={`official-${preset.id}-api-key`} value={draft.apiKey} onChange={(apiKey) => { invalidateTest(); onChange({ apiKey }); }} />
+      <div className="provider-test-section">
+        <button type="button" className="button-secondary" disabled={testing || !canTest} onClick={handleTest}>
+          {testing ? '测试中...' : '测试此 Provider'}
+        </button>
+        {testResult && (
+          <span className={testResult.success ? 'test-success' : 'test-error'}>
+            {testResult.success ? `✓ 测试成功，发现 ${availableModels.length} 个模型` : `✗ ${testResult.error}`}
+          </span>
+        )}
+      </div>
+      {testResult?.success && testResult.resolvedBaseUrl && needsBaseUrl && <p className="settings-note">实际可用地址：<code>{testResult.resolvedBaseUrl}</code></p>}
+      {testResult && !testResult.success && (testResult.attempts?.length ?? 0) > 1 && <ul className="relay-attempt-list">{testResult.attempts!.map((attempt) => <li key={attempt.baseUrl}><code>{attempt.baseUrl}</code> · {attempt.errorCode ?? '失败'}</li>)}</ul>}
+      <label>模型<select data-testid={`official-${preset.id}-model`} value={draft.model} onChange={(event) => onChange({ model: event.target.value })} disabled={!testResult?.success}>{availableModels.map((model) => <option key={model} value={model}>{model}</option>)}</select></label>
+      <button type="button" className="button-secondary" onClick={onAdd} disabled={!testResult?.success}>加入 fallback</button>
+      {!testResult?.success && <p className="settings-note">{needsBaseUrl ? '请先填写地址和 Key 并测试，测试成功后才能选择模型并加入 fallback' : '请先测试 Provider，测试成功后才能选择模型并加入 fallback'}</p>}
     </>}
   </article>;
 }
@@ -249,8 +372,20 @@ function FallbackList({ providers, presets, onMove, onRemove }: { providers: Pro
   if (!providers.length) return <p className="settings-note">还没有加入 fallback 的 Provider。</p>;
   return <section className="fallback-list" aria-label="Provider fallback 优先级"><h3>Provider fallback 优先级</h3><ol>{providers.map((provider, index) => {
     const label = provider.kind === 'official' ? presets.find((preset) => preset.id === provider.presetId)?.displayName ?? provider.presetId : provider.name;
-    return <li key={`${provider.kind}-${index}`}><div><strong>{label}</strong><span>{provider.model} · 优先级 {index + 1}</span></div><div className="fallback-actions"><button type="button" className="button-secondary" disabled={index === 0} onClick={() => onMove(index, index - 1)}>上移</button><button type="button" className="button-secondary" disabled={index === providers.length - 1} onClick={() => onMove(index, index + 1)}>下移</button><button type="button" className="button-secondary" onClick={() => onRemove(index)}>移除</button></div></li>;
+    const host = readProviderHost(provider);
+    return <li key={`${provider.kind}-${index}`}><div><strong>{label}</strong><span>{provider.model} · 优先级 {index + 1}{host ? ` · ${host}` : ''}</span></div><div className="fallback-actions"><button type="button" className="button-secondary" disabled={index === 0} onClick={() => onMove(index, index - 1)}>上移</button><button type="button" className="button-secondary" disabled={index === providers.length - 1} onClick={() => onMove(index, index + 1)}>下移</button><button type="button" className="button-secondary" onClick={() => onRemove(index)}>移除</button></div></li>;
   })}</ol></section>;
+}
+
+/** 三个中转站槽位只看名字分不清，列表里补上主机名。只显示 host，不带路径和查询串。 */
+function readProviderHost(provider: ProviderDraft): string | null {
+  const baseUrl = 'baseUrl' in provider ? provider.baseUrl : undefined;
+  if (!baseUrl) return null;
+  try {
+    return new URL(baseUrl).host;
+  } catch {
+    return null;
+  }
 }
 
 function moveItem<T>(items: T[], from: number, to: number): T[] {

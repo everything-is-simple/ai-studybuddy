@@ -9,9 +9,10 @@ const status = {
 
 const presets = {
   ai: [
-    { id: 'openai', displayName: 'OpenAI', group: 'international', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-5.5', modelSuggestions: ['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna'], description: 'OpenAI 官方' },
-    { id: 'claude', displayName: 'Claude / Anthropic', group: 'international', protocol: 'anthropic-native', availability: 'coming-soon', baseUrl: 'https://api.anthropic.com/v1', defaultModel: '', modelSuggestions: [], description: '后续适配' },
-    { id: 'kimi', displayName: 'Kimi / Moonshot', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.moonshot.cn/v1', defaultModel: 'kimi-k2.7-code', modelSuggestions: ['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6'], description: 'Kimi 官方' },
+    { id: 'openai', displayName: 'OpenAI', group: 'international', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-5.5', modelSuggestions: ['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna'], description: 'OpenAI 官方', requiresBaseUrl: false, maxBaseUrls: 1 },
+    { id: 'claude', displayName: 'Claude / Anthropic', group: 'international', protocol: 'anthropic-native', availability: 'coming-soon', baseUrl: 'https://api.anthropic.com/v1', defaultModel: '', modelSuggestions: [], description: '后续适配', requiresBaseUrl: false, maxBaseUrls: 1 },
+    { id: 'kimi', displayName: 'Kimi / Moonshot', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.moonshot.cn/v1', defaultModel: 'kimi-k2.7-code', modelSuggestions: ['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6'], description: 'Kimi 官方', requiresBaseUrl: false, maxBaseUrls: 1 },
+    { id: 'relay-1', displayName: '中转站 1', group: 'relay', protocol: 'openai-compatible', availability: 'available', baseUrl: '', defaultModel: '', modelSuggestions: [], description: '自定义中转站', requiresBaseUrl: true, maxBaseUrls: 4 },
   ],
   smtp: { host: 'smtp.qq.com', port: 465, secure: true, userHint: '填写 QQ 邮箱账号', authCodeHint: '填写 SMTP 授权码，不是 QQ 登录密码', recipientHint: '填写收件邮箱' },
   feishu: { webhookHint: '填写飞书群机器人 Webhook URL', securityHint: 'Webhook 会加密保存在本机、页面不回显、不要复制到截图或提交到 Git。' },
@@ -36,6 +37,14 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
     }
     if (request.method() === 'GET' && pathname === '/api/config/presets') {
       await route.fulfill({ json: success(presets) });
+      return;
+    }
+    if (request.method() === 'POST' && pathname === '/api/config/ai/test-provider') {
+      // 中转站会送多个候选地址，取第一个当作测通的那个。
+      const { baseUrls } = request.postDataJSON() as { baseUrls: string[] };
+      await route.fulfill({
+        json: success({ latencyMs: 12, supportedModels: [], resolvedBaseUrl: baseUrls[0], attempts: [{ baseUrl: baseUrls[0], pass: true }] }),
+      });
       return;
     }
     if (request.method() === 'POST' && pathname === '/api/config/ai/test-and-activate') {
@@ -76,8 +85,18 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
   expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
 
   await expect(page.getByTestId('custom-provider-advanced')).toHaveAttribute('open', '');
+
+  // 中转站没有官方地址，必须给出可填地址的输入框；官方 Provider 不给。
+  const relayCard = page.locator('.provider-preset-card', { has: page.getByRole('heading', { name: '中转站 1', level: 4 }) });
+  await expect(relayCard.getByTestId('official-relay-1-base-url-0')).toBeVisible();
+  await expect(relayCard).not.toContainText('官方 API 地址');
+  await expect(page.getByTestId('official-openai-base-url-0')).toHaveCount(0);
+
   const kimiCard = page.locator('.provider-preset-card', { has: page.getByRole('heading', { name: 'Kimi / Moonshot', level: 4 }) });
   await kimiCard.getByTestId('official-kimi-api-key').fill('FAKE_E2E_KIMI_KEY');
+  // 现在必须先测通才能加入 fallback。
+  await expect(kimiCard.getByRole('button', { name: '加入 fallback' })).toBeDisabled();
+  await kimiCard.getByRole('button', { name: '测试此 Provider' }).click();
   await kimiCard.getByRole('button', { name: '加入 fallback' }).click();
   await expect(page.getByLabel('Provider fallback 优先级')).toContainText('优先级 1');
   await page.getByRole('button', { name: '测试并激活 AI' }).click();
@@ -86,6 +105,7 @@ test('T12 设置中心通过 API mock 提供预设、脱敏失败与窄屏交互
   await expect(kimiCard.getByTestId('official-kimi-api-key')).toHaveValue('');
 
   await kimiCard.getByTestId('official-kimi-api-key').fill('FAKE_E2E_FAIL_KEY');
+  await kimiCard.getByRole('button', { name: '测试此 Provider' }).click();
   await kimiCard.getByRole('button', { name: '加入 fallback' }).click();
   await page.getByRole('button', { name: '测试并激活 AI' }).click();
   await expect(page.getByText('测试失败：CONFIG_CONNECTION_TEST_FAILED', { exact: true })).toBeVisible();

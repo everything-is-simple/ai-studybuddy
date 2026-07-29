@@ -11,7 +11,7 @@ export interface ConfigurationStatus {
   runtime: { dataDir: boolean; aiAvailable: boolean; smtpAvailable: boolean; feishuAvailable: boolean; uptime: number; nodeVersion: string };
 }
 
-export type ProviderPresetGroup = 'international' | 'mainland' | 'alternative';
+export type ProviderPresetGroup = 'international' | 'mainland' | 'relay';
 export type ProviderPresetProtocol = 'openai-compatible' | 'anthropic-native';
 export type ProviderPresetAvailability = 'available' | 'coming-soon';
 
@@ -25,6 +25,9 @@ export interface AiProviderPreset {
   defaultModel: string;
   modelSuggestions: string[];
   description: string;
+  /** 中转站为 true：地址由用户填写，可填多个备用地址。官方 Provider 为 false。 */
+  requiresBaseUrl?: boolean;
+  maxBaseUrls?: number;
 }
 
 export interface ConfigurationPresets {
@@ -37,6 +40,8 @@ export interface ConfigurationPresets {
 export interface OfficialAiCandidate {
   kind: 'official';
   presetId: string;
+  /** 只有中转站需要：测试通过的那个地址。官方 Provider 不传。 */
+  baseUrl?: string;
   apiKey: string;
   model: string;
   priority: number;
@@ -60,4 +65,31 @@ export const testAndActivate = (channel: 'ai' | 'smtp' | 'feishu', candidate: un
 export const retestConfiguration = (channel: 'ai' | 'smtp' | 'feishu') =>
   request<{ activated: boolean; test: { pass: boolean; errorCode?: string; sanitizedMessage?: string } }>(`/config/${channel}/retest`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}',
+  });
+
+export interface ProviderTestAttempt {
+  baseUrl: string;
+  pass: boolean;
+  errorCode?: string;
+}
+
+/**
+ * 测试单个 AI Provider 并获取支持的模型列表。
+ * 中转站传 baseUrls（多个候选地址，逐个尝试），返回 resolvedBaseUrl 表示哪个地址通了。
+ */
+export const testSingleProvider = (provider: {
+  name: string;
+  baseUrls: string[];
+  apiKey: string;
+  model?: string;
+}) =>
+  request<{
+    latencyMs: number;
+    supportedModels: string[];
+    resolvedBaseUrl?: string;
+    attempts?: ProviderTestAttempt[];
+  }>('/config/ai/test-provider', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(provider),
   });

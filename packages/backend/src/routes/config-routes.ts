@@ -16,6 +16,21 @@ interface ConfigurationServicePort {
     channel: ConfigChannel,
     options?: { sendTestEmail?: boolean }
   ): Promise<TestAndActivateResult | null>;
+  testSingleProvider?(provider: {
+    name: string;
+    baseUrl?: string;
+    baseUrls?: string[];
+    apiKey: string;
+    model: string;
+  }): Promise<{
+    pass: boolean;
+    errorCode?: string;
+    sanitizedMessage?: string;
+    latencyMs?: number;
+    supportedModels?: string[];
+    resolvedBaseUrl?: string;
+    attempts?: Array<{ baseUrl: string; pass: boolean; errorCode?: string }>;
+  }>;
 }
 
 class ValidationError extends Error {
@@ -43,6 +58,55 @@ export function createConfigRouter(service: ConfigurationServicePort): Router {
     }
     next();
   };
+
+  // 新增：测试单个 Provider 并获取模型列表（必须放在 /:channel 路由之前）
+  router.post('/ai/test-provider', jsonOnly, async (req, res) => {
+    try {
+      if (!service.testSingleProvider) {
+        res.status(501).json({
+          success: false,
+          error: { code: 'NOT_IMPLEMENTED', message: '该功能尚未实现' },
+        });
+        return;
+      }
+
+      const body = req.body as Record<string, unknown>;
+      const provider = {
+        name: cleanString(body.name, 100),
+        // 中转站会传 baseUrls（多个候选地址）；官方 Provider 传单个 baseUrl。
+        baseUrls: validateBaseUrlList(body.baseUrls, body.baseUrl),
+        apiKey: cleanString(body.apiKey, 500),
+        // 中转站首次测试时还不知道模型，允许留空由后端探测。
+        model: body.model === undefined || body.model === '' ? '' : cleanString(body.model, 200),
+      };
+
+      const result = await service.testSingleProvider(provider);
+
+      if (!result.pass) {
+        res.status(422).json({
+          success: false,
+          error: {
+            code: result.errorCode ?? 'PROVIDER_TEST_FAILED',
+            message: result.sanitizedMessage ?? 'Provider 测试失败',
+            details: { attempts: result.attempts ?? [] },
+          },
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: {
+          latencyMs: result.latencyMs,
+          supportedModels: result.supportedModels || [],
+          resolvedBaseUrl: result.resolvedBaseUrl,
+          attempts: result.attempts ?? [],
+        },
+      });
+    } catch (error) {
+      sendValidationError(res, error);
+    }
+  });
 
   router.post('/:channel/test-and-activate', jsonOnly, async (req, res) => {
     try {
@@ -135,18 +199,36 @@ function validateAiProvider(raw: unknown): ChannelConfigMap['ai']['providers'][n
 }
 
 function validateOfficialAiProvider(value: Record<string, unknown>): ChannelConfigMap['ai']['providers'][number] {
-  assertOnlyFields(value, ['kind', 'presetId', 'apiKey', 'model', 'priority']);
+  // presetId 要先解析出来，因为允许哪些字段取决于是官方 Provider 还是中转站。
   const presetId = cleanString(value.presetId, 50);
   const preset = findProviderPreset(presetId);
   if (!preset) throw new ValidationError('CONFIG_PRESET_INVALID');
   if (preset.availability !== 'available' || preset.protocol !== 'openai-compatible') {
     throw new ValidationError('CONFIG_PRESET_UNAVAILABLE');
   }
+
+  // 官方 Provider 的地址由预设固定，客户端传 baseUrl 一律拒绝（不是忽略），
+  // 避免把请求改指到别处。只有中转站可以带地址，且必须是测试通过的那一个。
+  assertOnlyFields(
+    value,
+    preset.requiresBaseUrl
+      ? ['kind', 'presetId', 'baseUrl', 'apiKey', 'model', 'priority']
+      : ['kind', 'presetId', 'apiKey', 'model', 'priority']
+  );
+  const baseUrl = preset.requiresBaseUrl
+    ? validateProviderUrl(cleanString(value.baseUrl, 500))
+    : preset.baseUrl;
+
+  // 官方 Provider 的模型必须在白名单内；中转站的模型是测试时从对方 /models 拿到的，
+  // 无法预先枚举，只做基本字符串校验。
   const model = cleanString(value.model, 100);
-  if (!preset.modelSuggestions.includes(model)) throw new ValidationError('CONFIG_MODEL_INVALID');
+  if (!preset.requiresBaseUrl && !preset.modelSuggestions.includes(model)) {
+    throw new ValidationError('CONFIG_MODEL_INVALID');
+  }
+
   return {
     name: preset.displayName,
-    baseUrl: preset.baseUrl,
+    baseUrl,
     apiKey: cleanString(value.apiKey, 200, false),
     model,
     priority: validatePriority(value.priority),
@@ -199,6 +281,17 @@ function validateFeishu(body: Record<string, unknown>): ChannelConfigMap['feishu
   const webhookUrl = validateProviderUrl(cleanString(body.webhookUrl, 500));
   if (!webhookUrl.startsWith('https://')) throw new ValidationError('CONFIG_URL_INVALID');
   return { webhookUrl };
+}
+
+function validateBaseUrlList(rawList: unknown, rawSingle: unknown): string[] {
+  const values = Array.isArray(rawList) ? rawList : rawSingle === undefined ? [] : [rawSingle];
+  if (values.length === 0) throw new ValidationError('CONFIG_BASE_URL_REQUIRED');
+  if (values.length > 4) throw new ValidationError('CONFIG_BASE_URL_COUNT_INVALID');
+  const urls = values
+    .filter((value) => typeof value === 'string' && value.trim().length > 0)
+    .map((value) => validateProviderUrl(cleanString(value, 500)));
+  if (urls.length === 0) throw new ValidationError('CONFIG_BASE_URL_REQUIRED');
+  return [...new Set(urls)];
 }
 
 function validateProviderUrl(value: string): string {

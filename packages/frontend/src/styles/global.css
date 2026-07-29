@@ -1703,6 +1703,59 @@ button:disabled {
   font-size: 0.875rem;
 }
 
+.relay-base-urls {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.relay-base-urls legend {
+  padding: 0 4px;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.relay-base-url-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.relay-base-url-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.provider-test-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.test-success {
+  color: var(--color-success, #1a7f4b);
+}
+
+.test-error {
+  color: var(--color-danger, #b3261e);
+}
+
+.relay-attempt-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.relay-attempt-list code {
+  overflow-wrap: anywhere;
+}
+
 .advanced-config {
   margin: 16px 0;
   padding: 12px;

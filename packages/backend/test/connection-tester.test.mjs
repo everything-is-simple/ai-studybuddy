@@ -10,7 +10,7 @@ const aiCandidate = {
   ],
 };
 
-test('AI connection test checks every provider and passes only when all pass', async () => {
+test('AI connection test checks every provider and passes when at least one passes', async () => {
   const calls = [];
   const tester = new ConnectionTester({
     createAiProvider(config) {
@@ -27,7 +27,8 @@ test('AI connection test checks every provider and passes only when all pass', a
 
   const result = await tester.testAi(aiCandidate);
 
-  assert.equal(result.pass, false);
+  // 只要有一家通就激活，失败的那家在结果里标出来但不阻塞。
+  assert.equal(result.pass, true);
   assert.equal(calls.length, 2);
   assert.deepEqual(result.providers.map(({ name, pass }) => ({ name, pass })), [
     { name: 'primary', pass: true },
@@ -35,6 +36,159 @@ test('AI connection test checks every provider and passes only when all pass', a
   ]);
   assert.equal(result.providers[1].errorCode, 'AI_UNKNOWN');
   assert.doesNotMatch(JSON.stringify(result), /secret-backup|backup\.invalid/);
+});
+
+test('AI connection test fails only when every provider fails', async () => {
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          throw new Error(`failed ${config.apiKey} ${config.baseUrl}`);
+        },
+      };
+    },
+  });
+
+  const result = await tester.testAi(aiCandidate);
+
+  assert.equal(result.pass, false);
+  assert.deepEqual(result.providers.map(({ pass }) => pass), [false, false]);
+  assert.doesNotMatch(JSON.stringify(result), /secret-primary|secret-backup|primary\.invalid|backup\.invalid/);
+});
+
+test('relay slots try every address in order and adopt the first one that answers', async () => {
+  const attempted = [];
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          attempted.push(config.baseUrl);
+          if (config.baseUrl !== 'https://relay-c.invalid/v1') {
+            throw new Error(`failed ${config.apiKey} ${config.baseUrl}`);
+          }
+          return { content: 'OK', provider: config.name, model: config.model, latencyMs: 4, fallbackUsed: false };
+        },
+      };
+    },
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [{ id: 'relay-model-a' }, { id: 'relay-model-b' }] }),
+    }),
+  });
+
+  const result = await tester.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay-a.invalid/v1', 'https://relay-b.invalid/v1', 'https://relay-c.invalid/v1'],
+    apiKey: 'secret-relay',
+    model: '',
+  });
+
+  assert.equal(result.pass, true);
+  assert.equal(result.resolvedBaseUrl, 'https://relay-c.invalid/v1');
+  assert.deepEqual(attempted, [
+    'https://relay-a.invalid/v1',
+    'https://relay-b.invalid/v1',
+    'https://relay-c.invalid/v1',
+  ]);
+  assert.deepEqual(result.supportedModels, ['relay-model-a', 'relay-model-b']);
+  assert.doesNotMatch(JSON.stringify(result), /secret-relay/);
+});
+
+test('relay slots separate an unreachable address from a reachable one with a bad key', async () => {
+  const tester = new ConnectionTester({
+    createAiProvider: (config) => ({ name: config.name, generate: async () => ({ content: 'OK' }) }),
+    // 地址连不上：fetch 直接抛，而不是返回 HTTP 错误。
+    fetch: async () => { throw new Error('getaddrinfo ENOTFOUND'); },
+  });
+
+  const unreachable = await tester.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay-nope.invalid/v1'],
+    apiKey: 'secret-relay',
+    model: '',
+  });
+
+  assert.equal(unreachable.pass, false);
+  assert.equal(unreachable.errorCode, 'AI_BASE_URL_UNREACHABLE');
+  assert.doesNotMatch(JSON.stringify(unreachable), /secret-relay/);
+
+  const rejectedKey = new ConnectionTester({
+    createAiProvider: (config) => ({ name: config.name, generate: async () => ({ content: 'OK' }) }),
+    // 地址通了但 Key 不对。
+    fetch: async () => ({ ok: false, status: 401, json: async () => ({}) }),
+  });
+
+  const badKey = await rejectedKey.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay-ok.invalid/v1'],
+    apiKey: 'secret-relay',
+    model: '',
+  });
+
+  assert.equal(badKey.pass, false);
+  assert.equal(badKey.errorCode, 'AI_AUTH_FAILED');
+});
+
+test('relay slots report an empty model list separately from an unreachable address', async () => {
+  const tester = new ConnectionTester({
+    createAiProvider: (config) => ({ name: config.name, generate: async () => ({ content: 'OK' }) }),
+    // 地址通、Key 也没被拒，但对方就是没给模型。
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ data: [] }) }),
+  });
+
+  const result = await tester.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay-empty.invalid/v1'],
+    apiKey: 'secret-relay',
+    model: '',
+  });
+
+  assert.equal(result.pass, false);
+  assert.equal(result.errorCode, 'AI_NO_MODEL_AVAILABLE');
+});
+
+test('relay slots report failure with per-address attempts when no address answers', async () => {
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          const error = new Error('unauthorized');
+          error.status = 401;
+          throw error;
+        },
+      };
+    },
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ data: [{ id: 'relay-model-a' }] }) }),
+  });
+
+  const result = await tester.testSingleProvider({
+    name: '中转站 2',
+    baseUrls: ['https://relay-a.invalid/v1', 'https://relay-b.invalid/v1'],
+    apiKey: 'secret-relay',
+    model: '',
+  });
+
+  // 两个地址都是 401，说明问题在 Key 而不是地址，要报认证失败。
+  assert.equal(result.pass, false);
+  assert.equal(result.errorCode, 'AI_AUTH_FAILED');
+  assert.equal(result.attempts.length, 2);
+  assert.deepEqual(result.attempts.map(({ pass }) => pass), [false, false]);
+  assert.doesNotMatch(JSON.stringify(result), /secret-relay/);
+});
+
+test('relay slots reject an empty address list', async () => {
+  const tester = new ConnectionTester({
+    createAiProvider: (config) => ({ name: config.name, generate: async () => ({ content: 'OK' }) }),
+  });
+
+  const result = await tester.testSingleProvider({ name: '中转站 3', baseUrls: [], apiKey: 'secret', model: '' });
+
+  assert.equal(result.pass, false);
+  assert.equal(result.errorCode, 'AI_BASE_URL_REQUIRED');
 });
 
 test('AI connection test marks a provider timeout without leaking candidate values', async () => {

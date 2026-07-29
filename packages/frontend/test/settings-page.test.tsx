@@ -16,9 +16,8 @@ const presetsFixture = {
     { id: 'glm', displayName: '智谱 GLM', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://glm.invalid/v1', defaultModel: 'glm-test', modelSuggestions: ['glm-test'], description: 'GLM 官方' },
     { id: 'kimi', displayName: 'Kimi / Moonshot', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.moonshot.cn/v1', defaultModel: 'kimi-k2.7-code', modelSuggestions: ['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6'], description: 'Kimi 官方' },
     { id: 'deepseek', displayName: 'DeepSeek', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://deepseek.invalid/v1', defaultModel: 'deepseek-test', modelSuggestions: ['deepseek-test'], description: 'DeepSeek 官方' },
-    { id: 'minimax', displayName: 'MiniMax', group: 'alternative', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://minimax.invalid/v1', defaultModel: 'minimax-test', modelSuggestions: ['minimax-test'], description: 'MiniMax 官方' },
-    { id: 'qwen', displayName: 'Qwen / DashScope', group: 'alternative', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://qwen.invalid/v1', defaultModel: 'qwen-test', modelSuggestions: ['qwen-test'], description: 'Qwen 官方' },
-    { id: 'stepfun', displayName: 'StepFun', group: 'alternative', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://stepfun.invalid/v1', defaultModel: 'stepfun-test', modelSuggestions: ['stepfun-test'], description: 'StepFun 官方' },
+    { id: 'relay-1', displayName: '中转站 1', group: 'relay', protocol: 'openai-compatible', availability: 'available', baseUrl: '', defaultModel: '', modelSuggestions: [], description: '自定义中转站', requiresBaseUrl: true, maxBaseUrls: 4 },
+    { id: 'relay-2', displayName: '中转站 2', group: 'relay', protocol: 'openai-compatible', availability: 'available', baseUrl: '', defaultModel: '', modelSuggestions: [], description: '自定义中转站', requiresBaseUrl: true, maxBaseUrls: 4 },
   ],
   smtp: { host: 'smtp.qq.com', port: 465, secure: true, userHint: '填写 QQ 邮箱账号', authCodeHint: '填写 SMTP 授权码，不是 QQ 登录密码', recipientHint: '填写收件邮箱' },
   feishu: { webhookHint: '填写飞书群机器人 Webhook URL', securityHint: 'Webhook 会加密保存在本机、页面不回显、不要复制到截图或提交到 Git。' },
@@ -37,6 +36,7 @@ const mocks = vi.hoisted(() => ({
   getConfigurationPresets: vi.fn(),
   testAndActivate: vi.fn(),
   retestConfiguration: vi.fn(),
+  testSingleProvider: vi.fn(),
 }));
 
 vi.mock('../src/api/configuration-api', async (importOriginal) => ({
@@ -45,6 +45,7 @@ vi.mock('../src/api/configuration-api', async (importOriginal) => ({
   getConfigurationPresets: mocks.getConfigurationPresets,
   testAndActivate: mocks.testAndActivate,
   retestConfiguration: mocks.retestConfiguration,
+  testSingleProvider: mocks.testSingleProvider,
 }));
 
 let container: HTMLDivElement;
@@ -71,6 +72,12 @@ beforeEach(() => {
   mocks.getConfigurationPresets.mockResolvedValue(presetsFixture);
   mocks.testAndActivate.mockResolvedValue({ activated: true, test: { pass: true } });
   mocks.retestConfiguration.mockResolvedValue({ activated: false, test: { pass: true } });
+  mocks.testSingleProvider.mockImplementation(async ({ baseUrls }: { baseUrls: string[] }) => ({
+    latencyMs: 12,
+    supportedModels: [],
+    resolvedBaseUrl: baseUrls[0],
+    attempts: [{ baseUrl: baseUrls[0], pass: true }],
+  }));
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
@@ -145,13 +152,27 @@ async function setInput(element: HTMLInputElement, value: string) {
   await act(async () => { setter.call(element, value); element.dispatchEvent(new Event('input', { bubbles: true })); });
 }
 
+function cardButton(name: string, label: string): HTMLButtonElement {
+  const button = [...presetCard(name).querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(label));
+  expect(button, `应在卡片 ${name} 找到按钮：${label}`).not.toBeNull();
+  return button!;
+}
+
+/** 现在必须先测通才能加入 fallback，所以每次加入前都要走一遍测试。 */
+async function testThenAdd(name: string) {
+  await act(async () => cardButton(name, '测试此 Provider').click());
+  await flush();
+  await act(async () => cardButton(name, '加入 fallback').click());
+  await flush();
+}
+
 describe('settings page', () => {
   it('renders server-provided official presets in groups without editable official base URLs', async () => {
     await renderSettingsPage();
 
     expect(container.textContent).toContain('国外主流');
     expect(container.textContent).toContain('国内主流');
-    expect(container.textContent).toContain('国内外备选');
+    expect(container.textContent).toContain('中转站');
     expect(container.textContent).toContain('OpenAI');
     expect(container.textContent).toContain('Kimi / Moonshot');
     expect(container.textContent).toContain('后续适配');
@@ -206,9 +227,10 @@ describe('settings page', () => {
     await setInput(input('official-kimi-api-key'), 'FAKE_KIMI_SECRET');
     await act(async () => buttonByAriaLabel('显示 Kimi / Moonshot API Key').click());
     expect(input('official-kimi-api-key').type).toBe('text');
-    await act(async () => [...presetCard('Kimi / Moonshot').querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('加入 fallback'))!.click());
-    await flush();
+    await testThenAdd('Kimi / Moonshot');
 
+    // 加入 fallback 会清空 Key，SecretInput 在值变空后自动回到遮蔽态。
+    expect(input('official-kimi-api-key').value).toBe('');
     expect(input('official-kimi-api-key').type).toBe('password');
     await setInput(input('official-kimi-api-key'), 'SENTINEL_AFTER_CLEAR');
     expect(input('official-kimi-api-key').type).toBe('password');
@@ -229,10 +251,9 @@ describe('settings page', () => {
   it('moves and removes fallback candidates while deriving the displayed priority from list order', async () => {
     await renderSettingsPage();
     await setInput(input('official-kimi-api-key'), 'FAKE_KIMI_MOVE');
-    await act(async () => [...presetCard('Kimi / Moonshot').querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('加入 fallback'))!.click());
+    await testThenAdd('Kimi / Moonshot');
     await setInput(input('official-openai-api-key'), 'FAKE_OPENAI_MOVE');
-    await act(async () => [...presetCard('OpenAI').querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('加入 fallback'))!.click());
-    await flush();
+    await testThenAdd('OpenAI');
 
     const items = () => [...container.querySelectorAll<HTMLElement>('.fallback-list li')];
     expect(items()).toHaveLength(2);
@@ -275,6 +296,84 @@ describe('settings page', () => {
     expect(input('feishu-webhook-url').value).toBe('');
     expect(container.textContent).not.toContain('FAKE_FEISHU_SECRET');
     expect(setItemSpy).not.toHaveBeenCalled();
+  });
+
+  it('lets relay slots take user-entered addresses while official providers keep fixed ones', async () => {
+    await renderSettingsPage();
+
+    // 官方 Provider：地址由预设固定，不给编辑框。
+    expect(container.querySelector('[data-testid="official-kimi-base-url-0"]')).toBeNull();
+    expect(presetCard('Kimi / Moonshot').textContent).toContain('官方 API 地址');
+
+    // 中转站：必须有地址输入框，且不该显示"官方 API 地址"。
+    const relayCard = presetCard('中转站 1');
+    expect(relayCard.textContent).not.toContain('官方 API 地址');
+    expect(input('official-relay-1-base-url-0')).not.toBeNull();
+
+    // 只填 Key 不填地址时不能测试。
+    await setInput(input('official-relay-1-api-key'), 'FAKE_RELAY_KEY');
+    expect(cardButton('中转站 1', '测试此 Provider').disabled).toBe(true);
+
+    await setInput(input('official-relay-1-base-url-0'), 'https://relay-a.invalid/v1');
+    expect(cardButton('中转站 1', '测试此 Provider').disabled).toBe(false);
+  });
+
+  it('tries every relay address in order and adopts the one that answers', async () => {
+    mocks.testSingleProvider.mockResolvedValue({
+      latencyMs: 30,
+      supportedModels: ['relay-gpt-4o', 'relay-claude'],
+      resolvedBaseUrl: 'https://relay-b.invalid/v1',
+      attempts: [
+        { baseUrl: 'https://relay-a.invalid/v1', pass: false, errorCode: 'AI_UNKNOWN' },
+        { baseUrl: 'https://relay-b.invalid/v1', pass: true },
+      ],
+    });
+    await renderSettingsPage();
+
+    await setInput(input('official-relay-1-api-key'), 'FAKE_RELAY_KEY');
+    await setInput(input('official-relay-1-base-url-0'), 'https://relay-a.invalid/v1');
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-testid="official-relay-1-add-base-url"]')!.click());
+    await flush();
+    await setInput(input('official-relay-1-base-url-1'), 'https://relay-b.invalid/v1');
+
+    await act(async () => cardButton('中转站 1', '测试此 Provider').click());
+    await flush();
+
+    // 两个地址都要送到后端，顺序保持用户填写的顺序。
+    expect(mocks.testSingleProvider).toHaveBeenCalledWith({
+      name: '中转站 1',
+      baseUrls: ['https://relay-a.invalid/v1', 'https://relay-b.invalid/v1'],
+      apiKey: 'FAKE_RELAY_KEY',
+      model: '',
+    });
+
+    // 模型来自中转站实际返回，而不是预设。
+    expect([...select('official-relay-1-model').options].map((option) => option.value)).toEqual(['relay-gpt-4o', 'relay-claude']);
+    expect(presetCard('中转站 1').textContent).toContain('https://relay-b.invalid/v1');
+
+    await act(async () => cardButton('中转站 1', '加入 fallback').click());
+    await flush();
+    await act(async () => buttonContaining('测试并激活 AI').click());
+    await flush();
+
+    // 激活时必须带上测通的那个地址，否则后端不知道该请求哪里。
+    expect(mocks.testAndActivate).toHaveBeenCalledWith('ai', {
+      providers: [{ kind: 'official', presetId: 'relay-1', baseUrl: 'https://relay-b.invalid/v1', apiKey: 'FAKE_RELAY_KEY', model: 'relay-gpt-4o', priority: 1 }],
+    });
+  });
+
+  it('invalidates a passed test when the address or key changes afterwards', async () => {
+    await renderSettingsPage();
+
+    await setInput(input('official-relay-1-api-key'), 'FAKE_RELAY_KEY');
+    await setInput(input('official-relay-1-base-url-0'), 'https://relay-a.invalid/v1');
+    await act(async () => cardButton('中转站 1', '测试此 Provider').click());
+    await flush();
+    expect(cardButton('中转站 1', '加入 fallback').disabled).toBe(false);
+
+    // 改了地址就不能再用旧的测试结果加入 fallback。
+    await setInput(input('official-relay-1-base-url-0'), 'https://relay-changed.invalid/v1');
+    expect(cardButton('中转站 1', '加入 fallback').disabled).toBe(true);
   });
 
   it('shows first-run guide in app shell when all channels are unconfigured', async () => {

@@ -68,7 +68,9 @@ export class ConnectionTester {
     const providers = await Promise.all(
       candidate.providers.map((provider) => this.testOneAiProvider(provider))
     );
-    return { pass: providers.every((provider) => provider.pass), providers };
+    // 至少一个 Provider 测试通过就算成功，失败的会被自动跳过
+    const hasAtLeastOnePass = providers.some((provider) => provider.pass);
+    return { pass: hasAtLeastOnePass, providers };
   }
 
   async testSmtp(
@@ -131,6 +133,130 @@ export class ConnectionTester {
     }
   }
 
+  /**
+   * 单独测试一个 Provider 并获取其支持的模型列表。
+   *
+   * 官方 Provider 只有一个地址。中转站可以给多个候选地址：按顺序试，第一个通的就是
+   * 结果，返回 resolvedBaseUrl 告诉调用方到底哪个地址通了。全部不通时返回最后一次
+   * 的失败原因（若某个地址是认证失败，优先报认证失败，因为那通常是 Key 的问题）。
+   */
+  async testSingleProvider(
+    provider: Omit<ProviderConfig, 'baseUrl' | 'priority'> & {
+      baseUrl?: string;
+      baseUrls?: string[];
+    }
+  ): Promise<{
+    pass: boolean;
+    errorCode?: string;
+    sanitizedMessage?: string;
+    latencyMs?: number;
+    supportedModels?: string[];
+    resolvedBaseUrl?: string;
+    attempts?: Array<{ baseUrl: string; pass: boolean; errorCode?: string }>;
+  }> {
+    const candidates = (provider.baseUrls?.length ? provider.baseUrls : [provider.baseUrl])
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      .map((value) => value.trim());
+
+    if (candidates.length === 0) {
+      return fixedFailure('AI_BASE_URL_REQUIRED', '请填写至少一个 API 请求地址');
+    }
+
+    const attempts: Array<{ baseUrl: string; pass: boolean; errorCode?: string }> = [];
+    let lastFailure = fixedFailure('AI_UNKNOWN', 'AI Provider 连接测试失败');
+    let authFailure: ConnectionTestResult | null = null;
+
+    for (const baseUrl of candidates) {
+      const startedAt = Date.now();
+      const probe: ProviderConfig = {
+        name: provider.name,
+        baseUrl,
+        apiKey: provider.apiKey,
+        model: provider.model,
+        priority: 1,
+      };
+      try {
+        // 中转站首次测试时还不知道有哪些模型，先取模型列表挑一个来试跑；
+        // 官方 Provider 已有默认模型，直接用它。
+        const listing = await this.fetchModelList(probe);
+        const model = provider.model || listing.models[0];
+        if (!model) {
+          lastFailure = !listing.reachable
+            ? fixedFailure('AI_BASE_URL_UNREACHABLE', '该 API 请求地址连不上，请检查地址是否正确')
+            : listing.status === 401 || listing.status === 403
+              ? fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败')
+              : fixedFailure('AI_NO_MODEL_AVAILABLE', '地址可以连通但没返回可用模型，请确认 Key 和权限');
+          if (lastFailure.errorCode === 'AI_AUTH_FAILED') authFailure = lastFailure;
+          attempts.push({ baseUrl, pass: false, errorCode: lastFailure.errorCode });
+          continue;
+        }
+
+        await withTimeout(
+          this.createAiProvider({ ...probe, model }).generate({
+            taskType: 'error_analysis',
+            inputText: '只回复 OK',
+          }),
+          this.aiProviderTimeoutMs
+        );
+        attempts.push({ baseUrl, pass: true });
+        return {
+          pass: true,
+          latencyMs: Date.now() - startedAt,
+          supportedModels: listing.models.length > 0 ? listing.models : [model],
+          resolvedBaseUrl: baseUrl,
+          attempts,
+        };
+      } catch (error) {
+        lastFailure = classifyAiError(error);
+        attempts.push({ baseUrl, pass: false, errorCode: lastFailure.errorCode });
+        if (lastFailure.errorCode === 'AI_AUTH_FAILED') authFailure = lastFailure;
+      }
+    }
+
+    return { ...(authFailure ?? lastFailure), attempts };
+  }
+
+  /**
+   * 调用 /v1/models 获取模型列表。
+   *
+   * 区分三种情况，因为它们对用户意味着完全不同的排查方向：
+   * - reachable + 有模型：地址和 Key 都对
+   * - reachable + 空列表或 HTTP 错误：地址通了，但 Key 或权限有问题
+   * - unreachable：地址本身错了（DNS、端口、协议），跟 Key 无关
+   */
+  private async fetchModelList(
+    provider: ProviderConfig
+  ): Promise<{ reachable: boolean; status?: number; models: string[] }> {
+    let response: Response;
+    try {
+      const url = `${provider.baseUrl.replace(/\/$/, '')}/models`;
+      response = await this.fetchImpl(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${provider.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch {
+      // 不记日志：URL 和 Key 都是敏感值，日志里不留。
+      return { reachable: false, models: [] };
+    }
+
+    if (!response.ok) return { reachable: true, status: response.status, models: [] };
+
+    try {
+      const data = (await response.json()) as { data?: Array<{ id: string }> };
+      return {
+        reachable: true,
+        status: response.status,
+        models: (data.data ?? []).map((entry) => entry.id).filter(Boolean),
+      };
+    } catch {
+      return { reachable: true, status: response.status, models: [] };
+    }
+  }
+
   private async testOneAiProvider(provider: ProviderConfig): Promise<AiProviderTestResult> {
     const startedAt = Date.now();
     try {
@@ -148,22 +274,23 @@ export class ConnectionTester {
         model: result.model ?? provider.model,
       };
     } catch (error) {
-      if (error instanceof ConnectionTimeoutError) {
-        return {
-          name: provider.name,
-          ...fixedFailure('AI_CONNECTION_TIMEOUT', 'AI Provider 连接超时'),
-        };
-      }
-      const status = getErrorStatus(error);
-      if (status === 401 || status === 403) {
-        return { name: provider.name, ...fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败') };
-      }
-      if (status === 429) {
-        return { name: provider.name, ...fixedFailure('AI_QUOTA_OR_RATE_LIMITED', 'AI Provider 额度、配额或速率受限') };
-      }
-      return { name: provider.name, ...fixedFailure('AI_UNKNOWN', 'AI Provider 连接测试失败') };
+      return { name: provider.name, ...classifyAiError(error) };
     }
   }
+}
+
+function classifyAiError(error: unknown): ConnectionTestResult {
+  if (error instanceof ConnectionTimeoutError) {
+    return fixedFailure('AI_CONNECTION_TIMEOUT', 'AI Provider 连接超时');
+  }
+  const status = getErrorStatus(error);
+  if (status === 401 || status === 403) {
+    return fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败');
+  }
+  if (status === 429) {
+    return fixedFailure('AI_QUOTA_OR_RATE_LIMITED', 'AI Provider 额度、配额或速率受限');
+  }
+  return fixedFailure('AI_UNKNOWN', 'AI Provider 连接测试失败');
 }
 
 function fixedFailure(errorCode: string, sanitizedMessage: string): ConnectionTestResult {

@@ -204,6 +204,44 @@ export class ConfigurationService {
     });
   }
 
+  /**
+   * 测试单个 AI Provider 并获取模型列表。中转站可传多个候选地址。
+   */
+  async testSingleProvider(provider: {
+    name: string;
+    baseUrl?: string;
+    baseUrls?: string[];
+    apiKey: string;
+    model: string;
+  }): Promise<{
+    pass: boolean;
+    errorCode?: string;
+    sanitizedMessage?: string;
+    latencyMs?: number;
+    supportedModels?: string[];
+    resolvedBaseUrl?: string;
+    attempts?: Array<{ baseUrl: string; pass: boolean; errorCode?: string }>;
+  }> {
+    // 检查 tester 是否支持 testSingleProvider
+    if (typeof (this.tester as any).testSingleProvider !== 'function') {
+      return {
+        pass: false,
+        errorCode: 'NOT_IMPLEMENTED',
+        sanitizedMessage: 'ConnectionTester 未实现 testSingleProvider 方法',
+      };
+    }
+
+    try {
+      return await (this.tester as any).testSingleProvider(provider);
+    } catch (error) {
+      return {
+        pass: false,
+        errorCode: 'PROVIDER_TEST_ERROR',
+        sanitizedMessage: '测试 Provider 时发生错误',
+      };
+    }
+  }
+
   private async withChannelLock<T>(channel: ConfigChannel, operation: () => Promise<T>): Promise<T> {
     const previous = this.channelLocks.get(channel) ?? Promise.resolve();
     let release!: () => void;
