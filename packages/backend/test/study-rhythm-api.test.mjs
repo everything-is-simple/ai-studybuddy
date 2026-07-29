@@ -83,6 +83,10 @@ async function createCourse(port, semesterId, name, retakeOfCourseInstanceId) {
   return requestJson(port, 'POST', '/api/courses', body);
 }
 
+async function deleteCourse(port, semesterId, courseId) {
+  return requestJson(port, 'DELETE', `/api/courses/${courseId}?semesterId=${semesterId}`);
+}
+
 async function createExam(port, semesterId, courseInstanceId, overrides = {}) {
   return requestJson(port, 'POST', '/api/exams', {
     semesterId,
@@ -134,6 +138,21 @@ test('creates and lists courses within one ready semester', async (t) => {
     listed.json.data.map((course) => course.name),
     ['数学分析']
   );
+});
+
+test('deletes an empty course within its ready semester', async (t) => {
+  const backend = await startBackend(t);
+  const semesterId = await initializeReadySemester(backend.port);
+  const created = await createCourse(backend.port, semesterId, '待删除课程');
+
+  const deleted = await deleteCourse(backend.port, semesterId, created.json.data.id);
+  assert.equal(deleted.status, 200);
+  assert.equal(deleted.json.success, true);
+  assert.equal(deleted.json.data.id, created.json.data.id);
+
+  const listed = await requestJson(backend.port, 'GET', `/api/courses?semesterId=${semesterId}`);
+  assert.equal(listed.status, 200);
+  assert.deepEqual(listed.json.data, []);
 });
 
 test('rejects course writes to missing or unready semester', async (t) => {

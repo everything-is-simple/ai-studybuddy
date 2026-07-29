@@ -30,6 +30,13 @@ export function createCourse(
   });
 }
 
+export function deleteCourse(semesterId: string, courseId: string, signal?: AbortSignal): Promise<CourseInstanceDto> {
+  return request<CourseInstanceDto>('/courses/' + encodeURIComponent(courseId) + '?semesterId=' + encodeURIComponent(semesterId), {
+    method: 'DELETE',
+    signal,
+  });
+}
+
 export function updateCourse(
   semesterId: string,
   courseId: string,

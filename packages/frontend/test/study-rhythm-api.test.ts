@@ -12,6 +12,7 @@ import {
   getScheduleEntries,
   createScheduleEntry,
   updateScheduleEntry,
+  deleteCourse,
   deleteScheduleEntry,
   updateExam,
 } from '../src/api/study-rhythm-api';
@@ -34,6 +35,16 @@ afterEach(() => {
 });
 
 describe('study-rhythm API client', () => {
+  it('deletes a course with its encoded id and semester boundary', async () => {
+    mockSuccess({ id: 'course/1' });
+    await deleteCourse('semester-1', 'course/1');
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      `${baseUrl}/courses/course%2F1?semesterId=semester-1`,
+      expect.objectContaining({ method: 'DELETE' })
+    );
+  });
+
   it('uses the backend exams endpoint and includes semesterId when creating an exam', async () => {
     mockSuccess({ id: 'exam-1' });
     await createExam({

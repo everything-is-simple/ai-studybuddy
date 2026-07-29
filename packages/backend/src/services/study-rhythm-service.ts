@@ -556,6 +556,28 @@ export class StudyRhythmService {
     }
   }
 
+  deleteCourse(input: { semesterId: unknown; courseInstanceId: unknown }): CourseInstanceDto {
+    if (!isUuid(input.semesterId)) {
+      throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
+    }
+    this.assertWritableSemester(input.semesterId);
+    const db = this.openReadySemesterDb(input.semesterId);
+    try {
+      const course = this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
+      try {
+        db.prepare('DELETE FROM course_instances WHERE id = ? AND semester_id = ?').run(input.courseInstanceId, input.semesterId);
+      } catch (error) {
+        if (error instanceof Error && /constraint/i.test(error.message)) {
+          throw new StudyRhythmError('COURSE_HAS_DEPENDENCIES', 409, '课程已有课表、考试或学习资料，不能直接删除');
+        }
+        throw error;
+      }
+      return this.toCourseDto(course);
+    } finally {
+      db.close();
+    }
+  }
+
   listCourses(semesterId: unknown): CourseInstanceDto[] {
     if (!isUuid(semesterId)) {
       throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');

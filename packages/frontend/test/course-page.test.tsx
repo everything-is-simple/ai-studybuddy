@@ -71,6 +71,7 @@ vi.mock('../src/api/study-rhythm-api', () => ({
     return STUB_SCHEDULE_ENTRY;
   }),
   updateScheduleEntry: vi.fn(async () => STUB_SCHEDULE_ENTRY),
+  deleteCourse: vi.fn(async () => STUB_COURSE),
   deleteScheduleEntry: vi.fn(async () => STUB_SCHEDULE_ENTRY),
   updateExam: vi.fn(async () => PENDING_EXAM),
   getTimeline: vi.fn(async () => ({ items: [], pagination: { total: 0 } })),
@@ -117,6 +118,22 @@ async function renderPage() {
   });
   await flush();
 }
+
+describe('CoursePage 课程删除', () => {
+  it('确认后在当前学期删除课程', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true));
+    await renderPage();
+
+    const deleteButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '删除课程');
+    expect(deleteButton).not.toBeNull();
+    await act(async () => { deleteButton!.click(); });
+    await flush();
+
+    const { deleteCourse } = await import('../src/api/study-rhythm-api');
+    expect(deleteCourse).toHaveBeenCalledWith('sem-1', STUB_COURSE.id);
+    expect(container.textContent).toContain('课程已删除');
+  });
+});
 
 describe('CoursePage 考试表单受控值', () => {
   it('输入框显示用户键入的内容，并把正确 payload 传给 createExam', async () => {

@@ -47,6 +47,19 @@ router.get('/courses', (req: Request, res: Response) => {
   }
 });
 
+// ── DELETE /api/courses/:id ──────────────────────────────────
+router.delete('/courses/:id', (req: Request, res: Response) => {
+  try {
+    const course = service.deleteCourse({
+      semesterId: req.query.semesterId ?? req.body?.semesterId,
+      courseInstanceId: req.params.id,
+    });
+    return res.json(okResponse(course));
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
 // ── PATCH /api/courses/:id ───────────────────────────────────
 router.patch('/courses/:id', (req: Request, res: Response) => {
   try {

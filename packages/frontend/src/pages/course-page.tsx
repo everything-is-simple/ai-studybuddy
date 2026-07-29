@@ -7,6 +7,7 @@ import {
   createCourse,
   createExam,
   createScheduleEntry,
+  deleteCourse,
   deleteScheduleEntry,
   getCourses,
   getExams,
@@ -55,6 +56,7 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingCourseName, setEditingCourseName] = useState('');
   const [savingCourseId, setSavingCourseId] = useState<string | null>(null);
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
 
   const [activeExamCourseId, setActiveExamCourseId] = useState<string | null>(null);
   const [submittingExamFor, setSubmittingExamFor] = useState<string | null>(null);
@@ -80,6 +82,7 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
     setCourseName('');
     setEditingCourseId(null);
     setEditingCourseName('');
+    setDeletingCourseId(null);
     setActiveExamCourseId(null);
     setSubmittingExamFor(null);
     setExamForm(emptyExamForm);
@@ -174,6 +177,25 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
       reportActionError(actionSemesterId, err, '更新课程名称失败');
     } finally {
       if (currentSemesterRef.current === actionSemesterId) setSavingCourseId(null);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string, courseName: string) => {
+    if (!semesterId) return;
+    if (!globalThis.confirm(`确定删除课程“${courseName}”吗？已有课表、考试或学习资料的课程不能直接删除。`)) return;
+    const actionSemesterId = semesterId;
+    setDeletingCourseId(courseId);
+    setSuccessMessage(null);
+    setActionError(null);
+    try {
+      await deleteCourse(actionSemesterId, courseId);
+      if (currentSemesterRef.current !== actionSemesterId) return;
+      setSuccessMessage('课程已删除');
+      refetch();
+    } catch (err) {
+      reportActionError(actionSemesterId, err, '删除课程失败');
+    } finally {
+      if (currentSemesterRef.current === actionSemesterId) setDeletingCourseId(null);
     }
   };
 
@@ -400,6 +422,9 @@ export function CoursePage({ semesterId, onSemesterError }: CoursePageProps) {
                         <strong>{course.name}</strong>
                         {course.retakeOfCourseInstanceId && <span className="badge">重修</span>}
                         <button type="button" onClick={() => { setEditingCourseId(course.id); setEditingCourseName(course.name); setActionError(null); }}>编辑课程名称</button>
+                        <button type="button" onClick={() => void handleDeleteCourse(course.id, course.name)} disabled={deletingCourseId === course.id}>
+                          {deletingCourseId === course.id ? '删除中…' : '删除课程'}
+                        </button>
                       </>}
                     </div>
 
