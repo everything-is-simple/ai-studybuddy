@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CurrentSemesterDto, SemesterPreviewDto, SemesterSummaryDto, TimetablePreviewEntryDto } from '@ai-studybuddy/shared';
 import { ApiClientError } from '../api/api-client';
@@ -65,7 +65,6 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
   }, [current?.id, loadSemesterLists]);
 
   const currentId = current?.id ?? null;
-  const sortedEntries = useMemo(() => [...entries].sort((a, b) => a.weekday - b.weekday || a.startTime.localeCompare(b.startTime)), [entries]);
 
   async function handleSelect(semesterId: string) {
     setSubmitting(true);
@@ -275,7 +274,7 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
           {preview.warnings.map((warning) => <p className="feedback warning" key={warning}>{warning}</p>)}
           <button type="button" className="secondary" onClick={addManualEntry} disabled={submitting}>新增课程表条目</button>
           <div className="timetable-preview-table">
-            {sortedEntries.map((entry) => (
+            {entries.map((entry) => (
               <div className="timetable-preview-row" key={entry.clientId}>
                 <label>课程<input value={entry.courseName} onChange={(event) => updateEntry(entry.clientId, { courseName: event.target.value })} /></label>
                 <label>星期<input type="number" min="0" max="6" value={entry.weekday} onChange={(event) => updateEntry(entry.clientId, { weekday: Number(event.target.value) as TimetablePreviewEntryDto['weekday'] })} /></label>

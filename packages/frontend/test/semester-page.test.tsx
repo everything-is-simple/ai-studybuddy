@@ -244,6 +244,67 @@ describe('SemesterPage', () => {
     }));
   });
 
+  it('keeps a manual timetable row stable while its weekday and time are edited', async () => {
+    mocks.previewSemesterTimetable.mockResolvedValueOnce({
+      previewId: 'preview-with-entry',
+      expiresAt: '2026-07-18T01:00:00.000Z',
+      semesterCode: '2026 春季学期',
+      teachingStartDate: '2026-02-16',
+      teachingEndDate: '2026-06-30',
+      finalArchiveDate: null,
+      requiresStudentName: true,
+      entries: [{
+        clientId: 'parsed-entry',
+        courseName: '自动识别课程',
+        weekday: 3,
+        startTime: '10:00',
+        endTime: '11:00',
+        location: null,
+        parserConfidence: 0.8,
+        warnings: [],
+      }],
+      warnings: [],
+    });
+    await renderPage(null);
+
+    await setInputByLabel('学生姓名', '学生A');
+    await setInputByLabel('学期名称', '2026 春季学期');
+    await setInputByLabel('开始日期', '2026-02-16');
+    await setInputByLabel('结束日期', '2026-06-30');
+    await setFileByLabel('课程表图片', new File([new Uint8Array([1, 2, 3])], 'timetable.png', { type: 'image/png' }));
+    const createForm = container.querySelector<HTMLFormElement>('form.semester-form');
+    await act(async () => createForm!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    await flush();
+
+    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('新增课程表条目'));
+    await act(async () => addButton!.click());
+
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+    const manualInputs = container.querySelectorAll<HTMLDivElement>('.timetable-preview-row')[1].querySelectorAll<HTMLInputElement>('input');
+    await act(async () => {
+      setter.call(manualInputs[1], '4');
+      manualInputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await flush();
+
+    const stableManualInputs = container.querySelectorAll<HTMLDivElement>('.timetable-preview-row')[1].querySelectorAll<HTMLInputElement>('input');
+    expect(stableManualInputs[0].value).toBe('');
+    await act(async () => {
+      setter.call(stableManualInputs[0], '手动补录课程');
+      stableManualInputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+      setter.call(stableManualInputs[2], '16:00');
+      stableManualInputs[2].dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('确认创建并切换'));
+    await act(async () => confirmButton!.click());
+    await flush();
+
+    expect(mocks.confirmSemester).toHaveBeenCalledWith(expect.objectContaining({
+      entries: expect.arrayContaining([expect.objectContaining({ courseName: '手动补录课程', weekday: 4, startTime: '16:00' })]),
+    }));
+  });
+
 
 
   it('shows archived semesters, history links, and archives only non-current active semesters', async () => {
