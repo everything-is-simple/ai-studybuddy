@@ -1745,6 +1745,13 @@ button:disabled {
   color: var(--color-danger, #b3261e);
 }
 
+.relay-manual-model {
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
 .relay-attempt-list {
   margin: 0;
   padding-left: 18px;

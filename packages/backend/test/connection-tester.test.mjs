@@ -338,3 +338,36 @@ test('AI 429 and common SMTP transport failures use fixed actionable sanitized c
   });
   assert.doesNotMatch(JSON.stringify({ aiResult, smtpResult }), new RegExp(secret));
 });
+
+test('relay slots skip /models when the caller provides a model name', async () => {
+  let fetchCalled = false;
+  let generateCalledWith = '';
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          generateCalledWith = config.model;
+          return { content: 'OK', provider: config.name, model: config.model, latencyMs: 1, fallbackUsed: false };
+        },
+      };
+    },
+    fetch: async () => {
+      fetchCalled = true;
+      return { ok: true, status: 200, json: async () => ({ data: [{ id: 'server-model' }] }) };
+    },
+  });
+
+  const result = await tester.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay.example.test/v1'],
+    apiKey: 'secret-relay',
+    model: 'user-typed-model',
+  });
+
+  assert.equal(result.pass, true);
+  assert.equal(fetchCalled, false, '/models 不应被调用');
+  assert.equal(generateCalledWith, 'user-typed-model');
+  assert.deepEqual(result.supportedModels, ['user-typed-model']);
+  assert.doesNotMatch(JSON.stringify(result), /secret-relay/);
+});

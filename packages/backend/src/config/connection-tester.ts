@@ -176,19 +176,27 @@ export class ConnectionTester {
         priority: 1,
       };
       try {
-        // 中转站首次测试时还不知道有哪些模型，先取模型列表挑一个来试跑；
-        // 官方 Provider 已有默认模型，直接用它。
-        const listing = await this.fetchModelList(probe);
-        const model = provider.model || listing.models[0];
-        if (!model) {
-          lastFailure = !listing.reachable
-            ? fixedFailure('AI_BASE_URL_UNREACHABLE', '该 API 请求地址连不上，请检查地址是否正确')
-            : listing.status === 401 || listing.status === 403
-              ? fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败')
-              : fixedFailure('AI_NO_MODEL_AVAILABLE', '地址可以连通但没返回可用模型，请确认 Key 和权限');
-          if (lastFailure.errorCode === 'AI_AUTH_FAILED') authFailure = lastFailure;
-          attempts.push({ baseUrl, pass: false, errorCode: lastFailure.errorCode });
-          continue;
+        // 用户若已手动填了模型名，跳过 /models 探测直接用它试跑（中转站不一定实现 /models）。
+        // 没填时先探测模型列表，挑第一个来试跑。
+        const presetModel = provider.model.trim();
+        let model: string;
+        let listing: { reachable: boolean; status?: number; models: string[] } = { reachable: true, models: [] };
+
+        if (presetModel) {
+          model = presetModel;
+        } else {
+          listing = await this.fetchModelList(probe);
+          model = listing.models[0] ?? '';
+          if (!model) {
+            lastFailure = !listing.reachable
+              ? fixedFailure('AI_BASE_URL_UNREACHABLE', '该 API 请求地址连不上，请检查地址是否正确')
+              : listing.status === 401 || listing.status === 403
+                ? fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败')
+                : fixedFailure('AI_NO_MODEL_AVAILABLE', '地址可以连通但 /models 接口没返回模型，请手动填写模型名后重试');
+            if (lastFailure.errorCode === 'AI_AUTH_FAILED') authFailure = lastFailure;
+            attempts.push({ baseUrl, pass: false, errorCode: lastFailure.errorCode });
+            continue;
+          }
         }
 
         await withTimeout(
@@ -202,6 +210,7 @@ export class ConnectionTester {
         return {
           pass: true,
           latencyMs: Date.now() - startedAt,
+          // 手动指定模型时不探测模型列表，supportedModels 就是用户填的那个。
           supportedModels: listing.models.length > 0 ? listing.models : [model],
           resolvedBaseUrl: baseUrl,
           attempts,

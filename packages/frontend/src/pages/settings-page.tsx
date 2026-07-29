@@ -307,15 +307,14 @@ function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProv
         name: preset.displayName,
         baseUrls: needsBaseUrl ? filledBaseUrls : [preset.baseUrl],
         apiKey: draft.apiKey,
-        // 中转站首测时留空，让后端从对方 /models 探测。
-        model: needsBaseUrl ? '' : draft.model,
+        // 中转站：用户填了就用，否则后端从对方 /models 探测。
+        model: needsBaseUrl ? (draft.model.trim() || '') : draft.model,
       });
 
       const models = result.supportedModels.length > 0 ? result.supportedModels : preset.modelSuggestions;
       setTestResult({ success: true, models, resolvedBaseUrl: result.resolvedBaseUrl, attempts: result.attempts });
       onChange({
         resolvedBaseUrl: result.resolvedBaseUrl,
-        // 探测出的模型列表里不含当前选中值时，回落到第一个可用模型。
         ...(models.length > 0 && !models.includes(draft.model) ? { model: models[0] } : {}),
       });
     } catch (error) {
@@ -324,6 +323,10 @@ function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProv
       setTesting(false);
     }
   };
+
+  // 中转站：探测失败且报 NO_MODEL_AVAILABLE 时，允许用户手动填模型名再重试。
+  const needsManualModel = needsBaseUrl && !testResult?.success &&
+    testResult?.error?.includes('/models');
 
   const availableModels = testResult?.success && testResult.models ? testResult.models : preset.modelSuggestions;
 
@@ -361,6 +364,17 @@ function ProviderPresetCard({ preset, draft, onChange, onAdd }: { preset: AiProv
       </div>
       {testResult?.success && testResult.resolvedBaseUrl && needsBaseUrl && <p className="settings-note">实际可用地址：<code>{testResult.resolvedBaseUrl}</code></p>}
       {testResult && !testResult.success && (testResult.attempts?.length ?? 0) > 1 && <ul className="relay-attempt-list">{testResult.attempts!.map((attempt) => <li key={attempt.baseUrl}><code>{attempt.baseUrl}</code> · {attempt.errorCode ?? '失败'}</li>)}</ul>}
+      {needsManualModel && <label className="relay-manual-model">
+        模型名（手动填写）
+        <input
+          data-testid={`official-${preset.id}-manual-model`}
+          type="text"
+          placeholder="gpt-4o-mini 或中转站支持的模型名"
+          value={draft.model}
+          onChange={(event) => { invalidateTest(); onChange({ model: event.target.value }); }}
+        />
+        <span className="settings-note">填完后重新点【测试此 Provider】</span>
+      </label>}
       <label>模型<select data-testid={`official-${preset.id}-model`} value={draft.model} onChange={(event) => onChange({ model: event.target.value })} disabled={!testResult?.success}>{availableModels.map((model) => <option key={model} value={model}>{model}</option>)}</select></label>
       <button type="button" className="button-secondary" onClick={onAdd} disabled={!testResult?.success}>加入 fallback</button>
       {!testResult?.success && <p className="settings-note">{needsBaseUrl ? '请先填写地址和 Key 并测试，测试成功后才能选择模型并加入 fallback' : '请先测试 Provider，测试成功后才能选择模型并加入 fallback'}</p>}
