@@ -120,7 +120,7 @@ if (-not (Test-Path -LiteralPath $paths.EnvFile -PathType Leaf)) {
     "OCR_TEMP_ROOT=$($paths.Tmp)\ocr",
     "OCR_CACHE_ROOT=$($paths.Models)\rapidocr",
     'AI_TIMEOUT_MS=60000',
-    'CONFIG_ALLOWED_ORIGINS=',
+    'CONFIG_ALLOWED_ORIGINS=http://127.0.0.1:3000',
     'AI_PROVIDERS=',
     'AI_BASE_URL=',
     'AI_MODEL=',

@@ -18,7 +18,7 @@ async function withServer(t, allowedOrigins) {
   return `http://127.0.0.1:${server.address().port}/api/ping`;
 }
 
-test('Origin policy accepts fixed Vite origins, loopback additions, and origin-less CLI', async (t) => {
+test('Origin policy accepts fixed development/production loopback origins, additions, and origin-less CLI', async (t) => {
   const allowed = parseAllowedOrigins('http://127.0.0.1:4174');
   const url = await withServer(t, allowed);
 
@@ -26,6 +26,8 @@ test('Origin policy accepts fixed Vite origins, loopback additions, and origin-l
     'http://127.0.0.1:5173',
     'http://localhost:5173',
     'http://127.0.0.1:4173',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
     'http://127.0.0.1:4174',
   ]) {
     const response = await fetch(url, { headers: { Origin: origin } });

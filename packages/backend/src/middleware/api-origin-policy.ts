@@ -1,6 +1,13 @@
 import type { RequestHandler } from 'express';
 
-const DEFAULT_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173'];
+const DEFAULT_ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
 
 export class AllowedOriginsError extends Error {
   readonly code = 'CONFIG_ALLOWED_ORIGINS_INVALID';

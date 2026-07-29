@@ -25,14 +25,12 @@ const configurationService = {
   retest: async () => null,
 };
 
-async function startApp(t) {
+async function startApp(t, timetableText = '周一 08:00-08:45 数学 101\n周三 10:00-10:45 英语 202') {
   const app = createApp({
     configurationService,
     enableDevRoutes: false,
     timetableRecognizer: {
-      recognize: async () => ({
-        text: '周一 08:00-08:45 数学 101\n周三 10:00-10:45 英语 202',
-      }),
+      recognize: async () => ({ text: timetableText }),
     },
   });
   const server = http.createServer(app);
@@ -106,6 +104,21 @@ test('semester current is empty before onboarding and set after preview confirma
 
   const courses = await json(base, 'GET', `/api/courses?semesterId=${confirmed.body.data.semester.id}`);
   assert.deepEqual(courses.body.data.map((course) => course.name).sort(), ['数学', '英语'].sort());
+});
+
+test('semester preview normalizes OCR text with removed spaces and fullwidth dashes', async (t) => {
+  const base = await startApp(t, '合成验收课程表\n周一08:00－09:30合成数学A101\n周三10:00－11:30合成物理B202');
+  const previewed = await preview(base, { semesterCode: 'normalized-ocr-semester' });
+
+  assert.equal(previewed.status, 200);
+  assert.equal(previewed.body.data.entries.length, 2);
+  assert.deepEqual(
+    previewed.body.data.entries.map((entry) => ({ weekday: entry.weekday, startTime: entry.startTime, endTime: entry.endTime, courseName: entry.courseName, location: entry.location })),
+    [
+      { weekday: 1, startTime: '08:00', endTime: '09:30', courseName: '合成数学A101', location: null },
+      { weekday: 3, startTime: '10:00', endTime: '11:30', courseName: '合成物理B202', location: null },
+    ]
+  );
 });
 
 test('semester onboarding rejects duplicate code and invalid date', async (t) => {

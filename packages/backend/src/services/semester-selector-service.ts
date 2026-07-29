@@ -568,17 +568,21 @@ export class SemesterSelectorService {
     const weekdayMap: Record<string, 0 | 1 | 2 | 3 | 4 | 5 | 6> = { 日: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
     const entries: TimetablePreviewEntryDto[] = [];
     const warnings: string[] = [];
-    for (const line of text.split(/\r?\n/)) {
+    for (const line of this.normalizeTimetableText(text).split(/\r?\n/)) {
       const trimmed = line.trim();
       if (!trimmed) continue;
-      const match = /周([日一二三四五六])\s+([0-2]?\d:[0-5]\d)\s*-\s*([0-2]?\d:[0-5]\d)\s+(.+?)(?:\s+([^\s]+))?$/.exec(trimmed);
+      // OCR frequently removes the visual spaces between weekday, time, and course name.
+      // Location remains optional because it cannot be safely inferred from a concatenated OCR tail.
+      const match = /周([日一二三四五六])\s*([0-2]?\d:[0-5]\d)\s*-\s*([0-2]?\d:[0-5]\d)\s*(.+)$/.exec(trimmed);
       if (!match) {
         warnings.push('部分识别文本暂未能解析，请人工补充课程表记录');
         continue;
       }
       const startTime = this.padTime(match[2]);
       const endTime = this.padTime(match[3]);
-      const courseName = match[4].trim();
+      const details = match[4].trim();
+      const detailsMatch = /^(.+?)(?:\s+([^\s]+))?$/.exec(details);
+      const courseName = detailsMatch?.[1]?.trim() ?? '';
       if (!TIME_RE.test(startTime) || !TIME_RE.test(endTime) || startTime >= endTime || !courseName) {
         warnings.push('部分课程时间或名称不合法，已跳过');
         continue;
@@ -589,13 +593,20 @@ export class SemesterSelectorService {
         weekday: weekdayMap[match[1]],
         startTime,
         endTime,
-        location: match[5]?.trim() ?? null,
+        location: detailsMatch?.[2]?.trim() ?? null,
         parserConfidence: 0.8,
         warnings: [],
       });
     }
     if (entries.length === 0) warnings.push('未解析出课程，请手动补充后再确认');
     return { entries, warnings: [...new Set(warnings)] };
+  }
+
+  private normalizeTimetableText(text: string): string {
+    return text
+      .normalize('NFKC')
+      .replace(/[‐‑‒–—―－]/g, '-')
+      .replace(/[\u00a0\u3000]/g, ' ');
   }
 
   private padTime(value: string): string {

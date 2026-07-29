@@ -160,6 +160,22 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
     setEntries((items) => items.map((entry) => (entry.clientId === clientId ? { ...entry, ...patch } : entry)));
   }
 
+  function addManualEntry() {
+    setEntries((items) => [
+      ...items,
+      {
+        clientId: globalThis.crypto.randomUUID(),
+        courseName: '',
+        weekday: 1,
+        startTime: '08:00',
+        endTime: '09:00',
+        location: null,
+        parserConfidence: null,
+        warnings: ['手动添加，请补全课程信息'],
+      },
+    ]);
+  }
+
   return (
     <section className="page semester-page">
       <div className="page-header-row">
@@ -257,6 +273,7 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
           <h2>确认课程表预览</h2>
           <p>规则解析置信度仅表示本机规则解析文本的把握度，请确认后再创建。</p>
           {preview.warnings.map((warning) => <p className="feedback warning" key={warning}>{warning}</p>)}
+          <button type="button" className="secondary" onClick={addManualEntry} disabled={submitting}>新增课程表条目</button>
           <div className="timetable-preview-table">
             {sortedEntries.map((entry) => (
               <div className="timetable-preview-row" key={entry.clientId}>
