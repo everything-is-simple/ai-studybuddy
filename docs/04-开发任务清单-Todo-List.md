@@ -745,6 +745,7 @@ Phase 0.5 不包含 Windows 原生 SQLite、本地文件、持久化 Job、家�
 
 
 
+> **T08 部署包/源码设置中心一致性复核（2026-07-30）**：按需求对当前 Windows 部署包与开发源码的设置中心进行了只读比对。部署 manifest 所指源码提交与当前 `master` 一致；后端运行产物中 276 个同路径文件与源码构建产物逐文件 hash 一致，部署包额外的依赖元数据及其构建 manifest 属于预期包级差异；前端静态产物 122 个同路径文件 hash 一致。DPAPI 安全存储、配置状态与连接测试、运行时热切换、Provider 官方预设与候选 fallback、环境来源安全摘要、错误脱敏、子进程环境边界及 `/v1` fallback 的相关提交均已在 `master`。本轮定向配置后端测试 23/23、设置页测试 9/9、`pnpm type-check` 与 `pnpm build` 均通过（生产构建仅保留既有大 chunk 警告）。未读取、写入或输出任何运行时配置、秘密或用户资料。结论：部署包不存在待反哺的设置中心代码；本轮不修改业务实现，仅补充可追溯复核证据。
 > **Phase 1 Pre-T09 端到端验收登记（2026-07-18，验证任务，非 T09 实施）**：已从最新 `origin/master` 创建验证分支 `codex/pre-t09-e2e-validation`，计划为 `.plans/pre-t09-e2e-validation-plan.md`。本轮范围是对 T00/T10/T11/T02/T03/T03A/T03B/T03C/T03D/T04/T04A/T04B/T05/T06/T06A/T06B/T07/T08 的后端、前端、API 和浏览器主路径进行隔离回归；不实现 T09A–T09E，不触发 S5/S7/Phase 3，不运行真实 AI/SMTP/飞书 smoke。
 >
 > **验收证据（2026-07-18）**：治理检查 `scripts/check-docs-governance.ps1` 通过，`git diff --check` 通过；`pnpm type-check` 通过；后端 build 通过、后端测试 `212/212` 通过；前端 build 通过（仅有 Vite chunk 大于 500 kB 的非阻塞警告）、前端测试 `10 files / 52 tests` 通过；根级 `pnpm test` 通过（同样汇总后端 `212/212`、前端 `10 files / 52 tests`）。隔离 `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\pre-t09-e2e-validation` 下，Playwright `pnpm test:e2e` 最终 `5 passed`：S4 错题改错、T11 多考试/任务闭环、S3 限时练习（含超时提交/刷新恢复）、不存在练习错误态、T07 时间线/移动端。一次性真实浏览器脚本进一步通过 `/settings` 配置中心与 password 密钥字段、`/courses` 课程入口、`/materials` 合成文本上传与处理刷新、`/notes/:noteId` Markdown/思维导图/知识模块展示；API envelope 合成检查通过。S6 规则生成/隔离/去重/重试边界由现有自动化测试覆盖，未发送真实 QQ SMTP 或飞书消息。
