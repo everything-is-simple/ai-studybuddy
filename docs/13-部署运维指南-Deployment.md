@@ -114,16 +114,68 @@ Node native 依赖（例如 `better-sqlite3`）需要匹配当前 Node 的预编
 
 ## 八、备份、恢复、升级与回滚
 
-当前 T02G 只完成仓库外合成夹具验证，不授权真实用户数据、正式安装根或 ACL 操作。脚本仅白名单 `studybuddy.db` 与 `semesters/` 学习数据；不读取 config、tmp、logs、models、缓存或 Playwright 证据。backup 必须提供显式、既存、同卷且位于安装根之外的受控输出根；输出、manifest 和错误不得包含宿主数据根。
+### 8.1 手动备份
 
 ```powershell
-# 仅限已批准的合成夹具；不得替换为真实用户目录。
-.\scripts\backup-data.ps1 -InstallRoot $installRoot -OutputRoot <controlled-external-output-root>
-.\scripts\test-data-integrity.ps1 -BackupPath <synthetic-backup-path>
-.\scripts\restore-data.ps1 -InstallRoot $installRoot -BackupPath <synthetic-backup-path> -WhatIf
+.\scripts\backup-data.ps1 -InstallRoot $installRoot -OutputRoot <external-backup-root>
+.\scripts\test-data-integrity.ps1 -BackupPath <backup-path>
 ```
 
-`restore-data.ps1 -WhatIf` 只执行 manifest、payload、路径和 hash 预检，不创建目录、不复制文件、不改变属性。当前任何非 `-WhatIf` 恢复都会固定拒绝 `RESTORE_WRITE_DISABLED`：真实恢复尚未实现，必须另行批准服务/计划任务停止证据、recovery point、写入顺序、中断处理和目标机器。不得将本节或合成夹具结果表述为真实备份、真实恢复、ACL 修复、升级回滚、生产上线或用户电脑验收完成。
+`backup-data.ps1` 仅白名单 `studybuddy.db` 与 `semesters/` 学习数据；不读取 config、tmp、logs、models、缓存或 Playwright 证据。备份输出必须是显式、既存、同卷且位于安装根之外的受控目录。
+
+### 8.2 自动定期备份（T04-1）
+
+**注册自动备份任务**（每日自动执行）：
+
+```powershell
+.\scripts\schedule-auto-backup.ps1 `
+  -InstallRoot $installRoot `
+  -OutputRoot <external-backup-root> `
+  -ScheduleTime "22:00"
+```
+
+**注销自动备份任务**：
+
+```powershell
+.\scripts\remove-auto-backup.ps1 -InstallRoot $installRoot
+```
+
+自动备份任务以当前 Windows 用户身份运行，默认每日 22:00 执行。任务名称为 `AIStudyBuddy-AutoBackup`，可在"任务计划程序"中查看。
+
+### 8.3 数据恢复（T04-3）
+
+**预检（不写入）**：
+
+```powershell
+.\scripts\restore-data.ps1 -InstallRoot $installRoot -BackupPath <backup-path> -WhatIf
+```
+
+**执行恢复**：
+
+```powershell
+# 1. 停止服务
+.\scripts\stop-production.ps1 -InstallRoot $installRoot
+
+# 2. 恢复数据
+.\scripts\restore-data.ps1 -InstallRoot $installRoot -BackupPath <backup-path>
+
+# 3. 手动重启服务
+.\scripts\start-production.ps1 -InstallRoot $installRoot
+```
+
+恢复流程会自动创建 recovery point 到 `backups/recovery-points/`，失败时可用于手动回滚。恢复过程会验证每个文件的 SHA256 哈希。
+
+### 8.4 启动时完整性检查（T04-2）
+
+系统启动时自动检查全局库和所有活跃学期库的 `PRAGMA integrity_check`。任何损坏都会拒绝启动并输出明确错误：
+
+```
+[DATABASE] STARTUP_INTEGRITY_FAILED scope=global detail=...
+[DATABASE] STARTUP_INTEGRITY_FAILED scope=semester semesterId=<id> detail=...
+[DATABASE] STARTUP_INTEGRITY_ALL_FAILED count=N
+```
+
+启动失败时，检查日志并从最近备份恢复。
 
 ---
 

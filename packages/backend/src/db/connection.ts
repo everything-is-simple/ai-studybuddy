@@ -98,6 +98,29 @@ export function checkpointAndClose(db: DatabaseType): void {
 }
 
 /**
+ * 获取所有活跃学期的数据库路径。
+ * 读取全局库中 status 为 'active'、'teaching_ended' 或 'follow_up' 的学期。
+ */
+export function getAllActiveSemesterDbPaths(): string[] {
+  const globalDb = openReadOnlyExistingDbAtPath(getGlobalDbPath());
+  try {
+    const rows = globalDb
+      .prepare(
+        `SELECT semester_id FROM semesters
+         WHERE status IN ('active', 'teaching_ended', 'follow_up')
+         ORDER BY semester_id`
+      )
+      .all() as { semester_id: string }[];
+
+    return rows
+      .map(row => getSemesterDbPath(row.semester_id))
+      .filter(dbPath => fs.existsSync(dbPath));
+  } finally {
+    globalDb.close();
+  }
+}
+
+/**
  * 备份数据库：先 checkpoint，然后复制 .db 文件。
  */
 export function backupDb(db: DatabaseType, destination: string): void {
