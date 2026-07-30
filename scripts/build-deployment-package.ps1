@@ -44,7 +44,6 @@ try {
   $scriptNames = @('bootstrap-runtime.ps1','start-production.ps1','stop-production.ps1','check-installation.ps1','backup-data.ps1','restore-data.ps1','test-data-integrity.ps1','register-parent-report-task.ps1','unregister-parent-report-task.ps1','run-parent-report-task.ps1','test-ocr-runtime.ps1')
   foreach ($name in $scriptNames) { Copy-Item -LiteralPath (Join-Path $repoRoot "scripts\$name") -Destination $scripts -Force }
   Copy-Item -LiteralPath (Join-Path $repoRoot 'scripts\lib') -Destination $scripts -Recurse -Force
-  Copy-Item -LiteralPath (Join-Path $repoRoot 'deployment\.env.production.example') -Destination $deployment -Force
   Copy-Item -LiteralPath (Join-Path $repoRoot 'deployment\runtime-compatibility.json') -Destination $deployment -Force
   Copy-Item -LiteralPath (Join-Path $repoRoot 'deployment\runtime-compatibility.psd1') -Destination $deployment -Force
   if (Test-Path -LiteralPath (Join-Path $repoRoot 'deployment\README-Windows.md') -PathType Leaf) {
