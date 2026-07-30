@@ -1,3 +1,6 @@
+// Node 24 polyfill: DOMMatrix removed from global scope, required by pdf-parse
+require('./polyfills.cjs');
+
 import path from 'node:path';
 import { createApp } from './app';
 import { bootstrapBackend, type BackendController } from './bootstrap';

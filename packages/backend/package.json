@@ -6,12 +6,12 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "pnpm run clean && tsc --build && pnpm run copy-assets",
-    "copy-assets": "node -e \"const fs=require('fs'); const path=require('path'); const src=path.join('src','scripts','ocr-worker.py'); const dst=path.join('dist','scripts','ocr-worker.py'); if(!fs.existsSync(src)){ console.error('missing '+src); process.exit(1); } fs.mkdirSync(path.dirname(dst),{recursive:true}); fs.copyFileSync(src,dst); console.log('copied ocr-worker.py -> dist/scripts/ocr-worker.py');\"",
-    "start": "node dist/server.js",
+    "copy-assets": "node -e \"const fs=require('fs'); const path=require('path'); const src=path.join('src','scripts','ocr-worker.py'); const dst=path.join('dist','scripts','ocr-worker.py'); if(!fs.existsSync(src)){ console.error('missing '+src); process.exit(1); } fs.mkdirSync(path.dirname(dst),{recursive:true}); fs.copyFileSync(src,dst); console.log('copied ocr-worker.py -> dist/scripts/ocr-worker.py'); fs.copyFileSync(path.join('src','polyfills.cjs'), path.join('dist','polyfills.cjs')); console.log('copied polyfills.cjs -> dist/polyfills.cjs');\"",
+    "start": "node --require ./polyfills.cjs dist/server.js",
     "type-check": "tsc --noEmit",
     "clean": "node -e \"const fs=require(\\\"fs\\\"); for (const path of [\\\"dist\\\", \\\"tsconfig.tsbuildinfo\\\"]) fs.rmSync(path, { recursive: true, force: true });\"",
-    "test": "node --test --test-concurrency=1 test/*.test.mjs",
-    "start:production": "node dist/server.js"
+    "test": "node --require ./polyfills.cjs --test --test-concurrency=1 test/*.test.mjs",
+    "start:production": "node --require ./polyfills.cjs dist/server.js"
   },
   "dependencies": {
     "@ai-studybuddy/shared": "workspace:*",
