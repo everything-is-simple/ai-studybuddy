@@ -154,9 +154,9 @@ export class ConnectionTester {
     resolvedBaseUrl?: string;
     attempts?: Array<{ baseUrl: string; pass: boolean; errorCode?: string }>;
   }> {
-    const candidates = (provider.baseUrls?.length ? provider.baseUrls : [provider.baseUrl])
-      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-      .map((value) => value.trim());
+    const candidates = expandBaseUrlCandidates(
+      provider.baseUrls?.length ? provider.baseUrls : [provider.baseUrl]
+    );
 
     if (candidates.length === 0) {
       return fixedFailure('AI_BASE_URL_REQUIRED', '请填写至少一个 API 请求地址');
@@ -286,6 +286,37 @@ export class ConnectionTester {
       return { name: provider.name, ...classifyAiError(error) };
     }
   }
+}
+
+/**
+ * 把用户填的地址展开成候选列表。
+ *
+ * 很多中转站（new-api / one-api 等）只在 /v1 下暴露 OpenAI 兼容接口：根路径返回的是
+ * 站点首页 HTML。SDK 会把 /chat/completions 直接拼在 baseURL 后面，若 baseURL 少了
+ * /v1，请求就打到首页上，拿回 HTML，最终报成 AI_UNKNOWN。这里为每个地址补一个 /v1
+ * 变体：原样地址先试（官方 Provider 如 DeepSeek 根路径就能用，不受影响），不通再试
+ * /v1 变体。已带 /v1（或 /v2 等版本段）的地址不再重复追加。去重后保持原有顺序。
+ */
+function expandBaseUrlCandidates(rawUrls: Array<string | undefined>): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  const push = (url: string): void => {
+    if (url && !seen.has(url)) {
+      seen.add(url);
+      result.push(url);
+    }
+  };
+  for (const raw of rawUrls) {
+    if (typeof raw !== 'string') continue;
+    const trimmed = raw.trim().replace(/\/+$/, '');
+    if (trimmed.length === 0) continue;
+    push(trimmed);
+    // 已经带版本段（/v1、/v2…）的地址不再补 /v1。
+    if (!/\/v\d+$/i.test(trimmed)) {
+      push(`${trimmed}/v1`);
+    }
+  }
+  return result;
 }
 
 function classifyAiError(error: unknown): ConnectionTestResult {

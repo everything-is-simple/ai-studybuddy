@@ -371,3 +371,63 @@ test('relay slots skip /models when the caller provides a model name', async () 
   assert.deepEqual(result.supportedModels, ['user-typed-model']);
   assert.doesNotMatch(JSON.stringify(result), /secret-relay/);
 });
+
+test('relay slots auto-append /v1 when a bare address only serves the API under /v1', async () => {
+  // 中转站（new-api / one-api）常只在 /v1 下暴露接口，根路径返回站点首页。
+  // 用户填裸地址时应自动补 /v1 变体并轮到它。
+  const attempted = [];
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          attempted.push(config.baseUrl);
+          if (config.baseUrl !== 'https://relay.invalid/v1') {
+            throw new Error(`failed ${config.apiKey} ${config.baseUrl}`);
+          }
+          return { content: 'OK', provider: config.name, model: config.model, latencyMs: 2, fallbackUsed: false };
+        },
+      };
+    },
+  });
+
+  const result = await tester.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay.invalid'],
+    apiKey: 'secret-relay',
+    model: 'gpt-5.5',
+  });
+
+  assert.equal(result.pass, true);
+  assert.equal(result.resolvedBaseUrl, 'https://relay.invalid/v1');
+  // 裸地址先试再退到 /v1 变体。
+  assert.deepEqual(attempted, ['https://relay.invalid', 'https://relay.invalid/v1']);
+  assert.doesNotMatch(JSON.stringify(result), /secret-relay/);
+});
+
+test('relay slots do not duplicate a /v1 suffix the caller already provided', async () => {
+  const attempted = [];
+  const tester = new ConnectionTester({
+    createAiProvider(config) {
+      return {
+        name: config.name,
+        async generate() {
+          attempted.push(config.baseUrl);
+          return { content: 'OK', provider: config.name, model: config.model, latencyMs: 1, fallbackUsed: false };
+        },
+      };
+    },
+  });
+
+  const result = await tester.testSingleProvider({
+    name: '中转站 1',
+    baseUrls: ['https://relay.invalid/v1'],
+    apiKey: 'secret-relay',
+    model: 'gpt-5.5',
+  });
+
+  assert.equal(result.pass, true);
+  assert.equal(result.resolvedBaseUrl, 'https://relay.invalid/v1');
+  // 已带 /v1 的地址只试一次，不生成 /v1/v1。
+  assert.deepEqual(attempted, ['https://relay.invalid/v1']);
+});
