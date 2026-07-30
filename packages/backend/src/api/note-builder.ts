@@ -60,6 +60,22 @@ router.get('/materials', (req: Request, res: Response) => {
     handle(error, res);
   }
 });
+router.get('/materials/:id/original-pdf', async (req: Request, res: Response) => {
+  try {
+    const original = await service.getOriginalPdf(req.query.semesterId, req.params.id);
+    res.status(200).set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': String(original.size),
+      'Content-Disposition': 'inline; filename="study-material.pdf"',
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    original.stream.on('error', () => res.destroy());
+    original.stream.pipe(res);
+  } catch (error) {
+    handle(error, res);
+  }
+});
 router.get('/materials/:id', (req: Request, res: Response) => {
   try {
     res.json(ok(service.getMaterial(req.query.semesterId, req.params.id)));
@@ -98,6 +114,13 @@ router.post('/materials/:id/replace-text', (req: Request, res: Response) => {
 router.get('/notes/:id', (req: Request, res: Response) => {
   try {
     res.json(ok(service.getNote(req.query.semesterId, req.params.id)));
+  } catch (error) {
+    handle(error, res);
+  }
+});
+router.patch('/notes/:id', (req: Request, res: Response) => {
+  try {
+    res.json(ok(service.updateNote(req.body.semesterId, req.params.id, req.body.markdown)));
   } catch (error) {
     handle(error, res);
   }

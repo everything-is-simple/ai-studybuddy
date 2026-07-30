@@ -3,7 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { useApiRequest } from '../hooks/use-api-request';
 import { useMaterialPolling } from '../hooks/use-material-polling';
 import { getCourses } from '../api/study-rhythm-api';
-import { generateNote, replaceText, retryAiGeneration, retryConversion, uploadMaterial } from '../api/note-builder-api';
+import {
+  generateNote,
+  getOriginalPdfUrl,
+  replaceText,
+  retryAiGeneration,
+  retryConversion,
+  uploadMaterial,
+} from '../api/note-builder-api';
 import { saveClassCaptureToNotes, transcribeClassCapture } from '../api/class-capture-api';
 import { FeedbackMessage } from '../components/feedback-message';
 import { FileDropzone } from '../components/file-dropzone';
@@ -385,6 +392,9 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
                     onRetryAi={() => handleRetryAi(material.id)}
                     onReplaceText={() => handleOpenReplaceText(material.id)}
                     onGenerateNote={() => handleGenerateNote(material.id)}
+                    originalPdfUrl={
+                      semesterId && material.fileType === 'pdf' ? getOriginalPdfUrl(semesterId, material.id) : undefined
+                    }
                     actionsDisabled={isSubmittingReplacement}
                   >
                     {isReplacing && (

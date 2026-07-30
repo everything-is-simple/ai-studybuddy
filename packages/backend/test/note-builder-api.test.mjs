@@ -102,6 +102,42 @@ test('S2 uploads text, converts it, and preserves normalized text when AI is una
   assert.equal(invalidRetry.json.error.code, 'INVALID_STATUS');
 });
 
+test('S2 reopens a stored PDF only through the owning semester route', async (t) => {
+  const port = await startBackend(t);
+  const semesterId = await readySemester(port);
+  const course = await json(port, 'POST', '/api/courses', { semesterId, name: '合成 PDF 验收课程' });
+  assert.equal(course.status, 201);
+
+  const pdfBytes = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
+  const form = new FormData();
+  form.append('semesterId', semesterId);
+  form.append('courseInstanceId', course.json.data.id);
+  form.append('file', new Blob([pdfBytes], { type: 'application/pdf' }), 'synthetic-short.pdf');
+  const upload = await fetch(`http://127.0.0.1:${port}/api/materials/upload`, { method: 'POST', body: form });
+  const uploaded = await upload.json();
+  assert.equal(upload.status, 200);
+  assert.equal(uploaded.success, true);
+
+  const opened = await fetch(
+    `http://127.0.0.1:${port}/api/materials/${uploaded.data.id}/original-pdf?semesterId=${semesterId}`
+  );
+  assert.equal(opened.status, 200);
+  assert.equal(opened.headers.get('content-type'), 'application/pdf');
+  assert.equal(opened.headers.get('content-disposition'), 'inline; filename="study-material.pdf"');
+  assert.equal(opened.headers.get('cache-control'), 'private, no-store');
+  assert.equal(opened.headers.get('x-content-type-options'), 'nosniff');
+  assert.deepEqual(Buffer.from(await opened.arrayBuffer()), pdfBytes);
+
+  const otherSemesterId = await readySemester(port);
+  const denied = await json(
+    port,
+    'GET',
+    `/api/materials/${uploaded.data.id}/original-pdf?semesterId=${otherSemesterId}`
+  );
+  assert.equal(denied.status, 404);
+  assert.equal(denied.json.error.code, 'MATERIAL_NOT_FOUND');
+});
+
 test('S2 worker runOnce generates notes, modules, list metadata, and study evidence with mock AI', async (t) => {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-t07-worker-'));
   t.after(() => rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
@@ -217,6 +253,9 @@ test('S2 worker runOnce generates notes, modules, list metadata, and study evide
 
   const note = service.getNote(semester.semesterId, noteId);
   assert.match(note.markdown, /^# 线性代数/);
+  const edited = service.updateNote(semester.semesterId, noteId, '# 已编辑的合成笔记');
+  assert.equal(edited.id, noteId);
+  assert.match(service.getNote(semester.semesterId, noteId).markdown, /^# 已编辑的合成笔记/);
   assert.match(note.mindMap.data, /^# 线性代数/);
   assert.equal(note.knowledgeModules.length, 1);
   assert.deepEqual(completedEvent, {

@@ -8,6 +8,7 @@ interface MaterialStatusProps {
   onRetryAi?: (material: MaterialDto) => void;
   onReplaceText?: (material: MaterialDto) => void;
   onGenerateNote?: (material: MaterialDto) => void;
+  originalPdfUrl?: string;
   actionsDisabled?: boolean;
   children?: ReactNode;
 }
@@ -33,6 +34,7 @@ export function MaterialStatus({
   onRetryAi,
   onReplaceText,
   onGenerateNote,
+  originalPdfUrl,
   actionsDisabled = false,
   children,
 }: MaterialStatusProps) {
@@ -52,6 +54,11 @@ export function MaterialStatus({
         {material.knowledgeModuleCount !== undefined && <span>知识模块：{material.knowledgeModuleCount}</span>}
       </div>
       <div className="material-status-actions">
+        {material.fileType === 'pdf' && originalPdfUrl && (
+          <a href={originalPdfUrl} className="button-link" target="_blank" rel="noopener noreferrer">
+            重新打开 PDF
+          </a>
+        )}
         {material.noteId && (
           <Link to={`/notes/${material.noteId}`} className="button-link">
             查看笔记

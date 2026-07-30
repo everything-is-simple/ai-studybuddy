@@ -336,6 +336,31 @@ export class NoteBuilderService {
     }
   }
 
+  async getOriginalPdf(semesterIdValue: unknown, materialIdValue: unknown) {
+    const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    const materialId = requiredUuid(materialIdValue, 'MATERIAL_NOT_FOUND', '资料不存在');
+    const db = this.openReadySemesterDb(semesterId);
+    let storageKey: string | undefined;
+    try {
+      const material = db
+        .prepare('SELECT file_type, storage_key FROM materials WHERE id = ?')
+        .get(materialId) as { file_type: MaterialFileType; storage_key: string } | undefined;
+      if (!material) throw new NoteBuilderError('MATERIAL_NOT_FOUND', 404, '资料不存在');
+      if (material.file_type !== 'pdf')
+        throw new NoteBuilderError('ORIGINAL_PDF_NOT_AVAILABLE', 409, '仅支持重新打开 PDF 资料');
+      storageKey = material.storage_key;
+    } finally {
+      db.close();
+    }
+
+    try {
+      if (!storageKey) throw new NoteBuilderError('ORIGINAL_FILE_NOT_AVAILABLE', 404, '原始 PDF 文件不存在或无法读取');
+      return await this.storage.get(storageKey);
+    } catch {
+      throw new NoteBuilderError('ORIGINAL_FILE_NOT_AVAILABLE', 404, '原始 PDF 文件不存在或无法读取');
+    }
+  }
+
   retry(semesterIdValue: unknown, materialIdValue: unknown, type: 'material_convert' | 'note_generate') {
     const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
     const materialId = requiredUuid(materialIdValue, 'MATERIAL_NOT_FOUND', '资料不存在');
@@ -558,6 +583,26 @@ export class NoteBuilderService {
       db.close();
     }
   }
+  updateNote(semesterIdValue: unknown, noteIdValue: unknown, markdownValue: unknown) {
+    const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
+    const noteId = requiredUuid(noteIdValue, 'NOTE_NOT_FOUND', '笔记不存在');
+    const markdown = string(markdownValue);
+    if (!markdown) throw new NoteBuilderError('INVALID_NOTE_MARKDOWN', 400, '笔记正文不能为空');
+    if (markdown.length > 1_048_576)
+      throw new NoteBuilderError('INVALID_NOTE_MARKDOWN', 400, '笔记正文不能超过 1,048,576 字符');
+    this.assertWritableSemester(semesterId);
+    const db = this.openReadySemesterDb(semesterId);
+    try {
+      const exists = db.prepare('SELECT id FROM structured_notes WHERE id = ?').get(noteId) as { id: string } | undefined;
+      if (!exists) throw new NoteBuilderError('NOTE_NOT_FOUND', 404, '笔记不存在');
+      const updatedAt = now();
+      db.prepare('UPDATE structured_notes SET markdown = ?, updated_at = ? WHERE id = ?').run(markdown, updatedAt, noteId);
+      return { id: noteId, updatedAt };
+    } finally {
+      db.close();
+    }
+  }
+
   listKnowledgeModules(
     semesterIdValue: unknown,
     courseInstanceIdValue: unknown,

@@ -72,6 +72,7 @@ vi.mock('../src/api/study-rhythm-api', () => ({
 }));
 
 vi.mock('../src/api/note-builder-api', () => ({
+  getOriginalPdfUrl: vi.fn((semesterId: string, materialId: string) => `/api/materials/${materialId}/original-pdf?semesterId=${semesterId}`),
   getMaterials: vi.fn(async () => ({
     items: mockMaterials,
     pagination: { page: 1, pageSize: 20, total: mockMaterials.length, hasMore: false },
@@ -224,6 +225,23 @@ describe('MaterialUploadPage 人工补文恢复闭环', () => {
   });
 });
 
+
+describe('MaterialUploadPage PDF 原件重新打开', () => {
+  it('仅为 PDF 资料提供受控的新标签页重新打开入口', async () => {
+    mockMaterials = [conversionFailedMaterial];
+    await renderAndSelectCourse();
+
+    const openPdf = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) =>
+      item.textContent?.includes('重新打开 PDF')
+    );
+    expect(openPdf).not.toBeNull();
+    expect(openPdf?.getAttribute('href')).toBe(
+      `/api/materials/${conversionFailedMaterial.id}/original-pdf?semesterId=sem-1`
+    );
+    expect(openPdf?.target).toBe('_blank');
+    expect(openPdf?.rel).toContain('noopener');
+  });
+});
 
 describe('MaterialUploadPage S7-MVP 入口与显式生成笔记', () => {
   it('在已选择课程后显示许可边界和受控 WAV 提示', async () => {

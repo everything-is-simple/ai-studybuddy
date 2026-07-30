@@ -7,6 +7,10 @@ export function normalizeApiBaseUrl(configuredBaseUrl?: string): string {
 
 const DEFAULT_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
+export function getApiUrl(url: string): string {
+  return `${DEFAULT_BASE_URL}${url}`;
+}
+
 export class ApiClientError extends Error {
   constructor(
     public readonly code: string,

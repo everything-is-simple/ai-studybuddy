@@ -1,5 +1,5 @@
 import type { KnowledgeModuleDto, MaterialDto } from '@ai-studybuddy/shared';
-import { request, requestPage, upload, type ApiPage } from './api-client';
+import { getApiUrl, request, requestPage, upload, type ApiPage } from './api-client';
 
 export interface NoteDetail {
   id: string;
@@ -52,6 +52,11 @@ export function uploadMaterial(
   return upload<MaterialDto>('/materials/upload', formData, signal);
 }
 
+export function getOriginalPdfUrl(semesterId: string, materialId: string): string {
+  const params = new URLSearchParams({ semesterId });
+  return getApiUrl(`/materials/${encodeURIComponent(materialId)}/original-pdf?${params.toString()}`);
+}
+
 export function retryConversion(semesterId: string, materialId: string, signal?: AbortSignal): Promise<unknown> {
   return request(`/materials/${encodeURIComponent(materialId)}/retry-conversion`, {
     method: 'POST',
@@ -95,6 +100,15 @@ export function replaceText(
 
 export function getNote(semesterId: string, noteId: string, signal?: AbortSignal): Promise<NoteDetail> {
   return request<NoteDetail>(`/notes/${encodeURIComponent(noteId)}?semesterId=${encodeURIComponent(semesterId)}`, {
+    signal,
+  });
+}
+
+export function updateNote(semesterId: string, noteId: string, markdown: string, signal?: AbortSignal): Promise<{ id: string; updatedAt: string }> {
+  return request(`/notes/${encodeURIComponent(noteId)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ semesterId, markdown }),
     signal,
   });
 }
