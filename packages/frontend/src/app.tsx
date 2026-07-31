@@ -360,6 +360,19 @@ export function App() {
             }
           />
           <Route
+            path="/mistakes"
+            element={
+              renderSemesterRoute(
+                (activeSemesterId) => (
+                  <Suspense fallback={<PageState state="loading" title="正在加载错题本" />}>
+                    <MistakeListPage semesterId={activeSemesterId} onSemesterError={handleSemesterError} />
+                  </Suspense>
+                ),
+                '正在恢复当前学期'
+              )
+            }
+          />
+          <Route
             path="/mistakes/:mistakeId"
             element={
               renderSemesterRoute(

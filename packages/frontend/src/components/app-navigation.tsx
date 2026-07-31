@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 
 type NavigationItem = {
-  key: 'home' | 'courses' | 'semesters' | 'materials' | 'settings';
+  key: 'home' | 'courses' | 'semesters' | 'materials' | 'mistakes' | 'settings';
   to: string;
   label: string;
 };
@@ -11,6 +11,7 @@ const NAV_ITEMS: NavigationItem[] = [
   { key: 'courses', to: '/courses', label: '课程' },
   { key: 'semesters', to: '/semesters', label: '学期' },
   { key: 'materials', to: '/materials', label: '资料' },
+  { key: 'mistakes', to: '/mistakes', label: '错题' },
   { key: 'settings', to: '/settings', label: '设置' },
 ];
 
@@ -20,12 +21,12 @@ function activeKey(pathname: string): NavigationItem['key'] {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/semesters')) return 'semesters';
   if (pathname.startsWith('/materials') || pathname.startsWith('/notes')) return 'materials';
+  if (pathname.startsWith('/mistakes')) return 'mistakes';
   if (pathname.startsWith('/settings')) return 'settings';
   if (
     pathname.startsWith('/courses') ||
     pathname.startsWith('/exams') ||
-    pathname.startsWith('/practice-sessions') ||
-    pathname.startsWith('/mistakes')
+    pathname.startsWith('/practice-sessions')
   ) {
     return 'courses';
   }

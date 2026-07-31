@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import type { MistakeStatus } from '@ai-studybuddy/shared';
 import { getMistakes, getWeakPoints } from '../api/error-fixer-api';
-import { getExam } from '../api/study-rhythm-api';
+import { getCourses, getExam } from '../api/study-rhythm-api';
 import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
 import { useApiRequest } from '../hooks/use-api-request';
@@ -40,31 +40,77 @@ function formatDateTime(value: string): string {
 
 export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPageProps) {
   const { examId = '' } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isGlobalMode = !examId;
   const [statusFilter, setStatusFilter] = useState<MistakeStatus | ''>('');
   const [moduleFilter, setModuleFilter] = useState<string>('');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(searchParams.get('courseInstanceId') ?? '');
+
+  const coursesFetcher = useCallback(
+    (signal: AbortSignal) => {
+      if (!semesterId || !isGlobalMode) return Promise.resolve([]);
+      return getCourses(semesterId, signal);
+    },
+    [semesterId, isGlobalMode]
+  );
+
+  const { data: courses, loading: coursesLoading } = useApiRequest(coursesFetcher, [coursesFetcher]);
+
+  useEffect(() => {
+    if (!isGlobalMode) return;
+    const requestedCourseId = searchParams.get('courseInstanceId');
+    if (requestedCourseId) {
+      setSelectedCourseId(requestedCourseId);
+    }
+  }, [isGlobalMode, searchParams]);
+
+  const effectiveCourseId = useMemo(() => {
+    if (!isGlobalMode) return undefined;
+    return selectedCourseId;
+  }, [isGlobalMode, selectedCourseId]);
 
   const fetcher = useCallback(
     async (signal: AbortSignal) => {
-      if (!semesterId || !examId) return null;
-      const exam = await getExam(semesterId, examId, signal);
+      if (!semesterId) return null;
+      if (!isGlobalMode && !examId) return null;
+
+      let courseInstanceId: string;
+      let examName: string | undefined;
+      let examIdValue: string | undefined;
+
+      if (isGlobalMode) {
+        if (!effectiveCourseId) return null;
+        courseInstanceId = effectiveCourseId;
+      } else {
+        const exam = await getExam(semesterId, examId, signal);
+        courseInstanceId = exam.courseInstanceId;
+        examName = exam.name;
+        examIdValue = exam.id;
+      }
+
       const [mistakes, weakPoints] = await Promise.all([
         getMistakes(
           semesterId,
-          exam.courseInstanceId,
+          courseInstanceId,
           {
             status: statusFilter || undefined,
             knowledgeModuleId: moduleFilter || undefined,
           },
           signal
         ),
-        getWeakPoints(semesterId, exam.courseInstanceId, signal),
+        getWeakPoints(semesterId, courseInstanceId, signal),
       ]);
-      return { exam, mistakes, weakPoints };
+      return { examName, examId: examIdValue, courseInstanceId, mistakes, weakPoints };
     },
-    [examId, moduleFilter, semesterId, statusFilter]
+    [examId, isGlobalMode, effectiveCourseId, moduleFilter, semesterId, statusFilter]
   );
 
   const { data, loading, error, refetch } = useApiRequest(fetcher, [fetcher]);
+
+  const handleCourseChange = (courseInstanceId: string) => {
+    setSelectedCourseId(courseInstanceId);
+    setSearchParams(courseInstanceId ? { courseInstanceId } : {}, { replace: true });
+  };
 
   if (!semesterId) {
     return (
@@ -84,12 +130,38 @@ export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPage
 
   return (
     <div className="page mistake-list-page">
-      <Link to={`/exams/${examId}`}>返回考试工作台</Link>
-      {data && <ExamContextNav examId={data.exam.id} courseInstanceId={data.exam.courseInstanceId} active="mistakes" />}
+      {!isGlobalMode && <Link to={`/exams/${examId}`}>返回考试工作台</Link>}
+      {data?.examId && data?.courseInstanceId && (
+        <ExamContextNav examId={data.examId} courseInstanceId={data.courseInstanceId} active="mistakes" />
+      )}
       <header className="card">
         <p className="workbench-eyebrow">查漏补缺 · 错题本</p>
-        <h1>{data ? `${data.exam.name} 的错题` : '错题本'}</h1>
+        <h1>{data?.examName ? `${data.examName} 的错题` : '错题本'}</h1>
       </header>
+
+      {isGlobalMode && (
+        <section className="card">
+          <h2>选择课程</h2>
+          {coursesLoading && <FeedbackMessage state="loading" />}
+          {!coursesLoading && courses && courses.length === 0 && (
+            <FeedbackMessage state="empty" message="还没有课程，请先去“课程”页面创建。" />
+          )}
+          {!coursesLoading && courses && courses.length > 0 && (
+            <select
+              value={selectedCourseId}
+              onChange={(event) => handleCourseChange(event.target.value)}
+              aria-label="选择课程"
+            >
+              <option value="">请选择课程</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </section>
+      )}
 
       {loading && <FeedbackMessage state="loading" message="正在加载错题…" />}
       {error && <FeedbackMessage state="error" message={error} onRetry={refetch} />}
@@ -181,7 +253,7 @@ export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPage
                         ? ` · 错因：${CAUSE_LABELS[mistake.errorCauseCategory] ?? mistake.errorCauseCategory}`
                         : ''}
                     </span>
-                    <Link className="button-link" to={`/mistakes/${mistake.id}?examId=${examId}`}>
+                    <Link className="button-link" to={isGlobalMode ? `/mistakes/${mistake.id}` : `/mistakes/${mistake.id}?examId=${examId}`}>
                       查看与改错
                     </Link>
                   </div>
