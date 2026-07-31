@@ -18,6 +18,7 @@ build/
 # IDE
 .vscode/
 .idea/
+*.code-workspace
 # Local Claude Code settings
 .claude/
 # Trae IDE local settings

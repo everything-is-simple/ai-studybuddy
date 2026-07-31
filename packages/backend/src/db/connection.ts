@@ -106,9 +106,9 @@ export function getAllActiveSemesterDbPaths(): string[] {
   try {
     const rows = globalDb
       .prepare(
-        `SELECT semester_id FROM semesters
+        `SELECT id AS semester_id FROM semesters
          WHERE status IN ('active', 'teaching_ended', 'follow_up')
-         ORDER BY semester_id`
+         ORDER BY id`
       )
       .all() as { semester_id: string }[];
 
