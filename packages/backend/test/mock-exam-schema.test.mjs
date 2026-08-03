@@ -146,7 +146,7 @@ function insertAttempt(db, foundation, paperId, overrides = {}) {
 
 test('S5 mock exam migration v9 creates tables, indexes, and triggers on current schema', async (t) => {
   const { db } = await openFreshSemester(t);
-  assert.equal(getAppliedVersion(db, 'semester'), 9);
+  assert.equal(getAppliedVersion(db, 'semester'), 11);
 
   const tables = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'mock_exam_%' ORDER BY name").all().map((row) => row.name);
   assert.deepEqual(tables, [

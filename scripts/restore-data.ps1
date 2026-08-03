@@ -15,6 +15,10 @@ Assert-AIStudyBuddyDataTreeWithoutReparsePoints -Root $target -Code 'RESTORE_TAR
 $backupInsideTarget = Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $validated.BackupPath -Root $target
 $targetInsideBackup = Test-AIStudyBuddyDataPathEqualOrDescendant -Candidate $target -Root $validated.BackupPath
 if ($backupInsideTarget -or $targetInsideBackup) { New-AIStudyBuddyDataBoundaryError 'RESTORE_BACKUP_INVALID' }
+if (-not $EnableWrite) {
+  Write-Output 'RESTORE_WRITE_DISABLED'
+  exit 0
+}
 if (-not $PSCmdlet.ShouldProcess('logical-data-root', 'Restore validated backup')) {
   Write-Output "RESTORE_VALIDATED_NO_WRITE files=$($validated.Entries.Count)"
   exit 0

@@ -239,13 +239,20 @@ test('T06B migration 从真实 v6 形态补齐缺失的快照与投递表及恢�
   const legacyPath = path.join(dataRoot, `legacy-${crypto.randomUUID()}.db`);
   const db = openDbAtPath(legacyPath);
   try {
-    // v1-v6 从未创建 T06B 的两张表；真实升级库只会留下 v6 migration 记录。
-    db.exec(`
-      CREATE TABLE schema_migrations (scope TEXT NOT NULL, version INTEGER NOT NULL, applied_at TEXT NOT NULL, PRIMARY KEY(scope, version));
-      INSERT INTO schema_migrations(scope, version, applied_at) VALUES ('semester', 6, '2026-06-01T00:00:00.000Z');
-    `);
+    // 通过 v1-v6 的实际 SQL 构造可升级数据库；不能只伪造 migration 记录。
+    const { SCHEMA_SEMESTER_SQL } = await import('../dist/db/sql/schema-semester.js');
+    const { SEMESTER_V2_SQL } = await import('../dist/db/sql/migration-semester-v2.js');
+    const { SEMESTER_V3_SQL } = await import('../dist/db/sql/migration-semester-v3.js');
+    const { SEMESTER_V4_SQL } = await import('../dist/db/sql/migration-semester-v4.js');
+    const { SEMESTER_V5_SQL } = await import('../dist/db/sql/migration-semester-v5.js');
+    const { SEMESTER_V6_SQL } = await import('../dist/db/sql/migration-semester-v6.js');
+    db.exec([SCHEMA_SEMESTER_SQL, SEMESTER_V2_SQL, SEMESTER_V3_SQL, SEMESTER_V4_SQL, SEMESTER_V5_SQL, SEMESTER_V6_SQL].join('\n'));
+    const appliedAt = '2026-06-01T00:00:00.000Z';
+    for (let version = 1; version <= 6; version += 1) {
+      db.prepare('INSERT INTO schema_migrations(scope, version, applied_at) VALUES (\'semester\', ?, ?)').run(version, appliedAt);
+    }
     migrateSemesterDb(db);
-    assert.equal(getAppliedVersion(db, 'semester'), 9);
+    assert.equal(getAppliedVersion(db, 'semester'), 11);
     assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'parent_reports'").get());
     const columns = db.pragma('table_info(report_deliveries)').map((column) => column.name);
     for (const column of ['report_key', 'channel', 'status', 'sent_at', 'error_summary', 'attempt_count', 'last_attempt_at', 'next_retry_at', 'updated_at', 'lease_expires_at', 'created_at']) assert.ok(columns.includes(column));

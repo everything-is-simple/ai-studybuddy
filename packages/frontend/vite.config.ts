@@ -28,17 +28,25 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // KaTeX is isolated behind the lazy note page and its renderer is 520 KiB
+    // minified. Keep a 550 KiB guardrail so real regressions still fail loudly.
+    chunkSizeWarningLimit: 550,
     rollupOptions: {
       output: {
         manualChunks(id) {
           const normalizedId = id.replace(/\\/g, '/');
 
+          // KaTeX and the Unified markdown plugins are independently cacheable.
+          // Keeping them separate avoids a single async math-rendering vendor chunk
+          // exceeding Vite's 500 KiB advisory limit.
+          if (normalizedId.includes('/node_modules/katex/')) {
+            return 'katex-renderer';
+          }
           if (
-            normalizedId.includes('/node_modules/katex/') ||
             normalizedId.includes('/node_modules/rehype-katex/') ||
             normalizedId.includes('/node_modules/remark-math/')
           ) {
-            return 'katex';
+            return 'math-markdown';
           }
           if (
             normalizedId.includes('/node_modules/react-markdown/') ||

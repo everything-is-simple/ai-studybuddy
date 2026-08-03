@@ -1,6 +1,6 @@
 {
   "name": "@ai-studybuddy/backend",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "commonjs",
   "main": "./src/server.ts",
   "scripts": {
@@ -10,7 +10,7 @@
     "start": "node --require ./polyfills.cjs dist/server.js",
     "type-check": "tsc --noEmit",
     "clean": "node -e \"const fs=require(\\\"fs\\\"); for (const path of [\\\"dist\\\", \\\"tsconfig.tsbuildinfo\\\"]) fs.rmSync(path, { recursive: true, force: true });\"",
-    "test": "node --require ./polyfills.cjs --test --test-concurrency=1 test/*.test.mjs",
+    "test": "pnpm run build && node test/run-tests.cjs",
     "start:production": "node --require ./polyfills.cjs dist/server.js"
   },
   "dependencies": {

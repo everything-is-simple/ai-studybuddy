@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -31,6 +32,9 @@ test('createApp protects every API route and exposes config status to allowed or
 
   const rejected = await fetch(`${base}/api/health`, { headers: { Origin: 'http://evil.example' } });
   assert.equal(rejected.status, 403);
+  const health = await fetch(`${base}/api/health`);
+  assert.equal(health.status, 200);
+  assert.equal((await health.json()).data.version, '0.8.1');
   const accepted = await fetch(`${base}/api/config/status`, { headers: { Origin: 'http://localhost:5173' } });
   assert.equal(accepted.status, 200);
   assert.equal((await accepted.json()).data.ai.status, 'unconfigured');
@@ -61,4 +65,5 @@ test('bootstrap waits for configuration before listen and starts worker only aft
   });
 
   assert.deepEqual(order, ['config-start', 'config-end', 'app', 'listen', 'worker']);
+  assert.equal(existsSync(path.join(dataRoot, 'studybuddy.db')), true);
 });

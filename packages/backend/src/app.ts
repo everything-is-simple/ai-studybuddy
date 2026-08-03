@@ -34,7 +34,7 @@ export function createApp(options: {
   app.get('/api/health', (_req, res) => {
     const response: ApiSuccess<{ version: string; timestamp: string }> = {
       success: true,
-      data: { version: '0.8.0', timestamp: new Date().toISOString() },
+      data: { version: '0.8.1', timestamp: new Date().toISOString() },
     };
     res.json(response);
   });

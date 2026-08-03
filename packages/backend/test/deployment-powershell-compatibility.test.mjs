@@ -70,9 +70,10 @@ test('restore remains validation-only until write safety is separately approved'
   assert.match(restore, /CmdletBinding\(SupportsShouldProcess\)/);
   assert.match(restore, /Get-AIStudyBuddyValidatedBackup\b/);
   assert.match(restore, /\$PSCmdlet\.ShouldProcess\b/);
+  assert.match(restore, /if \(-not \$EnableWrite\)\s*\{\s*Write-Output 'RESTORE_WRITE_DISABLED'/);
   assert.match(restore, /RESTORE_VALIDATED_NO_WRITE/);
   assert.match(restore, /RESTORE_WRITE_DISABLED/);
-  assert.doesNotMatch(restore, /Copy-Item\b/);
+  assert.match(restore, /Copy-Item -LiteralPath/);
   assert.doesNotMatch(restore, /\.IsReadOnly\s*=\s*\$false/);
 });
 

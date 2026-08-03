@@ -4,7 +4,7 @@
   MinimumPythonMajor = 3
   MinimumPythonMinor = 10
   MaximumPythonMinor = 12
-  BackendVersion = '0.8.0'
+  BackendVersion = '0.8.1'
   VerifiedOn = '2026-07-24'
   VerifiedNode = 'v24.14.0'
   VerifiedPython = '3.10.19'

@@ -198,7 +198,7 @@ async function openFreshSemester(t, prefix) {
 test('fresh semester database applies current migrations with S3 tables, indexes, and triggers exactly once', async (t) => {
   const { db, migrations } = await openFreshSemester(t, 'studybuddy-t03a-fresh-');
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 9);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 11);
   assert.deepEqual(columnNames(db, 'practice_sessions'), [
     'id',
     'course_instance_id',
@@ -318,7 +318,7 @@ test('v3 semester database upgrades to current schema without losing existing S1
 
   migrations.migrateSemesterDb(db);
 
-  assert.equal(migrations.getAppliedVersion(db, 'semester'), 9);
+  assert.equal(migrations.getAppliedVersion(db, 'semester'), 11);
   assert.equal(
     db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 5").get().count,
     1

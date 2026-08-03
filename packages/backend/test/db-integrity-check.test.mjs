@@ -12,7 +12,7 @@ function setup() {
 }
 
 function teardown() {
-  fs.rmSync(testRoot, { recursive: true, force: true });
+  fs.rmSync(testRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 }
 
 function createCleanDb(dbPath) {
@@ -60,17 +60,22 @@ test('T04-2-B: runIntegrityCheck 对损坏数据库返回错误', (t) => {
     corruptDb(dbPath);
 
     // 尝试打开损坏的数据库应该失败或返回错误
+    let db;
     try {
-      const db = new Database(dbPath, { readonly: true });
+      db = new Database(dbPath, { readonly: true });
       const result = db.pragma('integrity_check', { simple: true });
-      db.close();
 
       // 如果能打开，完整性检查应该报告错误
       assert.notStrictEqual(result, 'ok', '损坏的数据库完整性检查不应该返回 ok');
     } catch (error) {
       // 无法打开数据库也是预期行为
-      assert.ok(error.message.includes('file is not a database') || error.message.includes('disk I/O'),
-        '应该抛出数据库损坏相关错误');
+      assert.match(
+        String(error.message),
+        /file is not a database|disk I\/O|database disk image is malformed|SQLITE_CORRUPT/i,
+        '应该抛出数据库损坏相关错误'
+      );
+    } finally {
+      db?.close();
     }
   } finally {
     teardown();
@@ -85,21 +90,21 @@ test('T04-2-C: getAllActiveSemesterDbPaths 返回活跃学期路径', async (t) 
   try {
     setup();
 
-    // 创建全局数据库
+    // 创建与正式运行一致的全局数据库结构。
     const globalDbPath = path.join(isolatedRoot, 'studybuddy.db');
-    fs.mkdirSync(path.dirname(globalDbPath), { recursive: true });
-    const globalDb = new Database(globalDbPath);
-    globalDb.pragma('journal_mode = WAL');
-    globalDb.exec(`
-      CREATE TABLE IF NOT EXISTS semesters (
-        semester_id TEXT PRIMARY KEY,
-        status TEXT NOT NULL
-      );
-      INSERT INTO semesters (semester_id, status) VALUES
-        ('active-001', 'active'),
-        ('archived-001', 'archived'),
-        ('follow-up-001', 'follow_up');
+    const { initGlobalDbAtPath } = await import('../dist/db/migrations.js');
+    const globalDb = initGlobalDbAtPath(globalDbPath);
+    const now = new Date().toISOString();
+    globalDb.prepare('INSERT INTO students (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)').run('student-001', 'Test', now, now);
+    const insertSemester = globalDb.prepare(`
+      INSERT INTO semesters (
+        id, semester_code, student_id, teaching_start_date, teaching_end_date,
+        status, db_relative_path, ready, created_at, updated_at
+      ) VALUES (?, ?, 'student-001', '2026-02-20', '2026-06-30', ?, ?, 1, ?, ?)
     `);
+    insertSemester.run('active-001', 'active-001', 'active', 'semesters/active-001/semester.db', now, now);
+    insertSemester.run('archived-001', 'archived-001', 'archived', 'semesters/archived-001/semester.db', now, now);
+    insertSemester.run('follow-up-001', 'follow-up-001', 'follow_up', 'semesters/follow-up-001/semester.db', now, now);
     globalDb.close();
 
     // 创建活跃学期数据库

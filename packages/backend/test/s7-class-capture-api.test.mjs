@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -7,11 +8,23 @@ import path from 'node:path';
 import test from 'node:test';
 
 const backendDir = path.resolve(import.meta.dirname, '..');
-let nextPort = 59500;
+
+async function getFreePort() {
+  const server = http.createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  const port = typeof address === 'object' && address ? address.port : undefined;
+  await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  if (!port) throw new Error('failed to allocate a free port');
+  return port;
+}
 
 async function startBackend(t) {
   const dataRoot = await mkdtemp(path.join(tmpdir(), 'studybuddy-s7-api-'));
-  const port = nextPort++;
+  const port = await getFreePort();
   const child = spawn(process.execPath, ['dist/server.js'], {
     cwd: backendDir,
     env: {
