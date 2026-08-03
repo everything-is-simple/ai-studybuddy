@@ -609,6 +609,7 @@ export interface MockExamAttemptDetailDto {
   createdAt: string;
   updatedAt: string;
   questions: MockExamQuestionForStudentDto[];
+  result: SubmitMockExamAttemptResponse | null;
 }
 
 export interface SubmitMockExamAnswerInputDto {

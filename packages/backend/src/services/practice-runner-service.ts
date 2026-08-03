@@ -239,7 +239,9 @@ function optionalNonNegativeInteger(value: unknown, code: string, message: strin
 }
 
 function normalizeFillBlankAnswer(value: string): string {
-  return value.normalize('NFKC').trim().toLowerCase().replace(/\s+/g, '');
+  return value.normalize('NFKC').trim().toLowerCase()
+    .replace(/[［\[]/g, '(').replace(/[］\]]/g, ')').replace(/[﹣－−–—]/g, '-')
+    .replace(/\/\((\d+(?:\.\d+)?[a-z][a-z0-9]*)\)/g, '/$1').replace(/\s+/g, '');
 }
 
 function parseJsonArray(value: string | null, message: string): string[] {
@@ -567,7 +569,7 @@ export class PracticeRunnerService {
       `知识模块 JSON：${JSON.stringify(modules)}`,
       '',
       '严格只返回 JSON 对象，不要 Markdown 围栏或解说。schema：',
-      '{"questions":[{"type":"single_choice|multiple_choice|fill_blank","stem":"题干","options":["A. ...","B. ...","C. ...","D. ..."],"correct_answer":"A 或 [\\"A\\",\\"C\\"] 或 填空答案","acceptable_answers":null,"difficulty":"easy|medium|hard","knowledge_module_id":"uuid","explanation":"简短解析"}]}',
+      '{"questions":[{"type":"single_choice|multiple_choice|fill_blank","stem":"题干","options":"选择题为选项数组；填空题必须为 null","correct_answer":"单选填 A；多选填 A,C；填空填答案","acceptable_answers":"填空题可选答案数组，其他题为 null","difficulty":"easy|medium|hard","knowledge_module_id":"uuid","explanation":"简短解析"}]}',
     ].join('\n');
   }
 
@@ -598,8 +600,6 @@ export class PracticeRunnerService {
       throw new PracticeRunnerError('PRACTICE_GENERATION_FAILED', 502, 'AI 生成题目关联了未请求的知识模块');
 
     if (type === 'fill_blank') {
-      if (question.options !== null && question.options !== undefined)
-        throw new PracticeRunnerError('PRACTICE_GENERATION_FAILED', 502, '填空题不能包含选项');
       const correctAnswer = string(question.correct_answer);
       if (!correctAnswer) throw new PracticeRunnerError('PRACTICE_GENERATION_FAILED', 502, '填空题答案不能为空');
       const acceptableAnswers =

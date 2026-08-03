@@ -30,11 +30,11 @@ export function MockExamResultPage({ semesterId }: MockExamResultPageProps) {
   }, [attempt?.id, attempt?.status, clearAnswerFields, isHydrated]);
 
   if (!semesterId) return <div className="page"><FeedbackMessage state="empty" message="请先创建或选择当前学期，才能查看模拟考结果。" /></div>;
-  const result = draft.result;
+  const result = draft.result ?? attempt?.result ?? null;
   if (loading && !attempt) return <div className="page"><FeedbackMessage state="loading" message="正在读取模拟考状态…" /></div>;
   if (error) return <div className="page"><FeedbackMessage state="error" message={error} onRetry={refetch} /></div>;
   if (attempt?.status !== 'graded' || !result || result.status !== 'graded') {
-    return <div className="page"><FeedbackMessage state="empty" message="结果暂不可用：本次结果需要从刚完成的页面查看；当前接口未提供结果明细重取能力。" /><Link className="button-link" to={attempt ? `/exams/${encodeURIComponent(attempt.assessmentAttemptId)}/mock-exam` : '/courses'}>返回模拟考入口</Link></div>;
+    return <div className="page"><FeedbackMessage state="empty" message="模拟考结果暂不可用，请稍后刷新重试。" /><Link className="button-link" to={attempt ? `/exams/${encodeURIComponent(attempt.assessmentAttemptId)}/mock-exam` : '/courses'}>返回模拟考入口</Link></div>;
   }
   return (
     <div className="page mock-exam-result-page">

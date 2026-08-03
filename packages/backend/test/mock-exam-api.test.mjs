@@ -449,6 +449,7 @@ test('mock exam attempt submit grades answers, writes S5 analysis event, and doe
   const detail = await requestJson(backend.port, 'GET', `/api/mock-exam-attempts/${started.json.data.id}?semesterId=${semesterId}`);
   assert.equal(detail.status, 200, detail.text);
   assert.equal(detail.json.data.status, 'graded');
+  assert.deepEqual(detail.json.data.result, submitted.json.data);
   for (const question of detail.json.data.questions) assertStudentQuestionShape(question);
 
   assert.deepEqual(countMockExamRows(backend.dataRoot, semesterId), {

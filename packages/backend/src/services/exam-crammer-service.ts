@@ -119,7 +119,11 @@ function parseStringArray(value: unknown, message: string): string[] {
     throw new ExamCrammerError('MOCK_EXAM_GENERATION_FAILED', 502, message);
   return result;
 }
-function normalizeFill(value: string): string { return value.normalize('NFKC').trim().toLowerCase().replace(/\s+/g, ''); }
+function normalizeFill(value: string): string {
+  return value.normalize('NFKC').trim().toLowerCase()
+    .replace(/[［\[]/g, '(').replace(/[］\]]/g, ')').replace(/[﹣－−–—]/g, '-')
+    .replace(/\/\((\d+(?:\.\d+)?[a-z][a-z0-9]*)\)/g, '/$1').replace(/\s+/g, '');
+}
 function normalizeStudent(value: unknown): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== 'string') throw new ExamCrammerError('MOCK_EXAM_ANSWER_INVALID', 400, '答案格式不合法');
@@ -316,7 +320,7 @@ export class ExamCrammerService {
       '只使用知识模块摘要与来源证据，不读取或输出资料原文；不要依赖 S3/S4 原题和作答历史。',
       '来源摘要：' + JSON.stringify(summary),
       '知识模块：' + JSON.stringify(safeModules),
-      '严格只返回 JSON：{"questions":[{"type":"single_choice|multiple_choice|fill_blank","stem":"题干","options":["A. ...","B. ...","C. ...","D. ..."],"correct_answer":"A 或 A,C 或 填空答案","acceptable_answers":null,"difficulty":"easy|medium|hard","knowledge_module_id":"模块 UUID","explanation":"简短解析"}]}'
+      '严格只返回 JSON：{"questions":[{"type":"single_choice|multiple_choice|fill_blank","stem":"题干","options":"选择题为选项数组；填空题必须为 null","correct_answer":"单选填 A；多选填 A,C；填空填答案","acceptable_answers":"填空题可选答案数组，其他题为 null","difficulty":"easy|medium|hard","knowledge_module_id":"模块 UUID","explanation":"简短解析"}]}'
     ].join('\n');
   }
 
@@ -332,7 +336,6 @@ export class ExamCrammerService {
     const pointValue = raw.point_value === undefined ? 1 : positiveInteger(raw.point_value, 'MOCK_EXAM_GENERATION_FAILED', 'AI 生成分值不符合要求');
     if (pointValue > 10) throw new ExamCrammerError('MOCK_EXAM_GENERATION_FAILED', 502, 'AI 生成分值不符合要求');
     if (type === 'fill_blank') {
-      if (raw.options !== undefined && raw.options !== null) throw new ExamCrammerError('MOCK_EXAM_GENERATION_FAILED', 502, '填空题不能包含选项');
       const correct = text(raw.correct_answer);
       if (!correct) throw new ExamCrammerError('MOCK_EXAM_GENERATION_FAILED', 502, '填空题答案不能为空');
       const acceptable = raw.acceptable_answers == null ? null : parseStringArray(raw.acceptable_answers, '填空题可接受答案格式不符合要求');
@@ -501,6 +504,68 @@ export class ExamCrammerService {
     return row;
   }
 
+  private getAttemptResult(
+    db: DatabaseType,
+    row: AttemptRow,
+    questions: QuestionRow[]
+  ): SubmitMockExamAttemptResponse | null {
+    if (row.status !== 'graded') return null;
+    const answers = db
+      .prepare(
+        `SELECT a.question_id, a.student_answer, a.is_correct, a.score_awarded,
+                q.correct_answer, q.explanation, q.point_value, q.knowledge_module_id
+           FROM mock_exam_answers a
+           JOIN mock_exam_questions q ON q.id = a.question_id
+          WHERE a.attempt_id = ?
+          ORDER BY a.answer_order`
+      )
+      .all(row.id) as Array<{
+      question_id: string; student_answer: string | null; is_correct: number; score_awarded: number;
+      correct_answer: string; explanation: string | null; point_value: number; knowledge_module_id: string;
+    }>;
+    const analyses = db
+      .prepare(
+        `SELECT knowledge_module_id, question_count, correct_count, score_awarded,
+                total_points, correct_rate, weak_signal
+           FROM mock_exam_module_analyses
+          WHERE attempt_id = ?
+          ORDER BY knowledge_module_id`
+      )
+      .all(row.id) as Array<{
+      knowledge_module_id: string; question_count: number; correct_count: number; score_awarded: number;
+      total_points: number; correct_rate: number; weak_signal: number;
+    }>;
+    return {
+      attemptId: row.id,
+      status: 'graded',
+      totalScore: Number(row.total_score ?? 0),
+      totalPoints: Number(row.total_points),
+      questionCount: questions.length,
+      correctRate: Number(row.correct_rate ?? 0),
+      overtime: row.overtime === 1,
+      totalDurationSeconds: Number(row.total_duration_seconds ?? 0),
+      answers: answers.map((answer) => ({
+        questionId: answer.question_id,
+        studentAnswer: answer.student_answer,
+        correctAnswer: answer.correct_answer,
+        isCorrect: answer.is_correct === 1,
+        scoreAwarded: Number(answer.score_awarded),
+        pointValue: Number(answer.point_value),
+        explanation: answer.explanation,
+        knowledgeModuleId: answer.knowledge_module_id,
+      })),
+      moduleAnalyses: analyses.map((analysis) => ({
+        knowledgeModuleId: analysis.knowledge_module_id,
+        questionCount: Number(analysis.question_count),
+        correctCount: Number(analysis.correct_count),
+        scoreAwarded: Number(analysis.score_awarded),
+        totalPoints: Number(analysis.total_points),
+        correctRate: Number(analysis.correct_rate),
+        weakSignal: analysis.weak_signal === 1,
+      })),
+    };
+  }
+
   getAttempt(semesterIdValue: unknown, attemptIdValue: unknown): MockExamAttemptDetailDto {
     const semesterId = requiredUuid(semesterIdValue, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
     const attemptId = requiredUuid(attemptIdValue, 'MOCK_EXAM_ATTEMPT_NOT_FOUND', '模拟考尝试不存在');
@@ -514,7 +579,7 @@ export class ExamCrammerService {
         submittedAt: row.submitted_at, gradedAt: row.graded_at, totalScore: row.total_score,
         totalPoints: row.total_points, correctRate: row.correct_rate, overtime: row.overtime === 1,
         totalDurationSeconds: row.total_duration_seconds, createdAt: row.created_at, updatedAt: row.updated_at,
-        questions: questions.map((question) => this.questionDto(question)),
+        questions: questions.map((question) => this.questionDto(question)), result: this.getAttemptResult(db, row, questions),
       };
     } finally { db.close(); }
   }

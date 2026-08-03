@@ -512,8 +512,8 @@ describe('T03 模拟考会话与结果', () => {
     expect(container.textContent).not.toContain('因为 A 符合题意。');
   });
 
-  it('结果缓存缺失时不构造成绩或解析', async () => {
-    getMockExamAttemptMock.mockResolvedValue({ ...attempt, status: 'graded' });
+  it('结果缓存缺失时从已批改尝试接口重取结果', async () => {
+    getMockExamAttemptMock.mockResolvedValue({ ...attempt, status: 'graded', result: gradedResult });
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']}>
@@ -525,8 +525,8 @@ describe('T03 模拟考会话与结果', () => {
     });
     await flush();
 
-    expect(container.textContent).toContain('结果暂不可用');
-    expect(container.textContent).not.toContain('正确答案');
-    expect(container.textContent).not.toContain('因为 A 符合题意。');
+    expect(container.textContent).toContain('2 / 2');
+    expect(container.textContent).toContain('正确答案：A');
+    expect(container.textContent).toContain('因为 A 符合题意。');
   });
 });

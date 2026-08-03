@@ -11,7 +11,7 @@ import { getAppliedVersion, migrateGlobalDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CURRENT_SEMESTER_VERSION = 9;
+const CURRENT_SEMESTER_VERSION = 11;
 
 export class SemesterAccessError extends Error {
   constructor(
