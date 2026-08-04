@@ -439,7 +439,7 @@ describe('CoursePage T09C 状态反馈与确认态保护', () => {
 
   it('semesterId 缺失时给出创建和选择学期的引导', async () => {
     await act(async () => {
-      root.render(<MemoryRouter><CoursePage semesterId={null} /></MemoryRouter>);
+      root.render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><CoursePage semesterId={null} /></MemoryRouter>);
     });
     expect(container.textContent).toContain('请先创建并选择当前学期');
   });

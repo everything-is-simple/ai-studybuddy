@@ -53,7 +53,7 @@ async function flush() {
 async function renderPage(onSemesterError = vi.fn()) {
   const { DailyStudyHomePage } = await import('../src/pages/daily-study-home-page');
   await act(async () => {
-    root.render(<MemoryRouter><DailyStudyHomePage semesterId={SEMESTER_ID} onSemesterError={onSemesterError} /></MemoryRouter>);
+    root.render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><DailyStudyHomePage semesterId={SEMESTER_ID} onSemesterError={onSemesterError} /></MemoryRouter>);
   });
   await flush();
   return onSemesterError;

@@ -4,9 +4,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CurrentSemesterDto, SemesterSummaryDto } from '@ai-studybuddy/shared';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-
 const mocks = vi.hoisted(() => ({
   listSemesters: vi.fn(),
   listArchivedSemesters: vi.fn(),
@@ -119,6 +116,7 @@ async function renderPage(current: SemesterSummaryDto | null = null) {
         <Routes>
           <Route path="/semesters" element={<SemesterPage current={current} onCurrentChange={onCurrentChange} />} />
           <Route path="/semesters/:semesterId/practice-history" element={<p>练习历史占位</p>} />
+          <Route path="/courses" element={<p>课程占位</p>} />
         </Routes>
       </MemoryRouter>
     );

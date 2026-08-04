@@ -51,7 +51,7 @@ function renderPage() {
   const root = createRoot(container);
   act(() => {
     root.render(
-      <MemoryRouter initialEntries={['/notes/note-1']}>
+      <MemoryRouter initialEntries={['/notes/note-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes><Route path="/notes/:noteId" element={<NotePage semesterId="semester-1" />} /></Routes>
       </MemoryRouter>
     );

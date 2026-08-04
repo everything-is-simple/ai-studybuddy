@@ -26,7 +26,7 @@ function renderPage() {
   document.body.appendChild(container);
   const root = createRoot(container);
   act(() => {
-    root.render(<MemoryRouter initialEntries={['/exams/exam-1/cram']}><Routes><Route path="/exams/:examId/cram" element={<CramCardsPage semesterId="semester-1" />} /></Routes></MemoryRouter>);
+    root.render(<MemoryRouter initialEntries={['/exams/exam-1/cram']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Routes><Route path="/exams/:examId/cram" element={<CramCardsPage semesterId="semester-1" />} /></Routes></MemoryRouter>);
   });
   return { container, root };
 }

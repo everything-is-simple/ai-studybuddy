@@ -222,7 +222,7 @@ describe('T03 模拟考入口', () => {
   it('仅为已确认考试生成模拟卷，并使用既有 T02 默认请求', async () => {
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/exams/exam-1/mock-exam']}>
+        <MemoryRouter initialEntries={['/exams/exam-1/mock-exam']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/exams/:examId/mock-exam" element={<MockExamStartPage semesterId="semester-1" />} />
             <Route path="/mock-exam-papers/:paperId" element={<p>模拟卷详情</p>} />
@@ -249,7 +249,7 @@ describe('T03 模拟考入口', () => {
     getExamMock.mockResolvedValue({ ...confirmedExam, confirmationStatus: 'pending' });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/exams/exam-1/mock-exam']}>
+        <MemoryRouter initialEntries={['/exams/exam-1/mock-exam']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/exams/:examId/mock-exam" element={<MockExamStartPage semesterId="semester-1" />} />
           </Routes>
@@ -268,7 +268,7 @@ describe('T03 模拟卷详情', () => {
   it('读取既有试卷 DTO 并开始新的模拟考尝试', async () => {
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-papers/paper-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-papers/paper-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-papers/:paperId" element={<MockExamPaperPage semesterId="semester-1" />} />
             <Route path="/mock-exam-attempts/:attemptId" element={<p>模拟考作答页</p>} />
@@ -298,7 +298,7 @@ describe('T03 模拟卷详情', () => {
     });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-papers/paper-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-papers/paper-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-papers/:paperId" element={<MockExamPaperPage semesterId="semester-1" />} />
             <Route path="/mock-exam-attempts/:attemptId" element={<p>模拟考作答页</p>} />
@@ -323,7 +323,7 @@ describe('T03 模拟考会话与结果', () => {
       .mockResolvedValueOnce({ ...attempt, status: 'graded' });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
             <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
@@ -355,7 +355,7 @@ describe('T03 模拟考会话与结果', () => {
     );
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
             <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
@@ -388,7 +388,7 @@ describe('T03 模拟考会话与结果', () => {
     });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes><Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} /></Routes>
         </MemoryRouter>
       );
@@ -408,7 +408,7 @@ describe('T03 模拟考会话与结果', () => {
     });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
             <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
@@ -437,7 +437,7 @@ describe('T03 模拟考会话与结果', () => {
     getMockExamAttemptMock.mockResolvedValue({ ...attempt, status: 'graded' });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes><Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} /></Routes>
         </MemoryRouter>
       );
@@ -451,7 +451,7 @@ describe('T03 模拟考会话与结果', () => {
     submitMockExamAttemptMock.mockRejectedValue(new Error('网络暂不可用'));
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes><Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} /></Routes>
         </MemoryRouter>
       );
@@ -475,7 +475,7 @@ describe('T03 模拟考会话与结果', () => {
     submitMockExamAttemptMock.mockRejectedValue(new ApiClientError('MOCK_EXAM_ATTEMPT_STATE_INVALID', '模拟考状态已变化'));
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
             <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
@@ -498,7 +498,7 @@ describe('T03 模拟考会话与结果', () => {
     writeMockExamDraft('semester-1', 'attempt-1', { ...emptyDraft, result: gradedResult });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
           </Routes>
@@ -516,7 +516,7 @@ describe('T03 模拟考会话与结果', () => {
     getMockExamAttemptMock.mockResolvedValue({ ...attempt, status: 'graded', result: gradedResult });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']}>
+        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
           </Routes>

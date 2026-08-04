@@ -117,7 +117,7 @@ describe('S3 练习前端交互', () => {
   it('答题页保留草稿并以现有提交契约提交', async () => {
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/practice-sessions/session-1']}>
+        <MemoryRouter initialEntries={['/practice-sessions/session-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/practice-sessions/:sessionId" element={<PracticeSessionPage semesterId="semester-1" />} />
             <Route path="/practice-sessions/:sessionId/result" element={<p>结果页</p>} />

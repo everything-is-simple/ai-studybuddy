@@ -107,13 +107,13 @@ async function flush() {
 
 async function renderSettingsPage() {
   const { default: SettingsPage } = await import('../src/pages/settings-page');
-  await act(async () => { root.render(<MemoryRouter><SettingsPage /></MemoryRouter>); });
+  await act(async () => { root.render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><SettingsPage /></MemoryRouter>); });
   await flush();
 }
 
 async function renderApp() {
   const { App } = await import('../src/app');
-  await act(async () => { root.render(<MemoryRouter initialEntries={['/settings']}><App /></MemoryRouter>); });
+  await act(async () => { root.render(<MemoryRouter initialEntries={['/settings']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><App /></MemoryRouter>); });
   await flush();
 }
 

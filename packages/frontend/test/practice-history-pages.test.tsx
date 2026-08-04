@@ -98,7 +98,7 @@ describe('PracticeHistory pages', () => {
     const { PracticeHistoryPage } = await import('../src/pages/practice-history-page');
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={[`/semesters/${semesterId}/practice-history?status=graded&courseInstanceId=course-1`]}>
+        <MemoryRouter initialEntries={[`/semesters/${semesterId}/practice-history?status=graded&courseInstanceId=course-1`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/semesters/:semesterId/practice-history" element={<PracticeHistoryPage />} />
           </Routes>
@@ -123,7 +123,7 @@ describe('PracticeHistory pages', () => {
     const { PracticeHistoryResultPage } = await import('../src/pages/practice-history-result-page');
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={[`/semesters/${semesterId}/practice-history/${sessionId}`]}>
+        <MemoryRouter initialEntries={[`/semesters/${semesterId}/practice-history/${sessionId}`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/semesters/:semesterId/practice-history/:sessionId" element={<PracticeHistoryResultPage />} />
           </Routes>

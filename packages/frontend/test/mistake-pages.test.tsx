@@ -128,7 +128,7 @@ afterEach(async () => {
 async function renderListPage() {
   await act(async () => {
     root.render(
-      <MemoryRouter initialEntries={['/exams/exam-1/mistakes']}>
+      <MemoryRouter initialEntries={['/exams/exam-1/mistakes']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/exams/:examId/mistakes" element={<MistakeListPage semesterId="22222222-2222-4222-8222-222222222222" />} />
         </Routes>
@@ -148,7 +148,7 @@ async function renderDetailPage() {
   root = createRoot(container);
   await act(async () => {
     root.render(
-      <MemoryRouter initialEntries={['/mistakes/11111111-1111-4111-8111-111111111111?examId=exam-1']}>
+      <MemoryRouter initialEntries={['/mistakes/11111111-1111-4111-8111-111111111111?examId=exam-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/mistakes/:mistakeId" element={<MistakeDetailPage semesterId="22222222-2222-4222-8222-222222222222" />} />
           <Route path="/practice-sessions/:sessionId" element={<div data-testid="redo-session-page">重做作答页</div>} />
