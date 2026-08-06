@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import http from 'node:http';
-import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';

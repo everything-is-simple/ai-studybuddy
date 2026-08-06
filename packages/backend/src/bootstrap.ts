@@ -4,15 +4,14 @@ import type { Server } from 'http';
 import type { ConfigurationService } from './config/configuration-service';
 import type { MaterialJobWorker } from './services/material-job-worker';
 import { SemesterSelectorService } from './services/semester-selector-service';
-import { initGlobalDb } from './db/migrations';
 import { getGlobalDbPath } from './db/paths';
+import { initGlobalDbAtPath } from './db/migrations';
 import {
   openReadOnlyExistingDbAtPath,
   runIntegrityCheck,
   getAllActiveSemesterDbPaths,
   checkpointAndClose,
 } from './db/connection';
-import { initGlobalDbAtPath } from './db/migrations';
 
 export interface BackendController {
   server: Server;
@@ -102,11 +101,6 @@ export async function bootstrapBackend(options: {
   log?: (message: string) => void;
 }): Promise<BackendController> {
   const configurationService = await options.initializeConfiguration();
-  // 首次启动没有全局库时，先建立并迁移空库；既有库不会在此路径被隐式新建。
-  if (!fs.existsSync(getGlobalDbPath())) {
-    const globalDb = initGlobalDb();
-    globalDb.close();
-  }
   new SemesterSelectorService().migrateReadySemesters();
   const app = options.createApplication(configurationService);
 

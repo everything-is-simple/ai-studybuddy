@@ -85,7 +85,7 @@ test('restore remains validation-only until write safety is separately approved'
   assert.match(restore, /if \(-not \$EnableWrite\)\s*\{\s*Write-Output 'RESTORE_WRITE_DISABLED'/);
   assert.match(restore, /RESTORE_VALIDATED_NO_WRITE/);
   assert.match(restore, /RESTORE_WRITE_DISABLED/);
-  assert.match(restore, /Copy-Item -LiteralPath/);
+  assert.doesNotMatch(restore, /Copy-Item\b/);
   assert.doesNotMatch(restore, /\.IsReadOnly\s*=\s*\$false/);
 });
 
