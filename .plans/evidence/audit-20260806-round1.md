@@ -59,3 +59,34 @@
 - A 类：更新 `docs/14-项目代码百科-Code-Wiki.md` 端点表与路由表，使其与 `app.ts`/各 router 实际注册一致；同步 `docs/00` 无需改（14 已有效）。
 - B1：更新 S3 PRD API 表标注实际端点。
 - 全部修复走任务分支 `claude/audit-20260806-doc-code-deviation`，验证通过后合入 master 并推送。
+
+---
+
+## 五、第二轮核查结论（2026-08-06）
+
+### 行为级核查（代码与文档语义一致性）
+
+| 核查点 | 文档承诺 | 代码实际 | 结论 |
+|---|---|---|---|
+| Worker 串行/恢复/重试 | docs/08：单进程串行、过期 running 恢复、重试上限 | `material-job-worker.ts`：runOnce 串行、recoverStale 恢复 running→pending、max_attempts=3 | ✅ 一致 |
+| Worker setInterval 不等待 | docs/04 T09 已登记技术债 | `startPolling` 仍 `void this.runOnce()` | ⚠️ 既有已知项，文档如实记录 |
+| 配置脱敏 | docs/10：掩码值、固定错误码、禁回显秘密 | `configuration-service.ts` summarize/maskEmail | ✅ 一致 |
+| T02A 统一错误/回环 | .plans/t02a：统一 JSON 错误、127.0.0.1 | `api-error-handler.ts` safeErrors、`api-origin-policy.ts` loopback | ✅ 一致 |
+| T02D 秘密扫描边界 | .plans/t02d：相对路径+短指纹 | `AIStudyBuddy.SecretScan.cjs` isSensitivePath/resolveCandidate | ✅ 一致 |
+| T02E 打包受控根 | .plans/t02e：拒绝仓库根/磁盘根 | `build-deployment-package.ps1` New-AIStudyBuddyPackageBoundary | ✅ 一致 |
+| T02F 日志 allowlist | .plans/t02f：固定 JSONL allowlist | `runtime-log-boundary.ts` LOG_ENTRY_FIELDS | ✅ 一致 |
+| 前端规范 | docs/11：组件不直接 fetch、禁秘密进浏览器存储 | 前端仅 use-api-request/refetch，无裸 fetch | ✅ 一致 |
+| 错误码命名 | docs/10：大写蛇形 | S3/S4/S7 错误码抽查 | ✅ 一致 |
+
+### 既有测试失败（与审计无关，登记为既有项）
+
+- `packages/backend/test/trusted-approval-contract.test.mjs` 在 **master（8739a4bc）同样失败**：`TRUSTED_ANCHOR_INVALID`。
+- 原因：`createInvalidKeyFactoryAttempt` 用 RSA 公钥伪造 Ed25519 anchor，期望 `TRUSTED_ANCHOR_INVALID`；当前 Node 24 环境下 fixture 的 `createTrustAnchorFixture` KeyObject 校验行为与测试预期不符。
+- 属 Phase 3 T02 信任锚既有实现细节，不在本审计修复范围；建议登记为后续独立问题。
+
+### 文档状态检查
+
+- docs/01 总 PRD、docs/00 索引：状态描述与 docs/04/代码一致 ✅
+- docs/13：Node 24 收紧（本轮已修）✅
+- docs/14：端点/路由/数据模型/技术栈/备份（本轮已修）✅
+- S3 PRD 端点（本轮已修）✅
