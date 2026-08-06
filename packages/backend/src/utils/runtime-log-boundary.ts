@@ -139,10 +139,25 @@ export function createSiblingRuntimeLogBoundary(appDataRoot: string): RuntimeLog
 }
 export class RuntimeLogBoundary {
   private readonly logRoot: string;
+  private readonly maxFileBytes: number;
 
-  constructor(options: { logRoot: string; protectedRoots: readonly string[] }) {
+  constructor(options: {
+    logRoot: string;
+    protectedRoots: readonly string[];
+    /** 单文件字节上限（T05-3）：append 前检查，超限先轮转再追加。默认 5 MiB。 */
+    maxFileBytes?: number;
+  }) {
     this.logRoot = normalizeAbsolute(options.logRoot, 'LOG_ROOT_INVALID');
     assertExistingDirectoryIsNotLink(this.logRoot);
+
+    if (options.maxFileBytes !== undefined) {
+      if (!Number.isInteger(options.maxFileBytes) || options.maxFileBytes < 1024 || options.maxFileBytes > 1073741824) {
+        fail('LOG_MAX_FILE_BYTES_INVALID');
+      }
+      this.maxFileBytes = options.maxFileBytes;
+    } else {
+      this.maxFileBytes = 5 * 1024 * 1024;
+    }
 
     const userHome = normalizeAbsolute(os.homedir(), 'LOG_TARGET_PROTECTED_ROOT');
     if (this.logRoot === userHome) fail('LOG_TARGET_PROTECTED_ROOT');
@@ -164,6 +179,14 @@ export class RuntimeLogBoundary {
   append(logFile: LogFileName, entry: SafeLogEntry): void {
     assertAllowedEntry(logFile, entry);
     const target = this.getTarget(logFile, true);
+    // T05-3：单文件容量上限——达到 maxFileBytes 先轮转（保留 3 份）再追加，
+    // 防止长期运行日志无限增长。轮转同样受 allowlist 与路径边界约束。
+    if (fs.existsSync(target.filePath)) {
+      const stats = fs.statSync(target.filePath);
+      if (stats.size >= this.maxFileBytes) {
+        this.rotateAndRetain(logFile, { now: new Date(), maxRetainedFiles: 3 });
+      }
+    }
     const serialized = JSON.stringify(entry);
     fs.appendFileSync(target.filePath, `${serialized}\n`, { encoding: 'utf8', flag: 'a' });
   }
@@ -179,13 +202,20 @@ export class RuntimeLogBoundary {
     const target = this.getTarget(logFile, false);
     if (fs.existsSync(target.filePath)) {
       assertRegularFileIsNotLink(target.filePath);
-      const rotatedName = `${target.fileName}.${createRotationStamp(options.now)}.rotated`;
-      const rotatedPath = path.join(target.directory, rotatedName);
-      if (fs.existsSync(rotatedPath)) fail('LOG_ROTATION_COLLISION');
+      const stamp = createRotationStamp(options.now);
+      // 同秒内多次轮转会碰撞：追加单调后缀 -1/-2/…（正则允许 \.rotated 前的任意段）
+      let rotatedPath = path.join(target.directory, `${target.fileName}.${stamp}.rotated`);
+      let suffix = 1;
+      while (fs.existsSync(rotatedPath)) {
+        rotatedPath = path.join(target.directory, `${target.fileName}.${stamp}-${suffix}.rotated`);
+        suffix += 1;
+      }
       fs.renameSync(target.filePath, rotatedPath);
     }
 
-    const rotationPattern = new RegExp(`^${escapeRegExp(target.fileName)}\\.\\d{14}\\.rotated$`);
+    const rotationPattern = new RegExp(
+      `^${escapeRegExp(target.fileName)}\\.\\d{14}(?:-\\d+)?\\.rotated$`
+    );
     const retained = fs
       .readdirSync(target.directory, { withFileTypes: true })
       .filter((entry) => rotationPattern.test(entry.name))

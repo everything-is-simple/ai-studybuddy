@@ -145,3 +145,41 @@ test('symbolic-link log roots are rejected when the platform permits the synthet
     'LOG_TARGET_REPARSE_POINT'
   );
 });
+
+test('T05-3: append auto-rotates when the single-file byte cap is reached and retains capped count', () => {
+  const capBoundary = new RuntimeLogBoundary({
+    logRoot,
+    protectedRoots: [protectedDataRoot, process.cwd()],
+    maxFileBytes: 1024,
+  });
+  // 写入超过上限：每条约 150 字节，写 20 条应触发至少一次轮转
+  for (let i = 0; i < 20; i += 1) {
+    capBoundary.append('maintenance', maintenanceEntry());
+  }
+  const errorDirectory = path.join(logRoot, 'errors');
+  const files = fs.readdirSync(errorDirectory).sort();
+  // 当前文件 + 轮转副本（保留 3 份以内）
+  const rotated = files.filter((name) => /^maintenance\.jsonl\.\d{14}(?:-\d+)?\.rotated$/.test(name));
+  assert.ok(rotated.length >= 1, `应至少产生一次轮转，实际: ${files.join(',')}`);
+  assert.ok(rotated.length <= 3, `轮转副本不得超过保留上限 3，实际: ${rotated.length}`);
+  const current = files.find((name) => name === 'maintenance.jsonl');
+  assert.ok(current, '当前日志文件必须存在');
+  const currentSize = fs.statSync(path.join(errorDirectory, current)).size;
+  assert.ok(currentSize < 2048, `轮转后当前文件应低于上限，实际 ${currentSize} 字节`);
+  assert.equal(fs.readFileSync(protectedSentinel, 'utf8'), 'synthetic-protected-sentinel');
+});
+
+test('T05-3: invalid maxFileBytes is rejected', () => {
+  assertBoundaryCode(
+    () => new RuntimeLogBoundary({ logRoot, protectedRoots: [protectedDataRoot], maxFileBytes: 100 }),
+    'LOG_MAX_FILE_BYTES_INVALID'
+  );
+  assertBoundaryCode(
+    () => new RuntimeLogBoundary({ logRoot, protectedRoots: [protectedDataRoot], maxFileBytes: 2 ** 31 }),
+    'LOG_MAX_FILE_BYTES_INVALID'
+  );
+  assertBoundaryCode(
+    () => new RuntimeLogBoundary({ logRoot, protectedRoots: [protectedDataRoot], maxFileBytes: 0 }),
+    'LOG_MAX_FILE_BYTES_INVALID'
+  );
+});
