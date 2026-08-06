@@ -312,8 +312,6 @@ test('409 提交冲突后锁定已提交尝试，并且结果缓存缺失时不�
   await expect(page.getByText('该模拟考已提交，不能再次修改答案。')).toBeVisible();
   await expect(page.getByRole('button', { name: '提交模拟考' })).toHaveCount(0);
   await page.getByRole('link', { name: '查看结果' }).click();
-  await expect(
-    page.getByText('结果暂不可用：本次结果需要从刚完成的页面查看；当前接口未提供结果明细重取能力。')
-  ).toBeVisible();
+  await expect(page.getByText('模拟考结果暂不可用，请稍后刷新重试。')).toBeVisible();
   await expect(page.getByText('正确答案：A')).toHaveCount(0);
 });
