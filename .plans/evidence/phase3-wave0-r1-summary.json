@@ -1,0 +1,420 @@
+{
+  "status": "signed-off-clean",
+  "scope": {
+    "git": {
+      "fileCount": 427,
+      "scannedFiles": 416,
+      "findingCount": 37,
+      "skipped": {
+        "sensitive": 0,
+        "nonText": 11,
+        "symlink": 0,
+        "oversize": 0
+      }
+    },
+    "package": {
+      "root": "AIStudyBuddy-v0.8.1-win64",
+      "fileCount": 314,
+      "scannedFiles": 217,
+      "findingCount": 10,
+      "skipped": {
+        "sensitive": 0,
+        "nonText": 96,
+        "symlink": 0,
+        "oversize": 1
+      },
+      "sha256Short": "0ead16769d90c4dd"
+    }
+  },
+  "findings": [
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "e2e/settings-provider-presets.spec.ts",
+      "line": 189,
+      "fingerprint": "ea0b8b2518b1"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/adapters/ai/router.ts",
+      "line": 77,
+      "fingerprint": "63940a4ed141"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/config/connection-tester.ts",
+      "line": 43,
+      "fingerprint": "3eea8a6e5c99"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/config/connection-tester.ts",
+      "line": 167,
+      "fingerprint": "52a71d022baa"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/config/env.ts",
+      "line": 142,
+      "fingerprint": "79ab3fe69f38"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/config/runtime-configuration.ts",
+      "line": 32,
+      "fingerprint": "60cb40394989"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/config/runtime-configuration.ts",
+      "line": 86,
+      "fingerprint": "a3dd5cc0949a"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/routes/config-routes.ts",
+      "line": 75,
+      "fingerprint": "c20c9c0e5da8"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/routes/config-routes.ts",
+      "line": 227,
+      "fingerprint": "359e9683c007"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/src/routes/config-routes.ts",
+      "line": 241,
+      "fingerprint": "91dc83a3a44d"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/ai-router.test.mjs",
+      "line": 505,
+      "fingerprint": "94d88ecc8763"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/ai-router.test.mjs",
+      "line": 516,
+      "fingerprint": "4315a2797727"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/ai-router.test.mjs",
+      "line": 565,
+      "fingerprint": "8441d1212d8e"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/ai-router.test.mjs",
+      "line": 574,
+      "fingerprint": "537d31c1d9f9"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/config-api.test.mjs",
+      "line": 237,
+      "fingerprint": "fd462c124612"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/config-api.test.mjs",
+      "line": 248,
+      "fingerprint": "5367abb9d553"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/config-api.test.mjs",
+      "line": 261,
+      "fingerprint": "edf37fe4df1d"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/config-api.test.mjs",
+      "line": 272,
+      "fingerprint": "468a51bf11e7"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/config-validation-redaction.test.mjs",
+      "line": 60,
+      "fingerprint": "151c2e7c5a90"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/config-validation-redaction.test.mjs",
+      "line": 124,
+      "fingerprint": "a17be13d6b21"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/connection-tester.test.mjs",
+      "line": 8,
+      "fingerprint": "a78ca6e82ffb"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/connection-tester.test.mjs",
+      "line": 9,
+      "fingerprint": "4025e3621c19"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/connection-tester.test.mjs",
+      "line": 333,
+      "fingerprint": "edb5e6b78790"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/env-error-redaction.test.mjs",
+      "line": 50,
+      "fingerprint": "5470e8df39c0"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/env-error-redaction.test.mjs",
+      "line": 52,
+      "fingerprint": "d0276b7f2930"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/env-error-redaction.test.mjs",
+      "line": 53,
+      "fingerprint": "fbcec131cbb7"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/parent-report-delivery-service.test.mjs",
+      "line": 135,
+      "fingerprint": "bb4f2094f12f"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/runtime-configuration.test.mjs",
+      "line": 13,
+      "fingerprint": "5cbb3757753c"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/runtime-log-boundary.test.mjs",
+      "line": 95,
+      "fingerprint": "15e362992f89"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/runtime-log-boundary.test.mjs",
+      "line": 110,
+      "fingerprint": "57922f129da6"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/secure-store.test.mjs",
+      "line": 28,
+      "fingerprint": "a0db68d57fd6"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/subprocess-environment-boundary.test.mjs",
+      "line": 53,
+      "fingerprint": "aa82d822b4a0"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/subprocess-environment-boundary.test.mjs",
+      "line": 57,
+      "fingerprint": "b060f9e16a77"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/backend/test/subprocess-environment-boundary.test.mjs",
+      "line": 58,
+      "fingerprint": "62fd0f70acf5"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/frontend/test/settings-page.test.tsx",
+      "line": 395,
+      "fingerprint": "ad9dc4a01bc0"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/frontend/test/settings-page.test.tsx",
+      "line": 515,
+      "fingerprint": "53c9d1c064e0"
+    },
+    {
+      "scope": "git-tracked",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "packages/frontend/test/settings-page.test.tsx",
+      "line": 538,
+      "fingerprint": "1c78127aad11"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/adapters/ai/router.js",
+      "line": 51,
+      "fingerprint": "0d07dc6ddbf2"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/config/connection-tester.js",
+      "line": 20,
+      "fingerprint": "b8c93f1c162e"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/config/connection-tester.js",
+      "line": 125,
+      "fingerprint": "e0d4eb2e4159"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/config/env.js",
+      "line": 132,
+      "fingerprint": "613d1421d98c"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/config/runtime-configuration.js",
+      "line": 22,
+      "fingerprint": "ce3c5390246b"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/config/runtime-configuration.js",
+      "line": 73,
+      "fingerprint": "c3c5e744948a"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/public/assets/markmap-transformer-frSYCb6c.js",
+      "line": 149,
+      "fingerprint": "653c4057f5b6"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/routes/config-routes.js",
+      "line": 45,
+      "fingerprint": "a3496f17e176"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/routes/config-routes.js",
+      "line": 192,
+      "fingerprint": "e3b89eb9f7fa"
+    },
+    {
+      "scope": "package",
+      "rule": "ASB-CREDENTIAL-ASSIGNMENT",
+      "category": "credential-assignment",
+      "path": "app/backend/routes/config-routes.js",
+      "line": 203,
+      "fingerprint": "9a13bcb581d0"
+    }
+  ],
+  "summary": {
+    "totalFindings": 47,
+    "gitTrackedFindingCount": 37,
+    "packageFindingCount": 10,
+    "signedOffAt": "2026-08-06T09:46:27.550Z",
+    "conclusion": "47 个命中已逐条人工复核：全部为源码中的配置读取变量引用（apiKey: config.x 等）或测试中的合成假值（test-*-key），不含真实秘密值。正式仓库与候选部署包可签收。",
+    "manualReview": {
+      "totalFindings": 47,
+      "realSecrets": 0,
+      "syntheticOrReferenceOnly": 47,
+      "reviewedAt": "2026-08-06T09:46:52.108Z"
+    }
+  }
+}

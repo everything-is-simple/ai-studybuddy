@@ -1,0 +1,375 @@
+{
+  "contract": "phase3-wave0-r2-acl-readonly-v1",
+  "dataRoot": "AIStudyBuddy-runtime-root",
+  "collectedAt": "2026-08-06T09:49:53.588Z",
+  "summary": {
+    "directoriesCollected": 6,
+    "present": [
+      "config",
+      "data",
+      "logs",
+      "backups",
+      "tmp",
+      "models"
+    ],
+    "reparsePointsFound": 0,
+    "ownerClass": "UnknownPrincipal(脱敏归类)",
+    "aclStructure": "标准 Windows 继承默认：Administrators/SYSTEM/当前用户/Users，全部 inherited"
+  },
+  "riskFindings": [
+    {
+      "severity": "P1-candidate",
+      "category": "users-over-grant",
+      "detail": "Users(所有本地用户) 经继承获得 Read+Modify+FullControl 的 allow ACE。数据目录(config/data/backups)默认允许所有本地用户完全控制，属过度授权候选。",
+      "scope": [
+        "config",
+        "data",
+        "logs",
+        "backups",
+        "tmp",
+        "models"
+      ],
+      "requiresSeparateApproval": "任何 Set-Acl/icacls 修复须另建最小修复计划并获用户明确批准",
+      "rollback": "修复前保存当前 ACL 脱敏证据，修复后复验"
+    }
+  ],
+  "conclusion": "未发现 reparse point 风险；发现 Users 全权继承这一 P1 候选，需要最小 ACL 修复（另立任务）。当前仅只读采证，未做任何 ACL 修改。",
+  "entries": [
+    {
+      "dir": "config",
+      "exists": true,
+      "ownerClass": "UnknownPrincipal",
+      "isReparsePoint": false,
+      "aces": [
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "Read+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "dir": "data",
+      "exists": true,
+      "ownerClass": "UnknownPrincipal",
+      "isReparsePoint": false,
+      "aces": [
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "Read+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "dir": "logs",
+      "exists": true,
+      "ownerClass": "UnknownPrincipal",
+      "isReparsePoint": false,
+      "aces": [
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "Read+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "dir": "backups",
+      "exists": true,
+      "ownerClass": "UnknownPrincipal",
+      "isReparsePoint": false,
+      "aces": [
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "Read+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "dir": "tmp",
+      "exists": true,
+      "ownerClass": "UnknownPrincipal",
+      "isReparsePoint": false,
+      "aces": [
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "Read+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "dir": "models",
+      "exists": true,
+      "ownerClass": "UnknownPrincipal",
+      "isReparsePoint": false,
+      "aces": [
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Read+Write+Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "UnknownPrincipal",
+          "access": "allow",
+          "rights": "Delete+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "Read+Modify+FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "access": "allow",
+          "rights": "",
+          "inherited": true
+        }
+      ]
+    }
+  ]
+}
