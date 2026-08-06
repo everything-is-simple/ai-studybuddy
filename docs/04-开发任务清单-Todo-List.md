@@ -1025,9 +1025,22 @@ Phase 3 任务不是凭聊天临时编出来的，依据分四层：
 
 ## Phase 4：系统验收收口（v0.8.1 全系统验收基线）
 
-**状态**：📝 计划已创建（2026-08-06），待独立审查与用户确认后实施。
+**状态**：✅ 已完成主线复验并推送 `origin/master`（2026-08-06）。用户明确指示按验收执行 Prompt 实测全系统并收口，本轮按第十四章矩阵逐项实测并勾选，全部自动化基线通过，未见失败项需修复。
 
 **目标**：建立"当前 v0.8.1 全系统验收矩阵"作为单一、确定的验收标准来源（替代 docs/09 历史堆积），同步修正 docs/09 滞后项（备份/恢复 RESTORE_WRITE_DISABLED 描述、G2/Phase 1.5 状态、补 Phase 3 Wave 0-3 记录）。
+
+**本轮实测证据（2026-08-06，全部隔离 APP_DATA_ROOT=`H:\ai-studybuddy-tmp\runs\phase4-acceptance-20260806\<子项>`）**：
+- `pnpm type-check`：零错误；双端 build（`pnpm -r --filter backend run build` / `pnpm -r --filter @ai-studybuddy/frontend run build`）成功。
+- 后端测试：`pnpm -r --filter @ai-studybuddy/backend run test` = 342/342（duration 252s）。
+- 前端测试：`pnpm -r --filter @ai-studybuddy/frontend run test` = 149/149（28 files）。
+- E2E：`pnpm test:e2e` = 24/24（48.2s）；专项 `playwright test e2e/error-feedback-matrix.spec.ts` = 3/3。
+- 专项安全测试：`node --test test/error-feedback-matrix.test.mjs test/ai-logger-boundary.test.mjs test/runtime-log-boundary.test.mjs` = 17/17（含 6/6、4/4、7/7）。
+- 真实服务冒烟：`node packages/backend/dist/server.js`（BACKEND_PORT=38080、`PYTHON_PATH=H:\AIStudyBuddy\runtime\venv\Scripts\python.exe`、`FRONTEND_STATIC_ROOT=packages/frontend/dist`）；health 返回 v0.8.1；学生主路径 API 闭环：真实 OCR venv 课表预览（合成课表 28 字符、置信度 >0.99）→ 创建学期 201 → 设当前+读回一致 → 创建课程 201 → 创建考试 201 → 确认考试 confirmed → 任务/时间线返回事件 → 资料上传 200 → 读回 200；无 Provider 时生成笔记返回确定性状态错误（AI 降级边界符合预期）。
+- 安全证据核对：`phase3-wave0-r1-summary.json` `signed-off-clean`、realSecrets=0；`phase3-wave0-r2-summary.json` 6 目录 reparsePointsFound=0、Windows 标准默认 ACL；`restore-data.ps1` 静态核验默认 fail-closed（RESTORE_VALIDATED_NO_WRITE）+ `-EnableWrite` 8 步状态机；`BACKEND_HOST` 强制 127.0.0.1；`register-parent-report-task.ps1` 默认不注册。
+
+**未通过项**：无。全部验收项通过（含如实标注的待补边界，见 docs/09 §14.6：真实目标机验收、真实课表 OCR、真实渠道、R3-postrestore/T02-R6）。
+
+**任务分支**：`claude/phase4-acceptance-20260806`（docs/09 第十四章状态列勾选 + 本文档登记）；已 rebase `origin/master`、ff-only 合入 `master` 并推送 `origin/master`。
 
 **行动计划**：`.plans/phase4-acceptance-20260806-plan.md`；任务分支 `claude/phase4-acceptance-20260806`。
 
@@ -1037,6 +1050,17 @@ Phase 3 任务不是凭聊天临时编出来的，依据分四层：
 | 部署 | docs/13 §12 八项 | 部署矩阵 |
 | 安全基线 | Phase 3 Wave 0-3 | R1/R2/R4/T04/T05 证据 |
 | 全量自动化 | type-check/build/test/E2E | 全绿 |
+
+**Phase 4 验收勾选结果（2026-08-06，详见 docs/09 第十四章）**：
+
+| 维度 | 结果 |
+|---|---|
+| 14.1 S1-S7 学生主路径（12 项） | ✅ 全部本轮实测（E2E 24/24 覆盖 + 后端 342/342 + 真实业务冒烟） |
+| 14.2 失败反馈与脱敏（T02-R4） | ✅ error-feedback-matrix 后端 6/6 + E2E 3/3、ai-logger-boundary 4/4 本轮实测 |
+| 14.3 安全与数据（Wave 0-3） | ✅ R1 0 真实秘密、R2 ACL 标准默认 0 reparse、runtime-log-boundary 7/7、restore 状态机本轮核验 |
+| 14.4 部署验收（8 项） | ✅ 可实测项本轮实测（启停/OCR smoke/安全网络/配置密钥/任务计划）；Bootstrap 为历史证据，真实目标机见 14.6 |
+| 14.5 全量自动化基线 | ✅ type-check 零错误、双端 build、后端 342/342、前端 149/149、E2E 24/24 |
+| 14.6 待补项 | ⏳ 真实目标机验收 / 真实课表 OCR / 真实渠道 / R3-postrestore、T02-R6（如实标注，未冒充通过） |
 
 ---
 ## POST-PHASE3：3 天 Alpha 真实使用冲刺

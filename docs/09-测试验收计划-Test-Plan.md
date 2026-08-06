@@ -289,63 +289,64 @@ S7-MVP 已完成任务分支测试、构建、文档治理、diff 检查与开�
 ## 十四、当前版本验收矩阵（Phase 4，v0.8.1，2026-08-06）
 
 > **用途**：本矩阵是"当前 v0.8.1 全系统验收"的**单一确定标准**，替代按 Phase 历史堆积的旧章节。每项引用真实证据路径，证据不足项明确标注待补，不虚构通过。
-> **证据基线（2026-08-06 实测）**：后端测试 342/342、前端测试 149/149（28 files）、浏览器 E2E 24/24、type-check 零错误、双端 build 通过、真实业务冒烟（OCR 课表预览→创建学期→课程→考试→资料上传→转换→AI 降级）通过。
+> **证据基线（2026-08-06 本轮实测）**：后端测试 342/342、前端测试 149/149（28 files）、浏览器 E2E 24/24、type-check 零错误、双端 build 通过、真实业务冒烟（真实 OCR venv 课表预览→创建学期→课程→考试确认→任务/时间线→资料上传→转换读回）通过。所有实测均在隔离 `APP_DATA_ROOT=H:\ai-studybuddy-tmp\runs\phase4-acceptance-20260806\<子项>` 下执行。
+> **实测命令与结果（2026-08-06）**：`pnpm type-check` 零错误；`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build` 成功；`pnpm -r --filter @ai-studybuddy/backend run test` 342/342（duration 252s）；`pnpm -r --filter @ai-studybuddy/frontend run test` 149/149（28 files）；`pnpm test:e2e` 24/24（48.2s）；专项 `error-feedback-matrix.test.mjs`+`ai-logger-boundary.test.mjs`+`runtime-log-boundary.test.mjs` 17/17；`playwright test e2e/error-feedback-matrix.spec.ts` 3/3；真实服务冒烟 `node packages/backend/dist/server.js`（BACKEND_PORT=38080、PYTHON_PATH=OCR venv、FRONTEND_STATIC_ROOT=packages/frontend/dist）health 返回 v0.8.1，学生主路径 API 闭环通过。
 
 ### 14.1 S1-S7 学生主路径验收
 
 | 子系统 | 验收项 | 通过标准 | 证据 | 状态 |
 |---|---|---|---|---|
-| S1 学习节奏 | 学期创建/切换/隔离 | 预览→确认→创建→切换→刷新恢复，跨学期隔离 | `semester-selector.spec.ts`（E2E）+ `study-rhythm` 后端测试 | ✅ |
-| S1 | 课程/课表/考试目标 | 课程 CRUD、周课表条目、考试确认/倒计时 | `course-schedule-exam-goals.spec.ts`（E2E） | ✅ |
-| S1 | 任务/时间线 | 任务状态机、事件过滤、时间线展示 | `timeline.spec.ts`（E2E）+ `study-rhythm` 测试 | ✅ |
-| S2 资料笔记 | 上传/转换/AI 降级 | PDF/文本/图片上传→转换→AI 失败降级待质检 | `student-journey.spec.ts`（E2E）+ `note-builder` 测试 + 真实冒烟 | ✅ |
-| S2 | 笔记渲染/知识模块 | Markdown/KaTeX/Markmap、模块来源关联 | `markmap-lazy-load.spec.ts`（E2E）+ `note-generation-parsing` 测试 | ✅ |
-| S3 限时练习 | 生成/作答/批改 | 发起→作答→超时提交→批改结果→刷新恢复 | `practice-runner.spec.ts`（E2E）+ `practice` 后端测试 | ✅ |
-| S3 | 练习历史 | 历史列表/结果只读 | `practice-history-archive.spec.ts`（E2E） | ✅ |
-| S4 错题改错 | 归档/错因/重做/薄弱点 | 错题列表/详情/错因/重做/掌握状态 | `error-fixer.spec.ts`（E2E）+ `error-fixer-*` 后端测试 | ✅ |
-| S5 期末冲刺 | 模拟考 | 生成/作答/提交/结果/模块分析/409 冲突 | `mock-exam.spec.ts`（E2E）+ `mock-exam*` 后端测试 | ✅ |
-| S5 | 速背/冲刺计划/工作台 | 确定性只读卡、7 天计划、工作台冲刺区 | `cram-cards.spec.ts`、`cram-plan.spec.ts`、`exam-workbench.spec.ts`（E2E） | ✅ |
-| S6 家长报告 | 规则报告/AI 降级/去重 | 脱敏聚合、渠道级去重、双失败留档 | `parent-report-*` 后端测试 | ✅（未跑真实渠道） |
-| S7 课堂采集 | 受控 WAV→S2 handoff | 受控格式/同步转写/编辑/显式保存 | S7-MVP 验收（docs/09 §11）+ `class-capture` 后端测试 | ✅ MVP 边界 |
+| S1 学习节奏 | 学期创建/切换/隔离 | 预览→确认→创建→切换→刷新恢复，跨学期隔离 | `semester-selector.spec.ts`（E2E）+ `study-rhythm` 后端测试 | ✅ 本轮实测（2026-08-06：E2E 24/24 含 semester-selector，后端 342/342；真实冒烟 OCR 预览→创建学期→设当前→读回一致） |
+| S1 | 课程/课表/考试目标 | 课程 CRUD、周课表条目、考试确认/倒计时 | `course-schedule-exam-goals.spec.ts`（E2E） | ✅ 本轮实测（2026-08-06：E2E course-schedule-exam-goals 通过；真实冒烟创建课程 201、考试 201、确认考试 confirmed） |
+| S1 | 任务/时间线 | 任务状态机、事件过滤、时间线展示 | `timeline.spec.ts`（E2E）+ `study-rhythm` 测试 | ✅ 本轮实测（2026-08-06：E2E timeline 通过；真实冒烟任务创建后时间线返回 `assessment_attempt_confirmed` 事件） |
+| S2 资料笔记 | 上传/转换/AI 降级 | PDF/文本/图片上传→转换→AI 失败降级待质检 | `student-journey.spec.ts`（E2E）+ `note-builder` 测试 + 真实冒烟 | ✅ 本轮实测（2026-08-06：E2E student-journey 通过；真实冒烟文本资料上传 200、读回 200；无 Provider 时生成笔记返回确定性状态错误，符合 AI 降级边界） |
+| S2 | 笔记渲染/知识模块 | Markdown/KaTeX/Markmap、模块来源关联 | `markmap-lazy-load.spec.ts`（E2E）+ `note-generation-parsing` 测试 | ✅ 本轮实测（2026-08-06：E2E markmap-lazy-load 通过，后端 342/342 含 note-generation-parsing） |
+| S3 限时练习 | 生成/作答/批改 | 发起→作答→超时提交→批改结果→刷新恢复 | `practice-runner.spec.ts`（E2E）+ `practice` 后端测试 | ✅ 本轮实测（2026-08-06：E2E practice-runner 通过，后端 342/342 含 practice-generation/submit） |
+| S3 | 练习历史 | 历史列表/结果只读 | `practice-history-archive.spec.ts`（E2E） | ✅ 本轮实测（2026-08-06：E2E practice-history-archive 通过） |
+| S4 错题改错 | 归档/错因/重做/薄弱点 | 错题列表/详情/错因/重做/掌握状态 | `error-fixer.spec.ts`（E2E）+ `error-fixer-*` 后端测试 | ✅ 本轮实测（2026-08-06：E2E error-fixer 通过，后端 342/342 含 error-fixer 系列） |
+| S5 期末冲刺 | 模拟考 | 生成/作答/提交/结果/模块分析/409 冲突 | `mock-exam.spec.ts`（E2E）+ `mock-exam*` 后端测试 | ✅ 本轮实测（2026-08-06：E2E mock-exam 通过，后端 342/342 含 mock-exam-schema/api） |
+| S5 | 速背/冲刺计划/工作台 | 确定性只读卡、7 天计划、工作台冲刺区 | `cram-cards.spec.ts`、`cram-plan.spec.ts`、`exam-workbench.spec.ts`（E2E） | ✅ 本轮实测（2026-08-06：E2E cram-cards/cram-plan/exam-workbench 通过） |
+| S6 家长报告 | 规则报告/AI 降级/去重 | 脱敏聚合、渠道级去重、双失败留档 | `parent-report-*` 后端测试 | ✅ 本轮实测（2026-08-06：后端 342/342 含 parent-report-service/delivery/runner；未跑真实渠道，见 14.6） |
+| S7 课堂采集 | 受控 WAV→S2 handoff | 受控格式/同步转写/编辑/显式保存 | S7-MVP 验收（docs/09 §11）+ `class-capture` 后端测试 | ✅ MVP 边界本轮实测（2026-08-06：后端 342/342 含 s7-class-capture-api；受控 WAV 依赖本机 whisper.cpp，实机属 14.6 目标机门禁） |
 
 ### 14.2 失败反馈与脱敏（T02-R4）
 
 | 验收项 | 通过标准 | 证据 | 状态 |
 |---|---|---|---|
-| 错误矩阵 | S1-S7 错误中文可操作且脱敏 | `error-feedback-matrix.test.mjs` 6/6 + `error-feedback-matrix.spec.ts` 3/3（E2E） | ✅ |
-| 日志脱敏 | AI 日志字段 allowlist、落盘 ai-events.jsonl | `ai-logger-boundary.test.mjs` 4/4 | ✅ |
+| 错误矩阵 | S1-S7 错误中文可操作且脱敏 | `error-feedback-matrix.test.mjs` 6/6 + `error-feedback-matrix.spec.ts` 3/3（E2E） | ✅ 本轮实测（2026-08-06：`node --test test/error-feedback-matrix.test.mjs ...` 17/17 含 6/6；`playwright test e2e/error-feedback-matrix.spec.ts` 3/3 passed） |
+| 日志脱敏 | AI 日志字段 allowlist、落盘 ai-events.jsonl | `ai-logger-boundary.test.mjs` 4/4 | ✅ 本轮实测（2026-08-06：专项 `node --test` 17/17 含 4/4；全量后端 342/342 覆盖） |
 
 ### 14.3 安全与数据（Phase 3 Wave 0-3）
 
 | 验收项 | 通过标准 | 证据 | 状态 |
 |---|---|---|---|
-| 秘密扫描（T02-R1） | 正式仓库+部署包 0 真实秘密 | `phase3-wave0-r1-summary.json` | ✅ 签收 |
-| ACL 采证（T02-R2） | Windows 标准默认、0 reparse | `phase3-wave0-r2-summary.json`（误报已澄清） | ✅ |
-| 日志轮转（T05-3） | 单文件上限自动轮转、保留 3 份 | `runtime-log-boundary.test.mjs` 7/7 | ✅ |
-| 备份/恢复（T04-1/2/3） | 白名单备份、完整性检测、受控恢复写入 | `phase3-wave1/2` 证据 + `restore-data.ps1` 状态机 | ✅（真实目标机写入待批准） |
+| 秘密扫描（T02-R1） | 正式仓库+部署包 0 真实秘密 | `phase3-wave0-r1-summary.json` | ✅ 本轮实测（2026-08-06 核对：`signed-off-clean`，47 命中逐条人工复核后 `realSecrets=0`，全部为配置变量引用或测试合成值） |
+| ACL 采证（T02-R2） | Windows 标准默认、0 reparse | `phase3-wave0-r2-summary.json`（误报已澄清） | ✅ 本轮实测（2026-08-06 核对：6 目录采证 `reparsePointsFound=0`，Windows 标准默认 ACL 结论，误报已修复记录） |
+| 日志轮转（T05-3） | 单文件上限自动轮转、保留 3 份 | `runtime-log-boundary.test.mjs` 7/7 | ✅ 本轮实测（2026-08-06：专项 `node --test` 17/17 含 7/7；全量后端 342/342 覆盖） |
+| 备份/恢复（T04-1/2/3） | 白名单备份、完整性检测、受控恢复写入 | `phase3-wave1/2` 证据 + `restore-data.ps1` 状态机 | ✅（2026-08-06：`restore-data.ps1` 静态核验默认 `-WhatIf` fail-closed（`RESTORE_VALIDATED_NO_WRITE`）+ `-EnableWrite` 8 步状态机；Wave 1/2 演练证据在 `.plans/evidence/`；真实目标机写入待批准，见 14.6） |
 
 ### 14.4 部署验收（docs/13 §12 八项）
 
 | 验收项 | 通过标准 | 当前状态 |
 |---|---|---|
-| 部署包扫描 | 含编译产物、排除密钥/数据/日志 | ✅（T02-E 边界） |
-| Bootstrap | 目录/依赖/OCR venv/无密钥 env | ✅（选项 C 模拟验证） |
-| 生产启停 | 127.0.0.1 监听、health、SPA fallback、停止释放 | ✅（真实冒烟） |
-| OCR smoke | RapidOCR 可导入、合成图通过 | ⚠️ 依赖 OCR venv（`H:\AIStudyBuddy\runtime\venv`） |
-| 备份/恢复 | 白名单 manifest/hash、受控写入 | ✅（Wave 1/2） |
-| 配置/密钥 | 安装包与 Git 无真实密钥 | ✅（T02-R1 + M03） |
-| 任务计划 | 不默认注册真实发送 | ✅（静态检查） |
-| 安全网络 | 无防火墙改动、无公网、日志脱敏 | ✅（T02A-F） |
+| 部署包扫描 | 含编译产物、排除密钥/数据/日志 | ✅（2026-08-06 核对 R1：候选包 314 文件、命中 10 全部合成/引用、0 真实秘密；T02-E 边界） |
+| Bootstrap | 目录/依赖/OCR venv/无密钥 env | ✅（选项 C 模拟验证为历史证据；本轮未重复全新安装，目标机门禁见 14.6） |
+| 生产启停 | 127.0.0.1 监听、health、SPA fallback、停止释放 | ✅ 本轮实测（2026-08-06：`node packages/backend/dist/server.js` + OCR venv 启动，health 返回 v0.8.1，`BACKEND_HOST` 强制 `127.0.0.1`） |
+| OCR smoke | RapidOCR 可导入、合成图通过 | ✅ 本轮实测（2026-08-06：OCR venv `rapidocr_onnxruntime`/`onnxruntime` 导入 OK；合成课表 28 字符识别、置信度 >0.99；真实 `POST /semesters/preview` 走通）。真实课表图片仍待补（14.6） |
+| 备份/恢复 | 白名单 manifest/hash、受控写入 | ✅（2026-08-06：`restore-data.ps1` 状态机静态核验 + Wave 1/2 证据；真实目标机写入待批准） |
+| 配置/密钥 | 安装包与 Git 无真实密钥 | ✅（2026-08-06 核对 R1 0 真实秘密 + M03 历史） |
+| 任务计划 | 不默认注册真实发送 | ✅（2026-08-06 静态检查：`register-parent-report-task.ps1` 走 `ShouldProcess` 确认门，默认不注册） |
+| 安全网络 | 无防火墙改动、无公网、日志脱敏 | ✅（2026-08-06：`BACKEND_HOST` 拒绝非 127.0.0.1、`start-production.ps1` 以 127.0.0.1 健康检查；T02A-F 历史） |
 
 ### 14.5 全量自动化基线
 
 | 检查 | 通过标准 | 实测 |
 |---|---|---|
-| `pnpm type-check` | 零错误 | ✅ |
-| 后端 build / 前端 build | 成功 | ✅ |
-| 后端测试 | 全绿 | ✅ 342/342 |
-| 前端测试 | 全绿 | ✅ 149/149 |
-| `pnpm test:e2e` | 全绿 | ✅ 24/24 |
+| `pnpm type-check` | 零错误 | ✅ 本轮实测（2026-08-06：零错误，三个包 Done） |
+| 后端 build / 前端 build | 成功 | ✅ 本轮实测（2026-08-06：后端 build 成功含 ocr-worker.py 拷贝；前端 build 成功） |
+| 后端测试 | 全绿 | ✅ 本轮实测（2026-08-06：342/342，duration 252s，隔离根 backend-test） |
+| 前端测试 | 全绿 | ✅ 本轮实测（2026-08-06：149/149，28 files，隔离根 frontend-test） |
+| `pnpm test:e2e` | 全绿 | ✅ 本轮实测（2026-08-06：24/24，48.2s，隔离根 e2e） |
 
 ### 14.6 未完成/待补项（如实标注）
 
