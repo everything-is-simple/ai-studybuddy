@@ -77,16 +77,23 @@ test('deployment entry scripts use the shared runtime check module functions', a
   }
 });
 
-test('restore remains validation-only until write safety is separately approved', async () => {
+test('restore defaults to validation-only and only writes under explicit EnableWrite approval', async () => {
   const restore = await readScript('restore-data.ps1');
   assert.match(restore, /CmdletBinding\(SupportsShouldProcess\)/);
   assert.match(restore, /Get-AIStudyBuddyValidatedBackup\b/);
   assert.match(restore, /\$PSCmdlet\.ShouldProcess\b/);
-  assert.match(restore, /if \(-not \$EnableWrite\)\s*\{\s*Write-Output 'RESTORE_WRITE_DISABLED'/);
+  // 默认（无 -EnableWrite）必须 fail-closed：只验证不写入
+  assert.match(restore, /if \(-not \$EnableWrite\)\s*\{\s*Write-Output "RESTORE_VALIDATED_NO_WRITE/);
   assert.match(restore, /RESTORE_VALIDATED_NO_WRITE/);
-  assert.match(restore, /RESTORE_WRITE_DISABLED/);
-  assert.doesNotMatch(restore, /Copy-Item\b/);
-  assert.doesNotMatch(restore, /\.IsReadOnly\s*=\s*\$false/);
+  // -EnableWrite 下才允许受控写入（Wave 1 T04-3 已批准：含服务停止门禁、recovery point、逐文件 hash、完整性复验）
+  assert.match(restore, /\$EnableWrite/);
+  assert.match(restore, /Copy-Item/);
+  assert.match(restore, /\.IsReadOnly\s*=\s*\$false/);
+  // 写入路径必须包含完整状态序列与安全门禁
+  assert.match(restore, /RESTORE_PID_FILE_PRESENT/);
+  assert.match(restore, /RESTORE_WRITERS_ACTIVE/);
+  assert.match(restore, /RESTORE_RECOVERY_POINT_FAILED/);
+  assert.match(restore, /RESTORE_COMPLETED/);
 });
 
 test('backup script uses the shared Windows PowerShell 5.1 relative-path helper chain', async () => {

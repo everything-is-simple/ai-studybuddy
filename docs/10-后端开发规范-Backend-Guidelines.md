@@ -189,6 +189,39 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 [ERROR] <error_code> <简短摘要> <可选 context 键值对>
 ```
 
+### 7.4 日志等级与事件命名（T05-2 规范）
+
+#### 等级（level）语义
+
+| level | 用途                                             | 示例事件                                    |
+| ----- | ------------------------------------------------ | ------------------------------------------- |
+| DEBUG | 诊断细节，默认不落盘；仅开发/排障启用           | 配置快照对比                                |
+| INFO  | 正常生命周期事件                                 | `AI_REQUEST_SUCCESS`、`AI_PROVIDER_CIRCUIT_CLOSED` |
+| WARN  | 降级、重试、熔断、单渠道失败                     | `AI_REQUEST_FAILURE`、`AI_PROVIDER_CIRCUIT_OPENED` |
+| ERROR | 不可恢复或拒绝启动、越界失败                     | `BACKEND_BOOTSTRAP_FAILED`                  |
+
+#### 事件命名格式
+
+事件名统一为 `DOMAIN_ACTION_STATE`（大写蛇形）：
+
+- `AI_REQUEST_SUCCESS` / `AI_REQUEST_FAILURE`：AI 请求成功/失败
+- `AI_PROVIDER_CIRCUIT_OPENED` / `AI_PROVIDER_CIRCUIT_CLOSED`：Provider 熔断开/闭
+- `MAINTENANCE_*`：维护类事件（由维护日志定义）
+
+#### 允许字段（JSONL 日志白名单）
+
+运行日志写入 `logs/runtime/ai-events.jsonl`（AI）、`logs/errors/maintenance.jsonl`（维护）、`logs/operations/operations.jsonl`（操作），仅允许：
+
+- AI 事件：`event`、`level`、`taskType`、`provider`、`model`、`tokenUsed`、`latencyMs`、`fallbackUsed`、`attemptedProviderCount`、`attemptedProviders`、`cooldownStartedAt`、`cooldownEndsAt`、`cooldownEndedAt`、`errorCode`、`timestamp`
+- 维护/操作事件：`event`、`level`、`errorCode`、`cleanupErrorCount`、`cleanupErrorCode`、`status`、`timestamp`
+
+所有事件必须包含 `event`、`level`、`timestamp`；字符串字段长度 ≤ 128；`errorCode` 必须为大写蛇形（`^[A-Z][A-Z0-9_]{1,63}$`）。
+
+#### 面向用户 vs 内部诊断边界
+
+- 面向用户：API 错误只返回固定脱敏错误码与可行动中文信息（`{ success: false, error: { code, message } }`）。
+- 内部诊断：日志只记录允许字段与错误码；绝不记录请求正文、模型输出、资料原文、完整答案、完整 UUID、绝对路径或外部原始响应。
+
 ---
 
 ## 八、环境变量约定

@@ -1,6 +1,8 @@
 import { AiProviderRouter } from '../adapters/ai/router';
 import { OpenAiProvider } from '../adapters/ai/openai-provider';
-import { getConfigDir } from '../db/paths';
+import { getConfigDir, getAppDataRoot } from '../db/paths';
+import { createSiblingRuntimeLogBoundary } from '../utils/runtime-log-boundary';
+import { setAiLogBoundary } from '../utils/ai-logger';
 import {
   getAiRouter,
   getCurrentFeishuConfig,
@@ -45,6 +47,14 @@ export function applyRuntimeSnapshot<C extends ConfigChannel>(
 }
 
 export async function initializeRuntimeConfiguration(): Promise<ConfigurationService> {
+  // T05-1：启动时接线 AI 日志到 runtime-log-boundary 的 ai JSONL 文件（脱敏落盘）。
+  try {
+    const boundary = createSiblingRuntimeLogBoundary(getAppDataRoot());
+    setAiLogBoundary(boundary);
+  } catch {
+    // 日志边界不可用时保持 console 降级，不阻塞启动（字段仍脱敏）。
+    setAiLogBoundary(null);
+  }
   const configDir = getConfigDir();
   const service = new ConfigurationService({
     store: new SecureStore({ protector: new DpapiProtector(), configDir }),
