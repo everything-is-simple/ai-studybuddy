@@ -25,7 +25,7 @@
 | 06   | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md)                                                                 | ✅ 有效 | `H:\ai-studybuddy-*` 本地目录职责、外部试炼场、验证产物与单机数据边界                  |
 | 07   | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md)                                                               | ✅ 有效 | 文档分层、子系统文档触发条件                                                           |
 | 08   | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md)                                                                       | ✅ 有效 | 共同底座架构、Adapter、Job、数据对象和跨子系统边界                                     |
-| 09   | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md)                                                                             | ✅ 有效 | Phase 0.5/0.7/0.8 验收标准与证据规则                                                   |
+| 09   | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md)                                                                             | ✅ 有效 | 历史验收记录 + 第十四章“当前版本验收矩阵”（v0.8.1 全系统验收基线）                                                    |
 | 10   | [后端开发规范-Backend-Guidelines.md](10-后端开发规范-Backend-Guidelines.md)                                                           | ✅ 有效 | 后端目录结构、SQLite、Adapter、AI Provider、日志和环境变量约定                         |
 | 11   | [前端开发规范-Frontend-Guidelines.md](11-前端开发规范-Frontend-Guidelines.md)                                                         | ✅ 有效 | React/Vite 前端结构、API 信封、上传轮询、笔记渲染安全与 T08 验收规范                   |
 | 12   | [开发规范-Dev-Rules.md](12-开发规范-Dev-Rules.md)                                                                                     | ✅ 有效 | 工具无关 16 步协作流程、分支/worktree、多 Agent、验证、隐私和提交规则                  |

@@ -1023,6 +1023,22 @@ Phase 3 任务不是凭聊天临时编出来的，依据分四层：
 
 > **PHASE3-T02G Windows 运行目录、ACL 与 backup/restore 安全边界（2026-07-26，已完成主线集成）**：实施分支 `codex/phase3-t02g-windows-data-acl-backup-restore-implementation` 从 `origin/master` 的 `9c58e0a` 创建，并以已批准计划作为实现依据；P1 修复与独立审查完成后已 rebase、快进合并、主线复验并推送 `origin/master`（`6f5ecdd`）。当前仅实现并验证仓库外合成夹具：统一的绝对路径、受保护根、同卷与 reparse point fail-closed 分类；仅返回逻辑类别与短哈希的只读 ACL 证据；显式、安装根之外的 backup output、仅 `studybuddy.db`/`semesters` 白名单 payload、无 `sourceDataRoot` 的 v2 manifest；以及对 manifest/payload/hash/路径的 restore 预检。`restore-data.ps1 -WhatIf` 只验证且不落盘；任何真实 restore 写入均固定拒绝为 `RESTORE_WRITE_DISABLED`，等待独立的服务/计划任务停止、recovery point 和中断处理批准/实现。已执行 `powershell -ExecutionPolicy Bypass -File scripts/test-data-boundary.ps1`：合成路径和恶意 manifest 拒绝、manifest 脱敏、ACL 序列化不含夹具路径、`-WhatIf` 不改数据、受保护哨兵不变且夹具清理后无残留。当前环境无法创建符号链接夹具，测试明确记录 `REPARSE_FIXTURE_UNSUPPORTED`；因此不得将其表述为 reparse 实机证据，真实 ACL、真实备份、真实恢复、正式安装和用户电脑操作仍须分别批准。未触碰 T02E 部署包/staging 删除或 T02F 日志轮转/保留实现；本条不表示 T02G、T02、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成。
 
+## Phase 4：系统验收收口（v0.8.1 全系统验收基线）
+
+**状态**：📝 计划已创建（2026-08-06），待独立审查与用户确认后实施。
+
+**目标**：建立"当前 v0.8.1 全系统验收矩阵"作为单一、确定的验收标准来源（替代 docs/09 历史堆积），同步修正 docs/09 滞后项（备份/恢复 RESTORE_WRITE_DISABLED 描述、G2/Phase 1.5 状态、补 Phase 3 Wave 0-3 记录）。
+
+**行动计划**：`.plans/phase4-acceptance-20260806-plan.md`；任务分支 `claude/phase4-acceptance-20260806`。
+
+| 验收维度 | 覆盖 | 当前证据基线 |
+|---|---|---|
+| S1-S7 学生主路径 | 学期/课程/考试/资料/练习/错题/冲刺/报告/课堂 | 342 后端测试 + 149 前端测试 + 24 E2E + 真实业务冒烟 |
+| 部署 | docs/13 §12 八项 | 部署矩阵 |
+| 安全基线 | Phase 3 Wave 0-3 | R1/R2/R4/T04/T05 证据 |
+| 全量自动化 | type-check/build/test/E2E | 全绿 |
+
+---
 ## POST-PHASE3：3 天 Alpha 真实使用冲刺
 
 | 顺序 | 任务                                   | 状态 | 单一责任                                                                                                                                           |

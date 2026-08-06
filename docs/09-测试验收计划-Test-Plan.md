@@ -1,8 +1,8 @@
 # AI StudyBuddy 测试验收计划
 
-**版本**：v1.15
-**日期**：2026-07-23
-**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1、Phase 2 与 POST-PHASE2 已完成；Phase 1.5 T02=`PARTIAL`、T03=`PASS`、T04=能力验证 `PARTIAL`（非 Adapter 装配）；G2 跨平台强证据待独立批准
+**版本**：v1.16
+**日期**：2026-08-06
+**状态**：Phase 0.5/0.7 历史证据保留；Phase 0.8、Phase 1、Phase 2 与 POST-PHASE2 已完成；Phase 1.5 S7-MVP 已完成主线复验；Phase 3 Wave 0-3 已完成（R1/R2/R4、T04、T05）；**Phase 4 新增第十四章"当前版本验收矩阵"（v0.8.1 全系统验收基线）**
 **用途**：定义组件验证、Windows 单机业务闭环、全量自动化、完整浏览器 E2E 与实机/外部渠道证据标准。
 
 ---
@@ -252,7 +252,7 @@ G2 的验收对象是**可验证的操作系统级离线隔离**，而不是某�
 | Bootstrap  | 使用机器安装根创建目录、复制 app、安装生产 Node 依赖、创建 OCR venv、生成无密钥 `production.env`；不依赖开发机盘符作为运行时                                                                             | 记录 InstallRoot、Node/Python 版本、venv 路径和无密钥声明                                                                                       |
 | 生产启停   | 后端只监听 `127.0.0.1`；健康接口成功；前端 `/` 与 SPA fallback 返回 HTML；未知 `/api/*` 返回 JSON 404；停止后端口释放                                                                                    | 记录 PID、端口、health JSON、HTTP 状态和 stop 结果                                                                                              |
 | OCR smoke  | RapidOCR 可导入；中文合成图、空白图、不存在路径、超时、Worker JSON 输出和临时清理通过；模型缓存不进源码                                                                                                  | 记录 `test-ocr-runtime.ps1` 输出和 RuntimeRoot                                                                                                  |
-| 备份/恢复  | 当前仅 T02G 仓库外合成夹具：白名单 `studybuddy.db` 与 `semesters/`、v2 manifest/hash/路径验证、`-WhatIf` 不落盘；非 `-WhatIf` 固定拒绝 `RESTORE_WRITE_DISABLED`。真实备份、恢复点和恢复写入尚未获批/实施 | 记录 `scripts/test-data-boundary.ps1` 的合成夹具结果、完整性验证计数和无残留清理证据；不得记录真实 backup path、payload 文件列表或 restore root |
+| 备份/恢复  | 白名单 `studybuddy.db` 与 `semesters/`、v2 manifest/hash/路径验证、`-WhatIf` 不落盘；`-EnableWrite` 受控恢复写入（8 步状态机：PREWRITE_APPROVED→WRITERS_QUIESCED→PRECHECK_PASSED→RECOVERY_POINT_VERIFIED→STAGING_WRITTEN_AND_VERIFIED→CUTOVER_IN_PROGRESS→POST_RESTORE_VERIFICATION→RESTORE_COMPLETED，含状态文件/中断标记/重启默认拒绝）。真实目标机写入仍待精确批准+R3-prewrite 签收（Wave 1/2 已隔离根与选项 C 演练通过） | 记录 `scripts/test-data-boundary.ps1` 合成夹具结果、Wave 1/2 演练证据（`.plans/evidence/phase3-wave1-t043-20260806.md`、`phase3-wave2-t043-real-sim-20260806.md`）；不得记录真实 backup path、payload 文件列表或 restore root |
 | 配置/密钥  | 安装包和 Git 不携带真实密钥；AI/SMTP/飞书未配置时离线确定性主线可用，发送类能力不伪造成功                                                                                                                | 记录 `check-installation.ps1` secure-config、secret-files 和 plain-secret-config 检查                                                           |
 | 任务计划   | 默认不注册真实发送；注册脚本以当前用户身份指向安装根 wrapper；卸载/注销不删学习数据                                                                                                                      | 记录单测或 WhatIf/静态检查；真实发送另行验收                                                                                                    |
 | 安全网络   | 不新增防火墙规则，不绑定局域网，不暴露公网；日志不含 API Key、SMTP 授权码、完整 Webhook 或资料原文                                                                                                       | 记录端口监听和日志/密钥扫描                                                                                                                     |
@@ -283,3 +283,73 @@ Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`doc
 | 开发机 smoke | 固定外置 CLI/模型哈希复核后用合成 PCM WAV，记录脱敏退出码、耗时和清理结论                         | 把结果外推为用户机、完整 S7 或通用静音     |
 
 S7-MVP 已完成任务分支测试、构建、文档治理、diff 检查与开发机 smoke；仍须主线复验及远端推送，在此之前不得标记为主线完成。
+
+---
+
+## 十四、当前版本验收矩阵（Phase 4，v0.8.1，2026-08-06）
+
+> **用途**：本矩阵是"当前 v0.8.1 全系统验收"的**单一确定标准**，替代按 Phase 历史堆积的旧章节。每项引用真实证据路径，证据不足项明确标注待补，不虚构通过。
+> **证据基线（2026-08-06 实测）**：后端测试 342/342、前端测试 149/149（28 files）、浏览器 E2E 24/24、type-check 零错误、双端 build 通过、真实业务冒烟（OCR 课表预览→创建学期→课程→考试→资料上传→转换→AI 降级）通过。
+
+### 14.1 S1-S7 学生主路径验收
+
+| 子系统 | 验收项 | 通过标准 | 证据 | 状态 |
+|---|---|---|---|---|
+| S1 学习节奏 | 学期创建/切换/隔离 | 预览→确认→创建→切换→刷新恢复，跨学期隔离 | `semester-selector.spec.ts`（E2E）+ `study-rhythm` 后端测试 | ✅ |
+| S1 | 课程/课表/考试目标 | 课程 CRUD、周课表条目、考试确认/倒计时 | `course-schedule-exam-goals.spec.ts`（E2E） | ✅ |
+| S1 | 任务/时间线 | 任务状态机、事件过滤、时间线展示 | `timeline.spec.ts`（E2E）+ `study-rhythm` 测试 | ✅ |
+| S2 资料笔记 | 上传/转换/AI 降级 | PDF/文本/图片上传→转换→AI 失败降级待质检 | `student-journey.spec.ts`（E2E）+ `note-builder` 测试 + 真实冒烟 | ✅ |
+| S2 | 笔记渲染/知识模块 | Markdown/KaTeX/Markmap、模块来源关联 | `markmap-lazy-load.spec.ts`（E2E）+ `note-generation-parsing` 测试 | ✅ |
+| S3 限时练习 | 生成/作答/批改 | 发起→作答→超时提交→批改结果→刷新恢复 | `practice-runner.spec.ts`（E2E）+ `practice` 后端测试 | ✅ |
+| S3 | 练习历史 | 历史列表/结果只读 | `practice-history-archive.spec.ts`（E2E） | ✅ |
+| S4 错题改错 | 归档/错因/重做/薄弱点 | 错题列表/详情/错因/重做/掌握状态 | `error-fixer.spec.ts`（E2E）+ `error-fixer-*` 后端测试 | ✅ |
+| S5 期末冲刺 | 模拟考 | 生成/作答/提交/结果/模块分析/409 冲突 | `mock-exam.spec.ts`（E2E）+ `mock-exam*` 后端测试 | ✅ |
+| S5 | 速背/冲刺计划/工作台 | 确定性只读卡、7 天计划、工作台冲刺区 | `cram-cards.spec.ts`、`cram-plan.spec.ts`、`exam-workbench.spec.ts`（E2E） | ✅ |
+| S6 家长报告 | 规则报告/AI 降级/去重 | 脱敏聚合、渠道级去重、双失败留档 | `parent-report-*` 后端测试 | ✅（未跑真实渠道） |
+| S7 课堂采集 | 受控 WAV→S2 handoff | 受控格式/同步转写/编辑/显式保存 | S7-MVP 验收（docs/09 §11）+ `class-capture` 后端测试 | ✅ MVP 边界 |
+
+### 14.2 失败反馈与脱敏（T02-R4）
+
+| 验收项 | 通过标准 | 证据 | 状态 |
+|---|---|---|---|
+| 错误矩阵 | S1-S7 错误中文可操作且脱敏 | `error-feedback-matrix.test.mjs` 6/6 + `error-feedback-matrix.spec.ts` 3/3（E2E） | ✅ |
+| 日志脱敏 | AI 日志字段 allowlist、落盘 ai-events.jsonl | `ai-logger-boundary.test.mjs` 4/4 | ✅ |
+
+### 14.3 安全与数据（Phase 3 Wave 0-3）
+
+| 验收项 | 通过标准 | 证据 | 状态 |
+|---|---|---|---|
+| 秘密扫描（T02-R1） | 正式仓库+部署包 0 真实秘密 | `phase3-wave0-r1-summary.json` | ✅ 签收 |
+| ACL 采证（T02-R2） | Windows 标准默认、0 reparse | `phase3-wave0-r2-summary.json`（误报已澄清） | ✅ |
+| 日志轮转（T05-3） | 单文件上限自动轮转、保留 3 份 | `runtime-log-boundary.test.mjs` 7/7 | ✅ |
+| 备份/恢复（T04-1/2/3） | 白名单备份、完整性检测、受控恢复写入 | `phase3-wave1/2` 证据 + `restore-data.ps1` 状态机 | ✅（真实目标机写入待批准） |
+
+### 14.4 部署验收（docs/13 §12 八项）
+
+| 验收项 | 通过标准 | 当前状态 |
+|---|---|---|
+| 部署包扫描 | 含编译产物、排除密钥/数据/日志 | ✅（T02-E 边界） |
+| Bootstrap | 目录/依赖/OCR venv/无密钥 env | ✅（选项 C 模拟验证） |
+| 生产启停 | 127.0.0.1 监听、health、SPA fallback、停止释放 | ✅（真实冒烟） |
+| OCR smoke | RapidOCR 可导入、合成图通过 | ⚠️ 依赖 OCR venv（`H:\AIStudyBuddy\runtime\venv`） |
+| 备份/恢复 | 白名单 manifest/hash、受控写入 | ✅（Wave 1/2） |
+| 配置/密钥 | 安装包与 Git 无真实密钥 | ✅（T02-R1 + M03） |
+| 任务计划 | 不默认注册真实发送 | ✅（静态检查） |
+| 安全网络 | 无防火墙改动、无公网、日志脱敏 | ✅（T02A-F） |
+
+### 14.5 全量自动化基线
+
+| 检查 | 通过标准 | 实测 |
+|---|---|---|
+| `pnpm type-check` | 零错误 | ✅ |
+| 后端 build / 前端 build | 成功 | ✅ |
+| 后端测试 | 全绿 | ✅ 342/342 |
+| 前端测试 | 全绿 | ✅ 149/149 |
+| `pnpm test:e2e` | 全绿 | ✅ 24/24 |
+
+### 14.6 未完成/待补项（如实标注）
+
+- **真实目标机验收**：用户电脑安装运行（独立门禁，docs/04 明确"未完成不得宣称"）
+- **真实课表 OCR 解析**：合成图解析 0 条，需真实课表图片（docs/04 已知边界）
+- **真实外部渠道**：S6 QQ SMTP/飞书未跑真实发送（非常规验证）
+- **R3-postrestore / T02-R6**：目标机真实恢复演练后独立复核（Phase 3 收尾）
