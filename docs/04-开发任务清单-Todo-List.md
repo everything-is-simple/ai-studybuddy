@@ -1023,6 +1023,22 @@ Phase 3 任务不是凭聊天临时编出来的，依据分四层：
 
 > **PHASE3-T02G Windows 运行目录、ACL 与 backup/restore 安全边界（2026-07-26，已完成主线集成）**：实施分支 `codex/phase3-t02g-windows-data-acl-backup-restore-implementation` 从 `origin/master` 的 `9c58e0a` 创建，并以已批准计划作为实现依据；P1 修复与独立审查完成后已 rebase、快进合并、主线复验并推送 `origin/master`（`6f5ecdd`）。当前仅实现并验证仓库外合成夹具：统一的绝对路径、受保护根、同卷与 reparse point fail-closed 分类；仅返回逻辑类别与短哈希的只读 ACL 证据；显式、安装根之外的 backup output、仅 `studybuddy.db`/`semesters` 白名单 payload、无 `sourceDataRoot` 的 v2 manifest；以及对 manifest/payload/hash/路径的 restore 预检。`restore-data.ps1 -WhatIf` 只验证且不落盘；任何真实 restore 写入均固定拒绝为 `RESTORE_WRITE_DISABLED`，等待独立的服务/计划任务停止、recovery point 和中断处理批准/实现。已执行 `powershell -ExecutionPolicy Bypass -File scripts/test-data-boundary.ps1`：合成路径和恶意 manifest 拒绝、manifest 脱敏、ACL 序列化不含夹具路径、`-WhatIf` 不改数据、受保护哨兵不变且夹具清理后无残留。当前环境无法创建符号链接夹具，测试明确记录 `REPARSE_FIXTURE_UNSUPPORTED`；因此不得将其表述为 reparse 实机证据，真实 ACL、真实备份、真实恢复、正式安装和用户电脑操作仍须分别批准。未触碰 T02E 部署包/staging 删除或 T02F 日志轮转/保留实现；本条不表示 T02G、T02、Phase 3、安全与隐私基线审计、生产上线或用户电脑验收完成。
 
+## S2-Format：常见文件格式全支持（上传白名单与转换器扩展）
+
+**状态**：📝 计划已创建（2026-08-06），待独立审查与用户批准后实施。
+
+**目标**：将资料系统从 S2 PRD T07 边界（PDF/图片/文本/DOCX/PPTX）扩展到常见文件格式全支持：converter 层已具备但被上传白名单拦截的格式（md/csv/json/gif/bmp/html）直接放行；需新增转换器的常见格式（xlsx/odt/ods/odp/rtf/epub）新建提取器；安全/复杂度原因继续拒绝的格式（doc/ppt/压缩包/邮件）保持拒绝并给出明确提示。
+
+**行动计划**：`.plans/s2-file-format-expansion-plan.md`；任务分支 `claude/s2-file-format-expansion`。
+
+| 分类 | 格式 | 当前状态 | 计划动作 |
+|---|---|---|---|
+| A. 白名单拦截（converter 已支持） | md、csv、json、gif、bmp、html/htm | 上传被拦（INVALID_FILE_TYPE） | 扩展 FILE_TYPES + 前端 accept + 测试 |
+| B. 新增转换器 | xlsx、odt、ods、odp、rtf、epub | 显式拒绝（提示另存） | 零新依赖：复用 jszip 提取 zip/XML 文本；rtf 自写剥离 |
+| C. 继续拒绝 | doc、ppt、xls、zip/rar/7z/tar/gz、eml/msg | 显式拒绝 | 保留拒绝，更新提示文案；xls 提示另存 xlsx（SheetJS 有 CVE 且 npm 停更，不引入） |
+
+---
+
 ## Phase 4：系统验收收口（v0.8.1 全系统验收基线）
 
 **状态**：✅ 已完成主线复验并推送 `origin/master`（2026-08-06）。用户明确指示按验收执行 Prompt 实测全系统并收口，本轮按第十四章矩阵逐项实测并勾选，全部自动化基线通过，未见失败项需修复。
