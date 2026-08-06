@@ -45,3 +45,4 @@ test-reports/
 .turbo/
 .next/
 /.worktrees/
+.pi-subagents/
