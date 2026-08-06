@@ -20,9 +20,11 @@ function Classify-Account([string]$sid, [string]$name) {
   $systemSid = 'S-1-5-18'
   $adminsSid = 'S-1-5-32-544'
   $usersSid  = 'S-1-5-32-545'
+  $authenticatedSid = 'S-1-5-11'
   if ($sid -eq $systemSid) { return 'SYSTEM' }
   if ($sid -eq $adminsSid) { return 'Administrators' }
   if ($sid -eq $usersSid)  { return 'Users' }
+  if ($sid -eq $authenticatedSid) { return 'AuthenticatedUsers' }
   if ($cur.User.Value -eq $sid) { return 'CurrentUser' }
   if ($sid -like 'S-1-5-21-*') { return 'LocalAccount' }
   return 'UnknownPrincipal'
@@ -31,11 +33,24 @@ function Classify-Account([string]$sid, [string]$name) {
 function Classify-Ace([System.Security.AccessControl.FileSystemAccessRule]$ace) {
   $principal = Classify-Account $ace.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value $ace.IdentityReference.Value
   $rights = @()
-  if ($ace.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::Read) { $rights += 'Read' }
-  if ($ace.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::Write) { $rights += 'Write' }
-  if ($ace.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::Delete) { $rights += 'Delete' }
-  if ($ace.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::Modify) { $rights += 'Modify' }
-  if ($ace.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::FullControl) { $rights += 'FullControl' }
+  # FileSystemRights 是位掩码且各值相互包含（Modify 含 Write/Delete/Read 等低位）。
+  # 按“最宽→最窄”优先级判定，避免 Modify 被误判为 FullControl。
+  $fr = [int]$ace.FileSystemRights
+  $fullControl = [int][System.Security.AccessControl.FileSystemRights]::FullControl
+  $modify = [int][System.Security.AccessControl.FileSystemRights]::Modify
+  $delete = [int][System.Security.AccessControl.FileSystemRights]::Delete
+  $write = [int][System.Security.AccessControl.FileSystemRights]::Write
+  $read = [int][System.Security.AccessControl.FileSystemRights]::Read
+  # 比较有效位：FullControl 的低位与 Modify 相同，需排除继承传播位（OI/CI/IO 等高位）
+  $effectiveMask = 0x3FFFF
+  $eff = $fr -band $effectiveMask
+  if (($eff -band $fullControl) -eq $fullControl) { $rights += 'FullControl' }
+  elseif (($eff -band $modify) -eq $modify) { $rights += 'Modify' }
+  else {
+    if (($eff -band $delete) -eq $delete) { $rights += 'Delete' }
+    if (($eff -band $write) -eq $write) { $rights += 'Write' }
+    if (($eff -band $read) -eq $read) { $rights += 'Read' }
+  }
   return [ordered]@{
     principal = $principal
     access = ($ace.AccessControlType.ToString().ToLower())

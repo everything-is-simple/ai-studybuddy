@@ -1,7 +1,9 @@
 # T02-R2 后续：ACL 最小修复计划（Gate B 前置）
 
 **计划编号**：PHASE3-R2-ACL-MIN-FIX-20260806
-**状态**：📝 已创建；待用户明确批准后实施（ACL 写入属真实操作，须另批）
+**状态**：⛔ 已撤销（2026-08-06）——初版误报 Users 全权继承，经 icacls 权威核对确认为采证脚本归类/位掩码 bug；真实 ACL 为 Windows 标准默认（Users 仅 Read），无需 ACL 修复。
+
+**撤销原因**：T02-R2 采证脚本 Classify-Account 未识别 AuthenticatedUsers(S-1-5-11) 且 rights 位掩码误判（Modify 被误判为 FullControl），导致误报。脚本已修复，真实 ACL 无过度授权。
 **日期**：2026-08-06
 **上游**：`PHASE3-REOPEN-HIGH-WEIGHT-20260728` Wave 0 T02-R2（发现 P1 候选）；Gate B（R2 发现 ACL 宽泛须阻断真实写入）
 
