@@ -99,8 +99,15 @@ if (Test-Path -LiteralPath $pidFile) {
   # PID 文件存在但进程不存在：仍视为服务痕迹，需要运维确认清理后重试
   New-AIStudyBuddyDataBoundaryError 'RESTORE_PID_FILE_PRESENT'
 }
-# 若启动脚本未写 PID 文件，检查端口监听（BACKEND_PORT 默认 3000 回环）
-$listenPort = $env:BACKEND_PORT
+# 若启动脚本未写 PID 文件，检查端口监听——端口必须从本安装实例的
+# production.env 读取，避免误判其他进程占用的默认 3000 端口。
+$listenPort = $null
+if (Test-Path -LiteralPath $paths.EnvFile -PathType Leaf) {
+  $envSnapshot = @{}
+  try { Get-Content -LiteralPath $paths.EnvFile | ForEach-Object { if ($_ -match '^\s*BACKEND_PORT=(.+)$') { $envSnapshot['BACKEND_PORT'] = $matches[1].Trim() } } } catch { }
+  if ($envSnapshot.ContainsKey('BACKEND_PORT')) { $listenPort = $envSnapshot['BACKEND_PORT'] }
+}
+if (-not $listenPort) { $listenPort = $env:BACKEND_PORT }
 if (-not $listenPort) { $listenPort = '3000' }
 $listening = Get-NetTCPConnection -State Listen -LocalPort ([int]$listenPort) -ErrorAction SilentlyContinue
 if ($listening) { New-AIStudyBuddyDataBoundaryError 'RESTORE_WRITERS_ACTIVE' }

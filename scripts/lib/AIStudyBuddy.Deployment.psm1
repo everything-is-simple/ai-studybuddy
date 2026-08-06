@@ -1,4 +1,4 @@
-function Get-AIStudyBuddyRoot {
+﻿function Get-AIStudyBuddyRoot {
   param([string]$InstallRoot)
   if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
     if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { throw 'LOCALAPPDATA is not available.' }
@@ -631,7 +631,8 @@ function Get-AIStudyBuddyValidatedBackup {
     $validated.Add([pscustomobject]@{ RelativePath = $relative; SourcePath = $source; Bytes = $bytes; Sha256 = $hash })
   }
   $payloadFiles = Get-AIStudyBuddyDataPayloadFiles -PayloadRoot $payload -Code 'RESTORE_PAYLOAD_INVALID'
-  if ($payloadFiles.Count -ne $validated.Count) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
+  # PS 5.1 单元素数组解包坑：$payloadFiles 可能是标量，用 @() 强制数组计数
+  if (@($payloadFiles).Count -ne $validated.Count) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
   foreach ($payloadFile in $payloadFiles) {
     $payloadRelative = Test-AIStudyBuddyBackupRelativePath $payloadFile.RelativePath
     if ($null -eq $payloadRelative -or -not $seen.ContainsKey($payloadRelative.ToUpperInvariant())) { New-AIStudyBuddyDataBoundaryError 'RESTORE_PAYLOAD_INVALID' }
