@@ -356,13 +356,13 @@ StudyEvent (S1 已有)
 
 ### API
 
-| 端点                                | 方法 | 说明                                                                    |
-| ----------------------------------- | ---- | ----------------------------------------------------------------------- |
-| `/api/practice-sessions`            | POST | 创建练习：传入模块 ID 列表、题数、难度、限时；AI 生成题目后返回 session |
-| `/api/practice-sessions`            | GET  | 获取当前考试/课程的练习列表（分页、按时间倒序）                         |
-| `/api/practice-sessions/:id`        | GET  | 获取练习详情（含题目；未提交时不含正确答案）                            |
-| `/api/practice-sessions/:id/submit` | POST | 提交作答：传入逐题答案；触发批改并返回结果                              |
-| `/api/practice-sessions/:id/result` | GET  | 获取批改结果（含逐题对错、正确答案、解析）                              |
+| 端点                                             | 方法 | 说明                                                                    |
+| ------------------------------------------------ | ---- | ----------------------------------------------------------------------- |
+| `/api/practice-sessions`                         | POST | 创建练习：传入模块 ID 列表、题数、难度、限时；AI 生成题目后返回 session |
+| `/api/practice-sessions/history`                 | GET  | 获取练习历史列表（分页、按时间倒序；`semesterId`/`courseInstanceId` 过滤）|
+| `/api/practice-sessions/:id`                     | GET  | 获取练习详情（含题目；未提交时不含正确答案）                            |
+| `/api/practice-sessions/:id/submit`              | POST | 提交作答：传入逐题答案；触发批改并返回结果                              |
+| `/api/practice-sessions/:id/history-result`      | GET  | 获取批改结果（含逐题对错、正确答案、解析；历史详情页使用）              |
 
 ### API 契约
 

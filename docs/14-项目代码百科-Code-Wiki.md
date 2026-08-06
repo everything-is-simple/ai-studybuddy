@@ -221,7 +221,7 @@ ai-studybuddy/
 │   │   │   │   └── sql/                   # Schema 与 Migration SQL
 │   │   │   │       ├── schema-global.ts
 │   │   │   │       ├── schema-semester.ts
-│   │   │   │       └── migration-*.ts     # v2-v9
+│   │   │   │       └── migration-*.ts     # v2-v11
 │   │   │   ├── middleware/           # Express 中间件
 │   │   │   │   ├── api-origin-policy.ts
 │   │   │   │   └── api-error-handler.ts
@@ -329,7 +329,7 @@ StudyBuddy/
 
 | 组件   | 选型             | 版本                          |
 | ------ | ---------------- | ----------------------------- |
-| 运行时 | Node.js          | 20/22/24 LTS (不支持 Node 25) |
+| 运行时 | Node.js          | 24 LTS（已验证基线；部署脚本仅接受 major 24，Node 25 不支持） |
 | 包管理 | pnpm             | workspace monorepo            |
 | 语言   | TypeScript       | 5.3+                          |
 | Python | Python 3.10+ x64 | OCR 子进程                    |
@@ -443,7 +443,7 @@ initializeConfiguration()  // 读取配置
 - `schema_migrations` 表记录已执行版本
 - 版本连续递增，缺口必须失败
 - Migration SQL 与其版本记录在同一事务内提交
-- 当前学期库 migration 版本：v1-v9
+- 当前学期库 migration 版本：v1-v11（全局库 v1-v2）
 
 #### 6.1.5 AI Provider Router (`adapters/ai/router.ts`)
 
@@ -479,29 +479,31 @@ initializeConfiguration()  // 读取配置
 
 #### 6.2.1 路由结构 (`app.tsx`)
 
-20 个路由，按学期上下文分组：
+22 个路由，按学期上下文分组：
 
-| 路由                                      | 页面           | 子系统 |
-| ----------------------------------------- | -------------- | ------ |
-| `/`                                       | 每日学习首页   | S1     |
-| `/courses`                                | 课程与考试目标 | S1     |
-| `/materials`                              | 资料上传       | S2     |
-| `/notes/:noteId`                          | 笔记详情       | S2     |
-| `/exams/:examId`                          | 考试工作台     | S1/S5  |
-| `/exams/:examId/practice`                 | 练习发起       | S3     |
-| `/practice-sessions/:sessionId`           | 练习作答       | S3     |
-| `/practice-sessions/:sessionId/result`    | 练习结果       | S3     |
-| `/semesters/:semesterId/practice-history` | 练习历史       | S3     |
-| `/exams/:examId/mistakes`                 | 错题列表       | S4     |
-| `/mistakes/:mistakeId`                    | 错题详情       | S4     |
-| `/exams/:examId/mock-exam`                | 模拟考入口     | S5     |
-| `/mock-exam-papers/:paperId`              | 模拟卷详情     | S5     |
-| `/mock-exam-attempts/:attemptId`          | 模拟考作答     | S5     |
-| `/mock-exam-attempts/:attemptId/result`   | 模拟考结果     | S5     |
-| `/exams/:examId/cram`                     | 临考速背       | S5     |
-| `/exams/:examId/cram-plan`                | 冲刺计划       | S5     |
-| `/semesters`                              | 学期管理       | 共同   |
-| `/settings`                               | 配置中心       | 共同   |
+| 路由                                                    | 页面             | 子系统 |
+| ------------------------------------------------------- | ---------------- | ------ |
+| `/`                                                     | 每日学习首页     | S1     |
+| `/courses`                                              | 课程与考试目标   | S1     |
+| `/materials`                                            | 资料上传         | S2     |
+| `/notes/:noteId`                                        | 笔记详情         | S2     |
+| `/exams/:examId`                                        | 考试工作台       | S1/S5  |
+| `/exams/:examId/practice`                               | 练习发起         | S3     |
+| `/practice-sessions/:sessionId`                         | 练习作答         | S3     |
+| `/practice-sessions/:sessionId/result`                  | 练习结果         | S3     |
+| `/semesters/:semesterId/practice-history`               | 练习历史         | S3     |
+| `/semesters/:semesterId/practice-history/:sessionId`    | 练习历史详情     | S3     |
+| `/exams/:examId/mistakes`                               | 错题列表         | S4     |
+| `/mistakes`                                             | 错题列表（全部） | S4     |
+| `/mistakes/:mistakeId`                                  | 错题详情         | S4     |
+| `/exams/:examId/mock-exam`                              | 模拟考入口       | S5     |
+| `/mock-exam-papers/:paperId`                            | 模拟卷详情       | S5     |
+| `/mock-exam-attempts/:attemptId`                        | 模拟考作答       | S5     |
+| `/mock-exam-attempts/:attemptId/result`                 | 模拟考结果       | S5     |
+| `/exams/:examId/cram`                                   | 临考速背         | S5     |
+| `/exams/:examId/cram-plan`                              | 冲刺计划         | S5     |
+| `/semesters`                                            | 学期管理         | 共同   |
+| `/settings`                                             | 配置中心         | 共同   |
 
 #### 6.2.2 核心组件
 
@@ -673,9 +675,10 @@ interface ConverterResult { ok, sourceType, text?, metadata?, warnings?, error? 
 APP_DATA_ROOT/
 ├── studybuddy.db                    # 全局索引库
 │   ├── schema_migrations
-│   ├── users
+│   ├── app_meta
+│   ├── students
+│   ├── parent_report_targets
 │   ├── semesters                    # 学期目录
-│   ├── report_targets
 │   └── backup_records
 ├── config/
 │   ├── ai.active.enc               # DPAPI 加密 AI 配置
@@ -688,23 +691,28 @@ APP_DATA_ROOT/
 │   │   ├── course_instances
 │   │   ├── schedule_entries
 │   │   ├── assessment_attempts
+│   │   ├── assessment_date_changes
 │   │   ├── study_tasks
 │   │   ├── study_events
 │   │   ├── materials
-│   │   ├── knowledge_modules
-│   │   ├── notes
+│   │   ├── normalized_texts
+│   │   ├── structured_notes
 │   │   ├── mind_maps
+│   │   ├── knowledge_modules
 │   │   ├── questions
 │   │   ├── practice_sessions
 │   │   ├── practice_answers
 │   │   ├── mistakes
 │   │   ├── mistake_evidence
 │   │   ├── weak_points
+│   │   ├── parent_reports
+│   │   ├── report_deliveries
 │   │   ├── mock_exam_papers
 │   │   ├── mock_exam_questions
 │   │   ├── mock_exam_attempts
 │   │   ├── mock_exam_answers
 │   │   ├── mock_exam_module_analyses
+│   │   ├── material_chunks
 │   │   ├── jobs
 │   │   └── report_deliveries
 │   ├── files/                       # 资料文件
@@ -718,13 +726,13 @@ APP_DATA_ROOT/
 ### 8.2 学期状态机
 
 ```text
-ACTIVE → TEACHING_ENDED → FOLLOW_UP → ARCHIVED
+active → ready（staging 创建流程；current 由全局 app_meta 指定）
+active → archived（显式归档，仅非当前学期）
 ```
 
-- `ACTIVE`：正常教学期间
-- `TEACHING_ENDED`：教学结束，等待成绩
-- `FOLLOW_UP`：补考/迟交/申诉处理中
-- `ARCHIVED`：所有事项完成，默认只读
+- `status`：学期库记录当前为 `active`；`ready` 标记是否完成初始化（staging/ready/promote/current 流程，T09A 实现）。
+- `archived_at`：非当前学期可归档，归档学期只读。
+- 产品概念中的 `ACTIVE → TEACHING_ENDED → FOLLOW_UP → ARCHIVED` 是早期领域草案，不作为当前代码状态枚举。
 
 ### 8.3 Job 状态机
 
@@ -734,12 +742,16 @@ pending → running → pending  (可重试)
 pending → running → failed   (达到 max_attempts)
 ```
 
-### 8.4 学习项质量状态
+### 8.4 资料处理状态（S2 材料）
 
 ```text
-doing → pending_quality_check → done
-质量结论: required_fix | suggestion | uncertain | passed | overridden
+pending → converting → note_generating → completed
+pending → conversion_failed（可重试/人工补文）
+note_generating → pending_quality_check（AI 不可用降级，可补文）
 ```
+
+- `conversion_failed` 与 `pending_quality_check` 是恢复态：可触发重试或人工补文（`replace-text`）。
+- 学习任务状态独立为 `todo → doing → pending_quality_check → done / skipped`（S1）。
 
 ### 8.5 考试尝试确认状态
 
@@ -772,93 +784,207 @@ GET /api/health → { version, timestamp }
 #### 学习节奏 (S1)
 
 ```
-POST   /api/courses              创建课程
-GET    /api/courses               课程列表
-PUT    /api/courses/:id           更新课程
-POST   /api/assessment-attempts   创建考试目标
-GET    /api/assessment-attempts   考试列表
-PUT    /api/assessment-attempts/:id 更新考试
-POST   /api/study-tasks           创建学习任务
-GET    /api/study-tasks           任务列表
-PUT    /api/study-tasks/:id       更新任务状态
-GET    /api/timeline              学习时间线
-```
-
-#### 资料笔记 (S2)
-
-```
-POST   /api/materials/upload      上传资料
-GET    /api/materials              资料列表
-GET    /api/materials/:id          资料详情
-POST   /api/materials/:id/retry-convert  重试转换
-POST   /api/materials/:id/retry-note     重试生成笔记
-GET    /api/notes/:id              获取笔记
-GET    /api/knowledge-modules      知识模块列表
-```
-
-#### 限时练习 (S3)
-
-```
-POST   /api/practice-sessions      创建练习
-GET    /api/practice-sessions/:id  获取练习详情（作答前不含答案）
-POST   /api/practice-sessions/:id/submit  提交批改
-GET    /api/practice-sessions/:id/result  查看结果
-GET    /api/semesters/:id/practice-history 练习历史
-```
-
-#### 错题改错 (S4)
-
-```
-GET    /api/mistakes               错题列表
-GET    /api/mistakes/:id           错题详情
-PUT    /api/mistakes/:id/error-cause  确认错因
-PUT    /api/mistakes/:id/status    更新掌握状态
-POST   /api/mistakes/:id/redo      创建重做练习
-GET    /api/weak-points            薄弱点列表
-```
-
-#### 期末冲刺 (S5)
-
-```
-POST   /api/mock-exam-papers            生成模拟卷
-GET    /api/mock-exam-papers/:id        获取模拟卷（作答前不含答案）
-POST   /api/mock-exam-papers/:id/start  开始模拟考
-GET    /api/mock-exam-attempts/:id      获取模拟考作答
-POST   /api/mock-exam-attempts/:id/submit 提交模拟考
-GET    /api/mock-exam-attempts/:id/result  查看结果
-GET    /api/assessment-attempts/:id/cram-cards  临考速背
-GET    /api/assessment-attempts/:id/cram-plan   冲刺计划
+POST   /api/courses                    创建课程
+GET    /api/courses                    课程列表
+PATCH  /api/courses/:id                更新课程
+DELETE /api/courses/:id                删除课程
+GET    /api/schedule-entries           课表条目列表
+POST   /api/schedule-entries           新增课表条目
+PATCH  /api/schedule-entries/:id       编辑课表条目
+DELETE /api/schedule-entries/:id       移除课表条目
+POST   /api/exams                      创建考试目标
+GET    /api/exams                      考试列表
+GET    /api/exams/:id                  考试详情（单考试查询）
+PATCH  /api/exams/:id                  更新考试（名称/日期/目标）
+PATCH  /api/exams/:id/confirmation     确认考试（pending 首次确认，幂等）
+POST   /api/study-tasks                创建学习任务
+GET    /api/study-tasks                任务列表
+PATCH  /api/study-tasks/:id/status     更新任务状态
+POST   /api/study-events               写入时间线事件
+GET    /api/timeline                   学习时间线（支持 eventType 重复过滤）
 ```
 
 #### 每日首页 (S1)
 
 ```
-GET    /api/daily-study-home?semesterId=...  每日学习首页数据
+GET /api/daily-study-home?semesterId=...   每日学习首页数据
+```
+
+#### 资料笔记 (S2)
+
+```
+POST   /api/materials/upload                 上传资料
+GET    /api/materials                        资料列表
+GET    /api/materials/:id                    资料详情
+GET    /api/materials/:id/original-pdf       原始 PDF 下载
+POST   /api/materials/:id/retry-conversion   重试转换
+POST   /api/materials/:id/retry-ai-generation 重试 AI 生成笔记
+POST   /api/materials/:id/generate-note      生成笔记
+POST   /api/materials/:id/replace-text       人工补文（恢复替换正文）
+GET    /api/notes/:id                        获取笔记
+PATCH  /api/notes/:id                        更新笔记
+GET    /api/knowledge-modules                知识模块列表
+PATCH  /api/knowledge-modules/:id            更新知识模块状态
+```
+
+#### 限时练习 (S3)
+
+```
+POST   /api/practice-sessions                  创建练习（AI 生成题目入库）
+GET    /api/practice-sessions/history          练习历史列表（分页、按时间倒序）
+GET    /api/practice-sessions/:id              获取练习详情（作答前不含答案）
+GET    /api/practice-sessions/:id/history-result 练习历史结果（逐题对错）
+POST   /api/practice-sessions/:id/submit       提交作答并批改
+```
+
+#### 错题改错 (S4)
+
+```
+GET    /api/mistakes                  错题列表
+GET    /api/mistakes/:id              错题详情
+PATCH  /api/mistakes/:id/error-cause  确认错因
+PATCH  /api/mistakes/:id/status       更新掌握状态
+POST   /api/mistakes/:id/redo         创建重做练习
+GET    /api/weak-points               薄弱点列表
+```
+
+#### 期末冲刺 (S5)
+
+```
+POST   /api/mock-exam-papers              生成模拟卷
+GET    /api/mock-exam-papers/:id          获取模拟卷（作答前不含答案）
+POST   /api/mock-exam-papers/:id/attempts 开始模拟考尝试
+GET    /api/mock-exam-attempts/:id        获取模拟考作答与结果
+POST   /api/mock-exam-attempts/:id/submit 提交模拟考
+GET    /api/assessment-attempts/:id/cram-cards  临考速背卡（确定性只读）
+GET    /api/assessment-attempts/:id/cram-plan   冲刺计划（确定性只读）
 ```
 
 #### 学期管理
 
 ```
-POST   /api/semesters/preview      课表预览
-POST   /api/semesters/confirm      确认创建学期
-GET    /api/semesters/current      当前学期
-POST   /api/semesters/current      切换当前学期
+POST   /api/semesters/preview      课表预览（OCR/手工确认）
+POST   /api/semesters              创建学期（staging → ready → current）
 GET    /api/semesters              学期列表
+GET    /api/semesters/current      当前学期
+PUT    /api/semesters/current      切换当前学期
+GET    /api/semesters/archived     已归档学期列表
+POST   /api/semesters/:id/archive  归档非当前学期
 ```
 
 #### 课堂采集 (S7)
 
 ```
-POST   /api/class-capture/transcribe  上传 WAV 转写
-POST   /api/class-capture/save        保存为 S2 资料
+POST   /api/class-captures/transcribe   上传受控 PCM WAV 并同步转写
+POST   /api/class-captures/save-to-notes 将可编辑转写保存为 S2 文本资料
 ```
 
 #### 配置中心
 
 ```
-GET    /api/config/status                    配置状态
+GET    /api/config/status                     配置状态
+GET    /api/config/presets                    Provider 官方预设目录
+POST   /api/config/ai/test-provider           测试 AI Provider
 POST   /api/config/:channel/test-and-activate 测试并激活配置
-POST   /api/config/:channel/retest           重新测试
+POST   /api/config/:channel/retest            重新测试
+```
+
+#### 开发用端点（`/api/dev`，仅开发/测试模式挂载，生产禁用）
+
+```
+POST   /api/dev/init-semester        初始化学期（开发）
+GET    /api/dev/db-health            数据库健康（开发）
+POST   /api/dev/ai/generate          AI 生成（开发）
+POST   /api/dev/storage/upload       存储上传（开发）
+GET    /api/dev/storage/download     存储下载（开发）
+DELETE /api/dev/storage/delete       存储删除（开发）
+GET    /api/dev/storage/exists       存储存在检查（开发）
+POST   /api/dev/converter/pdf        转换 PDF（开发）
+POST   /api/dev/converter/image      转换图片/OCR（开发）
+POST   /api/dev/converter/text       转换文本（开发）
+POST   /api/dev/converter/docx       转换 DOCX（开发）
+POST   /api/dev/converter/pptx       转换 PPTX（开发）
+POST   /api/dev/converter/url        抓取 URL（开发）
+```
+
+#### 限时练习 (S3)
+
+```
+POST   /api/practice-sessions                  创建练习（AI 生成题目入库）
+GET    /api/practice-sessions/history          练习历史列表（分页、按时间倒序）
+GET    /api/practice-sessions/:id              获取练习详情（作答前不含答案）
+GET    /api/practice-sessions/:id/history-result 练习历史结果（逐题对错）
+POST   /api/practice-sessions/:id/submit       提交作答并批改
+```
+
+#### 错题改错 (S4)
+
+```
+GET    /api/mistakes                  错题列表
+GET    /api/mistakes/:id              错题详情
+PATCH  /api/mistakes/:id/error-cause  确认错因
+PATCH  /api/mistakes/:id/status       更新掌握状态
+POST   /api/mistakes/:id/redo         创建重做练习
+GET    /api/weak-points               薄弱点列表
+```
+
+#### 期末冲刺 (S5)
+
+```
+POST   /api/mock-exam-papers              生成模拟卷
+GET    /api/mock-exam-papers/:id          获取模拟卷（作答前不含答案）
+POST   /api/mock-exam-papers/:id/attempts 开始模拟考尝试
+GET    /api/mock-exam-attempts/:id        获取模拟考作答与结果
+POST   /api/mock-exam-attempts/:id/submit 提交模拟考
+GET    /api/assessment-attempts/:id/cram-cards  临考速背卡（确定性只读）
+GET    /api/assessment-attempts/:id/cram-plan   冲刺计划（确定性只读）
+```
+
+#### 学期管理
+
+```
+POST   /api/semesters/preview      课表预览（OCR/手工确认）
+POST   /api/semesters              创建学期（staging → ready → current）
+GET    /api/semesters              学期列表
+GET    /api/semesters/current      当前学期
+PUT    /api/semesters/current      切换当前学期
+GET    /api/semesters/archived     已归档学期列表
+POST   /api/semesters/:id/archive  归档非当前学期
+```
+
+#### 课堂采集 (S7)
+
+```
+POST   /api/class-captures/transcribe   上传受控 PCM WAV 并同步转写
+POST   /api/class-captures/save-to-notes 将可编辑转写保存为 S2 文本资料
+```
+
+#### 配置中心
+
+```
+GET    /api/config/status                     配置状态
+GET    /api/config/presets                    Provider 官方预设目录
+POST   /api/config/ai/test-provider           测试 AI Provider
+POST   /api/config/:channel/test-and-activate 测试并激活配置
+POST   /api/config/:channel/retest            重新测试
+```
+
+#### 开发用端点（`/api/dev`，仅开发/测试模式挂载，生产禁用）
+
+```
+POST   /api/dev/init-semester        初始化学期（开发）
+GET    /api/dev/db-health            数据库健康（开发）
+POST   /api/dev/ai/generate          AI 生成（开发）
+POST   /api/dev/storage/upload       存储上传（开发）
+GET    /api/dev/storage/download     存储下载（开发）
+DELETE /api/dev/storage/delete       存储删除（开发）
+GET    /api/dev/storage/exists       存储存在检查（开发）
+POST   /api/dev/converter/pdf        转换 PDF（开发）
+POST   /api/dev/converter/image      转换图片/OCR（开发）
+POST   /api/dev/converter/text       转换文本（开发）
+POST   /api/dev/converter/docx       转换 DOCX（开发）
+POST   /api/dev/converter/pptx       转换 PPTX（开发）
+POST   /api/dev/converter/url        抓取 URL（开发）
 ```
 
 ---
@@ -880,6 +1006,7 @@ POST   /api/config/:channel/retest           重新测试
 | `/semesters/:semesterId/practice-history`            | `PracticeHistoryPage`       | S3     | 懒加载   |
 | `/semesters/:semesterId/practice-history/:sessionId` | `PracticeHistoryResultPage` | S3     | 懒加载   |
 | `/exams/:examId/mistakes`                            | `MistakeListPage`           | S4     | 懒加载   |
+| `/mistakes`                                          | `MistakeListPage`           | S4     | 懒加载   |
 | `/mistakes/:mistakeId`                               | `MistakeDetailPage`         | S4     | 懒加载   |
 | `/exams/:examId/mock-exam`                           | `MockExamStartPage`         | S5     | 懒加载   |
 | `/mock-exam-papers/:paperId`                         | `MockExamPaperPage`         | S5     | 懒加载   |
@@ -1277,13 +1404,13 @@ APP_DATA_ROOT/
 
 #### 已有的备份/导出能力
 
-| 能力         | 实现                                  | 粒度                      |
-| ------------ | ------------------------------------- | ------------------------- |
-| 整库备份     | `backup-data.ps1`                     | 整个 `APP_DATA_ROOT` 目录 |
-| 编程式备份   | `backups.ts` `createDatabaseBackup()` | 全局库或学期库            |
-| 备份记录     | `backup_records` 表                   | 每次备份登记              |
-| 备份验证     | `test-data-integrity.ps1 -BackupPath` | 验证备份 manifest         |
-| 备份 SHA-256 | `backup-data.ps1` 第 39 行            | 每个文件计算哈希          |
+| 能力         | 实现                                  | 粒度                                                                                       |
+| ------------ | ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 整库备份     | `backup-data.ps1`                     | 已批准逻辑数据子集（payload 目录 + v2 manifest + 逐文件 SHA-256 + 只读标记），非整个目录     |
+| 编程式备份   | `backups.ts` `createDatabaseBackup()` | 全局库或学期库                                                                             |
+| 备份记录     | `backup_records` 表                   | 每次备份登记                                                                               |
+| 备份验证     | `test-data-integrity.ps1 -BackupPath` | 验证备份 manifest                                                                          |
+| 备份 SHA-256 | `backup-data.ps1`                     | 每个文件计算哈希并写入 manifest                                                            |
 
 #### 恢复能力：**写入被故意禁用**
 

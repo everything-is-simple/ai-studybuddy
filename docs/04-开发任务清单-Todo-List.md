@@ -4,6 +4,8 @@
 **日期**：2026-07-28
 **用途**：按阶段拆解具体开发任务，避免想到哪做到哪。每个任务有明确的完成标准。
 
+> **AUDIT-20260806：实现代码与设计文档偏差核查（进行中）**：按本文件 Phase 划分，逐 Phase 核查实现代码与设计文档（`docs/01`、`docs/02`、各子系统 PRD、`docs/08`/`docs/10`/`docs/11`/`docs/13`）之间的偏差；发现问题后按系统工作流独立计划、验证、修复。行动计划 `.plans/audit-20260806-doc-code-deviation-plan.md`；任务分支 `claude/audit-20260806-doc-code-deviation`。
+>
 > 当前进度：以 `origin/master` 为已集成事实。Phase 0.5/0.7/0.8、Phase 1、Phase 2-T01–T06 与 POST-PHASE2 全系统验证/文档收口均已完成主线复验并推送；S1–S6 简版、学生端产品化、配置中心及 T12/M01/M02/M03/Post-M03 维护范围已进入远端主线。开发机 Windows 原生 + Node 24 部署基线已验证；用户电脑安装运行仍待目标机器实机验收，不得宣称完成。Phase 3 T02A–T02G 安全切片已各自完成主线复验并进入 `origin/master`，但 T02 总体、真实机器操作与其余 Phase 3 候选任务仍未完成；用户于 2026-07-28 明确重新开放 Phase 3，但仅按 `PHASE3-REOPEN-HIGH-WEIGHT-20260728` 推进 11 个高权重必做项；计划已创建并等待独立审查与逐项实施。**S7-MVP（本地课堂录音导入 → 可编辑文本 → S2 笔记输入）已完成主线复验并推送 `origin/master`；它只允许受控 PCM WAV、显式本机 `whisper.cpp` 配置和同步短转写，不引入 Worker、FFmpeg、云端/Provider、Firewall/G2、Docker/WSL、实时录音或说话人分离。**旧 T02/T04 外部候选能力为 `PARTIAL`、T03 Composer smoke 为 `PASS`，均仍不等于完整 S7、用户机验收或 Phase 3 业务实现。G2 历史/候选证据仅按其自身环境范围解释，不是本 MVP 的实施事项。
 
 > **DOCS-20260725 系统事实与文档状态收口（主线复验通过）**：在隔离 worktree `codex/process-system-truth-document-reconciliation` 更新 `docs/00`、`docs/01`、`docs/02`、`docs/04`、`docs/06`、`docs/12` 与入口摘要，回答系统为何而生、为谁而做和为何采用本机分阶段设计；同步主线、开发机 Node 24、用户机验收、S7 候选能力与产品接入的边界。不改业务代码、ASR、Firewall、Docker/WSL、Schema、API、Worker 或前端。已 fast-forward 合入干净 `master`；主线 `scripts/check-docs-governance.ps1`、`git diff --check` 和关键事实字面抽查均通过。
