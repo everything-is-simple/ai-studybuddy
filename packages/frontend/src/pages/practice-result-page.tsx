@@ -63,7 +63,11 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
     <div className="page practice-result-page">
       <Link to="/courses">返回课程与考试</Link>
       {contextExamId && (
-        <ExamContextNav examId={contextExamId} courseInstanceId={data?.session.courseInstanceId ?? null} active="practice" />
+        <ExamContextNav
+          examId={contextExamId}
+          courseInstanceId={data?.session.courseInstanceId ?? null}
+          active="practice"
+        />
       )}
       <header className="card practice-result-summary">
         <p className="workbench-eyebrow">练习结果</p>
@@ -116,7 +120,12 @@ export function PracticeResultPage({ semesterId }: PracticeResultPageProps) {
           {data.session.questions.map((question) => {
             const answer = answerByQuestionId.get(question.id);
             return answer ? (
-              <PracticeResultItem key={question.id} question={question} answer={answer} moduleTitle={moduleById.get(question.knowledgeModuleId)?.title} />
+              <PracticeResultItem
+                key={question.id}
+                question={question}
+                answer={answer}
+                moduleTitle={moduleById.get(question.knowledgeModuleId)?.title}
+              />
             ) : null;
           })}
         </section>

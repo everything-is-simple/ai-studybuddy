@@ -136,9 +136,7 @@ export class SemesterSelectorService {
            ORDER BY s.teaching_start_date DESC, s.created_at DESC, s.id DESC`
         )
         .all() as SemesterRow[];
-      return rows
-        .filter((row) => this.isSelectable(row))
-        .map((row) => this.toSummary(row, row.id === currentId));
+      return rows.filter((row) => this.isSelectable(row)).map((row) => this.toSummary(row, row.id === currentId));
     } finally {
       db.close();
     }
@@ -158,9 +156,7 @@ export class SemesterSelectorService {
            ORDER BY s.archived_at DESC, s.updated_at DESC, s.id DESC`
         )
         .all() as SemesterRow[];
-      return rows
-        .filter((row) => this.isReadable(row))
-        .map((row) => this.toSummary(row, row.id === currentId));
+      return rows.filter((row) => this.isReadable(row)).map((row) => this.toSummary(row, row.id === currentId));
     } finally {
       db.close();
     }
@@ -354,22 +350,24 @@ export class SemesterSelectorService {
       const student = this.resolveStudentForCreate(globalDb, input.studentName, now);
       createdStudentId = student.created ? student.id : undefined;
       globalDb.transaction(() => {
-        globalDb!.prepare(
-          `INSERT INTO semesters
+        globalDb!
+          .prepare(
+            `INSERT INTO semesters
             (id, semester_code, student_id, teaching_start_date, teaching_end_date,
              final_archive_date, status, db_relative_path, ready, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, 'active', ?, 0, ?, ?)`
-        ).run(
-          semesterId,
-          input.semesterCode,
-          student.id,
-          input.teachingStartDate,
-          input.teachingEndDate,
-          input.finalArchiveDate ?? null,
-          `semesters/${semesterId}/semester.db`,
-          now,
-          now
-        );
+          )
+          .run(
+            semesterId,
+            input.semesterCode,
+            student.id,
+            input.teachingStartDate,
+            input.teachingEndDate,
+            input.finalArchiveDate ?? null,
+            `semesters/${semesterId}/semester.db`,
+            now,
+            now
+          );
         insertedGlobal = true;
       })();
 
@@ -377,10 +375,12 @@ export class SemesterSelectorService {
 
       globalDb.transaction(() => {
         globalDb!.prepare('UPDATE semesters SET ready = 1, updated_at = ? WHERE id = ?').run(now, semesterId);
-        globalDb!.prepare(
-          `INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
+        globalDb!
+          .prepare(
+            `INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
-        ).run(CURRENT_SEMESTER_KEY, semesterId, now);
+          )
+          .run(CURRENT_SEMESTER_KEY, semesterId, now);
       })();
 
       return {
@@ -401,7 +401,11 @@ export class SemesterSelectorService {
           globalDb.transaction(() => {
             globalDb!.prepare('DELETE FROM semesters WHERE id = ? AND ready = 0').run(semesterId);
             if (createdStudentId) {
-              globalDb!.prepare('DELETE FROM students WHERE id = ? AND NOT EXISTS (SELECT 1 FROM semesters WHERE student_id = ?)').run(createdStudentId, createdStudentId);
+              globalDb!
+                .prepare(
+                  'DELETE FROM students WHERE id = ? AND NOT EXISTS (SELECT 1 FROM semesters WHERE student_id = ?)'
+                )
+                .run(createdStudentId, createdStudentId);
             }
           })();
         }
@@ -459,7 +463,11 @@ export class SemesterSelectorService {
     })();
   }
 
-  private resolveStudentForCreate(db: DatabaseType, studentName: string | undefined, now: string): { id: string; name: string; created: boolean } {
+  private resolveStudentForCreate(
+    db: DatabaseType,
+    studentName: string | undefined,
+    now: string
+  ): { id: string; name: string; created: boolean } {
     const rows = db.prepare('SELECT id, name FROM students ORDER BY created_at ASC, id ASC').all() as Array<{
       id: string;
       name: string;
@@ -467,7 +475,12 @@ export class SemesterSelectorService {
     if (rows.length === 0) {
       if (!studentName) throw new SemesterSelectorError('MISSING_STUDENT_NAME', 400, '首次创建学期需要填写学生姓名');
       const id = crypto.randomUUID();
-      db.prepare('INSERT INTO students (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)').run(id, studentName, now, now);
+      db.prepare('INSERT INTO students (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)').run(
+        id,
+        studentName,
+        now,
+        now
+      );
       return { id, name: studentName, created: true };
     }
     if (rows.length > 1) {
@@ -482,10 +495,17 @@ export class SemesterSelectorService {
     teachingEndDate?: unknown;
     finalArchiveDate?: unknown;
     studentName?: unknown;
-  }): { studentName?: string; semesterCode: string; teachingStartDate: string; teachingEndDate: string; finalArchiveDate?: string } {
+  }): {
+    studentName?: string;
+    semesterCode: string;
+    teachingStartDate: string;
+    teachingEndDate: string;
+    finalArchiveDate?: string;
+  } {
     try {
       const normalized = validateSemesterInitializationInput({
-        studentName: typeof input.studentName === 'string' && input.studentName.trim() ? input.studentName : 'placeholder',
+        studentName:
+          typeof input.studentName === 'string' && input.studentName.trim() ? input.studentName : 'placeholder',
         semesterCode: String(input.semesterCode ?? ''),
         teachingStartDate: String(input.teachingStartDate ?? ''),
         teachingEndDate: String(input.teachingEndDate ?? ''),
@@ -495,7 +515,8 @@ export class SemesterSelectorService {
             : String(input.finalArchiveDate),
       });
       return {
-        studentName: typeof input.studentName === 'string' && input.studentName.trim() ? input.studentName.trim() : undefined,
+        studentName:
+          typeof input.studentName === 'string' && input.studentName.trim() ? input.studentName.trim() : undefined,
         semesterCode: normalized.semesterCode,
         teachingStartDate: normalized.teachingStartDate,
         teachingEndDate: normalized.teachingEndDate,
@@ -544,10 +565,20 @@ export class SemesterSelectorService {
       const startTime = typeof raw.startTime === 'string' ? raw.startTime : '';
       const endTime = typeof raw.endTime === 'string' ? raw.endTime : '';
       const weekday = Number(raw.weekday);
-      if (!courseName || courseName.length > 100 || !Number.isInteger(weekday) || weekday < 0 || weekday > 6 || !TIME_RE.test(startTime) || !TIME_RE.test(endTime) || startTime >= endTime) {
+      if (
+        !courseName ||
+        courseName.length > 100 ||
+        !Number.isInteger(weekday) ||
+        weekday < 0 ||
+        weekday > 6 ||
+        !TIME_RE.test(startTime) ||
+        !TIME_RE.test(endTime) ||
+        startTime >= endTime
+      ) {
         throw new SemesterSelectorError('TIMETABLE_ENTRIES_INVALID', 400, '课程表记录包含非法课程、星期或时间');
       }
-      const confidence = raw.parserConfidence === undefined || raw.parserConfidence === null ? null : Number(raw.parserConfidence);
+      const confidence =
+        raw.parserConfidence === undefined || raw.parserConfidence === null ? null : Number(raw.parserConfidence);
       if (confidence !== null && (!Number.isFinite(confidence) || confidence < 0 || confidence > 1)) {
         throw new SemesterSelectorError('TIMETABLE_ENTRIES_INVALID', 400, '规则解析置信度必须在 0 到 1 之间');
       }
@@ -559,7 +590,9 @@ export class SemesterSelectorService {
         endTime,
         location: typeof raw.location === 'string' && raw.location.trim() ? raw.location.trim() : null,
         parserConfidence: confidence,
-        warnings: Array.isArray(raw.warnings) ? raw.warnings.filter((value): value is string => typeof value === 'string') : undefined,
+        warnings: Array.isArray(raw.warnings)
+          ? raw.warnings.filter((value): value is string => typeof value === 'string')
+          : undefined,
       };
     });
   }
@@ -628,10 +661,17 @@ export class SemesterSelectorService {
   }
 
   private readImageDimensions(buffer: Buffer): { width: number; height: number } | null {
-    if (buffer.length >= 24 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    if (
+      buffer.length >= 24 &&
+      buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    ) {
       return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
     }
-    if (buffer.length >= 10 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP') {
+    if (
+      buffer.length >= 10 &&
+      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    ) {
       return { width: 1, height: 1 };
     }
     if (buffer.length >= 4 && buffer[0] === 0xff && buffer[1] === 0xd8) {
@@ -652,8 +692,7 @@ export class SemesterSelectorService {
 
   private readCurrentId(db: DatabaseType): string | null {
     const row = db.prepare('SELECT value FROM app_meta WHERE key = ?').get(CURRENT_SEMESTER_KEY) as
-      | { value: string }
-      | undefined;
+      { value: string } | undefined;
     return row?.value ?? null;
   }
 

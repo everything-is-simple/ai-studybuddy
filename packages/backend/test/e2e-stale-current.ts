@@ -2,7 +2,9 @@ import { openExistingDbAtPath } from '../src/db/connection';
 import { initGlobalDb } from '../src/db/migrations';
 import { getGlobalDbPath } from '../src/db/paths';
 
-export function poisonCurrentSemesterForE2E(staleSemesterId = ['00000000', '0000', '4000', '8000', '000000000000'].join('-')) {
+export function poisonCurrentSemesterForE2E(
+  staleSemesterId = ['00000000', '0000', '4000', '8000', '000000000000'].join('-')
+) {
   initGlobalDb().close();
   const db = openExistingDbAtPath(getGlobalDbPath());
   try {

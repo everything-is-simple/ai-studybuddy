@@ -49,7 +49,13 @@ function getShanghaiClock(now: Date): ShanghaiClock {
   const day = value('day');
   const hour = Number(value('hour'));
   const minute = Number(value('minute'));
-  if (!/^\d{4}$/.test(year) || !/^\d{2}$/.test(month) || !/^\d{2}$/.test(day) || !Number.isInteger(hour) || !Number.isInteger(minute)) {
+  if (
+    !/^\d{4}$/.test(year) ||
+    !/^\d{2}$/.test(month) ||
+    !/^\d{2}$/.test(day) ||
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute)
+  ) {
     throw new Error('PARENT_REPORT_CLOCK_INVALID');
   }
   return { reportDate: `${year}-${month}-${day}`, hour, minute };
@@ -91,7 +97,10 @@ export class ParentReportDeliveryRunner {
       await this.retryFailedWithinRun(semesterId, await this.deliveryService.retryDue({ semesterId }));
     } else {
       for (const readySemesterId of this.findReadySemesters()) {
-        await this.retryFailedWithinRun(readySemesterId, await this.deliveryService.retryDue({ semesterId: readySemesterId }));
+        await this.retryFailedWithinRun(
+          readySemesterId,
+          await this.deliveryService.retryDue({ semesterId: readySemesterId })
+        );
       }
       const activeSemesters = this.findActiveSemesters();
       if (activeSemesters.length === 0) return { status: 'no_active_semester' };
@@ -126,7 +135,7 @@ export class ParentReportDeliveryRunner {
     const db = openGlobalDb();
     try {
       return db
-        .prepare("SELECT id FROM semesters WHERE ready = 1 ORDER BY created_at ASC")
+        .prepare('SELECT id FROM semesters WHERE ready = 1 ORDER BY created_at ASC')
         .all()
         .map((row) => (row as { id: string }).id);
     } finally {

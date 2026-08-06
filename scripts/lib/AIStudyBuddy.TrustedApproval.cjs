@@ -1,8 +1,14 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { requireTrustedVerifierIntegrity, __TEST_ONLY_requireTrustedVerifierIntegrity } = require('./AIStudyBuddy.VerifierIntegrity.cjs');
-const { __TEST_ONLY_describeTrustedApprovalAnchor, __TEST_ONLY_acquireTrustedApprovalAnchor } = require('./AIStudyBuddy.TrustAnchor.cjs');
+const {
+  requireTrustedVerifierIntegrity,
+  __TEST_ONLY_requireTrustedVerifierIntegrity,
+} = require('./AIStudyBuddy.VerifierIntegrity.cjs');
+const {
+  __TEST_ONLY_describeTrustedApprovalAnchor,
+  __TEST_ONLY_acquireTrustedApprovalAnchor,
+} = require('./AIStudyBuddy.TrustAnchor.cjs');
 
 const FIELD_NAMES = Object.freeze([
   'format',
@@ -154,7 +160,11 @@ function assertExpected(expected, record) {
     if (readExpectedString(name) !== values[name]) return fail(code);
   }
   const nowEpochMs = readExpectedNow();
-  if (!Number.isSafeInteger(nowEpochMs) || nowEpochMs < Number(values.notBeforeEpochMs) || nowEpochMs > Number(values.notAfterEpochMs)) {
+  if (
+    !Number.isSafeInteger(nowEpochMs) ||
+    nowEpochMs < Number(values.notBeforeEpochMs) ||
+    nowEpochMs > Number(values.notAfterEpochMs)
+  ) {
     return fail('TRUSTED_APPROVAL_TIME_WINDOW_INVALID');
   }
 }
@@ -235,7 +245,8 @@ function __TEST_ONLY_createTrustedApprovalVerifier(options) {
   let trustAnchor;
   let integrity;
   try {
-    if (!options || typeof options !== 'object' || Array.isArray(options)) return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+    if (!options || typeof options !== 'object' || Array.isArray(options))
+      return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
     trustAnchor = options.trustAnchor;
     integrity = options.integrity;
   } catch {

@@ -21,6 +21,7 @@
 ### Task 1：建立一页可读的产品事实入口
 
 **Files:**
+
 - Modify: `docs/01-总PRD-产品需求-Product-Requirements.md`
 - Modify: `docs/00-文档索引-Index.md`
 - Test: `scripts/check-docs-governance.ps1`
@@ -59,6 +60,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-docs-governanc
 ### Task 2：把七子系统地图与任务清单对齐到主线事实
 
 **Files:**
+
 - Modify: `docs/02-七子系统地图-Scenario-Systems.md`
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Test: 主线/任务分支关系与 Markdown 一致性搜索
@@ -99,6 +101,7 @@ Select-String -Path docs\00-*.md,docs\01-*.md,docs\02-*.md,docs\04-*.md -Pattern
 ### Task 3：将机器盘符从产品事实中剥离
 
 **Files:**
+
 - Modify: `docs/06-本地目录治理-Dev-Environment.md`
 - Modify: `docs/00-文档索引-Index.md`
 - Modify: `docs/01-总PRD-产品需求-Product-Requirements.md`
@@ -126,6 +129,7 @@ Get-ChildItem docs -Recurse -File -Filter '*.md' | Select-String -Pattern '[A-Z]
 ### Task 4：收口入口规则与验证证据
 
 **Files:**
+
 - Modify: `AGENTS.md`（仅高层状态或路径约束实际不一致时）
 - Modify: `CLAUDE.md`（仅与 `AGENTS.md` 同一事实不一致时）
 - Modify: `docs/12-开发规范-Dev-Rules.md`（仅需补充分层规则时）
@@ -146,6 +150,7 @@ Get-ChildItem docs -Recurse -File -Filter '*.md' | Select-String -Pattern '[A-Z]
 ### Task 5：独立复核、主线集成与交付
 
 **Files:**
+
 - Modify: 上述文件中实际发生语义修改的文件
 - Test: 治理、差异、主线复验
 

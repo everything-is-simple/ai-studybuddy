@@ -10,7 +10,10 @@ import type { CurrentSemesterDto, SemesterSummaryDto } from '@ai-studybuddy/shar
 const mocks = vi.hoisted(() => ({
   getConfigurationStatus: vi.fn(),
   getCurrentSemester: vi.fn(),
-  semesterPageProps: [] as Array<{ current: SemesterSummaryDto | null; onCurrentChange: (current: CurrentSemesterDto) => void }>,
+  semesterPageProps: [] as Array<{
+    current: SemesterSummaryDto | null;
+    onCurrentChange: (current: CurrentSemesterDto) => void;
+  }>,
   courseSemesterIds: [] as Array<string | null>,
 }));
 
@@ -45,16 +48,24 @@ vi.mock('../src/pages/course-page', () => ({
 }));
 
 vi.mock('../src/pages/material-upload-page', () => ({
-  MaterialUploadPage: ({ semesterId }: { semesterId: string | null }) => <div className="page">资料页 semester={semesterId}</div>,
+  MaterialUploadPage: ({ semesterId }: { semesterId: string | null }) => (
+    <div className="page">资料页 semester={semesterId}</div>
+  ),
 }));
 
 vi.mock('../src/pages/semester-page', () => ({
-  SemesterPage: (props: { current: SemesterSummaryDto | null; onCurrentChange: (current: CurrentSemesterDto) => void }) => {
+  SemesterPage: (props: {
+    current: SemesterSummaryDto | null;
+    onCurrentChange: (current: CurrentSemesterDto) => void;
+  }) => {
     mocks.semesterPageProps.push(props);
     return (
       <div className="page">
         <h1>学期管理</h1>
-        <button type="button" onClick={() => props.onCurrentChange({ semester: currentSemester, recoveredFromStaleCurrent: false })}>
+        <button
+          type="button"
+          onClick={() => props.onCurrentChange({ semester: currentSemester, recoveredFromStaleCurrent: false })}
+        >
           模拟选择学期
         </button>
       </div>
@@ -70,7 +81,14 @@ beforeEach(() => {
     ai: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
     smtp: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
     feishu: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-    runtime: { dataDir: true, aiAvailable: true, smtpAvailable: true, feishuAvailable: true, uptime: 1, nodeVersion: 'v-test' },
+    runtime: {
+      dataDir: true,
+      aiAvailable: true,
+      smtpAvailable: true,
+      feishuAvailable: true,
+      uptime: 1,
+      nodeVersion: 'v-test',
+    },
   });
   mocks.getCurrentSemester.mockResolvedValue({ semester: currentSemester, recoveredFromStaleCurrent: false });
   mocks.semesterPageProps.length = 0;
@@ -163,7 +181,9 @@ describe('App current semester shell', () => {
     mocks.getCurrentSemester.mockResolvedValue({ semester: null, recoveredFromStaleCurrent: false });
     await renderApp('/semesters');
 
-    const button = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('模拟选择学期'));
+    const button = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('模拟选择学期')
+    );
     expect(button).not.toBeNull();
     await act(async () => button!.click());
     await flush();

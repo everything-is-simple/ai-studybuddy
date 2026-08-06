@@ -24,7 +24,13 @@ test('deployment package script requires a safe explicit output root and delegat
 test('synthetic external fixture rejects dangerous roots without deleting protected sentinels', () => {
   const result = spawnSync(
     'powershell',
-    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(scriptsRoot, 'test-deployment-output-delete-boundary.ps1')],
+    [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      path.join(scriptsRoot, 'test-deployment-output-delete-boundary.ps1'),
+    ],
     { cwd: repoRoot, encoding: 'utf8', windowsHide: true, timeout: 30000 }
   );
   const output = `${result.stdout}\n${result.stderr}`;
@@ -33,13 +39,17 @@ test('synthetic external fixture rejects dangerous roots without deleting protec
   assert.equal(/ASSERTION_FAILED|PACKAGE_[A-Z_]+.*[A-Z]:\\|stack|synthetic-protected-sentinel/i.test(output), false);
 });
 test('deployment entry rejects missing or relative output roots with fixed redacted errors', () => {
-  for (const args of [
-    ['-SkipBuild'],
-    ['-OutputRoot', 'relative-output', '-SkipBuild'],
-  ]) {
+  for (const args of [['-SkipBuild'], ['-OutputRoot', 'relative-output', '-SkipBuild']]) {
     const result = spawnSync(
       'powershell',
-      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(scriptsRoot, 'build-deployment-package.ps1'), ...args],
+      [
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        path.join(scriptsRoot, 'build-deployment-package.ps1'),
+        ...args,
+      ],
       { cwd: repoRoot, encoding: 'utf8', windowsHide: true, timeout: 30000 }
     );
     const output = `${result.stdout}\n${result.stderr}`;

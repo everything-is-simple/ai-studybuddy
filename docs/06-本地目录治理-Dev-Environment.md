@@ -17,16 +17,16 @@
 
 当前开发机已迁到 H 盘治理；旧文档中的 `I:\...` 只保留为历史路径语义，不再作为本轮重启的默认值。各目录按职责拆开，目的是让源码、正式/半正式数据、日志、可再生临时产物、worktree、备份和人工学习区互不污染。
 
-| 路径 | 唯一职责 | 可以放 | 禁止放 |
-| ---- | -------- | ------ | ------ |
-| `H:\ai-studybuddy` | 主系统 Git 仓库 | `docs/`、`packages/`、`scripts/`、`.plans/`、正式测试和产品代码 | 真实学习资料、正式 SQLite、长期日志、模型缓存、密钥明文、部署运行数据、任何 `.worktrees` 根或任务 worktree |
-| `H:\ai-studybuddy-worktrees` | **唯一**任务 worktree 根目录 | 从最新 `master` 派生的任务分支、隔离实现 | 主系统目录内 worktree、正式运行数据、密钥、模型缓存 |
-| `H:\ai-studybuddy-composer` | 外部组件/能力试炼场 | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志 | 正式产品代码直接引用、真实学习资料、主仓库 workspace 配置 |
-| `H:\ai-studybuddy-data` | 开发机人工指定的数据根候选 | SQLite、`materials/`、受控导出/备份 | 源码、Git 元数据、密钥明文；E2E 不得复用 |
-| `H:\ai-studybuddy-day-study` | 人工学习工作区 | 用户自己创建或整理的资料副本 | 系统唯一数据源、应用数据库、自动迁移目标 |
-| `H:\ai-studybuddy-logs` | 脱敏日志汇总 | 运行摘要、错误摘要、任务状态 | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案 |
-| `H:\ai-studybuddy-tmp` | 可再生临时/验证空间 | OCR 切片、E2E `runs/<task-id>`、部署包 smoke、Playwright 证据 | SQLite 正式库、唯一备份、真实资料主副本 |
-| `H:\ai-studybuddy-backup` | 只读阶段备份 | 源码阶段 ZIP、旧稿归档、恢复说明 | 当前 SoT 文档的直接编辑副本、密钥明文 |
+| 路径                         | 唯一职责                     | 可以放                                                          | 禁止放                                                                                                     |
+| ---------------------------- | ---------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `H:\ai-studybuddy`           | 主系统 Git 仓库              | `docs/`、`packages/`、`scripts/`、`.plans/`、正式测试和产品代码 | 真实学习资料、正式 SQLite、长期日志、模型缓存、密钥明文、部署运行数据、任何 `.worktrees` 根或任务 worktree |
+| `H:\ai-studybuddy-worktrees` | **唯一**任务 worktree 根目录 | 从最新 `master` 派生的任务分支、隔离实现                        | 主系统目录内 worktree、正式运行数据、密钥、模型缓存                                                        |
+| `H:\ai-studybuddy-composer`  | 外部组件/能力试炼场          | 最小样例、非隐私 fixtures、能力卡、局部依赖、测试日志           | 正式产品代码直接引用、真实学习资料、主仓库 workspace 配置                                                  |
+| `H:\ai-studybuddy-data`      | 开发机人工指定的数据根候选   | SQLite、`materials/`、受控导出/备份                             | 源码、Git 元数据、密钥明文；E2E 不得复用                                                                   |
+| `H:\ai-studybuddy-day-study` | 人工学习工作区               | 用户自己创建或整理的资料副本                                    | 系统唯一数据源、应用数据库、自动迁移目标                                                                   |
+| `H:\ai-studybuddy-logs`      | 脱敏日志汇总                 | 运行摘要、错误摘要、任务状态                                    | API Key、SMTP 授权码、完整 Webhook、资料原文、完整答案                                                     |
+| `H:\ai-studybuddy-tmp`       | 可再生临时/验证空间          | OCR 切片、E2E `runs/<task-id>`、部署包 smoke、Playwright 证据   | SQLite 正式库、唯一备份、真实资料主副本                                                                    |
+| `H:\ai-studybuddy-backup`    | 只读阶段备份                 | 源码阶段 ZIP、旧稿归档、恢复说明                                | 当前 SoT 文档的直接编辑副本、密钥明文                                                                      |
 
 **路径解释规则**：本节的 `H:\ai-studybuddy*` 是**当前开发机**的目录治理事实，不是普通用户电脑必须存在的安装路径。跨机器文档应优先使用逻辑名称（`<repo-root>`、`<external-component-root>`、`<run-evidence-root>`、`<app-data-root>`）；正式使用机器的数据根采用 `%LOCALAPPDATA%\AIStudyBuddy`。旧记录中的 `I:\...` 仅为历史证据路径，不应被改写成当前安装承诺。
 
@@ -128,7 +128,6 @@ Phase 0.7 只验证，不修改主系统。SQLite、本地文件、SQLite Job Wo
 4. **仓库外组件试炼场、运行数据和证据目录**不属于主仓 Git 脏状态，不得因为主仓清理而移动、复制或删除。
 
 禁止使用 `git clean`、`git reset --hard`、覆盖 checkout 或面向仓库根的通配符递归删除来处理脏状态。当前收口批次、风险分级和批准门以 `.plans/process-dirty-state-remediation-plan.md` 与 `docs/04` 的 `PROCESS-DIRTY-20260725` 为准。即使个别 worktree 尚未收口，也不改变 `origin/master` 的产品事实，更不改变用户电脑验收、S7 产品接入或外部候选能力的状态。
-
 
 ## S7-MVP 临时音频目录边界（2026-07-25）
 

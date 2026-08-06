@@ -144,9 +144,8 @@ export function migrateSemesterDb(db: DatabaseType): void {
 }
 
 function ensureCurrentJobsTable(db: DatabaseType): void {
-  const jobsExists = db
-    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'jobs'")
-    .get() as { 1: number } | undefined;
+  const jobsExists = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'jobs'").get() as
+    { 1: number } | undefined;
 
   if (!jobsExists) {
     db.exec(CURRENT_JOBS_TABLE_SQL);

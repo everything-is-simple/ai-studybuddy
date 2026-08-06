@@ -89,7 +89,13 @@ function readWavFormat(buffer: Buffer): WavFormat {
   if (!format || dataSize === undefined || dataSize === 0) {
     throw new WhisperCppAuralConverterError('ASR_INVALID_AUDIO_FORMAT', 400, 'WAV 缺少有效音频数据');
   }
-  if (format.audioFormat !== 1 || format.channels !== 1 || format.sampleRate !== 16000 || format.bitsPerSample !== 16 || dataSize % 2 !== 0) {
+  if (
+    format.audioFormat !== 1 ||
+    format.channels !== 1 ||
+    format.sampleRate !== 16000 ||
+    format.bitsPerSample !== 16 ||
+    dataSize % 2 !== 0
+  ) {
     throw new WhisperCppAuralConverterError(
       'ASR_INVALID_AUDIO_FORMAT',
       400,
@@ -131,14 +137,24 @@ export class WhisperCppAuralConverter {
       throw new WhisperCppAuralConverterError('ASR_FILE_TOO_LARGE', 413, '音频文件超过当前课堂转写大小限制');
     }
     const normalizedMime = file.mimetype.split(';')[0]?.trim().toLowerCase() ?? '';
-    if (normalizedMime && normalizedMime !== 'audio/wav' && normalizedMime !== 'audio/x-wav' && normalizedMime !== 'application/octet-stream') {
+    if (
+      normalizedMime &&
+      normalizedMime !== 'audio/wav' &&
+      normalizedMime !== 'audio/x-wav' &&
+      normalizedMime !== 'application/octet-stream'
+    ) {
       throw new WhisperCppAuralConverterError('ASR_INVALID_AUDIO_FORMAT', 400, '仅支持 WAV 音频文件');
     }
     if (!file.originalname.toLowerCase().endsWith('.wav')) {
       throw new WhisperCppAuralConverterError('ASR_INVALID_AUDIO_FORMAT', 400, '仅支持 .wav 音频文件');
     }
     readWavFormat(file.buffer);
-    if (!this.runtime.cliPath || !this.runtime.modelPath || !fs.existsSync(this.runtime.cliPath) || !fs.existsSync(this.runtime.modelPath)) {
+    if (
+      !this.runtime.cliPath ||
+      !this.runtime.modelPath ||
+      !fs.existsSync(this.runtime.cliPath) ||
+      !fs.existsSync(this.runtime.modelPath)
+    ) {
       throw new WhisperCppAuralConverterError('ASR_RUNTIME_UNAVAILABLE', 503, '本机课堂转写运行时尚未配置或不可用');
     }
 
@@ -161,7 +177,22 @@ export class WhisperCppAuralConverter {
 
   private runCli(inputPath: string, outputBase: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const args = ['-m', this.runtime.modelPath, '-f', inputPath, '-l', 'zh', '-ng', '-nt', '-nf', '-ojf', '-of', outputBase, '-nth', '0.60'];
+      const args = [
+        '-m',
+        this.runtime.modelPath,
+        '-f',
+        inputPath,
+        '-l',
+        'zh',
+        '-ng',
+        '-nt',
+        '-nf',
+        '-ojf',
+        '-of',
+        outputBase,
+        '-nth',
+        '0.60',
+      ];
       let settled = false;
       let timedOut = false;
       const settle = (callback: () => void) => {
@@ -187,7 +218,9 @@ export class WhisperCppAuralConverter {
       child.stderr.on('data', () => undefined);
       child.on('error', () => {
         clearTimeout(timer);
-        settle(() => reject(new WhisperCppAuralConverterError('ASR_RUNTIME_UNAVAILABLE', 503, '本机课堂转写运行时无法启动')));
+        settle(() =>
+          reject(new WhisperCppAuralConverterError('ASR_RUNTIME_UNAVAILABLE', 503, '本机课堂转写运行时无法启动'))
+        );
       });
       child.on('close', (code) => {
         clearTimeout(timer);

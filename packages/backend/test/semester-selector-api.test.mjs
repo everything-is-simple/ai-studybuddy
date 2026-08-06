@@ -18,7 +18,14 @@ const configurationService = {
     ai: unconfigured,
     smtp: unconfigured,
     feishu: unconfigured,
-    runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 1, nodeVersion: 'v22.test' },
+    runtime: {
+      dataDir: true,
+      aiAvailable: false,
+      smtpAvailable: false,
+      feishuAvailable: false,
+      uptime: 1,
+      nodeVersion: 'v22.test',
+    },
   }),
   getActiveSnapshot: () => null,
   testAndActivate: async () => ({ activated: false, test: { pass: false } }),
@@ -50,14 +57,16 @@ async function json(base, method, pathname, body) {
 }
 
 function tinyPngFile() {
-  return new File([
-    Uint8Array.from([
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-      0x08, 0x02, 0x00, 0x00, 0x00,
-    ]),
-  ], 'timetable.png', { type: 'image/png' });
+  return new File(
+    [
+      Uint8Array.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+        0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+      ]),
+    ],
+    'timetable.png',
+    { type: 'image/png' }
+  );
 }
 
 async function preview(base, fields = {}) {
@@ -113,7 +122,13 @@ test('semester preview normalizes OCR text with removed spaces and fullwidth das
   assert.equal(previewed.status, 200);
   assert.equal(previewed.body.data.entries.length, 2);
   assert.deepEqual(
-    previewed.body.data.entries.map((entry) => ({ weekday: entry.weekday, startTime: entry.startTime, endTime: entry.endTime, courseName: entry.courseName, location: entry.location })),
+    previewed.body.data.entries.map((entry) => ({
+      weekday: entry.weekday,
+      startTime: entry.startTime,
+      endTime: entry.endTime,
+      courseName: entry.courseName,
+      location: entry.location,
+    })),
     [
       { weekday: 1, startTime: '08:00', endTime: '09:30', courseName: '合成数学A101', location: null },
       { weekday: 3, startTime: '10:00', endTime: '11:30', courseName: '合成物理B202', location: null },
@@ -169,6 +184,12 @@ test('selecting current semester switches API isolation explicitly', async (t) =
 
   const firstCourses = await json(base, 'GET', `/api/courses?semesterId=${firstId}`);
   const secondCourses = await json(base, 'GET', `/api/courses?semesterId=${secondId}`);
-  assert.deepEqual(firstCourses.body.data.map((course) => course.name).sort(), ['数学-switch-a', '英语-switch-a'].sort());
-  assert.deepEqual(secondCourses.body.data.map((course) => course.name).sort(), ['数学-switch-b', '英语-switch-b'].sort());
+  assert.deepEqual(
+    firstCourses.body.data.map((course) => course.name).sort(),
+    ['数学-switch-a', '英语-switch-a'].sort()
+  );
+  assert.deepEqual(
+    secondCourses.body.data.map((course) => course.name).sort(),
+    ['数学-switch-b', '英语-switch-b'].sort()
+  );
 });

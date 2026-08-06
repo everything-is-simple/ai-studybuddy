@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import http from 'node:http';
 import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -15,8 +16,17 @@ const { bootstrapBackend } = await import('../dist/bootstrap.js');
 const unconfigured = { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null };
 const service = {
   getAllStatus: () => ({
-    ai: unconfigured, smtp: unconfigured, feishu: unconfigured,
-    runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 1, nodeVersion: 'v22.test' },
+    ai: unconfigured,
+    smtp: unconfigured,
+    feishu: unconfigured,
+    runtime: {
+      dataDir: true,
+      aiAvailable: false,
+      smtpAvailable: false,
+      feishuAvailable: false,
+      uptime: 1,
+      nodeVersion: 'v22.test',
+    },
   }),
   getActiveSnapshot: () => null,
   testAndActivate: async () => ({ activated: false, test: { pass: false } }),
@@ -42,7 +52,11 @@ test('createApp protects every API route and exposes config status to allowed or
 
 test('bootstrap waits for configuration before listen and starts worker only after listening', async () => {
   const order = [];
-  const fakeServer = { close(callback) { callback?.(); } };
+  const fakeServer = {
+    close(callback) {
+      callback?.();
+    },
+  };
   const fakeApp = {
     listen(_port, _host, callback) {
       order.push('listen');
@@ -51,19 +65,34 @@ test('bootstrap waits for configuration before listen and starts worker only aft
     },
   };
   const worker = {
-    startPolling() { order.push('worker'); return { fake: true }; },
+    startPolling() {
+      order.push('worker');
+      return { fake: true };
+    },
     stopPolling() {},
   };
 
+  const startupLogs = [];
   await bootstrapBackend({
-    initializeConfiguration: async () => { order.push('config-start'); await Promise.resolve(); order.push('config-end'); return service; },
-    createApplication: () => { order.push('app'); return fakeApp; },
+    initializeConfiguration: async () => {
+      order.push('config-start');
+      await Promise.resolve();
+      order.push('config-end');
+      return service;
+    },
+    createApplication: () => {
+      order.push('app');
+      return fakeApp;
+    },
     createWorker: () => worker,
     port: 3000,
     host: '127.0.0.1',
-    log: () => {},
+    log: (message) => startupLogs.push(message),
   });
 
   assert.deepEqual(order, ['config-start', 'config-end', 'app', 'listen', 'worker']);
-  assert.equal(existsSync(path.join(dataRoot, 'studybuddy.db')), true);
+  assert.equal(existsSync(path.join(dataRoot, 'studybuddy.db')), true, 'empty data root must initialize the global database');
+  assert.ok(startupLogs.includes('[DATABASE] STARTUP_GLOBAL_INITIALIZED'), 'first start must log explicit global database initialization');
+  assert.equal(startupLogs.some((message) => message.includes('STARTUP_INTEGRITY_ALL_FAILED')), false);
 });
+

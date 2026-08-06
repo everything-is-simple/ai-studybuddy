@@ -3,7 +3,13 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CramCardsPage } from '../src/pages/cram-cards-page';
-import { clearCramSession, cramSessionStorageKey, readCramSession, writeCramSession, type CramSessionSnapshot } from '../src/hooks/use-cram-session';
+import {
+  clearCramSession,
+  cramSessionStorageKey,
+  readCramSession,
+  writeCramSession,
+  type CramSessionSnapshot,
+} from '../src/hooks/use-cram-session';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -14,12 +20,43 @@ vi.mock('../src/api/cram-cards-api', () => ({ getCramCards: (...args: unknown[])
 
 const confirmedExam = { id: 'exam-1', courseInstanceId: 'course-1', name: '期末考试', confirmationStatus: 'confirmed' };
 const cards = [
-  { id: 'card-1', knowledgeModuleId: 'card-1', title: '函数', importance: 'critical', contentSummary: '函数摘要', examRelevance: '函数考点', sources: [{ kind: 'weak_point', count: 3 }, { kind: 'knowledge_module', count: 1 }] },
-  { id: 'card-2', knowledgeModuleId: 'card-2', title: '方程', importance: 'high', contentSummary: '方程摘要', examRelevance: '方程考点', sources: [{ kind: 'mistake', count: 2 }, { kind: 'knowledge_module', count: 1 }] },
+  {
+    id: 'card-1',
+    knowledgeModuleId: 'card-1',
+    title: '函数',
+    importance: 'critical',
+    contentSummary: '函数摘要',
+    examRelevance: '函数考点',
+    sources: [
+      { kind: 'weak_point', count: 3 },
+      { kind: 'knowledge_module', count: 1 },
+    ],
+  },
+  {
+    id: 'card-2',
+    knowledgeModuleId: 'card-2',
+    title: '方程',
+    importance: 'high',
+    contentSummary: '方程摘要',
+    examRelevance: '方程考点',
+    sources: [
+      { kind: 'mistake', count: 2 },
+      { kind: 'knowledge_module', count: 1 },
+    ],
+  },
 ] as const;
 
-async function flush() { await act(async () => { await Promise.resolve(); await Promise.resolve(); }); }
-async function click(element: Element) { await act(async () => { element.dispatchEvent(new MouseEvent('click', { bubbles: true })); }); }
+async function flush() {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+async function click(element: Element) {
+  await act(async () => {
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
 
 function renderPage() {
   const container = document.createElement('div');
@@ -68,9 +105,19 @@ describe('T04 临考速背页面与会话恢复', () => {
   });
 
   it('restores only card ID intersections and discards malformed storage safely', async () => {
-    const snapshot: CramSessionSnapshot = { version: 1, assessmentAttemptId: 'exam-1', cardIds: ['card-1', 'missing-card'], currentCardId: 'card-1', viewedCardIds: ['card-1', 'missing-card'], endsAt: Date.now() + 600_000, flipped: false };
+    const snapshot: CramSessionSnapshot = {
+      version: 1,
+      assessmentAttemptId: 'exam-1',
+      cardIds: ['card-1', 'missing-card'],
+      currentCardId: 'card-1',
+      viewedCardIds: ['card-1', 'missing-card'],
+      endsAt: Date.now() + 600_000,
+      flipped: false,
+    };
     expect(writeCramSession('semester-1', 'exam-1', snapshot)).toBe(true);
-    expect(readCramSession('semester-1', 'exam-1', ['card-1', 'card-2'])).toEqual(expect.objectContaining({ cardIds: ['card-1'], viewedCardIds: ['card-1'] }));
+    expect(readCramSession('semester-1', 'exam-1', ['card-1', 'card-2'])).toEqual(
+      expect.objectContaining({ cardIds: ['card-1'], viewedCardIds: ['card-1'] })
+    );
     ({ container, root } = renderPage());
     await flush();
     expect(container!.textContent).toContain('第 1 / 1 张');
@@ -95,10 +142,16 @@ describe('T04 临考速背页面与会话恢复', () => {
     const fiveMinutes = [...container!.querySelectorAll('button')].find((button) => button.textContent === '5 分钟');
     await click(fiveMinutes!);
     await click([...container!.querySelectorAll('button')].find((button) => button.textContent === '开始速背')!);
-    await act(async () => { vi.advanceTimersByTime(5 * 60 * 1000 + 500); });
+    await act(async () => {
+      vi.advanceTimersByTime(5 * 60 * 1000 + 500);
+    });
     expect(container!.textContent).toContain('本次限时翻阅已结束');
-    const next = [...container!.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '下一张');
-    const flip = [...container!.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '翻转查看考点');
+    const next = [...container!.querySelectorAll<HTMLButtonElement>('button')].find(
+      (button) => button.textContent === '下一张'
+    );
+    const flip = [...container!.querySelectorAll<HTMLButtonElement>('button')].find(
+      (button) => button.textContent === '翻转查看考点'
+    );
     expect(next?.disabled).toBe(true);
     expect(flip?.disabled).toBe(false);
   });

@@ -84,13 +84,13 @@ anchor metadata version
 
 ### 3.1 三元组责任
 
-| 事项 | 责任方 | 允许的动作 | 禁止的动作 |
-| --- | --- | --- | --- |
-| 生成 Ed25519 私钥与公钥 | 指定的安全/发布所有者 | 在仓库外、受控密钥系统中生成；私钥永不交付给本仓库或客户端 | 由开发代理、CI、测试夹具或用户目录生成 production key |
-| 提供 public 三元组 | 安全/发布所有者 | 通过受控渠道提供 `keyId`、SPKI DER Base64、fingerprint | 提供截断值、placeholder、口头不带校验的值或私钥 |
-| 独立核验 | 第二位指定核验者 | 在独立设备/渠道计算 DER fingerprint，并核对 keyId/算法 | 仅复制同一消息或由同一人单点确认 |
-| 写入 production 安装/发布边界 | 后续单独批准的实施者 | 仅在认证发布路径中写入，留最小审计证据 | 写入 Git、`.env`、APP_DATA_ROOT、用户数据目录、日志或测试 fixture |
-| 轮换/撤销 | 安全/发布所有者 + 第二核验者 | 使用明确版本、overlap 和撤销窗口；旧 key 仅按已批准策略保留 | 静默替换、keyId 复用、回滚到已撤销 anchor |
+| 事项                          | 责任方                       | 允许的动作                                                  | 禁止的动作                                                        |
+| ----------------------------- | ---------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| 生成 Ed25519 私钥与公钥       | 指定的安全/发布所有者        | 在仓库外、受控密钥系统中生成；私钥永不交付给本仓库或客户端  | 由开发代理、CI、测试夹具或用户目录生成 production key             |
+| 提供 public 三元组            | 安全/发布所有者              | 通过受控渠道提供 `keyId`、SPKI DER Base64、fingerprint      | 提供截断值、placeholder、口头不带校验的值或私钥                   |
+| 独立核验                      | 第二位指定核验者             | 在独立设备/渠道计算 DER fingerprint，并核对 keyId/算法      | 仅复制同一消息或由同一人单点确认                                  |
+| 写入 production 安装/发布边界 | 后续单独批准的实施者         | 仅在认证发布路径中写入，留最小审计证据                      | 写入 Git、`.env`、APP_DATA_ROOT、用户数据目录、日志或测试 fixture |
+| 轮换/撤销                     | 安全/发布所有者 + 第二核验者 | 使用明确版本、overlap 和撤销窗口；旧 key 仅按已批准策略保留 | 静默替换、keyId 复用、回滚到已撤销 anchor                         |
 
 ### 3.2 受控交付的最小流程
 
@@ -126,15 +126,15 @@ issuedAt / validity evidence
 
 ### 4.2 固定失败码（拟议，未来实施须逐项确认）
 
-| 情形 | 固定失败码 |
-| --- | --- |
-| 未有经认证的 release/verifier assertion | `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN` |
-| assertion 契约版本不兼容 | `TRUSTED_VERIFIER_CONTRACT_MISMATCH` |
-| anchor descriptor 缺失或不可认证 | `TRUSTED_ANCHOR_UNAVAILABLE` |
-| keyId、SPKI、算法或 fingerprint 不一致 | `TRUSTED_ANCHOR_INVALID` |
-| release identity 与已批准 anchor binding 不一致 | `TRUSTED_ANCHOR_BINDING_MISMATCH` |
-| anchor 已撤销、降级或版本回退 | `TRUSTED_ANCHOR_REVOKED_OR_ROLLBACK` |
-| descriptor / assertion 读取或 no-follow 证据不足 | `TRUSTED_RELEASE_EVIDENCE_UNPROVEN` |
+| 情形                                             | 固定失败码                            |
+| ------------------------------------------------ | ------------------------------------- |
+| 未有经认证的 release/verifier assertion          | `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN` |
+| assertion 契约版本不兼容                         | `TRUSTED_VERIFIER_CONTRACT_MISMATCH`  |
+| anchor descriptor 缺失或不可认证                 | `TRUSTED_ANCHOR_UNAVAILABLE`          |
+| keyId、SPKI、算法或 fingerprint 不一致           | `TRUSTED_ANCHOR_INVALID`              |
+| release identity 与已批准 anchor binding 不一致  | `TRUSTED_ANCHOR_BINDING_MISMATCH`     |
+| anchor 已撤销、降级或版本回退                    | `TRUSTED_ANCHOR_REVOKED_OR_ROLLBACK`  |
+| descriptor / assertion 读取或 no-follow 证据不足 | `TRUSTED_RELEASE_EVIDENCE_UNPROVEN`   |
 
 所有错误必须继续满足：`message === code`、无 caller-controlled message/stack、无 key DER、路径、记录、签名、环境变量、原始 release evidence 或用户数据回显。
 
@@ -183,10 +183,10 @@ issuedAt / validity evidence
 
 ### 6.1 本轮实际可写范围（计划任务）
 
-| 文件 | 动作 |
-| --- | --- |
-| `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | 新增本计划 |
-| `docs/04-开发任务清单-Todo-List.md` | 登记计划待独立审查；不得勾选实现完成 |
+| 文件                                                                           | 动作                                 |
+| ------------------------------------------------------------------------------ | ------------------------------------ |
+| `.plans/phase3-t02-production-trust-anchor-release-integrity-20260728-plan.md` | 新增本计划                           |
+| `docs/04-开发任务清单-Todo-List.md`                                            | 登记计划待独立审查；不得勾选实现完成 |
 
 ### 6.2 本轮禁止修改
 
@@ -216,12 +216,12 @@ packages/backend/test/helpers/trust-anchor-*.mjs      (候选新增)
 
 ## 7. 测试、审计与证据矩阵
 
-| 层级 | 可做事项 | 不能证明 / 不得声称 |
-| --- | --- | --- |
-| 本计划 | 文档一致性、范围/禁止项检查、独立计划审查 | 真实 anchor、真实发布、真实 Windows identity、真实 R1/R2 |
-| future 合成测试 | 动态 test key、DER/fingerprint mismatch、撤销/降级、异常脱敏、替换竞争、gate fail-closed | production key 已配置、release/installer 已认证、真实机器 no-follow 或真实 ACL |
-| future CI | 已跟踪源码的静态隔离、测试 key 不泄漏、构建/测试通过 | 生产发布签名、用户机器安装状态、真实审批记录有效性 |
-| future 受控环境验收 | 只在用户单独批准后，以最小公开 metadata 验证 release identity 与 anchor binding | T02-R1/R2 已完成，除非另有各自批准和证据 |
+| 层级                | 可做事项                                                                                 | 不能证明 / 不得声称                                                            |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 本计划              | 文档一致性、范围/禁止项检查、独立计划审查                                                | 真实 anchor、真实发布、真实 Windows identity、真实 R1/R2                       |
+| future 合成测试     | 动态 test key、DER/fingerprint mismatch、撤销/降级、异常脱敏、替换竞争、gate fail-closed | production key 已配置、release/installer 已认证、真实机器 no-follow 或真实 ACL |
+| future CI           | 已跟踪源码的静态隔离、测试 key 不泄漏、构建/测试通过                                     | 生产发布签名、用户机器安装状态、真实审批记录有效性                             |
+| future 受控环境验收 | 只在用户单独批准后，以最小公开 metadata 验证 release identity 与 anchor binding          | T02-R1/R2 已完成，除非另有各自批准和证据                                       |
 
 审计输出只允许固定错误码、布尔结果、计数、版本类最小标识和不可逆关联 ID；不得输出完整 key DER、fingerprint 以外的原始 anchor 内容、文件名、路径、record 内容、signature、候选包信息、环境变量、用户数据或原始 provider 输出。
 
@@ -229,16 +229,16 @@ packages/backend/test/helpers/trust-anchor-*.mjs      (候选新增)
 
 ## 8. P0/P1 风险与最小缓解
 
-| 优先级 | 风险 | 最小缓解 / gate |
-| --- | --- | --- |
-| P0 | 把可替换的本地 config/环境变量/目录 ACL 当作根信任 | 无独立认证 release identity 时固定 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN` |
-| P0 | 将测试 key、placeholder 或自动生成 key 进入 production | production 不接受 test factory；真实三元组缺失即停止；静态测试缝隔离 |
-| P0 | anchor 替换、keyId 复用或版本降级 | 绑定 keyId+DER fingerprint+metadata version+release identity；撤销优先、未知即拒绝 |
-| P0 | 读取 descriptor 时受路径/reparse/TOCTOU 攻击 | 未来仅 native same-handle no-follow；当前 backend 不存在则固定拒绝 |
-| P0 | 把本计划或合成结果误报为真实发布/真实机器证据 | 文档和交付中强制分层声明；独立审查检查措辞 |
-| P1 | public fingerprint 日志形成可关联元数据 | 默认只记录短不可逆关联 ID；完整 fingerprint 仅在受控核验流程外部使用 |
-| P1 | 轮换时间窗、离线撤销语义不明确 | future implementation 之前另行明确 time source、overlap、recovery 与撤销证据 |
-| P1 | release identity 的 OS/installer 技术方案未选定 | 先进行独立 release/install identity 设计；选不出可验证方案则不实施 anchor provider |
+| 优先级 | 风险                                                   | 最小缓解 / gate                                                                    |
+| ------ | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| P0     | 把可替换的本地 config/环境变量/目录 ACL 当作根信任     | 无独立认证 release identity 时固定 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`           |
+| P0     | 将测试 key、placeholder 或自动生成 key 进入 production | production 不接受 test factory；真实三元组缺失即停止；静态测试缝隔离               |
+| P0     | anchor 替换、keyId 复用或版本降级                      | 绑定 keyId+DER fingerprint+metadata version+release identity；撤销优先、未知即拒绝 |
+| P0     | 读取 descriptor 时受路径/reparse/TOCTOU 攻击           | 未来仅 native same-handle no-follow；当前 backend 不存在则固定拒绝                 |
+| P0     | 把本计划或合成结果误报为真实发布/真实机器证据          | 文档和交付中强制分层声明；独立审查检查措辞                                         |
+| P1     | public fingerprint 日志形成可关联元数据                | 默认只记录短不可逆关联 ID；完整 fingerprint 仅在受控核验流程外部使用               |
+| P1     | 轮换时间窗、离线撤销语义不明确                         | future implementation 之前另行明确 time source、overlap、recovery 与撤销证据       |
+| P1     | release identity 的 OS/installer 技术方案未选定        | 先进行独立 release/install identity 设计；选不出可验证方案则不实施 anchor provider |
 
 ---
 

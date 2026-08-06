@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
-export type ExamContextNavEntry = 'overview' | 'materials' | 'practice' | 'mock_exam' | 'cram' | 'cram_plan' | 'mistakes' | 'timeline';
+export type ExamContextNavEntry =
+  'overview' | 'materials' | 'practice' | 'mock_exam' | 'cram' | 'cram_plan' | 'mistakes' | 'timeline';
 
 interface ExamContextNavProps {
   examId: string;
@@ -19,7 +20,11 @@ function buildExamContextItems(examId: string, courseInstanceId?: string | null)
   const encodedCourseId = courseInstanceId ? encodeURIComponent(courseInstanceId) : null;
   return [
     { key: 'overview', to: `/exams/${encodedExamId}`, label: '总览' },
-    { key: 'materials', to: encodedCourseId ? `/materials?courseInstanceId=${encodedCourseId}` : '/materials', label: '资料' },
+    {
+      key: 'materials',
+      to: encodedCourseId ? `/materials?courseInstanceId=${encodedCourseId}` : '/materials',
+      label: '资料',
+    },
     { key: 'practice', to: `/exams/${encodedExamId}/practice`, label: '练习' },
     { key: 'mock_exam', to: `/exams/${encodedExamId}/mock-exam`, label: '模拟考' },
     { key: 'cram', to: `/exams/${encodedExamId}/cram`, label: '临考速背' },
@@ -37,7 +42,12 @@ export function ExamContextNav({ examId, courseInstanceId, active }: ExamContext
       {items.map((item) => {
         const isCurrent = item.key === active;
         return (
-          <Link key={item.key} to={item.to} className={isCurrent ? 'active' : undefined} aria-current={isCurrent ? 'page' : undefined}>
+          <Link
+            key={item.key}
+            to={item.to}
+            className={isCurrent ? 'active' : undefined}
+            aria-current={isCurrent ? 'page' : undefined}
+          >
             {item.label}
           </Link>
         );

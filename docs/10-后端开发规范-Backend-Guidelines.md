@@ -210,35 +210,35 @@ AI Router 请求日志额外只允许记录 `taskType`、Provider 名称、model
 
 ### 8.3 变量清单
 
-| 变量名 | 用途 | 必填 |
-| --- | --- | --- |
-| `APP_DATA_ROOT` | 运行数据根目录 | 是 |
-| `BACKEND_PORT` | 后端端口（默认 3000） | 否 |
-| `BACKEND_HOST` | 后端监听地址（默认 127.0.0.1） | 否 |
-| `CONFIG_ALLOWED_ORIGINS` | 追加本机前端 Origin；仅允许带显式端口的 loopback HTTP Origin，逗号分隔 | 否 |
-| `PYTHON_PATH` | OCR 子进程 Python 可执行文件（默认 `python`） | 否 |
-| `OCR_TIMEOUT_MS` | OCR 子进程超时毫秒数（默认 60000） | 否 |
-| `DOCX_ZIP_MAX_ENTRIES` | DOCX ZIP 最大条目数（默认 10000） | 否 |
-| `DOCX_ZIP_MAX_ENTRY_SIZE_BYTES` | DOCX 单条目解压大小上限 | 否 |
-| `DOCX_ZIP_MAX_TOTAL_SIZE_BYTES` | DOCX 总解压大小上限 | 否 |
-| `DOCX_ZIP_MAX_DOCUMENT_XML_SIZE_BYTES` | DOCX 正文 XML 大小上限 | 否 |
-| `PPTX_ZIP_MAX_ENTRIES` | PPTX ZIP 最大条目数（默认 10000） | 否 |
-| `PPTX_ZIP_MAX_ENTRY_SIZE_BYTES` | PPTX 单条目解压大小上限 | 否 |
-| `PPTX_ZIP_MAX_TOTAL_SIZE_BYTES` | PPTX 总解压大小上限 | 否 |
-| `PPTX_ZIP_MAX_SLIDE_XML_SIZE_BYTES` | PPTX 单页 XML 大小上限 | 否 |
-| `AI_PROVIDERS` | OpenAI-compatible Provider JSON 数组；按 `priority` 升序失败切换并冷却 | 否；优先于 legacy 单 Provider |
-| `AI_TIMEOUT_MS` | 单次 AI 请求超时毫秒数（默认 60000） | 否 |
-| `AI_BASE_URL` | legacy 单 Provider Base URL；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `AI_API_KEY` | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `AI_MODEL` | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用 | 否 |
-| `SMTP_HOST` | QQ SMTP 主机（默认 `smtp.qq.com`） | 渠道启用时必填 |
-| `SMTP_PORT` | QQ SMTP 端口（默认 465） | 否 |
-| `SMTP_SECURE` | 是否启用 SSL/TLS | 否 |
-| `SMTP_USER` | QQ 邮箱账号 | 渠道启用时必填 |
-| `SMTP_AUTH_CODE` | QQ SMTP 授权码；不得进入日志或提交 | 渠道启用时必填 |
-| `SMTP_TO` | 收件邮箱 | 渠道启用时必填 |
-| `FEISHU_WEBHOOK_URL` | 飞书 Webhook；不得进入日志或提交 | 渠道启用时必填 |
-| `VITE_API_BASE_URL` | 前端 API/开发代理基础地址；仅来自前端进程环境或 `packages/frontend` env 文件 | 否 |
+| 变量名                                 | 用途                                                                         | 必填                          |
+| -------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------- |
+| `APP_DATA_ROOT`                        | 运行数据根目录                                                               | 是                            |
+| `BACKEND_PORT`                         | 后端端口（默认 3000）                                                        | 否                            |
+| `BACKEND_HOST`                         | 后端监听地址（默认 127.0.0.1）                                               | 否                            |
+| `CONFIG_ALLOWED_ORIGINS`               | 追加本机前端 Origin；仅允许带显式端口的 loopback HTTP Origin，逗号分隔       | 否                            |
+| `PYTHON_PATH`                          | OCR 子进程 Python 可执行文件（默认 `python`）                                | 否                            |
+| `OCR_TIMEOUT_MS`                       | OCR 子进程超时毫秒数（默认 60000）                                           | 否                            |
+| `DOCX_ZIP_MAX_ENTRIES`                 | DOCX ZIP 最大条目数（默认 10000）                                            | 否                            |
+| `DOCX_ZIP_MAX_ENTRY_SIZE_BYTES`        | DOCX 单条目解压大小上限                                                      | 否                            |
+| `DOCX_ZIP_MAX_TOTAL_SIZE_BYTES`        | DOCX 总解压大小上限                                                          | 否                            |
+| `DOCX_ZIP_MAX_DOCUMENT_XML_SIZE_BYTES` | DOCX 正文 XML 大小上限                                                       | 否                            |
+| `PPTX_ZIP_MAX_ENTRIES`                 | PPTX ZIP 最大条目数（默认 10000）                                            | 否                            |
+| `PPTX_ZIP_MAX_ENTRY_SIZE_BYTES`        | PPTX 单条目解压大小上限                                                      | 否                            |
+| `PPTX_ZIP_MAX_TOTAL_SIZE_BYTES`        | PPTX 总解压大小上限                                                          | 否                            |
+| `PPTX_ZIP_MAX_SLIDE_XML_SIZE_BYTES`    | PPTX 单页 XML 大小上限                                                       | 否                            |
+| `AI_PROVIDERS`                         | OpenAI-compatible Provider JSON 数组；按 `priority` 升序失败切换并冷却       | 否；优先于 legacy 单 Provider |
+| `AI_TIMEOUT_MS`                        | 单次 AI 请求超时毫秒数（默认 60000）                                         | 否                            |
+| `AI_BASE_URL`                          | legacy 单 Provider Base URL；仅 `AI_PROVIDERS` 为空时使用                    | 否                            |
+| `AI_API_KEY`                           | legacy 单 Provider API Key；仅 `AI_PROVIDERS` 为空时使用                     | 否                            |
+| `AI_MODEL`                             | legacy 单 Provider 模型名；仅 `AI_PROVIDERS` 为空时使用                      | 否                            |
+| `SMTP_HOST`                            | QQ SMTP 主机（默认 `smtp.qq.com`）                                           | 渠道启用时必填                |
+| `SMTP_PORT`                            | QQ SMTP 端口（默认 465）                                                     | 否                            |
+| `SMTP_SECURE`                          | 是否启用 SSL/TLS                                                             | 否                            |
+| `SMTP_USER`                            | QQ 邮箱账号                                                                  | 渠道启用时必填                |
+| `SMTP_AUTH_CODE`                       | QQ SMTP 授权码；不得进入日志或提交                                           | 渠道启用时必填                |
+| `SMTP_TO`                              | 收件邮箱                                                                     | 渠道启用时必填                |
+| `FEISHU_WEBHOOK_URL`                   | 飞书 Webhook；不得进入日志或提交                                             | 渠道启用时必填                |
+| `VITE_API_BASE_URL`                    | 前端 API/开发代理基础地址；仅来自前端进程环境或 `packages/frontend` env 文件 | 否                            |
 
 所有 `/api` 路由统一执行 loopback Origin 校验。默认允许 Vite 开发端口 `5173` 与 preview/Playwright 端口 `4173`；无 `Origin` 的本机 CLI 请求允许通过。配置 POST 额外只接受 JSON。`CONFIG_ALLOWED_ORIGINS` 不接受远程 host、`*`、凭据、路径、查询或 fragment。
 
@@ -289,7 +289,6 @@ git diff --check
 ```powershell
 Invoke-RestMethod http://localhost:3000/api/health
 ```
-
 
 ## S7-MVP 后端补充规则（2026-07-25）
 

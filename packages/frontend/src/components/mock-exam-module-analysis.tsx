@@ -21,8 +21,8 @@ export function MockExamModuleAnalysis({ analyses }: MockExamModuleAnalysisProps
           <li key={analysis.knowledgeModuleId}>
             <strong>{analysis.knowledgeModuleId}</strong>
             <span>
-              {analysis.correctCount}/{analysis.questionCount} 题 · {analysis.scoreAwarded}/{analysis.totalPoints} 分 · 正确率{' '}
-              {formatPercent(analysis.correctRate)}
+              {analysis.correctCount}/{analysis.questionCount} 题 · {analysis.scoreAwarded}/{analysis.totalPoints} 分 ·
+              正确率 {formatPercent(analysis.correctRate)}
             </span>
             {analysis.weakSignal && <em>需要重点复习</em>}
           </li>

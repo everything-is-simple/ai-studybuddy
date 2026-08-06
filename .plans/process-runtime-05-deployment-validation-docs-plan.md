@@ -13,6 +13,7 @@
 ### Task 1: 部署包构建
 
 **Files:**
+
 - Create: `scripts/build-deployment-package.ps1`
 - Create: `deployment/README-Windows.md`
 - Test: `packages/backend/test/deployment-package-script.test.mjs`
@@ -24,6 +25,7 @@
 ### Task 2: 文档同步
 
 **Files:**
+
 - Modify: `docs/00-文档索引-Index.md`
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify: `docs/06-本地目录治理-Dev-Environment.md`
@@ -38,6 +40,7 @@
 ### Task 3: 完整验收与主线收口
 
 **Files:**
+
 - Create: `.plans/evidence/process-runtime-deployment-20260723.md`
 
 - [ ] **Step 1: 分支运行 type-check、双端 build、全量 test、完整 E2E（`H:\ai-studybuddy-tmp\runs\...`）、OCR smoke、生产启停、安装检查、部署包扫描、备份恢复。**

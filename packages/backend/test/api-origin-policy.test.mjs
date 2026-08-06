@@ -3,10 +3,7 @@ import http from 'node:http';
 import test from 'node:test';
 import express from 'express';
 
-import {
-  createApiOriginPolicy,
-  parseAllowedOrigins,
-} from '../dist/middleware/api-origin-policy.js';
+import { createApiOriginPolicy, parseAllowedOrigins } from '../dist/middleware/api-origin-policy.js';
 
 async function withServer(t, allowedOrigins) {
   const app = express();
@@ -71,10 +68,13 @@ test('Origin additions reject remote, wildcard, credentials, paths, and missing 
     'http://localhost:4174/path',
     'http://localhost',
   ]) {
-    assert.throws(() => parseAllowedOrigins(value), (error) => {
-      assert.equal(error.code, 'CONFIG_ALLOWED_ORIGINS_INVALID');
-      assert.equal(error.message.includes(value), false);
-      return true;
-    });
+    assert.throws(
+      () => parseAllowedOrigins(value),
+      (error) => {
+        assert.equal(error.code, 'CONFIG_ALLOWED_ORIGINS_INVALID');
+        assert.equal(error.message.includes(value), false);
+        return true;
+      }
+    );
   }
 });

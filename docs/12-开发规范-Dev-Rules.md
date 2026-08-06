@@ -202,13 +202,13 @@ git status --short --branch
 
 ## 七、验证矩阵
 
-| 任务类型 | 必跑验证 | 可能需要的补充验证 |
-| --- | --- | --- |
-| 纯文档 | `scripts/check-docs-governance.ps1`、`git diff --check` | 一致性搜索、Markdown 链接抽查 |
-| 后端 API / Worker | `pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/backend run test` 或 `pnpm test` | curl smoke、真实文件转换、重启后读回 |
-| 前端页面 | `pnpm type-check`、前端 build/test、`pnpm test` | 浏览器截图、刷新/空状态/错误状态验证 |
-| 跨端闭环 | `pnpm type-check`、`pnpm build`、`pnpm test` | 隔离 `APP_DATA_ROOT` 的浏览器端到端验收 |
-| Provider / 真实外部调用 | 单测脱敏、隔离数据根、预算明确 | 真实 Provider 只记录短哈希、状态、token、耗时、模型和脱敏错误摘要 |
+| 任务类型                | 必跑验证                                                                                                                   | 可能需要的补充验证                                                |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 纯文档                  | `scripts/check-docs-governance.ps1`、`git diff --check`                                                                    | 一致性搜索、Markdown 链接抽查                                     |
+| 后端 API / Worker       | `pnpm type-check`、`pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/backend run test` 或 `pnpm test` | curl smoke、真实文件转换、重启后读回                              |
+| 前端页面                | `pnpm type-check`、前端 build/test、`pnpm test`                                                                            | 浏览器截图、刷新/空状态/错误状态验证                              |
+| 跨端闭环                | `pnpm type-check`、`pnpm build`、`pnpm test`                                                                               | 隔离 `APP_DATA_ROOT` 的浏览器端到端验收                           |
+| Provider / 真实外部调用 | 单测脱敏、隔离数据根、预算明确                                                                                             | 真实 Provider 只记录短哈希、状态、token、耗时、模型和脱敏错误摘要 |
 
 运行会写数据的命令前，优先设置隔离目录，例如：
 

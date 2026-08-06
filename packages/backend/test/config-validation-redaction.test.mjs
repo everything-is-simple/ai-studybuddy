@@ -49,15 +49,41 @@ async function postJson(url, body) {
 test('config validation errors expose fixed codes without provider, smtp, or webhook values', async (t) => {
   const base = await createApi(t);
   const cases = [
-    [`${base}/ai/test-and-activate`, {
-      providers: [{ kind: 'custom', name: 'p', baseUrl: 'ftp://phase3-t02c-provider.invalid/v1', apiKey: 'phase3-t02c-api-key-sentinel', model: 'm', priority: 1 }],
-    }, 'CONFIG_URL_INVALID'],
-    [`${base}/smtp/test-and-activate`, {
-      host: 'smtp.phase3-t02c.invalid', port: 70000, secure: true, user: 'phase3-t02c-smtp-user-sentinel@example.invalid', authCode: 'phase3-t02c-smtp-auth-sentinel', to: 'phase3-t02c-smtp-to-sentinel@example.invalid',
-    }, 'CONFIG_SMTP_PORT_INVALID'],
-    [`${base}/feishu/test-and-activate`, {
-      webhookUrl: 'http://phase3-t02c-webhook.invalid/open-robot/send?token=secret',
-    }, 'CONFIG_URL_INVALID'],
+    [
+      `${base}/ai/test-and-activate`,
+      {
+        providers: [
+          {
+            kind: 'custom',
+            name: 'p',
+            baseUrl: 'ftp://phase3-t02c-provider.invalid/v1',
+            apiKey: 'phase3-t02c-api-key-sentinel',
+            model: 'm',
+            priority: 1,
+          },
+        ],
+      },
+      'CONFIG_URL_INVALID',
+    ],
+    [
+      `${base}/smtp/test-and-activate`,
+      {
+        host: 'smtp.phase3-t02c.invalid',
+        port: 70000,
+        secure: true,
+        user: 'phase3-t02c-smtp-user-sentinel@example.invalid',
+        authCode: 'phase3-t02c-smtp-auth-sentinel',
+        to: 'phase3-t02c-smtp-to-sentinel@example.invalid',
+      },
+      'CONFIG_SMTP_PORT_INVALID',
+    ],
+    [
+      `${base}/feishu/test-and-activate`,
+      {
+        webhookUrl: 'http://phase3-t02c-webhook.invalid/open-robot/send?token=secret',
+      },
+      'CONFIG_URL_INVALID',
+    ],
   ];
 
   for (const [url, body, code] of cases) {
@@ -75,15 +101,48 @@ test('connection test failures keep fixed sanitized summaries only', async (t) =
       activated: false,
       test: {
         pass: false,
-        errorCode: channel === 'ai' ? 'AI_AUTH_FAILED' : channel === 'smtp' ? 'SMTP_AUTH_FAILED' : 'FEISHU_WEBHOOK_REJECTED',
-        sanitizedMessage: channel === 'ai' ? 'AI Provider 身份验证失败' : channel === 'smtp' ? 'SMTP 身份验证失败' : '飞书 Webhook 拒绝了测试请求',
+        errorCode:
+          channel === 'ai' ? 'AI_AUTH_FAILED' : channel === 'smtp' ? 'SMTP_AUTH_FAILED' : 'FEISHU_WEBHOOK_REJECTED',
+        sanitizedMessage:
+          channel === 'ai'
+            ? 'AI Provider 身份验证失败'
+            : channel === 'smtp'
+              ? 'SMTP 身份验证失败'
+              : '飞书 Webhook 拒绝了测试请求',
       },
     }),
   });
   const requests = [
-    [`${base}/ai/test-and-activate`, { providers: [{ kind: 'custom', name: 'p', baseUrl: 'https://phase3-t02c-provider.invalid/v1', apiKey: 'phase3-t02c-api-key-sentinel', model: 'm', priority: 1 }] }],
-    [`${base}/smtp/test-and-activate`, { host: 'smtp.phase3-t02c.invalid', port: 465, secure: true, user: 'phase3-t02c-smtp-user-sentinel@example.invalid', authCode: 'phase3-t02c-smtp-auth-sentinel', to: 'phase3-t02c-smtp-to-sentinel@example.invalid' }],
-    [`${base}/feishu/test-and-activate`, { webhookUrl: 'https://phase3-t02c-webhook.invalid/open-robot/send?token=secret' }],
+    [
+      `${base}/ai/test-and-activate`,
+      {
+        providers: [
+          {
+            kind: 'custom',
+            name: 'p',
+            baseUrl: 'https://phase3-t02c-provider.invalid/v1',
+            apiKey: 'phase3-t02c-api-key-sentinel',
+            model: 'm',
+            priority: 1,
+          },
+        ],
+      },
+    ],
+    [
+      `${base}/smtp/test-and-activate`,
+      {
+        host: 'smtp.phase3-t02c.invalid',
+        port: 465,
+        secure: true,
+        user: 'phase3-t02c-smtp-user-sentinel@example.invalid',
+        authCode: 'phase3-t02c-smtp-auth-sentinel',
+        to: 'phase3-t02c-smtp-to-sentinel@example.invalid',
+      },
+    ],
+    [
+      `${base}/feishu/test-and-activate`,
+      { webhookUrl: 'https://phase3-t02c-webhook.invalid/open-robot/send?token=secret' },
+    ],
   ];
 
   for (const [url, body] of requests) {

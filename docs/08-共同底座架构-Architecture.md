@@ -24,19 +24,19 @@
 
 ## 二、最小组件与目录边界
 
-| 能力       | 当前默认组件                                                                   | 必须遵守的边界                                                                                |
-| ---------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| 本地 Web   | Express                                                                        | 只监听 `127.0.0.1`；孩子从本机浏览器使用                                                      |
-| 数据库     | `GlobalCatalogDatabase` + `SemesterDatabase`（均为 SQLite + `better-sqlite3`） | 全局库只存索引与配置；每学期一库，WAL、单 Node 写进程、关闭后备份                             |
-| 文件       | Node `fs` + `StorageAdapter`                                                   | 业务数据只存 `storage_key`，按学期/课程实例隔离，拒绝路径逃逸                                 |
-| 持久化任务 | SQLite `jobs` + 单进程 Worker                                                  | 串行领取、有限重试、过期 running 恢复；任务归属到学期库                                       |
-| OCR        | RapidOCR Python 子进程                                                         | stdin/参数只传文件路径；stdout 仅 JSON；用完退出；失败可转入分级 fallback                     |
-| AI         | `AiProviderRouter` + `OpenAiProvider` + 后续 `QualityGateService`              | 按 priority 首个成功返回；连续失败 5 次冷却 10 分钟，冷却期间跳过并保持 fallback                 |
-| 报告       | `ReportService`                                                                | 基于确定性证据聚合 INFO/SIGNAL/TREND；不读取资料正文、答案或聊天内容                          |
-| 邮件       | `nodemailer` + QQ SMTP                                                         | HTML 正式报告；运行时读取配置快照，不读取浏览器或 SQLite 明文秘密                             |
-| 飞书       | 自定义机器人 Webhook                                                           | 完整脱敏报告卡片；不暴露完整 URL                                                              |
-| 调度       | Windows Task Scheduler                                                         | 独立 `report.js`；不启动 OCR 或学习 Web 服务                                                  |
-| 配置保护   | `SecretProtector` + `@primno/dpapi`                                            | 当前 Windows 用户加密；active/prev 原子激活与恢复；密钥只进不出                               |
+| 能力       | 当前默认组件                                                                   | 必须遵守的边界                                                                   |
+| ---------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| 本地 Web   | Express                                                                        | 只监听 `127.0.0.1`；孩子从本机浏览器使用                                         |
+| 数据库     | `GlobalCatalogDatabase` + `SemesterDatabase`（均为 SQLite + `better-sqlite3`） | 全局库只存索引与配置；每学期一库，WAL、单 Node 写进程、关闭后备份                |
+| 文件       | Node `fs` + `StorageAdapter`                                                   | 业务数据只存 `storage_key`，按学期/课程实例隔离，拒绝路径逃逸                    |
+| 持久化任务 | SQLite `jobs` + 单进程 Worker                                                  | 串行领取、有限重试、过期 running 恢复；任务归属到学期库                          |
+| OCR        | RapidOCR Python 子进程                                                         | stdin/参数只传文件路径；stdout 仅 JSON；用完退出；失败可转入分级 fallback        |
+| AI         | `AiProviderRouter` + `OpenAiProvider` + 后续 `QualityGateService`              | 按 priority 首个成功返回；连续失败 5 次冷却 10 分钟，冷却期间跳过并保持 fallback |
+| 报告       | `ReportService`                                                                | 基于确定性证据聚合 INFO/SIGNAL/TREND；不读取资料正文、答案或聊天内容             |
+| 邮件       | `nodemailer` + QQ SMTP                                                         | HTML 正式报告；运行时读取配置快照，不读取浏览器或 SQLite 明文秘密                |
+| 飞书       | 自定义机器人 Webhook                                                           | 完整脱敏报告卡片；不暴露完整 URL                                                 |
+| 调度       | Windows Task Scheduler                                                         | 独立 `report.js`；不启动 OCR 或学习 Web 服务                                     |
+| 配置保护   | `SecretProtector` + `@primno/dpapi`                                            | 当前 Windows 用户加密；active/prev 原子激活与恢复；密钥只进不出                  |
 
 主系统位于 `I:\ai-studybuddy`；最小验证位于外部 `I:\ai-studybuddy-composer\windows-native`。后者不加入 workspace，不能被 `packages/` import。数据根目录通过 `APP_DATA_ROOT` 配置，开发机建议 `I:\ai-studybuddy-data`，成品可使用 `%LOCALAPPDATA%\AIStudyBuddy`。
 
@@ -227,7 +227,6 @@ G2 是**可验证的操作系统级离线隔离门禁**（Verifiable OS-level Eg
 - 文档采用 G2 语义不运行隔离、不下载或核验模型、不重跑 G1/G3，也不创建 `AuralConverter`、产品 API、Worker、Schema、前端或共享类型。真实平台隔离验证和所有产品实现仍须各自独立计划、审查与用户明确批准。
 
 当前总体结论仍为 `PARTIAL`：候选技术和若干前置能力证据不等于本地 ASR 已接入产品；G2 的跨平台强证据尚未执行，能力验证、产品接入与生产发布资格严格分离。
-
 
 ## S7-MVP 同步本地转写边界（2026-07-25，已完成主线复验并推送 `origin/master`）
 

@@ -262,7 +262,8 @@ function buttonContaining(label: string): HTMLButtonElement {
 }
 
 async function setInput(element: HTMLInputElement | HTMLSelectElement, value: string) {
-  const prototype = element instanceof HTMLSelectElement ? window.HTMLSelectElement.prototype : window.HTMLInputElement.prototype;
+  const prototype =
+    element instanceof HTMLSelectElement ? window.HTMLSelectElement.prototype : window.HTMLInputElement.prototype;
   const setter = Object.getOwnPropertyDescriptor(prototype, 'value')!.set!;
   await act(async () => {
     setter.call(element, value);
@@ -374,14 +375,12 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     const cramPlanMock = getCramPlan as unknown as ReturnType<typeof vi.fn>;
     const otherExam = allExams.find((exam) => exam.id === OTHER_EXAM_ID);
     let resolveOtherPlan: ((plan: any) => void) | undefined;
-    cramPlanMock
-      .mockResolvedValueOnce(makeAvailableCramPlan(currentExam))
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            resolveOtherPlan = resolve;
-          })
-      );
+    cramPlanMock.mockResolvedValueOnce(makeAvailableCramPlan(currentExam)).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveOtherPlan = resolve;
+        })
+    );
 
     await renderWorkbench();
     expect(container.querySelector('[data-testid="workbench-cram"]')?.textContent).toContain(
@@ -536,7 +535,11 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
     await renderWorkbench();
 
     const { getTimeline } = await import('../src/api/study-rhythm-api');
-    expect(getTimeline).toHaveBeenCalledWith('semester-1', { limit: 8, courseInstanceId: COURSE_A.id }, expect.any(AbortSignal));
+    expect(getTimeline).toHaveBeenCalledWith(
+      'semester-1',
+      { limit: 8, courseInstanceId: COURSE_A.id },
+      expect.any(AbortSignal)
+    );
 
     const timeline = container.querySelector('[data-testid="recent-study-activity"]');
     expect(timeline?.textContent).toContain('考试日期已确认');
@@ -573,9 +576,9 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
   it('时间线失败只影响活动区，并可局部重试', async () => {
     const { getTimeline } = await import('../src/api/study-rhythm-api');
     const timelineMock = getTimeline as unknown as ReturnType<typeof vi.fn>;
-    timelineMock.mockRejectedValueOnce(new Error('近期活动加载失败')).mockResolvedValueOnce([
-      timelineEvent('S3', 'practice_completed'),
-    ]);
+    timelineMock
+      .mockRejectedValueOnce(new Error('近期活动加载失败'))
+      .mockResolvedValueOnce([timelineEvent('S3', 'practice_completed')]);
 
     await renderWorkbench();
 
@@ -620,7 +623,9 @@ describe('ExamWorkbenchPage 考试项目闭环', () => {
       expect.any(AbortSignal)
     );
 
-    await act(async () => resolveCourseB?.([timelineEvent('S4', 'mistake_reviewed', { courseInstanceId: COURSE_B.id })]));
+    await act(async () =>
+      resolveCourseB?.([timelineEvent('S4', 'mistake_reviewed', { courseInstanceId: COURSE_B.id })])
+    );
     await flush();
 
     const completedTimeline = container.querySelector('[data-testid="recent-study-activity"]');

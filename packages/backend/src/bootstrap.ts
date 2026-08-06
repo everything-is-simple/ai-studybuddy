@@ -10,7 +10,9 @@ import {
   openReadOnlyExistingDbAtPath,
   runIntegrityCheck,
   getAllActiveSemesterDbPaths,
+  checkpointAndClose,
 } from './db/connection';
+import { initGlobalDbAtPath } from './db/migrations';
 
 export interface BackendController {
   server: Server;
@@ -25,9 +27,17 @@ export interface BackendController {
 function performStartupIntegrityCheck(log?: (message: string) => void): void {
   const failures: string[] = [];
 
+  // 首次启动允许初始化空的数据根；已有数据库仍必须通过只读完整性检查。
+  // 部署检查契约明确约定：没有数据库时，首次启动将初始化它；这不等同于放过已有损坏库。
+  const globalDbPath = getGlobalDbPath();
+  if (!fs.existsSync(globalDbPath)) {
+    const initializedDb = initGlobalDbAtPath(globalDbPath);
+    checkpointAndClose(initializedDb);
+    log?.('[DATABASE] STARTUP_GLOBAL_INITIALIZED');
+  }
+
   // 检查全局库
   try {
-    const globalDbPath = getGlobalDbPath();
     const globalDb = openReadOnlyExistingDbAtPath(globalDbPath);
     try {
       const result = runIntegrityCheck(globalDb);
@@ -77,7 +87,7 @@ function performStartupIntegrityCheck(log?: (message: string) => void): void {
     const summaryMsg = `[DATABASE] STARTUP_INTEGRITY_ALL_FAILED count=${failures.length}`;
     log?.(summaryMsg);
     console.error(summaryMsg);
-    failures.forEach(f => console.error(f));
+    failures.forEach((f) => console.error(f));
     process.exitCode = 1;
     throw new Error('Database integrity check failed at startup');
   }

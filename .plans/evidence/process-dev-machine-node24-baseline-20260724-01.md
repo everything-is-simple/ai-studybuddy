@@ -33,15 +33,15 @@
 
 ## 4. 最终 Node 24 包的实际路径
 
-| 步骤 | 输入 / 断言 | 结果 |
-| --- | --- | --- |
-| 构建部署包 | `build-deployment-package.ps1` | exit `0` |
-| Bootstrap | `bootstrap-runtime.ps1`，固定 Python 3.10.19 | exit `0`；生产 Node 依赖和受控 RapidOCR venv 创建成功 |
-| 安装检查 | `check-installation.ps1` | exit `0`；Node `v24.14.0`、Python x64、RapidOCR import、目录与回环配置均通过；服务未启动/首次无数据库仅为预期 warning |
-| OCR | `test-ocr-runtime.ps1` | exit `0`；合成中文图识别到“人工智能学习助手”，空白、损坏和缺失文件契约及临时清理通过 |
-| 启动和健康 | `start-production.ps1 -Port 30126`，随后 `GET http://127.0.0.1:30126/api/health` | exit `0`；`success=true`，监听地址仅 `127.0.0.1` |
-| 停止 | `stop-production.ps1` | exit `0`；`run\backend.pid` 删除，隔离安装根关联的 Node 进程为 `0` |
-| 数据安全 | 仅统计类别与路径，不输出配置值 | exit `0`；无明文外部配置、无 active 加密外部配置、无包禁入项、无安装根外数据库 |
+| 步骤       | 输入 / 断言                                                                      | 结果                                                                                                                  |
+| ---------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 构建部署包 | `build-deployment-package.ps1`                                                   | exit `0`                                                                                                              |
+| Bootstrap  | `bootstrap-runtime.ps1`，固定 Python 3.10.19                                     | exit `0`；生产 Node 依赖和受控 RapidOCR venv 创建成功                                                                 |
+| 安装检查   | `check-installation.ps1`                                                         | exit `0`；Node `v24.14.0`、Python x64、RapidOCR import、目录与回环配置均通过；服务未启动/首次无数据库仅为预期 warning |
+| OCR        | `test-ocr-runtime.ps1`                                                           | exit `0`；合成中文图识别到“人工智能学习助手”，空白、损坏和缺失文件契约及临时清理通过                                  |
+| 启动和健康 | `start-production.ps1 -Port 30126`，随后 `GET http://127.0.0.1:30126/api/health` | exit `0`；`success=true`，监听地址仅 `127.0.0.1`                                                                      |
+| 停止       | `stop-production.ps1`                                                            | exit `0`；`run\backend.pid` 删除，隔离安装根关联的 Node 进程为 `0`                                                    |
+| 数据安全   | 仅统计类别与路径，不输出配置值                                                   | exit `0`；无明文外部配置、无 active 加密外部配置、无包禁入项、无安装根外数据库                                        |
 
 完整原始命令输出保留在隔离运行目录，未加入 Git。
 

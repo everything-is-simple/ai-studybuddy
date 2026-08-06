@@ -17,16 +17,10 @@ test.after(async () => {
   await rm(fixtureRoot, { recursive: true, force: true });
 });
 
-const {
-  RuntimeLogBoundary,
-  RuntimeLogBoundaryError,
-  createSiblingRuntimeLogBoundary,
-  toSafeLogErrorCode,
-} = await import('../dist/utils/runtime-log-boundary.js');
-const {
-  SemesterInitializationError,
-  createMaintenanceFailureLogEntry,
-} = await import('../dist/db/semester-initializer.js');
+const { RuntimeLogBoundary, RuntimeLogBoundaryError, createSiblingRuntimeLogBoundary, toSafeLogErrorCode } =
+  await import('../dist/utils/runtime-log-boundary.js');
+const { SemesterInitializationError, createMaintenanceFailureLogEntry } =
+  await import('../dist/db/semester-initializer.js');
 const { aiLogger } = await import('../dist/utils/ai-logger.js');
 
 function maintenanceEntry() {
@@ -129,7 +123,12 @@ test('error and AI console logging keep raw exception values out of output', () 
   assert.equal(output[0].includes(secret), false);
   assert.equal(output[0].includes(fixtureRoot), false);
   assert.deepEqual(Object.keys(JSON.parse(output[0])).sort(), [
-    'errorCode', 'event', 'level', 'provider', 'taskType', 'timestamp',
+    'errorCode',
+    'event',
+    'level',
+    'provider',
+    'taskType',
+    'timestamp',
   ]);
 });
 

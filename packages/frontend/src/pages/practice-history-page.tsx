@@ -83,10 +83,16 @@ export function PracticeHistoryPage() {
       </div>
 
       <form className="history-filter-form panel" onSubmit={handleSubmit}>
-        <label>课程 ID
-          <input name="courseInstanceId" defaultValue={filters.courseInstanceId ?? ''} placeholder="可选 courseInstanceId" />
+        <label>
+          课程 ID
+          <input
+            name="courseInstanceId"
+            defaultValue={filters.courseInstanceId ?? ''}
+            placeholder="可选 courseInstanceId"
+          />
         </label>
-        <label>状态
+        <label>
+          状态
           <select name="status" defaultValue={filters.status ?? ''}>
             <option value="">全部</option>
             <option value="graded">已评分</option>
@@ -94,29 +100,41 @@ export function PracticeHistoryPage() {
             <option value="in_progress">进行中</option>
           </select>
         </label>
-        <label>开始日期
+        <label>
+          开始日期
           <input type="date" name="dateFrom" defaultValue={filters.dateFrom ?? ''} />
         </label>
-        <label>结束日期
+        <label>
+          结束日期
           <input type="date" name="dateTo" defaultValue={filters.dateTo ?? ''} />
         </label>
         <button type="submit">筛选</button>
       </form>
 
-      {error && <p className="feedback error" role="alert">{error}</p>}
-      {loading ? <PageState state="loading" title="正在加载练习历史" /> : data.items.length === 0 ? (
+      {error && (
+        <p className="feedback error" role="alert">
+          {error}
+        </p>
+      )}
+      {loading ? (
+        <PageState state="loading" title="正在加载练习历史" />
+      ) : data.items.length === 0 ? (
         <PageState state="empty" title="暂无练习历史" message="完成并评分的练习会出现在这里。" />
       ) : (
         <section className="panel">
           <h2>历史记录</h2>
-          <p className="page-intro">共 {data.pagination.total} 条，当前第 {data.pagination.page} 页。</p>
+          <p className="page-intro">
+            共 {data.pagination.total} 条，当前第 {data.pagination.page} 页。
+          </p>
           <ul className="practice-history-list">
             {data.items.map((item) => (
               <li key={item.id} className="practice-history-item">
                 <div>
                   <strong>{item.courseName}</strong>
                   <span>{item.assessmentName ?? '未关联考试'}</span>
-                  <span>{item.gradedAt?.slice(0, 10) ?? item.submittedAt?.slice(0, 10) ?? item.startedAt.slice(0, 10)}</span>
+                  <span>
+                    {item.gradedAt?.slice(0, 10) ?? item.submittedAt?.slice(0, 10) ?? item.startedAt.slice(0, 10)}
+                  </span>
                 </div>
                 <div>
                   <span>{item.questionCount} 题</span>

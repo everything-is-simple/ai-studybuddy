@@ -8,29 +8,30 @@
 
 ## 一、当前有效文档
 
-| 编号 | 文档名 | 状态 | 用途 |
-| ---- | ------ | ---- | ---- |
-| 00 | [文档索引-Index.md](00-文档索引-Index.md) | ✅ 有效 | 本文件，文档导航、文档门禁和触发状态 |
-| 01 | [总PRD-产品需求-Product-Requirements.md](01-总PRD-产品需求-Product-Requirements.md) | ✅ 有效 | 系统为何存在、为谁而做、考试驱动学习闭环、MVP 与部署边界 |
-| 02 | [七子系统地图-Scenario-Systems.md](02-七子系统地图-Scenario-Systems.md) | ✅ 有效 | 七个场景子系统边界、共同业务对象、依赖关系、开发顺序 |
-| 03 | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md) | ✅ 有效 | S1 轻量 PRD，课程、考试、任务、StudyEvent 与时间线 |
-| 03b | [subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md](subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md) | ✅ 有效 | S2 轻量 PRD，资料上传/格式转换/AI 笔记/知识模块 |
-| 03c | [subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md](subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md) | ✅ 有效 | S3 轻量 PRD，知识模块驱动练习、客观题批改、练习记录 |
-| 03d | [subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md](subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md) | ✅ 有效 | S4 轻量 PRD，错误作答事实、错因确认、重做证据、薄弱点与掌握边界 |
-| 03f | [subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md](subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md) | ✅ 有效 | S5 轻量 PRD，模拟考、临考速背、冲刺计划与考前工作台入口边界 |
-| 03e | [subsystems/06-S6-家长观察子系统PRD-ParentReport.md](subsystems/06-S6-家长观察子系统PRD-ParentReport.md) | ✅ 有效 | S6 轻量 PRD，脱敏日报/周报/月报/考前提醒与家长报告隐私边界 |
-| 03g | [subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md](subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md) | ✅ 有效 | S7-MVP：受控本地 WAV、同步本机 ASR、可编辑文本与 S2 文本资料 handoff；完整 S7 另立门禁 |
-| 04 | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md) | ✅ 有效 | 阶段任务、执行顺序、完成门槛和验证结论 |
-| 05 | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md) | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准 |
-| 06 | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md) | ✅ 有效 | `H:\ai-studybuddy-*` 本地目录职责、外部试炼场、验证产物与单机数据边界 |
-| 07 | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md) | ✅ 有效 | 文档分层、子系统文档触发条件 |
-| 08 | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md) | ✅ 有效 | 共同底座架构、Adapter、Job、数据对象和跨子系统边界 |
-| 09 | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md) | ✅ 有效 | Phase 0.5/0.7/0.8 验收标准与证据规则 |
-| 10 | [后端开发规范-Backend-Guidelines.md](10-后端开发规范-Backend-Guidelines.md) | ✅ 有效 | 后端目录结构、SQLite、Adapter、AI Provider、日志和环境变量约定 |
-| 11 | [前端开发规范-Frontend-Guidelines.md](11-前端开发规范-Frontend-Guidelines.md) | ✅ 有效 | React/Vite 前端结构、API 信封、上传轮询、笔记渲染安全与 T08 验收规范 |
-| 12 | [开发规范-Dev-Rules.md](12-开发规范-Dev-Rules.md) | ✅ 有效 | 工具无关 16 步协作流程、分支/worktree、多 Agent、验证、隐私和提交规则 |
-| 13 | [部署运维指南-Deployment.md](13-部署运维指南-Deployment.md) | ✅ 有效 | Windows 原生部署包、受控前置运行时、生产启停、检查、备份恢复、升级回滚和任务计划 |
-| 15 | [前端信息架构与界面范围研究-Frontend-Information-Architecture.md](15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md) | ✅ 有效 | 基于当前路由和产品边界研究学生端信息架构、页面范围与后续界面候选项；不替代独立实施门禁 |
+| 编号 | 文档名                                                                                                                                | 状态    | 用途                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| 00   | [文档索引-Index.md](00-文档索引-Index.md)                                                                                             | ✅ 有效 | 本文件，文档导航、文档门禁和触发状态                                                   |
+| 01   | [总PRD-产品需求-Product-Requirements.md](01-总PRD-产品需求-Product-Requirements.md)                                                   | ✅ 有效 | 系统为何存在、为谁而做、考试驱动学习闭环、MVP 与部署边界                               |
+| 02   | [七子系统地图-Scenario-Systems.md](02-七子系统地图-Scenario-Systems.md)                                                               | ✅ 有效 | 七个场景子系统边界、共同业务对象、依赖关系、开发顺序                                   |
+| 03   | [subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md](subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md)                                  | ✅ 有效 | S1 轻量 PRD，课程、考试、任务、StudyEvent 与时间线                                     |
+| 03b  | [subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md](subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md)                                | ✅ 有效 | S2 轻量 PRD，资料上传/格式转换/AI 笔记/知识模块                                        |
+| 03c  | [subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md](subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md)                          | ✅ 有效 | S3 轻量 PRD，知识模块驱动练习、客观题批改、练习记录                                    |
+| 03d  | [subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md](subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md)                                  | ✅ 有效 | S4 轻量 PRD，错误作答事实、错因确认、重做证据、薄弱点与掌握边界                        |
+| 03f  | [subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md](subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md)                                | ✅ 有效 | S5 轻量 PRD，模拟考、临考速背、冲刺计划与考前工作台入口边界                            |
+| 03e  | [subsystems/06-S6-家长观察子系统PRD-ParentReport.md](subsystems/06-S6-家长观察子系统PRD-ParentReport.md)                              | ✅ 有效 | S6 轻量 PRD，脱敏日报/周报/月报/考前提醒与家长报告隐私边界                             |
+| 03g  | [subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md](subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md)                              | ✅ 有效 | S7-MVP：受控本地 WAV、同步本机 ASR、可编辑文本与 S2 文本资料 handoff；完整 S7 另立门禁 |
+| 04   | [开发任务清单-Todo-List.md](04-开发任务清单-Todo-List.md)                                                                             | ✅ 有效 | 阶段任务、执行顺序、完成门槛和验证结论                                                 |
+| 05   | [开源组件装配-Open-Source-Foundation.md](05-开源组件装配-Open-Source-Foundation.md)                                                   | ✅ 有效 | 成熟开源组件先行装配规则、smoke test 标准                                              |
+| 06   | [本地目录治理-Dev-Environment.md](06-本地目录治理-Dev-Environment.md)                                                                 | ✅ 有效 | `H:\ai-studybuddy-*` 本地目录职责、外部试炼场、验证产物与单机数据边界                  |
+| 07   | [文档策略-Design-Docs-Strategy.md](07-文档策略-Design-Docs-Strategy.md)                                                               | ✅ 有效 | 文档分层、子系统文档触发条件                                                           |
+| 08   | [共同底座架构-Architecture.md](08-共同底座架构-Architecture.md)                                                                       | ✅ 有效 | 共同底座架构、Adapter、Job、数据对象和跨子系统边界                                     |
+| 09   | [测试验收计划-Test-Plan.md](09-测试验收计划-Test-Plan.md)                                                                             | ✅ 有效 | Phase 0.5/0.7/0.8 验收标准与证据规则                                                   |
+| 10   | [后端开发规范-Backend-Guidelines.md](10-后端开发规范-Backend-Guidelines.md)                                                           | ✅ 有效 | 后端目录结构、SQLite、Adapter、AI Provider、日志和环境变量约定                         |
+| 11   | [前端开发规范-Frontend-Guidelines.md](11-前端开发规范-Frontend-Guidelines.md)                                                         | ✅ 有效 | React/Vite 前端结构、API 信封、上传轮询、笔记渲染安全与 T08 验收规范                   |
+| 12   | [开发规范-Dev-Rules.md](12-开发规范-Dev-Rules.md)                                                                                     | ✅ 有效 | 工具无关 16 步协作流程、分支/worktree、多 Agent、验证、隐私和提交规则                  |
+| 13   | [部署运维指南-Deployment.md](13-部署运维指南-Deployment.md)                                                                           | ✅ 有效 | Windows 原生部署包、受控前置运行时、生产启停、检查、备份恢复、升级回滚和任务计划       |
+| 14   | [项目代码百科-Code-Wiki.md](14-项目代码百科-Code-Wiki.md)                                                                             | ✅ 有效 | 系统代码、部署边界与模块导航百科；用于测试、维护与审计定位                             |
+| 15   | [前端信息架构与界面范围研究-Frontend-Information-Architecture.md](15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md) | ✅ 有效 | 基于当前路由和产品边界研究学生端信息架构、页面范围与后续界面候选项；不替代独立实施门禁 |
 
 ---
 
@@ -48,29 +49,29 @@
 
 ## 二、子系统轻量 PRD 触发规则
 
-| 子系统 | PRD 文档 | 当前状态 | 触发条件 |
-| ------ | -------- | -------- | -------- |
-| S1 学习节奏 | `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 必需 |
-| S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | ✅ 已创建，MVP 已实现 | Phase 0.8 开始开发 S2 前触发 |
-| S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ MVP 已完成：Schema、生成、提交批改与前端闭环均已验收 | S2 MVP 完成后触发 |
-| S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收 | S3 MVP 完成后触发 |
-| S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` | ✅ Phase 2-T01–T06 与 POST-PHASE2 全系统验证、完整 E2E、文档对齐和主线复验均已完成并推送 | Phase 2 已触发并完成 |
-| S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md` | ✅ T06A 规则报告生成与 T06B 渠道推送已实现；真实渠道 smoke 非常规验证 | Phase 1 后期、准备正式发送家长报告前触发 |
-| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` | ✅ S7-MVP 已完成主线复验并推送 `origin/master`：受控 WAV 同步转写、编辑、显式保存为 S2 文本资料；旧候选能力仍为 `PARTIAL`/历史事实 | 不含 Worker、FFmpeg、云端、G2、实时录音、用户机验收或完整 S7 |
+| 子系统      | PRD 文档                                               | 当前状态                                                                                                                           | 触发条件                                                     |
+| ----------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| S1 学习节奏 | `subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md`     | ✅ 已创建，MVP 已实现                                                                                                              | Phase 0.8 必需                                               |
+| S2 资料笔记 | `subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md`    | ✅ 已创建，MVP 已实现                                                                                                              | Phase 0.8 开始开发 S2 前触发                                 |
+| S3 限时练习 | `subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | ✅ MVP 已完成：Schema、生成、提交批改与前端闭环均已验收                                                                            | S2 MVP 完成后触发                                            |
+| S4 错题改错 | `subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`     | ✅ MVP 闭环已完成：T04A Schema/归档、T04B 错题改错前端与 T05 回流规则均已验收                                                      | S3 MVP 完成后触发                                            |
+| S5 期末冲刺 | `subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`    | ✅ Phase 2-T01–T06 与 POST-PHASE2 全系统验证、完整 E2E、文档对齐和主线复验均已完成并推送                                           | Phase 2 已触发并完成                                         |
+| S6 家长观察 | `subsystems/06-S6-家长观察子系统PRD-ParentReport.md`   | ✅ T06A 规则报告生成与 T06B 渠道推送已实现；真实渠道 smoke 非常规验证                                                              | Phase 1 后期、准备正式发送家长报告前触发                     |
+| S7 课堂采集 | `subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`   | ✅ S7-MVP 已完成主线复验并推送 `origin/master`：受控 WAV 同步转写、编辑、显式保存为 S2 文本资料；旧候选能力仍为 `PARTIAL`/历史事实 | 不含 Worker、FFmpeg、云端、G2、实时录音、用户机验收或完整 S7 |
 
 ---
 
 ## 三、未来文档触发条件
 
-| 文档 | 触发条件 | 当前状态 |
-| ---- | -------- | -------- |
-| 08-共同底座架构-Architecture.md | 设计共同数据模型、队列、对象存储、AI Provider、Adapter 前 | ✅ 已创建（Phase 0.7/0.8） |
-| 09-测试验收计划-Test-Plan.md | 调通第一个开源组件 smoke test 前 | ✅ 已创建（Phase 0.5） |
-| 10-后端开发规范-Backend-Guidelines.md | 写第一个后端服务 / Adapter / API / Worker 前 | ✅ 已创建（Phase 0.8 T03） |
-| 11-前端开发规范-Frontend-Guidelines.md | 写第一个正式前端页面前 | ✅ 已创建（Phase 0.8 T08） |
-| 12-开发规范-Dev-Rules.md | 多 AI / 多分支 / 多 worktree 协作时 | ✅ 已创建（Phase 1-T00） |
-| 13-部署运维指南-Deployment.md | Phase 1 完成后准备部署时 | ✅ 已创建（PROCESS-RUNTIME-DEPLOY） |
-| 14-安全与隐私-Security-Privacy.md | Phase 1 后期或真实家庭试用前 | 未触发 |
+| 文档                                   | 触发条件                                                  | 当前状态                            |
+| -------------------------------------- | --------------------------------------------------------- | ----------------------------------- |
+| 08-共同底座架构-Architecture.md        | 设计共同数据模型、队列、对象存储、AI Provider、Adapter 前 | ✅ 已创建（Phase 0.7/0.8）          |
+| 09-测试验收计划-Test-Plan.md           | 调通第一个开源组件 smoke test 前                          | ✅ 已创建（Phase 0.5）              |
+| 10-后端开发规范-Backend-Guidelines.md  | 写第一个后端服务 / Adapter / API / Worker 前              | ✅ 已创建（Phase 0.8 T03）          |
+| 11-前端开发规范-Frontend-Guidelines.md | 写第一个正式前端页面前                                    | ✅ 已创建（Phase 0.8 T08）          |
+| 12-开发规范-Dev-Rules.md               | 多 AI / 多分支 / 多 worktree 协作时                       | ✅ 已创建（Phase 1-T00）            |
+| 13-部署运维指南-Deployment.md          | Phase 1 完成后准备部署时                                  | ✅ 已创建（PROCESS-RUNTIME-DEPLOY） |
+| 14-安全与隐私-Security-Privacy.md      | Phase 1 后期或真实家庭试用前                              | 未触发                              |
 
 ---
 
@@ -173,24 +174,24 @@ git diff --check
 
 ## 八、版本历史
 
-| 版本 | 日期 | 变更 |
-| ---- | ---- | ---- |
-| v2.63 | 2026-07-28 | 澄清 `6.3` 中 2026-07-27 的历史冻结记录已由同日 `PHASE3-REOPEN-HIGH-WEIGHT-20260728` 对指定 11 项有限替代；未纳入任务继续暂停，未表示 T02 或 Phase 3 完成。 |
-| v2.62 | 2026-07-28 | 同步用户重新开放 Phase 3 高权重必做项的恢复计划：仅纳入 T02-R1、T02-R2、T04-1～T04-3、T02-R3、T05-1～T05-3、T02-R4、T02-R6；计划待独立审查和逐项实施，不表示 T02、Phase 3、真实恢复、生产上线或用户电脑验收完成。 |
-| v2.61 | 2026-07-26 | T02G 已完成 P1 修复、独立审查、rebase、`master` 快进合并、合并后脚本/文档/类型复验并推送 `origin/master`（`6f5ecdd`）。该切片仅覆盖仓库外合成夹具边界；不表示 T02、Phase 3、真实 ACL/备份/恢复、生产上线或用户电脑验收完成。 |
-| v2.60 | 2026-07-26 | 同步 Phase 3 T02 实施事实：T02A–T02F 已各自完成主线复验并进入 `origin/master`；T02G 实现提交 `b5c6783` 已在任务分支完成合成夹具的路径/ACL 只读证据、v2 backup manifest 和 restore `-WhatIf` fail-closed 验证，正待独立审查/集成。该记录不表示 T02G、T02、Phase 3、安全审计、真实 ACL/备份/恢复、生产上线或用户电脑验收完成。 |
+| 版本  | 日期       | 变更                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v2.63 | 2026-07-28 | 澄清 `6.3` 中 2026-07-27 的历史冻结记录已由同日 `PHASE3-REOPEN-HIGH-WEIGHT-20260728` 对指定 11 项有限替代；未纳入任务继续暂停，未表示 T02 或 Phase 3 完成。                                                                                                                                                                                                                                                  |
+| v2.62 | 2026-07-28 | 同步用户重新开放 Phase 3 高权重必做项的恢复计划：仅纳入 T02-R1、T02-R2、T04-1～T04-3、T02-R3、T05-1～T05-3、T02-R4、T02-R6；计划待独立审查和逐项实施，不表示 T02、Phase 3、真实恢复、生产上线或用户电脑验收完成。                                                                                                                                                                                            |
+| v2.61 | 2026-07-26 | T02G 已完成 P1 修复、独立审查、rebase、`master` 快进合并、合并后脚本/文档/类型复验并推送 `origin/master`（`6f5ecdd`）。该切片仅覆盖仓库外合成夹具边界；不表示 T02、Phase 3、真实 ACL/备份/恢复、生产上线或用户电脑验收完成。                                                                                                                                                                                 |
+| v2.60 | 2026-07-26 | 同步 Phase 3 T02 实施事实：T02A–T02F 已各自完成主线复验并进入 `origin/master`；T02G 实现提交 `b5c6783` 已在任务分支完成合成夹具的路径/ACL 只读证据、v2 backup manifest 和 restore `-WhatIf` fail-closed 验证，正待独立审查/集成。该记录不表示 T02G、T02、Phase 3、安全审计、真实 ACL/备份/恢复、生产上线或用户电脑验收完成。                                                                                 |
 | v2.59 | 2026-07-26 | PHASE3-T02C 实现提交 `3a0b6bf` 已安全 fast-forward 集成到本机 `master`，并完成主线复验：Windows 原生 Node 24、仓库外隔离根、后端 build、T02C 专项与 T02A/T02B 相邻边界测试共 47/47、`pnpm type-check`、前端测试、文档治理和 `git diff --check` 均通过；外部服务配置保持为空，未调用真实服务。实现、主线复验与文档状态提交已推送 `origin/master`，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
-| v2.58 | 2026-07-26 | 创建 PHASE3-T02C 配置加载与环境错误脱敏实施计划 `.plans/phase3-t02c-env-error-redaction-plan.md`，登记 `docs/04` Phase 3 行动计划索引；范围仅限 `.env`/运行环境解析、配置校验错误和脚本检查摘要的秘密回显边界。当前仅为计划已创建并完成计划阶段审查，等待用户单独批准实施，不等于 T02C 实施、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
-| v2.57 | 2026-07-26 | PHASE3-T02A 状态补正与最新主线复验：实现提交 `7f976a0` 已在 `origin/master` 历史中，本轮基于 `533e6f2` 确认无需额外合并并完成 Node 24 主线复验；后端 build、T02A 专项 16/16、`pnpm type-check`、前端 Vitest 26 files / 139 tests、完整 `pnpm test`（后端 272/272）、文档治理和 `git diff --check` 均通过。范围仍仅限生产攻击面与统一错误边界，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
-| v2.56 | 2026-07-26 | PHASE3-T02B 已推送 `origin/master`：实现提交 `eeb9cb1` 与主线复验文档提交 `7281229` 已进入远端主线；随后更新本文档与 `docs/04`/计划文件为远端已推送状态。范围仍仅限 OCR/whisper.cpp 子进程环境最小化与安全输出回归，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。 |
-| v2.55 | 2026-07-26 | PHASE3-T02B 已 fast-forward 集成到本机 `master` 并完成主线复验：Node 24、后端 build、T02B/OCR 专项 7/7、`pnpm type-check`、前端 Vitest 26 files / 139 tests、文档治理、`git diff --check` 和完整 `pnpm test`（后端 272/272）均通过；仅既有 KaTeX chunk warning。尚未推送 `origin/master`，不得宣称远端主线、T02、Phase 3、安全审计或用户电脑验收完成。 |
-| v2.54 | 2026-07-26 | 同步 PHASE3-T02B 任务分支实现、专项验证与独立审查完成：OCR/whisper.cpp 子进程改为正向环境 allowlist，OCR 错误输出脱敏；后端分拆全量、前端测试、type-check、文档治理和 diff 检查通过。完整 `pnpm test` 受本机既有代理/浏览器连接占用固定端口 `59402` 影响出现单项既有测试失败；未合入 `master` 或推送 `origin/master`，不得宣称 T02B、T02、Phase 3、安全审计或用户电脑验收完成。 |
-| v2.53 | 2026-07-26 | 登记 PHASE3-T02B 独立实施计划及其 `docs/04` 行动计划索引：范围只限 OCR 与 whisper.cpp 子进程环境最小化和安全输出回归；当前为任务分支验证/独立审查阶段，未合入 `master` 或推送 `origin/master`。 |
-| v2.52 | 2026-07-25 | 同步 `docs/04` 流程状态：`9ed5bc1` 部署候选已通过 `b72e8b0` 收口进入 `origin/master`；Phase 3 启动治理/计划阶段；历史 worktree / 暂停计划继续审计清理。 |
-| v2.51 | 2026-07-25 | S7-MVP 已完成主线复验并推送 `origin/master`；功能边界仍只限受控 WAV、本机同步转写、可编辑文本与显式 S2 handoff，不扩大为完整 S7、G2、T02 主线、用户机验收或 Phase 3。 |
-| v2.50 | 2026-07-25 | S7-MVP 已 fast-forward 至本机 `master` 并完成主线复验，待推送 `origin/master`；仍不扩大为完整 S7、Worker、FFmpeg、云端、G2、用户机验收或 Phase 3。 |
-| v2.49 | 2026-07-25 | 登记并同步 S7-MVP：仅受控 PCM WAV 的本机同步转写、学生编辑与显式 S2 文本资料 handoff；实施中，不扩大为 Worker、FFmpeg、云端、G2、用户机验收或完整 S7。 |
-| v2.48 | 2026-07-25 | 固化用户的主系统目录边界：`H:\ai-studybuddy` 内禁止任何 worktree 根，唯一的新任务 worktree 根为 `H:\ai-studybuddy-worktrees`；历史仓内 worktree 只可按批准清单迁出或安全处置。 |
+| v2.58 | 2026-07-26 | 创建 PHASE3-T02C 配置加载与环境错误脱敏实施计划 `.plans/phase3-t02c-env-error-redaction-plan.md`，登记 `docs/04` Phase 3 行动计划索引；范围仅限 `.env`/运行环境解析、配置校验错误和脚本检查摘要的秘密回显边界。当前仅为计划已创建并完成计划阶段审查，等待用户单独批准实施，不等于 T02C 实施、T02、Phase 3、安全审计、生产上线或用户电脑验收完成。                                                            |
+| v2.57 | 2026-07-26 | PHASE3-T02A 状态补正与最新主线复验：实现提交 `7f976a0` 已在 `origin/master` 历史中，本轮基于 `533e6f2` 确认无需额外合并并完成 Node 24 主线复验；后端 build、T02A 专项 16/16、`pnpm type-check`、前端 Vitest 26 files / 139 tests、完整 `pnpm test`（后端 272/272）、文档治理和 `git diff --check` 均通过。范围仍仅限生产攻击面与统一错误边界，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。    |
+| v2.56 | 2026-07-26 | PHASE3-T02B 已推送 `origin/master`：实现提交 `eeb9cb1` 与主线复验文档提交 `7281229` 已进入远端主线；随后更新本文档与 `docs/04`/计划文件为远端已推送状态。范围仍仅限 OCR/whisper.cpp 子进程环境最小化与安全输出回归，不等于 T02、Phase 3、安全审计、生产上线或用户电脑验收完成。                                                                                                                              |
+| v2.55 | 2026-07-26 | PHASE3-T02B 已 fast-forward 集成到本机 `master` 并完成主线复验：Node 24、后端 build、T02B/OCR 专项 7/7、`pnpm type-check`、前端 Vitest 26 files / 139 tests、文档治理、`git diff --check` 和完整 `pnpm test`（后端 272/272）均通过；仅既有 KaTeX chunk warning。尚未推送 `origin/master`，不得宣称远端主线、T02、Phase 3、安全审计或用户电脑验收完成。                                                       |
+| v2.54 | 2026-07-26 | 同步 PHASE3-T02B 任务分支实现、专项验证与独立审查完成：OCR/whisper.cpp 子进程改为正向环境 allowlist，OCR 错误输出脱敏；后端分拆全量、前端测试、type-check、文档治理和 diff 检查通过。完整 `pnpm test` 受本机既有代理/浏览器连接占用固定端口 `59402` 影响出现单项既有测试失败；未合入 `master` 或推送 `origin/master`，不得宣称 T02B、T02、Phase 3、安全审计或用户电脑验收完成。                              |
+| v2.53 | 2026-07-26 | 登记 PHASE3-T02B 独立实施计划及其 `docs/04` 行动计划索引：范围只限 OCR 与 whisper.cpp 子进程环境最小化和安全输出回归；当前为任务分支验证/独立审查阶段，未合入 `master` 或推送 `origin/master`。                                                                                                                                                                                                              |
+| v2.52 | 2026-07-25 | 同步 `docs/04` 流程状态：`9ed5bc1` 部署候选已通过 `b72e8b0` 收口进入 `origin/master`；Phase 3 启动治理/计划阶段；历史 worktree / 暂停计划继续审计清理。                                                                                                                                                                                                                                                      |
+| v2.51 | 2026-07-25 | S7-MVP 已完成主线复验并推送 `origin/master`；功能边界仍只限受控 WAV、本机同步转写、可编辑文本与显式 S2 handoff，不扩大为完整 S7、G2、T02 主线、用户机验收或 Phase 3。                                                                                                                                                                                                                                        |
+| v2.50 | 2026-07-25 | S7-MVP 已 fast-forward 至本机 `master` 并完成主线复验，待推送 `origin/master`；仍不扩大为完整 S7、Worker、FFmpeg、云端、G2、用户机验收或 Phase 3。                                                                                                                                                                                                                                                           |
+| v2.49 | 2026-07-25 | 登记并同步 S7-MVP：仅受控 PCM WAV 的本机同步转写、学生编辑与显式 S2 文本资料 handoff；实施中，不扩大为 Worker、FFmpeg、云端、G2、用户机验收或完整 S7。                                                                                                                                                                                                                                                       |
+| v2.48 | 2026-07-25 | 固化用户的主系统目录边界：`H:\ai-studybuddy` 内禁止任何 worktree 根，唯一的新任务 worktree 根为 `H:\ai-studybuddy-worktrees`；历史仓内 worktree 只可按批准清单迁出或安全处置。                                                                                                                                                                                                                               |
 
 | v2.47 | 2026-07-25 | 登记多 worktree 脏状态的安全收口计划：语义差异、待审计划、生成物、依赖残留和外部证据必须分层治理；不以清理之名丢失内容，也不改变产品/用户机/S7 的既有边界。 |
 | v2.46 | 2026-07-25 | 收口产品目的、使用者、主线事实、S7 候选证据与产品接入边界；明确开发机 Node 24 已验证不等于用户电脑验收，并区分当前 H 盘开发机治理与历史绝对路径。 |

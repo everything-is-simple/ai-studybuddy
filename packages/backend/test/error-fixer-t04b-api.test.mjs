@@ -492,10 +492,7 @@ test('redo flow: incorrect redo keeps needs_review without new mistakes; correct
     assert.ok(Number.isInteger(event.workloadMinutes) && event.workloadMinutes > 0);
     assert.doesNotMatch(event.title, /封闭性|用于验证错题详情展示/);
   }
-  assert.deepEqual(
-    timeline.json.data.map((event) => event.title).sort(),
-    ['错题重做未通过', '错题重做通过'].sort()
-  );
+  assert.deepEqual(timeline.json.data.map((event) => event.title).sort(), ['错题重做未通过', '错题重做通过'].sort());
 });
 
 test('mastery with explicit student confirm works without redo evidence', async (t) => {

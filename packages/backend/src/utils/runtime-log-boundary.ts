@@ -9,7 +9,18 @@ const LOG_FILES = {
 } as const;
 
 const LOG_ENTRY_FIELDS: Record<keyof typeof LOG_FILES, readonly string[]> = {
-  ai: ['event', 'level', 'taskType', 'provider', 'model', 'tokenUsed', 'latencyMs', 'fallbackUsed', 'errorCode', 'timestamp'],
+  ai: [
+    'event',
+    'level',
+    'taskType',
+    'provider',
+    'model',
+    'tokenUsed',
+    'latencyMs',
+    'fallbackUsed',
+    'errorCode',
+    'timestamp',
+  ],
   maintenance: ['event', 'level', 'errorCode', 'cleanupErrorCount', 'cleanupErrorCode', 'timestamp'],
   operations: ['event', 'level', 'status', 'errorCode', 'timestamp'],
 };
@@ -64,7 +75,10 @@ function escapeRegExp(value: string): string {
 }
 
 function createRotationStamp(now: Date): string {
-  return now.toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+  return now
+    .toISOString()
+    .replace(/[^0-9]/g, '')
+    .slice(0, 14);
 }
 
 function assertAllowedEntry(logFile: LogFileName, entry: SafeLogEntry): void {
@@ -86,9 +100,8 @@ function assertAllowedEntry(logFile: LogFileName, entry: SafeLogEntry): void {
   }
 }
 export function toSafeLogErrorCode(error: unknown, fallback = 'UNKNOWN_ERROR'): string {
-  const candidate = error && typeof error === 'object' && 'code' in error
-    ? (error as { code?: unknown }).code
-    : undefined;
+  const candidate =
+    error && typeof error === 'object' && 'code' in error ? (error as { code?: unknown }).code : undefined;
   const code = typeof candidate === 'string' ? candidate : fallback;
   return /^[A-Z][A-Z0-9_]{1,63}$/.test(code) ? code : fallback;
 }
@@ -100,7 +113,11 @@ export function toSafeLogErrorCode(error: unknown, fallback = 'UNKNOWN_ERROR'): 
 export function createSiblingRuntimeLogBoundary(appDataRoot: string): RuntimeLogBoundary {
   const protectedDataRoot = normalizeAbsolute(appDataRoot, 'LOG_TARGET_PROTECTED_ROOT');
   const logRoot = path.resolve(protectedDataRoot, '..', 'logs');
-  if (logRoot === path.parse(logRoot).root || isSameOrDescendant(logRoot, protectedDataRoot) || isSameOrDescendant(protectedDataRoot, logRoot)) {
+  if (
+    logRoot === path.parse(logRoot).root ||
+    isSameOrDescendant(logRoot, protectedDataRoot) ||
+    isSameOrDescendant(protectedDataRoot, logRoot)
+  ) {
     fail('LOG_TARGET_PROTECTED_ROOT');
   }
   if (!fs.existsSync(logRoot)) {
@@ -129,9 +146,12 @@ export class RuntimeLogBoundary {
       .filter((candidate): candidate is string => typeof candidate === 'string' && candidate.trim() !== '')
       .map((candidate) => normalizeAbsolute(candidate, 'LOG_TARGET_PROTECTED_ROOT'));
 
-    if (protectedRoots.some((protectedRoot) =>
-      isSameOrDescendant(this.logRoot, protectedRoot) || isSameOrDescendant(protectedRoot, this.logRoot)
-    )) {
+    if (
+      protectedRoots.some(
+        (protectedRoot) =>
+          isSameOrDescendant(this.logRoot, protectedRoot) || isSameOrDescendant(protectedRoot, this.logRoot)
+      )
+    ) {
       fail('LOG_TARGET_PROTECTED_ROOT');
     }
   }
@@ -161,7 +181,8 @@ export class RuntimeLogBoundary {
     }
 
     const rotationPattern = new RegExp(`^${escapeRegExp(target.fileName)}\\.\\d{14}\\.rotated$`);
-    const retained = fs.readdirSync(target.directory, { withFileTypes: true })
+    const retained = fs
+      .readdirSync(target.directory, { withFileTypes: true })
       .filter((entry) => rotationPattern.test(entry.name))
       .map((entry) => {
         const candidate = path.join(target.directory, entry.name);
@@ -175,12 +196,16 @@ export class RuntimeLogBoundary {
     }
   }
 
-  private getTarget(logFile: LogFileName, createDirectory: boolean): { directory: string; filePath: string; fileName: string } {
+  private getTarget(
+    logFile: LogFileName,
+    createDirectory: boolean
+  ): { directory: string; filePath: string; fileName: string } {
     const definition = LOG_FILES[logFile];
     if (!definition) fail('LOG_TARGET_OUTSIDE_ALLOWLIST');
     const [subdirectory, fileName] = definition;
     const directory = path.resolve(this.logRoot, subdirectory);
-    if (!isSameOrDescendant(directory, this.logRoot) || directory === this.logRoot) fail('LOG_TARGET_OUTSIDE_ALLOWLIST');
+    if (!isSameOrDescendant(directory, this.logRoot) || directory === this.logRoot)
+      fail('LOG_TARGET_OUTSIDE_ALLOWLIST');
 
     if (createDirectory && !fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
     assertExistingDirectoryIsNotLink(directory);

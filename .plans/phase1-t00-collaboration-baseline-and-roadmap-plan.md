@@ -21,21 +21,22 @@
 
 ## 2. 文件责任
 
-| 文件 | 动作 | 单一责任 |
-| --- | --- | --- |
-| `docs/12-开发规范-Dev-Rules.md` | 新建 | 工具无关的 16 步流程、多 Agent/分支/worktree、证据、隐私和提交规则 SoT |
-| `CLAUDE.md` | 重写 | Claude Code 的仓库入口、当前命令和精简 16 步门禁；引用 `docs/12` 的详细规则 |
-| `AGENTS.md` | 重写 | 通用 Agent 入口、不可违反的仓库约束和精简 16 步门禁；不绑定特定工具名 |
-| `docs/00-文档索引-Index.md` | 更新 | 登记 docs/12、修正 S3 触发状态、维持未来文档门禁和版本记录 |
-| `docs/04-开发任务清单-Todo-List.md` | 更新 | 修正当前进度，拆出 Phase 1-T00/T10/T11/T02/T03/T04 的执行顺序和门禁 |
-| `docs/07-文档策略-Design-Docs-Strategy.md` | 更新 | 修正 S2 已创建、Phase 0.8 已完成、S3 可创建及其他 PRD 未触发的事实 |
-| `docs/09-测试验收计划-Test-Plan.md` | 最小更新 | 去除 Phase 0.8 可开始的过期表述，保留 T09 后续验收缺口 |
+| 文件                                       | 动作     | 单一责任                                                                    |
+| ------------------------------------------ | -------- | --------------------------------------------------------------------------- |
+| `docs/12-开发规范-Dev-Rules.md`            | 新建     | 工具无关的 16 步流程、多 Agent/分支/worktree、证据、隐私和提交规则 SoT      |
+| `CLAUDE.md`                                | 重写     | Claude Code 的仓库入口、当前命令和精简 16 步门禁；引用 `docs/12` 的详细规则 |
+| `AGENTS.md`                                | 重写     | 通用 Agent 入口、不可违反的仓库约束和精简 16 步门禁；不绑定特定工具名       |
+| `docs/00-文档索引-Index.md`                | 更新     | 登记 docs/12、修正 S3 触发状态、维持未来文档门禁和版本记录                  |
+| `docs/04-开发任务清单-Todo-List.md`        | 更新     | 修正当前进度，拆出 Phase 1-T00/T10/T11/T02/T03/T04 的执行顺序和门禁         |
+| `docs/07-文档策略-Design-Docs-Strategy.md` | 更新     | 修正 S2 已创建、Phase 0.8 已完成、S3 可创建及其他 PRD 未触发的事实          |
+| `docs/09-测试验收计划-Test-Plan.md`        | 最小更新 | 去除 Phase 0.8 可开始的过期表述，保留 T09 后续验收缺口                      |
 
 ## 3. 计划任务
 
 ### Task 0：批准后建立隔离执行环境
 
 **Files:**
+
 - Move plan into worktree: `.plans/phase1-t00-collaboration-baseline-and-roadmap-plan.md`
 
 - [ ] **Step 1：从最新 master 创建隔离分支和 worktree**
@@ -49,6 +50,7 @@
 ### Task 1：建立工具无关的协作规则 SoT
 
 **Files:**
+
 - Create: `docs/12-开发规范-Dev-Rules.md`
 - Modify: `docs/00-文档索引-Index.md`
 
@@ -74,6 +76,7 @@
 ### Task 2：收紧 CLAUDE.md 与 AGENTS.md
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 - Modify: `AGENTS.md`
 
@@ -109,6 +112,7 @@
 ### Task 3：拆解 Phase 1 路线图
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify: `docs/07-文档策略-Design-Docs-Strategy.md`
 
@@ -138,6 +142,7 @@
 ### Task 4：文档审查与机械验证
 
 **Files:**
+
 - Review: all files listed in section 2
 
 - [ ] **Step 1：一致性搜索**
@@ -179,6 +184,7 @@
 ### Task 5：提交与交付
 
 **Files:**
+
 - Commit: `.plans/phase1-t00-collaboration-baseline-and-roadmap-plan.md` and approved documentation files
 
 - [ ] **Step 1：只暂存批准范围**
@@ -200,15 +206,15 @@
 
 ## 4. 风险审查与修订结论
 
-| 风险 | 修订结论 |
-| --- | --- |
-| 只在 docs/12 写流程会导致自动加载入口漏读门禁 | `CLAUDE.md`、`AGENTS.md` 各保留精简 16 步编号清单，docs/12 保存详细规则 |
-| 三份规则重复后再次漂移 | 入口只保留摘要；状态、命令和详细流程分别由 docs/00、package scripts、docs/12 提供事实来源 |
-| 数字顺序 T10/T11/T02 容易被误认为执行顺序 | 明确这些是历史追溯编号，并在 docs/04 单独维护“真实执行顺序”表 |
-| 参考项目无明确许可证 | 只记录可借鉴原则，不复制源码、截图、文案、CSS token 或品牌资产 |
-| 更新命令仍可能让 Agent 用正式数据跑测试 | 所有运行命令前标出显式隔离 `APP_DATA_ROOT`，占位符不得直接执行 |
-| 文档任务被扩大为功能实现 | 本任务只改文档；T10/T11/T02/T03/T04 保持未完成并分别走后续 16 步流程 |
-| 直接在 master 修改导致协作污染 | 批准后先创建 `codex/phase1-t00-docs` 隔离 worktree，再迁移计划并实施 |
+| 风险                                          | 修订结论                                                                                  |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 只在 docs/12 写流程会导致自动加载入口漏读门禁 | `CLAUDE.md`、`AGENTS.md` 各保留精简 16 步编号清单，docs/12 保存详细规则                   |
+| 三份规则重复后再次漂移                        | 入口只保留摘要；状态、命令和详细流程分别由 docs/00、package scripts、docs/12 提供事实来源 |
+| 数字顺序 T10/T11/T02 容易被误认为执行顺序     | 明确这些是历史追溯编号，并在 docs/04 单独维护“真实执行顺序”表                             |
+| 参考项目无明确许可证                          | 只记录可借鉴原则，不复制源码、截图、文案、CSS token 或品牌资产                            |
+| 更新命令仍可能让 Agent 用正式数据跑测试       | 所有运行命令前标出显式隔离 `APP_DATA_ROOT`，占位符不得直接执行                            |
+| 文档任务被扩大为功能实现                      | 本任务只改文档；T10/T11/T02/T03/T04 保持未完成并分别走后续 16 步流程                      |
+| 直接在 master 修改导致协作污染                | 批准后先创建 `codex/phase1-t00-docs` 隔离 worktree，再迁移计划并实施                      |
 
 ## 5. 验收标准
 

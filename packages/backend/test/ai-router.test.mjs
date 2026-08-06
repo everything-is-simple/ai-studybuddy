@@ -30,7 +30,6 @@ class MockProvider {
   }
 }
 
-
 function createClock(start = Date.parse('2026-07-16T00:00:00.000Z')) {
   let current = start;
   return {
@@ -351,9 +350,7 @@ test('health state is isolated by provider instance even when names match', asyn
   const unhealthy = new MockProvider('duplicate-name', () => {
     throw new Error('unhealthy instance');
   });
-  const healthy = new MockProvider('duplicate-name', () =>
-    successResponse({ provider: 'duplicate-name' })
-  );
+  const healthy = new MockProvider('duplicate-name', () => successResponse({ provider: 'duplicate-name' }));
   const router = new AiProviderRouter({
     providers: [unhealthy, healthy],
     now: clock.now,
@@ -376,12 +373,8 @@ test('health state is isolated between router instances', async () => {
   const sharedPrimary = new MockProvider('shared-primary', () => {
     throw new Error('shared primary unavailable');
   });
-  const firstFallback = new MockProvider('first-fallback', () =>
-    successResponse({ provider: 'first-fallback' })
-  );
-  const secondFallback = new MockProvider('second-fallback', () =>
-    successResponse({ provider: 'second-fallback' })
-  );
+  const firstFallback = new MockProvider('first-fallback', () => successResponse({ provider: 'first-fallback' }));
+  const secondFallback = new MockProvider('second-fallback', () => successResponse({ provider: 'second-fallback' }));
   const firstRouter = new AiProviderRouter({
     providers: [sharedPrimary, firstFallback],
     now: clock.now,
@@ -597,13 +590,7 @@ test('circuit logger output uses a strict field allowlist and drops sensitive ex
     'provider',
     'timestamp',
   ]);
-  assert.deepEqual(Object.keys(closed).sort(), [
-    'cooldownEndedAt',
-    'event',
-    'level',
-    'provider',
-    'timestamp',
-  ]);
+  assert.deepEqual(Object.keys(closed).sort(), ['cooldownEndedAt', 'event', 'level', 'provider', 'timestamp']);
   assert.equal(opened.event, 'AI_PROVIDER_CIRCUIT_OPENED');
   assert.equal(closed.event, 'AI_PROVIDER_CIRCUIT_CLOSED');
 
@@ -641,10 +628,13 @@ test('all cooling error reports the earliest provider recovery time', async () =
     });
   }
 
-  await assert.rejects(() => router.generate(makeRequest()), (error) => {
-    assert.ok(error instanceof AllProvidersCoolingDownError);
-    assert.equal(error.retryAt, '2026-07-16T00:10:00.000Z');
-    assert.deepEqual(error.providers, ['primary', 'secondary']);
-    return true;
-  });
+  await assert.rejects(
+    () => router.generate(makeRequest()),
+    (error) => {
+      assert.ok(error instanceof AllProvidersCoolingDownError);
+      assert.equal(error.retryAt, '2026-07-16T00:10:00.000Z');
+      assert.deepEqual(error.providers, ['primary', 'secondary']);
+      return true;
+    }
+  );
 });

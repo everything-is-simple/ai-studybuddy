@@ -1,14 +1,29 @@
 import { request } from './api-client';
 
 export type ConfigState = 'unconfigured' | 'verified_pass' | 'environment_fallback';
-export interface SafeConfigurationDetail { label: string; value: string; }
+export interface SafeConfigurationDetail {
+  label: string;
+  value: string;
+}
 export interface ChannelStatus {
-  status: ConfigState; lastVerified: string | null; summary: string | null;
-  details: SafeConfigurationDetail[]; errorCode: string | null;
+  status: ConfigState;
+  lastVerified: string | null;
+  summary: string | null;
+  details: SafeConfigurationDetail[];
+  errorCode: string | null;
 }
 export interface ConfigurationStatus {
-  ai: ChannelStatus; smtp: ChannelStatus; feishu: ChannelStatus;
-  runtime: { dataDir: boolean; aiAvailable: boolean; smtpAvailable: boolean; feishuAvailable: boolean; uptime: number; nodeVersion: string };
+  ai: ChannelStatus;
+  smtp: ChannelStatus;
+  feishu: ChannelStatus;
+  runtime: {
+    dataDir: boolean;
+    aiAvailable: boolean;
+    smtpAvailable: boolean;
+    feishuAvailable: boolean;
+    uptime: number;
+    nodeVersion: string;
+  };
 }
 
 export type ProviderPresetGroup = 'international' | 'mainland' | 'relay';
@@ -59,13 +74,23 @@ export interface CustomAiCandidate {
 export const getConfigurationStatus = () => request<ConfigurationStatus>('/config/status');
 export const getConfigurationPresets = () => request<ConfigurationPresets>('/config/presets');
 export const testAndActivate = (channel: 'ai' | 'smtp' | 'feishu', candidate: unknown) =>
-  request<{ activated: boolean; test: { pass: boolean; errorCode?: string; sanitizedMessage?: string } }>(`/config/${channel}/test-and-activate`, {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(candidate),
-  });
+  request<{ activated: boolean; test: { pass: boolean; errorCode?: string; sanitizedMessage?: string } }>(
+    `/config/${channel}/test-and-activate`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(candidate),
+    }
+  );
 export const retestConfiguration = (channel: 'ai' | 'smtp' | 'feishu') =>
-  request<{ activated: boolean; test: { pass: boolean; errorCode?: string; sanitizedMessage?: string } }>(`/config/${channel}/retest`, {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}',
-  });
+  request<{ activated: boolean; test: { pass: boolean; errorCode?: string; sanitizedMessage?: string } }>(
+    `/config/${channel}/retest`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}',
+    }
+  );
 
 export interface ProviderTestAttempt {
   baseUrl: string;
@@ -77,12 +102,7 @@ export interface ProviderTestAttempt {
  * 测试单个 AI Provider 并获取支持的模型列表。
  * 中转站传 baseUrls（多个候选地址，逐个尝试），返回 resolvedBaseUrl 表示哪个地址通了。
  */
-export const testSingleProvider = (provider: {
-  name: string;
-  baseUrls: string[];
-  apiKey: string;
-  model?: string;
-}) =>
+export const testSingleProvider = (provider: { name: string; baseUrls: string[]; apiKey: string; model?: string }) =>
   request<{
     latencyMs: number;
     supportedModels: string[];

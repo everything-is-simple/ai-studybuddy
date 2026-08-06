@@ -101,8 +101,7 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
     error: cramError,
     refetch: refetchCramPlan,
   } = useApiRequest(cramPlanFetcher, [cramPlanFetcher]);
-  const currentCramData =
-    data?.exam.id === examId && cramData?.assessmentAttemptId === examId ? cramData : null;
+  const currentCramData = data?.exam.id === examId && cramData?.assessmentAttemptId === examId ? cramData : null;
 
   const timelineFetcher = useCallback(
     async (signal: AbortSignal): Promise<TimelineData> => {
@@ -153,9 +152,7 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
         .sort((a, b) => a.examAt.localeCompare(b.examAt)),
     [data?.exams]
   );
-  const recentConfirmedExams = confirmedExams
-    .filter((exam) => calendarDayDistance(exam.examAt) >= 0)
-    .slice(0, 5);
+  const recentConfirmedExams = confirmedExams.filter((exam) => calendarDayDistance(exam.examAt) >= 0).slice(0, 5);
   const pendingExams = (data?.exams ?? []).filter((exam) => exam.confirmationStatus === 'pending');
   const nearbyExams = data
     ? confirmedExams.filter(
@@ -312,7 +309,11 @@ export function ExamWorkbenchPage({ semesterId, onSemesterError }: ExamWorkbench
                   <h2>切换考试项目</h2>
                   <div className="exam-switcher-links">
                     {confirmedExams.map((exam) => (
-                      <Link key={exam.id} to={`/exams/${exam.id}`} aria-current={exam.id === examId ? 'page' : undefined}>
+                      <Link
+                        key={exam.id}
+                        to={`/exams/${exam.id}`}
+                        aria-current={exam.id === examId ? 'page' : undefined}
+                      >
                         {exam.name}
                       </Link>
                     ))}
@@ -531,16 +532,9 @@ interface WorkbenchCramSectionProps {
   onRetry: () => void;
 }
 
-function WorkbenchCramSection({
-  exam,
-  routeExamId,
-  cramData,
-  loading,
-  error,
-  onRetry,
-}: WorkbenchCramSectionProps) {
+function WorkbenchCramSection({ exam, routeExamId, cramData, loading, error, onRetry }: WorkbenchCramSectionProps) {
   const isCurrentExam = exam.id === routeExamId;
-  const plan = isCurrentExam ? cramData?.plan ?? null : null;
+  const plan = isCurrentExam ? (cramData?.plan ?? null) : null;
   const suggestions = plan?.days.flatMap((day) => day.suggestions) ?? [];
   const suggestionDays = plan?.days.filter((day) => day.suggestions.length > 0).length ?? 0;
   const topSuggestion = [...suggestions].sort(
@@ -587,9 +581,7 @@ function WorkbenchCramSection({
           {plan.availability === 'not_started' && (
             <p className="text-muted">尚未进入考前 7 天冲刺窗口；可先使用临考速背或查看完整计划说明。</p>
           )}
-          {plan.availability === 'ended' && (
-            <p className="text-muted">该考试已结束，工作台不会生成新的冲刺建议。</p>
-          )}
+          {plan.availability === 'ended' && <p className="text-muted">该考试已结束，工作台不会生成新的冲刺建议。</p>}
           {plan.availability === 'available' && suggestions.length === 0 && (
             <p className="text-muted">暂时没有可安全生成的建议；不会伪造建议或改写历史学习事实。</p>
           )}

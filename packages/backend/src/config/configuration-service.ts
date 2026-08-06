@@ -11,10 +11,7 @@ import type {
   ConnectionTestResult,
 } from './configuration-types';
 
-export type PersistedChannelStatus =
-  | 'unconfigured'
-  | 'verified_pass'
-  | 'environment_fallback';
+export type PersistedChannelStatus = 'unconfigured' | 'verified_pass' | 'environment_fallback';
 
 export interface SafeConfigurationDetail {
   label: string;
@@ -50,17 +47,11 @@ export interface TestAndActivateResult {
 
 interface ConnectionTesterLike {
   testAi(candidate: ChannelConfigMap['ai']): Promise<AiConnectionTestResult>;
-  testSmtp(
-    candidate: ChannelConfigMap['smtp'],
-    sendTestEmail: boolean
-  ): Promise<ConnectionTestResult>;
+  testSmtp(candidate: ChannelConfigMap['smtp'], sendTestEmail: boolean): Promise<ConnectionTestResult>;
   testFeishu(candidate: ChannelConfigMap['feishu']): Promise<ConnectionTestResult>;
 }
 
-type ActivatedListener = (
-  channel: ConfigChannel,
-  snapshot: Readonly<ChannelConfigMap[ConfigChannel]>
-) => void;
+type ActivatedListener = (channel: ConfigChannel, snapshot: Readonly<ChannelConfigMap[ConfigChannel]>) => void;
 
 const CHANNELS: ConfigChannel[] = ['ai', 'smtp', 'feishu'];
 
@@ -147,9 +138,7 @@ export class ConfigurationService {
     return this.runtimeAvailability?.(channel) ?? this.snapshots[channel] !== undefined;
   }
 
-  getActiveSnapshot<C extends ConfigChannel>(
-    channel: C
-  ): Readonly<ChannelConfigMap[C]> | null {
+  getActiveSnapshot<C extends ConfigChannel>(channel: C): Readonly<ChannelConfigMap[C]> | null {
     return (this.snapshots[channel] as Readonly<ChannelConfigMap[C]> | undefined) ?? null;
   }
 
@@ -158,10 +147,7 @@ export class ConfigurationService {
     return () => this.listeners.delete(listener);
   }
 
-  registerEnvironmentFallback<C extends ConfigChannel>(
-    channel: C,
-    candidate: ChannelConfigMap[C]
-  ): boolean {
+  registerEnvironmentFallback<C extends ConfigChannel>(channel: C, candidate: ChannelConfigMap[C]): boolean {
     if (this.getActiveSnapshot(channel)) return false;
     this.setSnapshot(channel, candidate);
     this.statuses.set(channel, {
@@ -179,9 +165,7 @@ export class ConfigurationService {
     candidate: ChannelConfigMap[C],
     options: { sendTestEmail?: boolean } = {}
   ): Promise<TestAndActivateResult> {
-    return this.withChannelLock(channel, () =>
-      this.doTestAndActivate(channel, candidate, options)
-    );
+    return this.withChannelLock(channel, () => this.doTestAndActivate(channel, candidate, options));
   }
 
   async retest(
@@ -298,10 +282,7 @@ export class ConfigurationService {
       return this.tester.testAi(candidate as unknown as ChannelConfigMap['ai']);
     }
     if (channel === 'smtp') {
-      return this.tester.testSmtp(
-        candidate as unknown as ChannelConfigMap['smtp'],
-        options.sendTestEmail === true
-      );
+      return this.tester.testSmtp(candidate as unknown as ChannelConfigMap['smtp'], options.sendTestEmail === true);
     }
     return this.tester.testFeishu(candidate as unknown as ChannelConfigMap['feishu']);
   }
@@ -359,10 +340,7 @@ function summarize<C extends ConfigChannel>(channel: C, value: ChannelConfigMap[
   return channel === 'smtp' ? 'QQ SMTP 已激活' : '飞书 Webhook 已激活';
 }
 
-function summarizeDetails<C extends ConfigChannel>(
-  channel: C,
-  value: ChannelConfigMap[C]
-): SafeConfigurationDetail[] {
+function summarizeDetails<C extends ConfigChannel>(channel: C, value: ChannelConfigMap[C]): SafeConfigurationDetail[] {
   if (channel === 'ai') {
     return (value as ChannelConfigMap['ai']).providers
       .slice()

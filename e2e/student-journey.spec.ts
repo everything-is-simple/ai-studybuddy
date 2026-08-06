@@ -49,7 +49,10 @@ async function getData<T>(request: APIRequestContext, pathName: string): Promise
   return body.data;
 }
 
-async function createSemesterWithTimetable(page: Page, options: { code: string; studentName?: string; firstCourseName: string }) {
+async function createSemesterWithTimetable(
+  page: Page,
+  options: { code: string; studentName?: string; firstCourseName: string }
+) {
   await page.goto('/semesters');
   if (options.studentName) {
     await page.getByLabel('学生姓名').fill(options.studentName);
@@ -85,7 +88,14 @@ function resetAppDataForEmptyJourney() {
   if (!resolved.includes(`${path.sep}ai-studybuddy-tmp${path.sep}runs${path.sep}`)) {
     throw new Error(`Refuse to reset non-isolated APP_DATA_ROOT: ${resolved}`);
   }
-  for (const relativePath of ['studybuddy.db', 'studybuddy.db-wal', 'studybuddy.db-shm', 'semesters', 'tmp', 'config']) {
+  for (const relativePath of [
+    'studybuddy.db',
+    'studybuddy.db-wal',
+    'studybuddy.db-shm',
+    'semesters',
+    'tmp',
+    'config',
+  ]) {
     fs.rmSync(path.join(resolved, relativePath), { recursive: true, force: true });
   }
 }
@@ -221,11 +231,17 @@ test('T09D 学生从空系统完成创建学期、课程考试、资料笔记、
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '每日学习首页', level: 1 })).toBeVisible();
   await expect(page.getByText('T09D 学生旅程期末考试', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '今日' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '今日' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
 
   await page.goto(`/exams/${exam.id}`);
   await expect(page.getByRole('heading', { name: 'T09D 学生旅程期末考试', level: 1 })).toBeVisible();
-  await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '总览' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '总览' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
   await expect(page.getByTestId('recent-study-activity')).toContainText('资料笔记已生成');
 
   await page.getByTestId('exam-context-navigation').getByRole('link', { name: '资料' }).click();
@@ -246,12 +262,18 @@ test('T09D 学生从空系统完成创建学期、课程考试、资料笔记、
   await page.getByRole('button', { name: '提交练习' }).click();
   await expect(page.getByText('练习结果', { exact: true })).toBeVisible();
   await expect(page.getByText('0 / 1', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '练习' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '练习' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
   await page.getByTestId('exam-context-navigation').getByRole('link', { name: '时间线' }).click();
   await expect(page).toHaveURL(new RegExp(`/exams/${exam.id}#recent-study-activity$`));
   await expect(page.getByTestId('recent-study-activity')).toContainText('资料笔记已生成');
   await page.goto(`/practice-sessions/${seeded.sessionId}/result`);
-  await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '练习' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '练习' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
   await page.getByRole('link', { name: '打开错题本' }).click();
   await expect(page.getByRole('heading', { name: 'T09D 学生旅程期末考试 的错题', level: 1 })).toBeVisible();
   await expect(page.getByText('T09D 旅程练习题')).toBeVisible();

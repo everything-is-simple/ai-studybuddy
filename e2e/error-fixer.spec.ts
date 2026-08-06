@@ -95,41 +95,77 @@ test.beforeEach(async ({ page }) => {
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 
     if (request.method() === 'GET' && pathName === '/api/semesters/current')
-      return json(success({
-        semester: {
-          id: semesterId,
-          semesterCode: 'E2E 合成学期',
-          studentName: 'E2E 合成学生',
-          teachingStartDate: '2026-02-16',
-          teachingEndDate: '2026-06-30',
-          finalArchiveDate: null,
-          status: 'active',
-          isCurrent: true,
-          createdAt: '2026-07-18T00:00:00.000Z',
-          updatedAt: '2026-07-18T00:00:00.000Z',
-        },
-        recoveredFromStaleCurrent: false,
-      }));
+      return json(
+        success({
+          semester: {
+            id: semesterId,
+            semesterCode: 'E2E 合成学期',
+            studentName: 'E2E 合成学生',
+            teachingStartDate: '2026-02-16',
+            teachingEndDate: '2026-06-30',
+            finalArchiveDate: null,
+            status: 'active',
+            isCurrent: true,
+            createdAt: '2026-07-18T00:00:00.000Z',
+            updatedAt: '2026-07-18T00:00:00.000Z',
+          },
+          recoveredFromStaleCurrent: false,
+        })
+      );
     if (request.method() === 'GET' && pathName === '/api/semesters')
-      return json(success([{
-        id: semesterId,
-        semesterCode: 'E2E 合成学期',
-        studentName: 'E2E 合成学生',
-        teachingStartDate: '2026-02-16',
-        teachingEndDate: '2026-06-30',
-        finalArchiveDate: null,
-        status: 'active',
-        isCurrent: true,
-        createdAt: '2026-07-18T00:00:00.000Z',
-        updatedAt: '2026-07-18T00:00:00.000Z',
-      }]));
+      return json(
+        success([
+          {
+            id: semesterId,
+            semesterCode: 'E2E 合成学期',
+            studentName: 'E2E 合成学生',
+            teachingStartDate: '2026-02-16',
+            teachingEndDate: '2026-06-30',
+            finalArchiveDate: null,
+            status: 'active',
+            isCurrent: true,
+            createdAt: '2026-07-18T00:00:00.000Z',
+            updatedAt: '2026-07-18T00:00:00.000Z',
+          },
+        ])
+      );
 
     if (request.method() === 'GET' && pathName === `/api/exams/${examId}`)
-      return json(success({ id: examId, courseInstanceId: courseId, name: 'T04B 合成考试', attemptType: 'normal', examAt: '2026-08-01T09:00:00.000Z', confirmationStatus: 'confirmed' }));
+      return json(
+        success({
+          id: examId,
+          courseInstanceId: courseId,
+          name: 'T04B 合成考试',
+          attemptType: 'normal',
+          examAt: '2026-08-01T09:00:00.000Z',
+          confirmationStatus: 'confirmed',
+        })
+      );
     if (request.method() === 'GET' && pathName === '/api/courses')
-      return json(success([{ id: courseId, semesterId, name: 'T04B 合成课程', createdAt: '2026-07-16T00:00:00.000Z', updatedAt: '2026-07-16T00:00:00.000Z' }]));
+      return json(
+        success([
+          {
+            id: courseId,
+            semesterId,
+            name: 'T04B 合成课程',
+            createdAt: '2026-07-16T00:00:00.000Z',
+            updatedAt: '2026-07-16T00:00:00.000Z',
+          },
+        ])
+      );
     if (request.method() === 'GET' && pathName === '/api/exams')
-      return json(success([{ id: examId, courseInstanceId: courseId, name: 'T04B 合成考试', attemptType: 'normal', examAt: '2026-08-01T09:00:00.000Z', confirmationStatus: 'confirmed' }]));
+      return json(
+        success([
+          {
+            id: examId,
+            courseInstanceId: courseId,
+            name: 'T04B 合成考试',
+            attemptType: 'normal',
+            examAt: '2026-08-01T09:00:00.000Z',
+            confirmationStatus: 'confirmed',
+          },
+        ])
+      );
     if (request.method() === 'GET' && pathName === '/api/study-tasks') return json(success([]));
 
     if (request.method() === 'GET' && pathName === '/api/mistakes') {
@@ -205,7 +241,24 @@ test.beforeEach(async ({ page }) => {
       );
     }
     if (request.method() === 'GET' && pathName === '/api/knowledge-modules')
-      return json(success({ items: [{ id: moduleId, courseInstanceId: courseId, title: '矩阵基础', contentSummary: '矩阵基本运算', importance: 'high', difficulty: 'medium', learnStatus: 'learning', createdAt: '2026-07-16T00:00:00.000Z', updatedAt: '2026-07-16T00:00:00.000Z' }], pagination: { page: 1, pageSize: 20, total: 1, hasMore: false } }));
+      return json(
+        success({
+          items: [
+            {
+              id: moduleId,
+              courseInstanceId: courseId,
+              title: '矩阵基础',
+              contentSummary: '矩阵基本运算',
+              importance: 'high',
+              difficulty: 'medium',
+              learnStatus: 'learning',
+              createdAt: '2026-07-16T00:00:00.000Z',
+              updatedAt: '2026-07-16T00:00:00.000Z',
+            },
+          ],
+          pagination: { page: 1, pageSize: 20, total: 1, hasMore: false },
+        })
+      );
     return json({ success: false, error: { code: 'UNEXPECTED_REQUEST', message: '未预期的测试请求' } }, 500);
   });
 });

@@ -10,9 +10,8 @@ process.env.OCR_TEMP_ROOT = path.join(runtimeRoot, 'tmp', 'ocr');
 process.env.OCR_CACHE_ROOT = path.join(runtimeRoot, 'models', 'rapidocr');
 
 const { OcrConverter } = await import('../dist/adapters/converter.js');
-const { OcrTimetableRecognizer, getTimetableOcrConverterOptions } = await import(
-  '../dist/services/semester-selector-service.js'
-);
+const { OcrTimetableRecognizer, getTimetableOcrConverterOptions } =
+  await import('../dist/services/semester-selector-service.js');
 
 test('semester timetable OCR uses the configured production runtime paths', async () => {
   const expected = {

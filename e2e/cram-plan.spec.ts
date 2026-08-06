@@ -14,11 +14,51 @@ const examIds = {
 type ExamKey = keyof typeof examIds;
 
 const suggestions = [
-  { id: 'task:task-1', priority: 1, reason: '优先完成考试前到期的未完成任务', sourceKind: 'study_task', sourceId: 'task-1', targetType: 'study_task', targetId: 'task-1' },
-  { id: 'weak:weak-1', priority: 2, reason: '薄弱点已有 4 条证据', sourceKind: 'weak_point', sourceId: 'weak-1', targetType: 'weak_point', targetId: 'weak-1' },
-  { id: 'mistake:mistake-1', priority: 3, reason: '错题累计 3 次错误', sourceKind: 'mistake', sourceId: 'mistake-1', targetType: 'mistake', targetId: 'mistake-1' },
-  { id: 'practice:practice-1', priority: 4, reason: '已完成练习正确率 40%，建议针对性复盘', sourceKind: 'practice_performance', sourceId: 'practice-1', targetType: 'practice_history', targetId: 'practice-1' },
-  { id: 'cram-cards', priority: 4, reason: '可使用临考速背快速回顾已整理考点', sourceKind: 'cram_cards', sourceId: null, targetType: 'cram_cards', targetId: examIds.normal },
+  {
+    id: 'task:task-1',
+    priority: 1,
+    reason: '优先完成考试前到期的未完成任务',
+    sourceKind: 'study_task',
+    sourceId: 'task-1',
+    targetType: 'study_task',
+    targetId: 'task-1',
+  },
+  {
+    id: 'weak:weak-1',
+    priority: 2,
+    reason: '薄弱点已有 4 条证据',
+    sourceKind: 'weak_point',
+    sourceId: 'weak-1',
+    targetType: 'weak_point',
+    targetId: 'weak-1',
+  },
+  {
+    id: 'mistake:mistake-1',
+    priority: 3,
+    reason: '错题累计 3 次错误',
+    sourceKind: 'mistake',
+    sourceId: 'mistake-1',
+    targetType: 'mistake',
+    targetId: 'mistake-1',
+  },
+  {
+    id: 'practice:practice-1',
+    priority: 4,
+    reason: '已完成练习正确率 40%，建议针对性复盘',
+    sourceKind: 'practice_performance',
+    sourceId: 'practice-1',
+    targetType: 'practice_history',
+    targetId: 'practice-1',
+  },
+  {
+    id: 'cram-cards',
+    priority: 4,
+    reason: '可使用临考速背快速回顾已整理考点',
+    sourceKind: 'cram_cards',
+    sourceId: null,
+    targetType: 'cram_cards',
+    targetId: examIds.normal,
+  },
 ] as const;
 
 function success(data: unknown) {
@@ -53,9 +93,36 @@ function examFor(key: ExamKey) {
 }
 
 function planFor(key: ExamKey) {
-  if (key === 'notStarted') return { assessmentAttemptId: examIds[key], courseInstanceId: courseId, assessmentName: examFor(key).name, examAt: examFor(key).examAt, daysUntilExam: 11, availability: 'not_started', days: [] };
-  if (key === 'ended') return { assessmentAttemptId: examIds[key], courseInstanceId: courseId, assessmentName: examFor(key).name, examAt: examFor(key).examAt, daysUntilExam: -1, availability: 'ended', days: [] };
-  if (key === 'empty') return { assessmentAttemptId: examIds[key], courseInstanceId: courseId, assessmentName: examFor(key).name, examAt: examFor(key).examAt, daysUntilExam: 4, availability: 'available', days: [{ date: '2026-07-21', suggestions: [] }] };
+  if (key === 'notStarted')
+    return {
+      assessmentAttemptId: examIds[key],
+      courseInstanceId: courseId,
+      assessmentName: examFor(key).name,
+      examAt: examFor(key).examAt,
+      daysUntilExam: 11,
+      availability: 'not_started',
+      days: [],
+    };
+  if (key === 'ended')
+    return {
+      assessmentAttemptId: examIds[key],
+      courseInstanceId: courseId,
+      assessmentName: examFor(key).name,
+      examAt: examFor(key).examAt,
+      daysUntilExam: -1,
+      availability: 'ended',
+      days: [],
+    };
+  if (key === 'empty')
+    return {
+      assessmentAttemptId: examIds[key],
+      courseInstanceId: courseId,
+      assessmentName: examFor(key).name,
+      examAt: examFor(key).examAt,
+      daysUntilExam: 4,
+      availability: 'available',
+      days: [{ date: '2026-07-21', suggestions: [] }],
+    };
   return {
     assessmentAttemptId: examIds[key],
     courseInstanceId: courseId,
@@ -75,13 +142,27 @@ async function installCramPlanApi(page: Page, options: { failOnce?: boolean } = 
     methods.push(request.method());
     const url = new URL(request.url());
     const path = url.pathname;
-    const json = (body: unknown, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 
     if (request.method() === 'GET' && path === '/api/semesters/current') {
-      return json(success({
-        semester: { id: semesterId, semesterCode: 'T05 E2E', studentName: '合成学生', teachingStartDate: '2026-02-16', teachingEndDate: '2026-06-30', finalArchiveDate: null, status: 'active', isCurrent: true, createdAt: '2026-07-21T00:00:00.000Z', updatedAt: '2026-07-21T00:00:00.000Z' },
-        recoveredFromStaleCurrent: false,
-      }));
+      return json(
+        success({
+          semester: {
+            id: semesterId,
+            semesterCode: 'T05 E2E',
+            studentName: '合成学生',
+            teachingStartDate: '2026-02-16',
+            teachingEndDate: '2026-06-30',
+            finalArchiveDate: null,
+            status: 'active',
+            isCurrent: true,
+            createdAt: '2026-07-21T00:00:00.000Z',
+            updatedAt: '2026-07-21T00:00:00.000Z',
+          },
+          recoveredFromStaleCurrent: false,
+        })
+      );
     }
     if (request.method() === 'GET' && path.startsWith('/api/exams/')) {
       const key = (Object.keys(examIds) as ExamKey[]).find((candidate) => path.endsWith(examIds[candidate]));
@@ -91,7 +172,8 @@ async function installCramPlanApi(page: Page, options: { failOnce?: boolean } = 
       const key = (Object.keys(examIds) as ExamKey[]).find((candidate) => path.includes(examIds[candidate]));
       if (key) {
         planCalls += 1;
-        if (options.failOnce && planCalls === 1) return json({ success: false, error: { code: 'CRAM_PLAN_FAILED', message: '合成请求失败' } }, 503);
+        if (options.failOnce && planCalls === 1)
+          return json({ success: false, error: { code: 'CRAM_PLAN_FAILED', message: '合成请求失败' } }, 503);
         return json(success(planFor(key)));
       }
     }
@@ -112,9 +194,13 @@ test('T05 冲刺计划在真实 Chromium 中展示建议、深链、切换清理
   await expect(page.getByText('待复习错题')).toBeVisible();
   await expect(page.getByText('练习表现')).toBeVisible();
   await expect(page.getByTestId('exam-context-navigation').getByRole('link', { name: '临考速背' })).toBeVisible();
-  await expect(page.getByTestId('cram-plan-days').locator('.cram-plan-suggestion strong').filter({ hasText: '临考速背' })).toBeVisible();
+  await expect(
+    page.getByTestId('cram-plan-days').locator('.cram-plan-suggestion strong').filter({ hasText: '临考速背' })
+  ).toBeVisible();
 
-  const links = await page.locator('.cram-plan-suggestion .button-link').evaluateAll((elements) => elements.map((element) => (element as HTMLAnchorElement).getAttribute('href')));
+  const links = await page
+    .locator('.cram-plan-suggestion .button-link')
+    .evaluateAll((elements) => elements.map((element) => (element as HTMLAnchorElement).getAttribute('href')));
   expect(links).toEqual([
     `/exams/${examIds.normal}`,
     `/exams/${examIds.normal}/mistakes`,
@@ -147,9 +233,18 @@ test('T05 冲刺计划展示未确认、窗口状态和空建议降级', async (
 
   await page.goto(`/exams/${examIds.empty}/cram-plan`);
   await expect(page.getByTestId('cram-plan-empty')).toBeVisible();
-  await expect(page.getByRole('link', { name: '开始练习' })).toHaveAttribute('href', `/exams/${examIds.empty}/practice`);
-  await expect(page.getByRole('link', { name: '查看错题本' })).toHaveAttribute('href', `/exams/${examIds.empty}/mistakes`);
-  await expect(page.getByTestId('cram-plan-empty').getByRole('link', { name: '临考速背' })).toHaveAttribute('href', `/exams/${examIds.empty}/cram`);
+  await expect(page.getByRole('link', { name: '开始练习' })).toHaveAttribute(
+    'href',
+    `/exams/${examIds.empty}/practice`
+  );
+  await expect(page.getByRole('link', { name: '查看错题本' })).toHaveAttribute(
+    'href',
+    `/exams/${examIds.empty}/mistakes`
+  );
+  await expect(page.getByTestId('cram-plan-empty').getByRole('link', { name: '临考速背' })).toHaveAttribute(
+    'href',
+    `/exams/${examIds.empty}/cram`
+  );
 });
 
 test('T05 冲刺计划请求失败后可重试且重试仍为只读导航', async ({ page }) => {

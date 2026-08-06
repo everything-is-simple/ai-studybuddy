@@ -94,62 +94,61 @@ Phase 0.8 已完成；以下保留为 S1/S2 后续补齐与 Phase 1 继续验收
 
 ### 7.1 Phase 0.8 T09：隔离真实 E2E（2026-07-14）
 
-| 验收项 | 实际证据 | 结论 |
-| --- | --- | --- |
-| 隔离与隐私 | 两个 run 使用独立 `APP_DATA_ROOT`、合成文本 PDF；仓库外 evidence 仅保存短哈希、状态、计数、耗时与裁剪截图。 | ✅ 通过 |
-| 基线 | 隔离 worktree 中 `pnpm type-check`、后端 build、`pnpm test` 通过；后端 97/97、前端 12/12。 | ✅ 通过（Markmap chunk 大小警告非阻塞） |
-| 文本 PDF 转换 | 两个 run 的 `material_convert` 均 1 次完成，终态前可读 normalized text。 | ✅ 通过 |
-| 真实 Provider 笔记生成 | 已配置 Provider 的 run 中 3 次调用均成功返回（`pixel-k12` / `gpt-5.5`；token 701/784/831；约 15.4/20.0/16.2 秒），但 `JSON.parse(response.content)` 失败，`note_generate` 用尽 3 次且没有落库笔记。错误仅留 `JSON_PARSE` 与短哈希。 | ❌ 未通过；不得用历史 smoke test 替代 |
-| 无 Provider 降级 | 显式无 Provider run 的 `note_generate` 3 次、约 14 秒后进入 `pending_quality_check`；页面显示“需要人工补文”，刷新不白屏。 | ✅ 通过 |
-| 考试与 priorityBucket | 浏览器考试表单未能提交；同一未来 deadline 的 API 对照为 overdue=0、confirmed=1、pending=2。任务列表仍按 deadline 而非 bucket 排序。 | ⚠️ 仅后端派生逻辑通过，不是浏览器闭环或排序验收 |
-| 手动补文 | `pending_quality_check` 下 `replace-text` 返回 `INVALID_STATUS`，符合当前后端仅允许 `conversion_failed` 补文的规则；页面没有可用手动补文入口。 | ❌ T10 候选恢复 UX/状态契约缺口 |
-| 笔记/KaTeX/Markmap/模块/模块任务 | 没有成功笔记，因而无法验证。 | ⏳ 依赖真实 Provider 成功后重跑 |
-| tmp 安全清理读回 | 已核对允许范围；因无完成笔记，未删除任何 tmp，避免形成无效通过结论。OCR 仍使用系统临时目录，尚无 `APP_DATA_ROOT\tmp` 清理实现或读回自动化证据。 | ⏳ 依赖成功笔记与清理实现后重跑 |
+| 验收项                           | 实际证据                                                                                                                                                                                                                            | 结论                                            |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 隔离与隐私                       | 两个 run 使用独立 `APP_DATA_ROOT`、合成文本 PDF；仓库外 evidence 仅保存短哈希、状态、计数、耗时与裁剪截图。                                                                                                                         | ✅ 通过                                         |
+| 基线                             | 隔离 worktree 中 `pnpm type-check`、后端 build、`pnpm test` 通过；后端 97/97、前端 12/12。                                                                                                                                          | ✅ 通过（Markmap chunk 大小警告非阻塞）         |
+| 文本 PDF 转换                    | 两个 run 的 `material_convert` 均 1 次完成，终态前可读 normalized text。                                                                                                                                                            | ✅ 通过                                         |
+| 真实 Provider 笔记生成           | 已配置 Provider 的 run 中 3 次调用均成功返回（`pixel-k12` / `gpt-5.5`；token 701/784/831；约 15.4/20.0/16.2 秒），但 `JSON.parse(response.content)` 失败，`note_generate` 用尽 3 次且没有落库笔记。错误仅留 `JSON_PARSE` 与短哈希。 | ❌ 未通过；不得用历史 smoke test 替代           |
+| 无 Provider 降级                 | 显式无 Provider run 的 `note_generate` 3 次、约 14 秒后进入 `pending_quality_check`；页面显示“需要人工补文”，刷新不白屏。                                                                                                           | ✅ 通过                                         |
+| 考试与 priorityBucket            | 浏览器考试表单未能提交；同一未来 deadline 的 API 对照为 overdue=0、confirmed=1、pending=2。任务列表仍按 deadline 而非 bucket 排序。                                                                                                 | ⚠️ 仅后端派生逻辑通过，不是浏览器闭环或排序验收 |
+| 手动补文                         | `pending_quality_check` 下 `replace-text` 返回 `INVALID_STATUS`，符合当前后端仅允许 `conversion_failed` 补文的规则；页面没有可用手动补文入口。                                                                                      | ❌ T10 候选恢复 UX/状态契约缺口                 |
+| 笔记/KaTeX/Markmap/模块/模块任务 | 没有成功笔记，因而无法验证。                                                                                                                                                                                                        | ⏳ 依赖真实 Provider 成功后重跑                 |
+| tmp 安全清理读回                 | 已核对允许范围；因无完成笔记，未删除任何 tmp，避免形成无效通过结论。OCR 仍使用系统临时目录，尚无 `APP_DATA_ROOT\tmp` 清理实现或读回自动化证据。                                                                                     | ⏳ 依赖成功笔记与清理实现后重跑                 |
 
 无 Provider run 的三次 note Job 尝试跨约 14 秒，符合 5 秒退避；本次运行**未观察到**重入，但当前 `setInterval` 不等待 `runOnce()`，不能将此写成 Worker 已证明串行。前端轮询在页面隐藏时不停止、状态变化不重置退避，亦未作为通过项。该 2026-07-14 首次运行不勾选完成；修复后复验结论见 7.2。
 
 ### 7.2 Phase 0.8 T09 修复后隔离复验（2026-07-15）
 
-| 验收项 | 实际证据 | 结论 |
-| --- | --- | --- |
-| 修复基线 | `4f595c6` 修复 AI JSON 解析与考试表单受控值；`20a67c6` 收紧 JSON 解析失败错误消息并新增敏感哨兵回归测试。 | ✅ 通过 |
-| 自动化回归 | `pnpm type-check`、后端 build、全量 `pnpm test` 通过；后端 102/102、前端 13/13。一次完整测试曾出现后端健康检查波动，单文件复跑与第二次全量均通过。 | ✅ 通过，记录启动波动 |
-| 真实 Provider 主路径 | 合成文本 PDF 转换 1 次完成，AI 生成 1 次完成；笔记 Markdown、highlights、Markmap、4 个知识模块、4/4 来源关联与 `material_note_completed` 事件均落盘。token 1949，AI 耗时 31,987 ms；2026-07-15 用户批准首次 AI 预算从 30 秒放宽到 35 秒。 | ✅ 通过 |
-| 浏览器考试闭环 | 通过纯浏览器操作创建 pending 考试，截图 `01-courses-and-pending-exam.png`；不再使用 API 绕过证明考试创建。 | ✅ 通过 |
-| 浏览器笔记渲染 | 截图 `02-note-markdown-katex-markmap.png` 与 `05-after-tmp-cleanup-note-readback.png` 证明笔记正文、KaTeX 文本、Markmap 区域和知识模块可读。 | ✅ 通过 |
-| 无 Provider 降级 | 独立 run 显式清空 Provider；AI 3 次有限重试后进入 `pending_quality_check`，文本保留、无笔记、无模块；错误/状态字段不含 Key、正文短语、V8 诊断串或 Provider URL。浏览器刷新后仍可读。 | ✅ 通过 |
-| tmp 安全清理读回 | 仅删除当前 run 的 `semesters/<semesterHash>/tmp`，不碰 files/DB/其他学期；重启后端后 API 与浏览器均能读回笔记、模块和思维导图。 | ✅ 通过 |
-| 证据脱敏 | 仓库外 evidence/browser-evidence 只保存截图、短哈希、计数、耗时和脱敏相对路径；截图前遮盖 semesterId 输入框可见值。 | ✅ 通过 |
+| 验收项               | 实际证据                                                                                                                                                                                                                                  | 结论                  |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| 修复基线             | `4f595c6` 修复 AI JSON 解析与考试表单受控值；`20a67c6` 收紧 JSON 解析失败错误消息并新增敏感哨兵回归测试。                                                                                                                                 | ✅ 通过               |
+| 自动化回归           | `pnpm type-check`、后端 build、全量 `pnpm test` 通过；后端 102/102、前端 13/13。一次完整测试曾出现后端健康检查波动，单文件复跑与第二次全量均通过。                                                                                        | ✅ 通过，记录启动波动 |
+| 真实 Provider 主路径 | 合成文本 PDF 转换 1 次完成，AI 生成 1 次完成；笔记 Markdown、highlights、Markmap、4 个知识模块、4/4 来源关联与 `material_note_completed` 事件均落盘。token 1949，AI 耗时 31,987 ms；2026-07-15 用户批准首次 AI 预算从 30 秒放宽到 35 秒。 | ✅ 通过               |
+| 浏览器考试闭环       | 通过纯浏览器操作创建 pending 考试，截图 `01-courses-and-pending-exam.png`；不再使用 API 绕过证明考试创建。                                                                                                                                | ✅ 通过               |
+| 浏览器笔记渲染       | 截图 `02-note-markdown-katex-markmap.png` 与 `05-after-tmp-cleanup-note-readback.png` 证明笔记正文、KaTeX 文本、Markmap 区域和知识模块可读。                                                                                              | ✅ 通过               |
+| 无 Provider 降级     | 独立 run 显式清空 Provider；AI 3 次有限重试后进入 `pending_quality_check`，文本保留、无笔记、无模块；错误/状态字段不含 Key、正文短语、V8 诊断串或 Provider URL。浏览器刷新后仍可读。                                                      | ✅ 通过               |
+| tmp 安全清理读回     | 仅删除当前 run 的 `semesters/<semesterHash>/tmp`，不碰 files/DB/其他学期；重启后端后 API 与浏览器均能读回笔记、模块和思维导图。                                                                                                           | ✅ 通过               |
+| 证据脱敏             | 仓库外 evidence/browser-evidence 只保存截图、短哈希、计数、耗时和脱敏相对路径；截图前遮盖 semesterId 输入框可见值。                                                                                                                       | ✅ 通过               |
 
 复验结论：T09 的 P0 功能阻塞已修复，核心业务闭环已经真实走通；首次 AI 生成耗时 31,987 ms，落入用户批准后的 35 秒预算。`docs/04` 可勾选 T09 与第一个里程碑。T10 人工补文恢复闭环、T11 考试确认/学习任务浏览器闭环、Worker 单飞和轮询优化仍保留为后续独立任务，不纳入本次通过结论。
 
-
 ### 7.3 Phase 1-T11：考试确认与任务创建闭环（2026-07-15）
 
-| 验收项 | 实际证据 | 结论 |
-| --- | --- | --- |
-| 后端考试确认契约 | 集成测试覆盖单考试读取、pending 首次确认、confirmed 幂等、rejected/superseded 409、不存在/跨学期 404、固定 S1 确认事件和确认后任务 priority 派生。 | ✅ 通过 |
-| 课程页与工作台 | 前端组件测试覆盖 pending 确认入口、confirmed 工作台入口、非法考试 URL、日期/倒计时/进度、当前考试任务隔离、任务创建和状态流转。 | ✅ 通过 |
-| 多考试最小范围 | 组件与浏览器测试覆盖 confirmed 考试切换、近期最多 5 场概览、pending 只显示待确认，以及当前考试前后 7 个自然日的其他考试/关联截止任务只读提示。 | ✅ 通过 |
-| 资料课程上下文 | `courseInstanceId` 查询参数只接受当前学期课程，预选后手动切换会同步 URL；非法值不会驱动前端越权读取。 | ✅ 通过 |
-| 自动化基线 | `pnpm type-check`、后端 build、前端 build 均退出码 0；隔离 `pnpm test` 后端 109/109、前端 32/32。 | ✅ 通过（Markmap chunk 大小警告非阻塞） |
-| Chromium 浏览器闭环 | Playwright 在 `Asia/Shanghai`、后端 `127.0.0.1:4311`、前端 `127.0.0.1:4173` 下 1/1 通过；覆盖三场考试、两场确认、切换、近期概览、邻近提示、任务 `todo → doing → done`、刷新读回、资料上下文和非法 URL。 | ✅ 通过 |
-| 数据隔离与证据 | 最终全量测试使用 `phase1-t11-20260715-221112-final-test`，最终浏览器验收使用 `phase1-t11-20260715-221352-final-e2e`；截图、trace、report、test-results 仅写入仓库外 `APP_DATA_ROOT/playwright`。 | ✅ 通过 |
-| 非目标 | 未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 健康熔断或 S3 业务代码。 | ✅ 边界保持 |
+| 验收项              | 实际证据                                                                                                                                                                                                | 结论                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 后端考试确认契约    | 集成测试覆盖单考试读取、pending 首次确认、confirmed 幂等、rejected/superseded 409、不存在/跨学期 404、固定 S1 确认事件和确认后任务 priority 派生。                                                      | ✅ 通过                                 |
+| 课程页与工作台      | 前端组件测试覆盖 pending 确认入口、confirmed 工作台入口、非法考试 URL、日期/倒计时/进度、当前考试任务隔离、任务创建和状态流转。                                                                         | ✅ 通过                                 |
+| 多考试最小范围      | 组件与浏览器测试覆盖 confirmed 考试切换、近期最多 5 场概览、pending 只显示待确认，以及当前考试前后 7 个自然日的其他考试/关联截止任务只读提示。                                                          | ✅ 通过                                 |
+| 资料课程上下文      | `courseInstanceId` 查询参数只接受当前学期课程，预选后手动切换会同步 URL；非法值不会驱动前端越权读取。                                                                                                   | ✅ 通过                                 |
+| 自动化基线          | `pnpm type-check`、后端 build、前端 build 均退出码 0；隔离 `pnpm test` 后端 109/109、前端 32/32。                                                                                                       | ✅ 通过（Markmap chunk 大小警告非阻塞） |
+| Chromium 浏览器闭环 | Playwright 在 `Asia/Shanghai`、后端 `127.0.0.1:4311`、前端 `127.0.0.1:4173` 下 1/1 通过；覆盖三场考试、两场确认、切换、近期概览、邻近提示、任务 `todo → doing → done`、刷新读回、资料上下文和非法 URL。 | ✅ 通过                                 |
+| 数据隔离与证据      | 最终全量测试使用 `phase1-t11-20260715-221112-final-test`，最终浏览器验收使用 `phase1-t11-20260715-221352-final-e2e`；截图、trace、report、test-results 仅写入仓库外 `APP_DATA_ROOT/playwright`。        | ✅ 通过                                 |
+| 非目标              | 未实现跨考试自动排程、智能任务平衡、模拟考、临考速背、T02 Provider 健康熔断或 S3 业务代码。                                                                                                             | ✅ 边界保持                             |
 
 T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新的通过证据，不回写或改写 T09 当时的未完成事实。
 
 ### 7.4 Phase 1-T08：本机配置中心与连接验收（2026-07-17）
 
-| 验收项 | 实际证据 | 结论 |
-| ------ | -------- | ---- |
-| Windows 秘密存储 | Node `v22.23.1`、win32 x64 的 `@primno/dpapi` 与 `DpapiProtector` roundtrip 均为 true；自动化使用注入式 `TestProtector` | ✅ 通过 |
-| 状态与恢复 | 覆盖候选不落盘、active/prev 恢复、双损坏降级、唯一 tmp 清理、同通道串行锁和跨通道并行 | ✅ 通过 |
-| 连接与热切换 | AI 逐 Provider 全通过才激活；SMTP/飞书 mock 测试隔离；新请求读取新 Router，在途请求继续使用旧 Router，熔断状态跨请求保留 | ✅ 通过 |
-| API 安全 | 覆盖字段/数量/协议/长度上限、JSON-only、loopback Origin、恶意预检 403、状态响应不含密钥或路径 | ✅ 通过 |
-| 前端设置页 | 组件测试覆盖运行状态、成功/失败、密钥清空、不写 `localStorage` 和首次引导；浏览器在 `/settings` 与 `/courses` 验收可见 | ✅ 通过 |
-| 自动化基线 | 后端 212/212，前端 10 files / 52 tests，根级 type-check、build、`pnpm test`、文档治理和 diff 检查通过 | ✅ 通过 |
-| 外部服务边界 | 未执行真实 AI、SMTP、飞书 smoke；浏览器未点击真实测试激活按钮 | ✅ 边界保持 |
+| 验收项           | 实际证据                                                                                                                 | 结论        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Windows 秘密存储 | Node `v22.23.1`、win32 x64 的 `@primno/dpapi` 与 `DpapiProtector` roundtrip 均为 true；自动化使用注入式 `TestProtector`  | ✅ 通过     |
+| 状态与恢复       | 覆盖候选不落盘、active/prev 恢复、双损坏降级、唯一 tmp 清理、同通道串行锁和跨通道并行                                    | ✅ 通过     |
+| 连接与热切换     | AI 逐 Provider 全通过才激活；SMTP/飞书 mock 测试隔离；新请求读取新 Router，在途请求继续使用旧 Router，熔断状态跨请求保留 | ✅ 通过     |
+| API 安全         | 覆盖字段/数量/协议/长度上限、JSON-only、loopback Origin、恶意预检 403、状态响应不含密钥或路径                            | ✅ 通过     |
+| 前端设置页       | 组件测试覆盖运行状态、成功/失败、密钥清空、不写 `localStorage` 和首次引导；浏览器在 `/settings` 与 `/courses` 验收可见   | ✅ 通过     |
+| 自动化基线       | 后端 212/212，前端 10 files / 52 tests，根级 type-check、build、`pnpm test`、文档治理和 diff 检查通过                    | ✅ 通过     |
+| 外部服务边界     | 未执行真实 AI、SMTP、飞书 smoke；浏览器未点击真实测试激活按钮                                                            | ✅ 边界保持 |
 
 ## 八、Phase 0.8 设计回填验收矩阵
 
@@ -177,13 +176,13 @@ T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新
 
 ### 9.1 Phase 2 S5 完成覆盖
 
-| 范围 | 自动化与浏览器证据 | 当前边界 |
-| ---- | ------------------ | -------- |
-| T02 模拟考 Schema 与生成 | migration v9、API 集成测试、确定性生成与学生安全 DTO | 持久化模拟卷/尝试/答案/模块分析；不依赖真实 AI |
-| T03 模拟考前端 | 页面/客户端测试与 Playwright 覆盖生成、作答、刷新恢复、提交和结果 | 只消费 T02 API，不改后端事实 |
-| T04 临考速背 | 后端/前端测试与 Playwright 覆盖翻卡、计时、刷新恢复和窄屏 | 即时只读卡片；无 Schema、Worker 或真实 AI |
-| T05 冲刺计划 | 后端/前端测试与 Playwright 覆盖 7 天建议、状态降级和安全深链 | 即时只读计划；不持久化 `CramPlan` 或完成状态 |
-| T06 工作台冲刺区 | 组件测试与 Playwright 覆盖已确认考试、窗口状态、跨考试切换和窄屏 | 仅前端聚合；不新增 API、Schema、StudyEvent 或写回 |
+| 范围                     | 自动化与浏览器证据                                                | 当前边界                                          |
+| ------------------------ | ----------------------------------------------------------------- | ------------------------------------------------- |
+| T02 模拟考 Schema 与生成 | migration v9、API 集成测试、确定性生成与学生安全 DTO              | 持久化模拟卷/尝试/答案/模块分析；不依赖真实 AI    |
+| T03 模拟考前端           | 页面/客户端测试与 Playwright 覆盖生成、作答、刷新恢复、提交和结果 | 只消费 T02 API，不改后端事实                      |
+| T04 临考速背             | 后端/前端测试与 Playwright 覆盖翻卡、计时、刷新恢复和窄屏         | 即时只读卡片；无 Schema、Worker 或真实 AI         |
+| T05 冲刺计划             | 后端/前端测试与 Playwright 覆盖 7 天建议、状态降级和安全深链      | 即时只读计划；不持久化 `CramPlan` 或完成状态      |
+| T06 工作台冲刺区         | 组件测试与 Playwright 覆盖已确认考试、窗口状态、跨考试切换和窄屏  | 仅前端聚合；不新增 API、Schema、StudyEvent 或写回 |
 
 ### 9.2 POST-PHASE2 分支全量验证（2026-07-21）
 
@@ -210,18 +209,18 @@ T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新
 
 ## 十、Phase 1.5-T02 S7 ASR Composer Smoke
 
-| 验收项 | 实际证据 | 结果 |
-| ------ | -------- | ---- |
-| Windows CPU 安装与加载 | Python 3.10.19 独立 `.venv`；FunASR 1.3.22；torch/torchaudio 2.11.0+cpu；本地 SenseVoiceSmall | ✅ |
-| 官方来源与许可 | ModelScope 官方 `iic/SenseVoiceSmall`；API 与下载 README 均为 Apache License 2.0；FunASR MIT | ⚠️ 模型只有 `master`，无 immutable revision；逐文件哈希补强 |
-| 安全样例 | 本机 SAPI 合成中文/中英混合；程序生成静音、轻噪声、损坏 WAV 与非 WAV；无学生数据 | ✅ |
-| 正向短音频 | 两个语音样例各 3/3 非空、短哈希稳定；RTF 约 0.146–0.188 | ⚠️ 存在可见识别替换，不代表课堂准确率 |
-| 无语音/噪声 | 静音和轻噪声各 3/3 产生同一短误识别 | ❌ no-speech 门禁未关闭 |
-| 稳定错误 | 损坏 WAV → `AUDIO_DECODE_FAILED`；非 WAV → `AUDIO_FORMAT_UNSUPPORTED` | ✅ |
-| 结果契约 | 离线批次 14/14 通过 Draft 2020-12 JSON Schema；完整转写不进主仓库 | ✅ |
-| 性能资源 | 模型加载 3,342 ms；总进程 28,056 ms；峰值工作集约 3,125.5 MiB；CPU 64.109 s | ⚠️ 仅短音频开发机事实，16GB/长音频须重测 |
-| 离线与清理 | 显式本地模型 + offline 环境变量成功；100 ms 轮询无 TCP；退出后无候选 Python 残留 | ⚠️ 未做防火墙隔离，证据为辅助级 |
-| 执行边界 | 未修改 `packages/`，未执行 FFmpeg，未实现 Adapter/API/Worker/前端 | ✅ |
+| 验收项                 | 实际证据                                                                                      | 结果                                                        |
+| ---------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Windows CPU 安装与加载 | Python 3.10.19 独立 `.venv`；FunASR 1.3.22；torch/torchaudio 2.11.0+cpu；本地 SenseVoiceSmall | ✅                                                          |
+| 官方来源与许可         | ModelScope 官方 `iic/SenseVoiceSmall`；API 与下载 README 均为 Apache License 2.0；FunASR MIT  | ⚠️ 模型只有 `master`，无 immutable revision；逐文件哈希补强 |
+| 安全样例               | 本机 SAPI 合成中文/中英混合；程序生成静音、轻噪声、损坏 WAV 与非 WAV；无学生数据              | ✅                                                          |
+| 正向短音频             | 两个语音样例各 3/3 非空、短哈希稳定；RTF 约 0.146–0.188                                       | ⚠️ 存在可见识别替换，不代表课堂准确率                       |
+| 无语音/噪声            | 静音和轻噪声各 3/3 产生同一短误识别                                                           | ❌ no-speech 门禁未关闭                                     |
+| 稳定错误               | 损坏 WAV → `AUDIO_DECODE_FAILED`；非 WAV → `AUDIO_FORMAT_UNSUPPORTED`                         | ✅                                                          |
+| 结果契约               | 离线批次 14/14 通过 Draft 2020-12 JSON Schema；完整转写不进主仓库                             | ✅                                                          |
+| 性能资源               | 模型加载 3,342 ms；总进程 28,056 ms；峰值工作集约 3,125.5 MiB；CPU 64.109 s                   | ⚠️ 仅短音频开发机事实，16GB/长音频须重测                    |
+| 离线与清理             | 显式本地模型 + offline 环境变量成功；100 ms 轮询无 TCP；退出后无候选 Python 残留              | ⚠️ 未做防火墙隔离，证据为辅助级                             |
+| 执行边界               | 未修改 `packages/`，未执行 FFmpeg，未实现 Adapter/API/Worker/前端                             | ✅                                                          |
 
 **总判定：`PARTIAL`。** T02 执行完成并证明 Windows CPU 本地 ASR 的基本技术可行性；静音/轻噪声 false positive、immutable revision、离线证明强度、一次性 pip cache 偏差和首次树清单缺口阻止完整 `PASS`。下一步只能创建并审查 T03 FFmpeg 音频预处理计划；T04 产品装配前必须重验 no-speech、模型版本、许可/再分发、资源和课堂近似样例。
 
@@ -231,13 +230,13 @@ T09 的历史结论保持不变；T11 作为后续独立任务在本节形成新
 
 G2 的验收对象是**可验证的操作系统级离线隔离**，而不是某一个 Windows 配置、模型缓存状态或人工断网结果。每次验收必须明确 ASR 所在的平台、OS/运行时版本、CPU 架构及外部隔离实现；合格结果只适用于该组合，不外推为跨平台、产品接入或生产发布资格。
 
-| 验收项 | 强证据通过标准 | 当前事实与状态 |
-| ------ | ------------ | -------------- |
-| G2 外部强制隔离 | ASR 进程外部的 OS、容器或虚拟化层对其出站能力强制生效；可采用标准 Windows Firewall、Linux namespace/nftables、Docker `--network none`、独立虚拟机或等价机制 | 未执行新的平台组合验证 |
-| G2 审计、清理与回滚 | 留存隔离启用前后状态、覆盖范围、阻断/拒绝结果、清理和回滚记录；不得遗留永久策略或未清理规则 | 未执行；每次平台实测须有独立计划和明确批准 |
-| G2 隔离下本地正向结果 | 隔离持续有效时，以显式本地模型路径取得结构化、可复查的本地 ASR 正向结果 | 未执行；不能由缓存命中或进程未联网轮询替代 |
-| 辅助性事实 | `offline`/cache-only、DNS、hosts、代理、无 TCP 轮询或人工断网可记录为缓存、清理或环境事实 | 永远不能单独构成 G2 `PASS` |
-| 历史 Windows 证据 | 定制 Windows 10 的 Firewall profile 全部不可用时停止；不创建规则、不修改永久策略 | 旧 G2=`BLOCKED` 历史保留；在新语义下该环境可标记 `ENVIRONMENT_UNAVAILABLE`/`DEFERRED`，但不是 `PASS` |
+| 验收项                | 强证据通过标准                                                                                                                                              | 当前事实与状态                                                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| G2 外部强制隔离       | ASR 进程外部的 OS、容器或虚拟化层对其出站能力强制生效；可采用标准 Windows Firewall、Linux namespace/nftables、Docker `--network none`、独立虚拟机或等价机制 | 未执行新的平台组合验证                                                                               |
+| G2 审计、清理与回滚   | 留存隔离启用前后状态、覆盖范围、阻断/拒绝结果、清理和回滚记录；不得遗留永久策略或未清理规则                                                                 | 未执行；每次平台实测须有独立计划和明确批准                                                           |
+| G2 隔离下本地正向结果 | 隔离持续有效时，以显式本地模型路径取得结构化、可复查的本地 ASR 正向结果                                                                                     | 未执行；不能由缓存命中或进程未联网轮询替代                                                           |
+| 辅助性事实            | `offline`/cache-only、DNS、hosts、代理、无 TCP 轮询或人工断网可记录为缓存、清理或环境事实                                                                   | 永远不能单独构成 G2 `PASS`                                                                           |
+| 历史 Windows 证据     | 定制 Windows 10 的 Firewall profile 全部不可用时停止；不创建规则、不修改永久策略                                                                            | 旧 G2=`BLOCKED` 历史保留；在新语义下该环境可标记 `ENVIRONMENT_UNAVAILABLE`/`DEFERRED`，但不是 `PASS` |
 
 现有门禁事实不变：G1/G3=`PASS`；T02=`PARTIAL`；T03=`PASS`；T04 为能力验证 `PARTIAL`、非 Adapter 装配；T05/T06 未启动。正式采用这些验收语义本身没有运行 Firewall、namespace、nftables、Docker 或虚拟机隔离试验，也没有下载/核验模型、重跑 G1/G3 或进入产品实现。任何真实 G2 执行仍须独立行动计划、审查和用户明确批准。
 
@@ -247,16 +246,16 @@ G2 的验收对象是**可验证的操作系统级离线隔离**，而不是某�
 
 本矩阵只评价 Windows 原生部署准备，不评价 S7/ASR 产品装配，也不把 G2 试验结论写成产品部署结论。所有会写运行数据的命令必须使用仓库外隔离根；E2E 必须使用 `H:\ai-studybuddy-tmp\runs\<task-id>` 这类可再生目录，不得使用正式 `%LOCALAPPDATA%\AIStudyBuddy\data`。
 
-| 验收项 | 通过标准 | 当前证据口径 |
-| ------ | -------- | ------------ |
-| 部署包扫描 | 包含编译后后端/前端/shared、OCR Worker、OCR requirements、部署脚本、兼容清单；排除 `.git`、`node_modules`、密钥、真实数据、日志、tmp、models、Playwright 证据 | 记录部署包根、zip、扫描命令和排除扫描结果 |
-| Bootstrap | 使用机器安装根创建目录、复制 app、安装生产 Node 依赖、创建 OCR venv、生成无密钥 `production.env`；不依赖开发机盘符作为运行时 | 记录 InstallRoot、Node/Python 版本、venv 路径和无密钥声明 |
-| 生产启停 | 后端只监听 `127.0.0.1`；健康接口成功；前端 `/` 与 SPA fallback 返回 HTML；未知 `/api/*` 返回 JSON 404；停止后端口释放 | 记录 PID、端口、health JSON、HTTP 状态和 stop 结果 |
-| OCR smoke | RapidOCR 可导入；中文合成图、空白图、不存在路径、超时、Worker JSON 输出和临时清理通过；模型缓存不进源码 | 记录 `test-ocr-runtime.ps1` 输出和 RuntimeRoot |
-| 备份/恢复 | 当前仅 T02G 仓库外合成夹具：白名单 `studybuddy.db` 与 `semesters/`、v2 manifest/hash/路径验证、`-WhatIf` 不落盘；非 `-WhatIf` 固定拒绝 `RESTORE_WRITE_DISABLED`。真实备份、恢复点和恢复写入尚未获批/实施 | 记录 `scripts/test-data-boundary.ps1` 的合成夹具结果、完整性验证计数和无残留清理证据；不得记录真实 backup path、payload 文件列表或 restore root |
-| 配置/密钥 | 安装包和 Git 不携带真实密钥；AI/SMTP/飞书未配置时离线确定性主线可用，发送类能力不伪造成功 | 记录 `check-installation.ps1` secure-config、secret-files 和 plain-secret-config 检查 |
-| 任务计划 | 默认不注册真实发送；注册脚本以当前用户身份指向安装根 wrapper；卸载/注销不删学习数据 | 记录单测或 WhatIf/静态检查；真实发送另行验收 |
-| 安全网络 | 不新增防火墙规则，不绑定局域网，不暴露公网；日志不含 API Key、SMTP 授权码、完整 Webhook 或资料原文 | 记录端口监听和日志/密钥扫描 |
+| 验收项     | 通过标准                                                                                                                                                                                                 | 当前证据口径                                                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 部署包扫描 | 包含编译后后端/前端/shared、OCR Worker、OCR requirements、部署脚本、兼容清单；排除 `.git`、`node_modules`、密钥、真实数据、日志、tmp、models、Playwright 证据                                            | 记录部署包根、zip、扫描命令和排除扫描结果                                                                                                       |
+| Bootstrap  | 使用机器安装根创建目录、复制 app、安装生产 Node 依赖、创建 OCR venv、生成无密钥 `production.env`；不依赖开发机盘符作为运行时                                                                             | 记录 InstallRoot、Node/Python 版本、venv 路径和无密钥声明                                                                                       |
+| 生产启停   | 后端只监听 `127.0.0.1`；健康接口成功；前端 `/` 与 SPA fallback 返回 HTML；未知 `/api/*` 返回 JSON 404；停止后端口释放                                                                                    | 记录 PID、端口、health JSON、HTTP 状态和 stop 结果                                                                                              |
+| OCR smoke  | RapidOCR 可导入；中文合成图、空白图、不存在路径、超时、Worker JSON 输出和临时清理通过；模型缓存不进源码                                                                                                  | 记录 `test-ocr-runtime.ps1` 输出和 RuntimeRoot                                                                                                  |
+| 备份/恢复  | 当前仅 T02G 仓库外合成夹具：白名单 `studybuddy.db` 与 `semesters/`、v2 manifest/hash/路径验证、`-WhatIf` 不落盘；非 `-WhatIf` 固定拒绝 `RESTORE_WRITE_DISABLED`。真实备份、恢复点和恢复写入尚未获批/实施 | 记录 `scripts/test-data-boundary.ps1` 的合成夹具结果、完整性验证计数和无残留清理证据；不得记录真实 backup path、payload 文件列表或 restore root |
+| 配置/密钥  | 安装包和 Git 不携带真实密钥；AI/SMTP/飞书未配置时离线确定性主线可用，发送类能力不伪造成功                                                                                                                | 记录 `check-installation.ps1` secure-config、secret-files 和 plain-secret-config 检查                                                           |
+| 任务计划   | 默认不注册真实发送；注册脚本以当前用户身份指向安装根 wrapper；卸载/注销不删学习数据                                                                                                                      | 记录单测或 WhatIf/静态检查；真实发送另行验收                                                                                                    |
+| 安全网络   | 不新增防火墙规则，不绑定局域网，不暴露公网；日志不含 API Key、SMTP 授权码、完整 Webhook 或资料原文                                                                                                       | 记录端口监听和日志/密钥扫描                                                                                                                     |
 
 当前 Node native 依赖安装还需要稳定网络取得预编译包；若下载失败会退回本地编译并要求 Visual Studio C++ Build Tools。bootstrap 脚本必须给出可操作错误，不能静默半配置。
 
@@ -273,15 +272,14 @@ git diff --check
 
 Phase 0.7 的最终选型结论与实测数据已经同步回 `docs/04-*`、`docs/08-*` 与能力卡。Phase 1.5-T02 的 `PARTIAL` ASR 证据已同步回 `docs/04-*`、`docs/08-*`、composer README 与能力卡；不得将该结论描述为 S7 或 `AuralConverter` 已完成。Phase 0.8 T04A composer 试炼场证据与 T05 正式 AI Router 验收已同步回 `docs/04-*`、`docs/05-*`、`docs/08-*`、能力卡与本节。Phase 0.8 每完成一项正式 Adapter/API/页面验收，再把实际命令、结果和证据路径回填本计划；当前未完成的 HP 兼容复测与 Phase 0.8 E2E 不得用文档措辞掩盖。
 
-
 ## 十一、S7-MVP 本地 WAV → S2 验收（2026-07-25，已完成主线复验并推送 `origin/master`）
 
-| 层级 | 必须验证 | 禁止替代 |
-| ---- | -------- | -------- |
-| Adapter | 受控 PCM WAV 成功、格式/大小拒绝、运行时未配置、非零退出、超时、临时文件和 CLI 残留清理 | 只测 harness、只测 cache/offline、真实录音 |
-| API + SQLite | 许可确认、学期/课程归属、编辑文本保存为 `text` material + `normalized_texts`、不创建转换/笔记 Job | mock DB、自动 Provider 调用 |
-| 前端 | 许可复选框、格式/质量提示、转写后可编辑、显式保存、资料卡明确生成笔记操作 | `localStorage` 暂存全文、自动保存 |
-| 浏览器闭环 | fake CLI + 隔离 `APP_DATA_ROOT` 下完成“选择 WAV → 编辑 → 保存为 S2 输入” | 使用真实 Provider、Firewall/G2、Docker/WSL |
-| 开发机 smoke | 固定外置 CLI/模型哈希复核后用合成 PCM WAV，记录脱敏退出码、耗时和清理结论 | 把结果外推为用户机、完整 S7 或通用静音 |
+| 层级         | 必须验证                                                                                          | 禁止替代                                   |
+| ------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Adapter      | 受控 PCM WAV 成功、格式/大小拒绝、运行时未配置、非零退出、超时、临时文件和 CLI 残留清理           | 只测 harness、只测 cache/offline、真实录音 |
+| API + SQLite | 许可确认、学期/课程归属、编辑文本保存为 `text` material + `normalized_texts`、不创建转换/笔记 Job | mock DB、自动 Provider 调用                |
+| 前端         | 许可复选框、格式/质量提示、转写后可编辑、显式保存、资料卡明确生成笔记操作                         | `localStorage` 暂存全文、自动保存          |
+| 浏览器闭环   | fake CLI + 隔离 `APP_DATA_ROOT` 下完成“选择 WAV → 编辑 → 保存为 S2 输入”                          | 使用真实 Provider、Firewall/G2、Docker/WSL |
+| 开发机 smoke | 固定外置 CLI/模型哈希复核后用合成 PCM WAV，记录脱敏退出码、耗时和清理结论                         | 把结果外推为用户机、完整 S7 或通用静音     |
 
 S7-MVP 已完成任务分支测试、构建、文档治理、diff 检查与开发机 smoke；仍须主线复验及远端推送，在此之前不得标记为主线完成。

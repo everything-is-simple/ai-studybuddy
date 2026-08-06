@@ -21,7 +21,7 @@ function hasPendingMaterials(materials: MaterialDto[]) {
 export function useMaterialPolling(
   semesterId: string | null,
   courseInstanceId: string,
-  enabled = true,
+  enabled = true
 ): UseMaterialPollingResult {
   const [materials, setMaterials] = useState<MaterialDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,7 +89,7 @@ export function useMaterialPolling(
         setError(
           consecutiveErrors >= MAX_CONSECUTIVE_ERRORS
             ? `资料状态请求连续失败，已停止自动刷新，请手动重试。${message ? `（${message}）` : ''}`
-            : message,
+            : message
         );
 
         if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {

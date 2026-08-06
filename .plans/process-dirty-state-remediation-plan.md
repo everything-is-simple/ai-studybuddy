@@ -48,15 +48,15 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
 
 ## 3. 当前只读审计快照（2026-07-25）
 
-| 区域 | 当前状态 | 初步分类 | 不能直接做的事 | 后续需要的决定 |
-| --- | --- | --- | --- | --- |
-| `H:\ai-studybuddy` | 分支 `codex/phase1-5-g2-wsl-isolation-exec`；5 个已跟踪文件显示修改、2 个未跟踪计划文件；相对当前主线落后且有自身提交 | **语义风险 + 行尾噪声 + 待审计划** | 不得 reset、覆盖 checkout 或删除 | 对 `CURRENT_SEMESTER_VERSION = 8` 与 migration 9 进行专门的行为判定；计划文件需决定保留/迁移/提交 |
-| `H:\ai-studybuddy\packages\backend\src\services\semester-access-service.ts` | 与当前主线的实质差异为 `CURRENT_SEMESTER_VERSION` 从 `9` 改为 `8` | **高优先级语义风险** | 不得以“恢复主线”为由直接改回 `9` | 明确数据迁移事实、受影响数据库、测试契约及用户意图后，再独立批准修改 |
-| `H:\ai-studybuddy\.worktrees\process-runtime-deployment` | 仅未跟踪 `node_modules.shared-deps\` | **依赖残留候选** | 不得使用宽泛清理命令 | 核对没有进程/工作树依赖后，按精确绝对路径清理或保留 |
-| `H:\ai-studybuddy-worktrees\phase1-5-t02-asr-candidate-harness-plan` | 仅未跟踪 T02 候选 harness 计划 | **待审计划** | 不得因 ASR 暂缓而删除计划 | 用户决定保留、独立提交计划或归档；不触发 ASR 产品实现 |
-| `H:\ai-studybuddy-worktrees\phase1-5-t02-whispercpp-formal-revalidation-plan` | 仅未跟踪正式复验计划 | **待审计划** | 不得删除或宣称已实施 | 用户决定保留、独立提交计划或归档；不触发 G2 或 S7 接入 |
-| `H:\ai-studybuddy-worktrees\process-runtime-deploy-compatibility-clean-20260724` | 6 个已跟踪脚本/任务清单修改、1 个未跟踪计划、约 309 个可疑编译/测试生成物 | **待比较的运行时修复草稿 + 生成物残留** | 不得把已跟踪修改和生成物一起删除 | 逐个比较脚本差异是否已被 Node 24 主线覆盖；仅在白名单和预检通过后清理生成物 |
-| `H:\ai-studybuddy-components\local-asr-whispercpp` 及其 `runs`/`evidence` | 仓库外组件候选和证据 | **外部证据，不是主仓脏状态** | 不得纳入主仓清理、复制入 `packages/` 或改变产品状态 | 保持独立；仅在单独 T02/G2 任务处理 |
+| 区域                                                                             | 当前状态                                                                                                              | 初步分类                                | 不能直接做的事                                      | 后续需要的决定                                                                                    |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `H:\ai-studybuddy`                                                               | 分支 `codex/phase1-5-g2-wsl-isolation-exec`；5 个已跟踪文件显示修改、2 个未跟踪计划文件；相对当前主线落后且有自身提交 | **语义风险 + 行尾噪声 + 待审计划**      | 不得 reset、覆盖 checkout 或删除                    | 对 `CURRENT_SEMESTER_VERSION = 8` 与 migration 9 进行专门的行为判定；计划文件需决定保留/迁移/提交 |
+| `H:\ai-studybuddy\packages\backend\src\services\semester-access-service.ts`      | 与当前主线的实质差异为 `CURRENT_SEMESTER_VERSION` 从 `9` 改为 `8`                                                     | **高优先级语义风险**                    | 不得以“恢复主线”为由直接改回 `9`                    | 明确数据迁移事实、受影响数据库、测试契约及用户意图后，再独立批准修改                              |
+| `H:\ai-studybuddy\.worktrees\process-runtime-deployment`                         | 仅未跟踪 `node_modules.shared-deps\`                                                                                  | **依赖残留候选**                        | 不得使用宽泛清理命令                                | 核对没有进程/工作树依赖后，按精确绝对路径清理或保留                                               |
+| `H:\ai-studybuddy-worktrees\phase1-5-t02-asr-candidate-harness-plan`             | 仅未跟踪 T02 候选 harness 计划                                                                                        | **待审计划**                            | 不得因 ASR 暂缓而删除计划                           | 用户决定保留、独立提交计划或归档；不触发 ASR 产品实现                                             |
+| `H:\ai-studybuddy-worktrees\phase1-5-t02-whispercpp-formal-revalidation-plan`    | 仅未跟踪正式复验计划                                                                                                  | **待审计划**                            | 不得删除或宣称已实施                                | 用户决定保留、独立提交计划或归档；不触发 G2 或 S7 接入                                            |
+| `H:\ai-studybuddy-worktrees\process-runtime-deploy-compatibility-clean-20260724` | 6 个已跟踪脚本/任务清单修改、1 个未跟踪计划、约 309 个可疑编译/测试生成物                                             | **待比较的运行时修复草稿 + 生成物残留** | 不得把已跟踪修改和生成物一起删除                    | 逐个比较脚本差异是否已被 Node 24 主线覆盖；仅在白名单和预检通过后清理生成物                       |
+| `H:\ai-studybuddy-components\local-asr-whispercpp` 及其 `runs`/`evidence`        | 仓库外组件候选和证据                                                                                                  | **外部证据，不是主仓脏状态**            | 不得纳入主仓清理、复制入 `packages/` 或改变产品状态 | 保持独立；仅在单独 T02/G2 任务处理                                                                |
 
 快照说明：上表是截至本计划创建时的初步审计，不是对文件内容归属的最终裁定。任何状态在实施前必须再次以 `git status --short --branch`、`git diff`、`git log` 和进程检查复核；不得根据旧快照删除文件。
 
@@ -150,14 +150,14 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
 
 ## 5. 统一安全门禁与命令边界
 
-| 门禁 | 必须满足 | 不满足时的结论 |
-| --- | --- | --- |
-| G0 计划门 | 本文件及 `docs/04` 计划记录已审查；用户明确批准某一批次 | 只允许继续讨论或只读盘点 |
-| G1 语义门 | 学期版本 8/9 的迁移、测试、数据影响和用户意图已明确 | 保留主工作区原状，标记 `BLOCKED` |
-| G2 差异门 | 每项运行时脚本修改与最新主线逐项比较完毕 | 不得删除旧草稿或重复合并 |
-| G3 删除门 | 精确绝对路径、类别、进程检查、父目录验证、预期后状态和用户批准齐全 | 不得执行删除 |
-| G4 计划门 | 每个未跟踪计划已决定保留、提交、迁移或归档 | 不得把计划当垃圾或当已完成能力 |
-| G5 主线门 | 只有需要集成的已验证修改才进入主线流程 | 不得因清理需要合并无关改动 |
+| 门禁      | 必须满足                                                           | 不满足时的结论                   |
+| --------- | ------------------------------------------------------------------ | -------------------------------- |
+| G0 计划门 | 本文件及 `docs/04` 计划记录已审查；用户明确批准某一批次            | 只允许继续讨论或只读盘点         |
+| G1 语义门 | 学期版本 8/9 的迁移、测试、数据影响和用户意图已明确                | 保留主工作区原状，标记 `BLOCKED` |
+| G2 差异门 | 每项运行时脚本修改与最新主线逐项比较完毕                           | 不得删除旧草稿或重复合并         |
+| G3 删除门 | 精确绝对路径、类别、进程检查、父目录验证、预期后状态和用户批准齐全 | 不得执行删除                     |
+| G4 计划门 | 每个未跟踪计划已决定保留、提交、迁移或归档                         | 不得把计划当垃圾或当已完成能力   |
+| G5 主线门 | 只有需要集成的已验证修改才进入主线流程                             | 不得因清理需要合并无关改动       |
 
 所有批次均禁止：`git reset --hard`、`git clean`、强推、覆盖 checkout、跨 worktree 移动未分类文件、删除仓库根或用通配符对多目录递归处理。任何涉及运行数据的验证仍必须使用隔离 `APP_DATA_ROOT`。
 
@@ -220,7 +220,6 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
 3. 历史文档/旧计划中出现的仓内 `.worktrees` 路径仅作为历史证据，不构成当前许可；当前规则以 `docs/06` 和 `docs/12` 为准。
 4. 此决定不授权删除：先完成只读归属判定，再由用户逐批批准 Git worktree 移动、无效残留清理或归档。
 
-
 ## 10. 2026-07-25 实施记录
 
 本轮按“先迁出、后判定、暂不销毁”的原则完成第一批实际收口：
@@ -232,10 +231,10 @@ AI StudyBuddy 已形成学生本机学习闭环的雏形：一名在 Windows 本
    - `H:\ai-studybuddy-origin-master-readonly`；
    - `H:\ai-studybuddy-worktrees\process-dev-machine-node24-runtime-baseline`；
    - `H:\ai-studybuddy-worktrees\process-system-truth-document-reconciliation`。
-   Git 分支和提交仍保留，没有执行强制删除。
+     Git 分支和提交仍保留，没有执行强制删除。
 3. 将仓库内剩余 15 个已失去 Git 登记、且多数仍指向历史 `I:\...` gitdir 的目录整体迁至：
    - `H:\ai-studybuddy-worktrees\_legacy-unregistered-20260725`。
-   迁移前确认该路径下不存在有效登记 worktree、无占用进程；迁移后 15 个直接子项计数一致。
+     迁移前确认该路径下不存在有效登记 worktree、无占用进程；迁移后 15 个直接子项计数一致。
 4. 将外部 worktree 根中 6 个未登记旧目录归拢到上述隔离区的 `_external-root-remnants`；将两个确认包括隐藏项在内均为空的顶层目录 `H:\ai-studybuddy-day-study`、`H:\ai-studybuddy-logs` 归拢到 `_empty-top-level-directories`。
 5. 最终复查：
    - `H:\ai-studybuddy\.worktrees` 不存在；

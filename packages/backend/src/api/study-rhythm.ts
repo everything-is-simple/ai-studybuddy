@@ -104,10 +104,14 @@ router.patch('/schedule-entries/:id', (req: Request, res: Response) => {
 // ── DELETE /api/schedule-entries/:id ──────────────────────────
 router.delete('/schedule-entries/:id', (req: Request, res: Response) => {
   try {
-    return res.json(okResponse(service.deleteScheduleEntry({
-      semesterId: req.query.semesterId ?? req.body?.semesterId,
-      scheduleEntryId: req.params.id,
-    })));
+    return res.json(
+      okResponse(
+        service.deleteScheduleEntry({
+          semesterId: req.query.semesterId ?? req.body?.semesterId,
+          scheduleEntryId: req.params.id,
+        })
+      )
+    );
   } catch (error) {
     return handleError(error, res);
   }

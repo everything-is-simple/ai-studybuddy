@@ -16,7 +16,12 @@ const ai = (apiKey) => ({
   providers: [{ name: 'primary', baseUrl: 'https://provider.invalid/v1', apiKey, model: 'm1', priority: 1 }],
 });
 const smtp = (authCode) => ({
-  host: 'smtp.qq.com', port: 465, secure: true, user: 'sender@example.test', authCode, to: 'to@example.test',
+  host: 'smtp.qq.com',
+  port: 465,
+  secure: true,
+  user: 'sender@example.test',
+  authCode,
+  to: 'to@example.test',
 });
 const feishu = (webhookUrl = 'https://example.invalid/hook') => ({ webhookUrl });
 
@@ -42,7 +47,11 @@ test('ConfigurationService initializes all channels as unconfigured without cras
   await service.initialize();
 
   assert.deepEqual(service.getChannelStatus('ai'), {
-    status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: null,
+    status: 'unconfigured',
+    lastVerified: null,
+    summary: null,
+    details: [],
+    errorCode: null,
   });
   assert.equal(service.getActiveSnapshot('smtp'), null);
   assert.deepEqual(service.getAllStatus(), {
@@ -77,20 +86,25 @@ test('successful test activates an immutable snapshot, persists it, and notifies
   assert.deepEqual((await store.read('ai')).data, candidate);
   assert.equal(events.length, 1);
   assert.equal(events[0].channel, 'ai');
-  assert.throws(() => { events[0].snapshot.providers[0].model = 'mutated'; }, TypeError);
+  assert.throws(() => {
+    events[0].snapshot.providers[0].model = 'mutated';
+  }, TypeError);
 });
 
 test('failed candidate is discarded without changing disk, snapshot, or listeners', async (t) => {
   const tester = passingTester({
-    testAi: async (candidate) => candidate.providers[0].apiKey === 'good'
-      ? { pass: true, providers: [{ name: 'primary', pass: true }] }
-      : { pass: false, providers: [{ name: 'primary', pass: false, errorCode: 'AI_AUTH_FAILED' }] },
+    testAi: async (candidate) =>
+      candidate.providers[0].apiKey === 'good'
+        ? { pass: true, providers: [{ name: 'primary', pass: true }] }
+        : { pass: false, providers: [{ name: 'primary', pass: false, errorCode: 'AI_AUTH_FAILED' }] },
   });
   const { service, store } = await createService(t, tester);
   await service.initialize();
   await service.testAndActivate('ai', ai('good'));
   let eventCount = 0;
-  service.onConfigActivated(() => { eventCount += 1; });
+  service.onConfigActivated(() => {
+    eventCount += 1;
+  });
 
   const result = await service.testAndActivate('ai', ai('bad'));
 
@@ -111,9 +125,7 @@ test('same-channel activation is serial while different channels can test concur
     else crossChannelMax = Math.max(crossChannelMax, active);
     await delay();
     active -= 1;
-    return kind === 'ai'
-      ? { pass: true, providers: [{ name: 'primary', pass: true }] }
-      : { pass: true };
+    return kind === 'ai' ? { pass: true, providers: [{ name: 'primary', pass: true }] } : { pass: true };
   };
   const tester = passingTester({
     testAi: async () => tracked('same'),
@@ -122,28 +134,21 @@ test('same-channel activation is serial while different channels can test concur
   const { service } = await createService(t, tester);
   await service.initialize();
 
-  await Promise.all([
-    service.testAndActivate('ai', ai('first')),
-    service.testAndActivate('ai', ai('second')),
-  ]);
+  await Promise.all([service.testAndActivate('ai', ai('first')), service.testAndActivate('ai', ai('second'))]);
   assert.equal(sameChannelMax, 1);
   assert.deepEqual(service.getActiveSnapshot('ai'), ai('second'));
 
   active = 0;
   tester.testAi = async () => tracked('ai');
   tester.testSmtp = async () => tracked('smtp');
-  await Promise.all([
-    service.testAndActivate('ai', ai('third')),
-    service.testAndActivate('smtp', smtp('smtp-secret')),
-  ]);
+  await Promise.all([service.testAndActivate('ai', ai('third')), service.testAndActivate('smtp', smtp('smtp-secret'))]);
   assert.equal(crossChannelMax, 2);
 });
 
 test('a failed queued activation always releases the channel for its successor', async (t) => {
   const tester = passingTester({
-    testFeishu: async (candidate) => candidate.webhookUrl.includes('bad')
-      ? { pass: false, errorCode: 'FEISHU_WEBHOOK_REJECTED' }
-      : { pass: true },
+    testFeishu: async (candidate) =>
+      candidate.webhookUrl.includes('bad') ? { pass: false, errorCode: 'FEISHU_WEBHOOK_REJECTED' } : { pass: true },
   });
   const { service } = await createService(t, tester);
   await service.initialize();
@@ -186,7 +191,11 @@ test('initialize recovers prev, preserves safe metadata, and degrades on double 
   });
   await degraded.initialize();
   assert.deepEqual(degraded.getChannelStatus('ai'), {
-    status: 'unconfigured', lastVerified: null, summary: null, details: [], errorCode: 'CONFIG_CORRUPT_DEGRADED',
+    status: 'unconfigured',
+    lastVerified: null,
+    summary: null,
+    details: [],
+    errorCode: 'CONFIG_CORRUPT_DEGRADED',
   });
 });
 
@@ -196,8 +205,12 @@ test('initialize reports DPAPI unavailable separately from corrupt configuration
   await writeFile(path.join(configDir, 'ai.active.enc'), 'encrypted-data');
   const unavailableProtector = {
     available: false,
-    encrypt() { throw new SecretProtectionError('CONFIG_DPAPI_UNAVAILABLE', 'unavailable'); },
-    decrypt() { throw new SecretProtectionError('CONFIG_DPAPI_UNAVAILABLE', 'unavailable'); },
+    encrypt() {
+      throw new SecretProtectionError('CONFIG_DPAPI_UNAVAILABLE', 'unavailable');
+    },
+    decrypt() {
+      throw new SecretProtectionError('CONFIG_DPAPI_UNAVAILABLE', 'unavailable');
+    },
   };
   const store = new SecureStore({ configDir, protector: unavailableProtector });
   const service = new ConfigurationService({ store, tester: passingTester(), configDir });
@@ -223,7 +236,9 @@ test('retest uses only the active snapshot and never rewrites or deactivates it'
   assert.equal(await service.retest('ai'), null);
   await service.testAndActivate('ai', ai('active-secret'));
   let events = 0;
-  service.onConfigActivated(() => { events += 1; });
+  service.onConfigActivated(() => {
+    events += 1;
+  });
   shouldPass = false;
 
   const result = await service.retest('ai');
@@ -235,7 +250,6 @@ test('retest uses only the active snapshot and never rewrites or deactivates it'
   assert.equal(service.getChannelStatus('ai').status, 'verified_pass');
   assert.equal(events, 0);
 });
-
 
 test('environment fallback is observable without persistence or secret disclosure', async (t) => {
   const { service, store } = await createService(t);

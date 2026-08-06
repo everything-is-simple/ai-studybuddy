@@ -11,16 +11,35 @@ const DEFAULT_ORIGINS = [
 
 export class AllowedOriginsError extends Error {
   readonly code = 'CONFIG_ALLOWED_ORIGINS_INVALID';
-  constructor() { super('CONFIG_ALLOWED_ORIGINS_INVALID'); }
+  constructor() {
+    super('CONFIG_ALLOWED_ORIGINS_INVALID');
+  }
 }
 
 export function parseAllowedOrigins(raw = ''): ReadonlySet<string> {
   const origins = new Set(DEFAULT_ORIGINS);
-  for (const entry of raw.split(',').map((value) => value.trim()).filter(Boolean)) {
+  for (const entry of raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)) {
     let parsed: URL;
-    try { parsed = new URL(entry); } catch { throw new AllowedOriginsError(); }
+    try {
+      parsed = new URL(entry);
+    } catch {
+      throw new AllowedOriginsError();
+    }
     const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
-    if (entry === '*' || parsed.protocol !== 'http:' || !loopback || !parsed.port || parsed.username || parsed.password || parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    if (
+      entry === '*' ||
+      parsed.protocol !== 'http:' ||
+      !loopback ||
+      !parsed.port ||
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== '/' ||
+      parsed.search ||
+      parsed.hash
+    ) {
       throw new AllowedOriginsError();
     }
     origins.add(parsed.origin);

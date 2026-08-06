@@ -27,12 +27,7 @@ export const PARENT_REPORT_CHANNELS = ['smtp', 'feishu'] as const;
 
 export type ParentReportChannel = (typeof PARENT_REPORT_CHANNELS)[number];
 export type ParentReportDeliveryStatus =
-  | 'sent'
-  | 'failed'
-  | 'deduplicated'
-  | 'skipped_unconfigured'
-  | 'deferred'
-  | 'in_progress';
+  'sent' | 'failed' | 'deduplicated' | 'skipped_unconfigured' | 'deferred' | 'in_progress';
 
 export interface FrozenParentReportBlock {
   reportType: ParentReportType;
@@ -80,7 +75,10 @@ export interface ParentReportDeliveryServiceOptions {
 export interface ParentReportDeliveryResult {
   reportKey: string;
   snapshotCreated: boolean;
-  channels: Record<ParentReportChannel, { status: ParentReportDeliveryStatus; errorSummary?: string; nextRetryAt?: string }>;
+  channels: Record<
+    ParentReportChannel,
+    { status: ParentReportDeliveryStatus; errorSummary?: string; nextRetryAt?: string }
+  >;
 }
 
 interface DeliveryRow {
@@ -129,7 +127,10 @@ function reportTypeLabel(type: ParentReportType): string {
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
+  return value.replace(
+    /[&<>"']/g,
+    (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!
+  );
 }
 
 function safeErrorCode(channel: ParentReportChannel): string {
@@ -139,7 +140,9 @@ function safeErrorCode(channel: ParentReportChannel): string {
 function hasExamReminder(report: ParentReportResult): boolean {
   return report.ruleReport.sections.some((section) => {
     if (section.kind !== 'exam_reminder') return false;
-    return Object.entries(section.metrics).some(([key, value]) => key.endsWith('Reminders') && typeof value === 'number' && value > 0);
+    return Object.entries(section.metrics).some(
+      ([key, value]) => key.endsWith('Reminders') && typeof value === 'number' && value > 0
+    );
   });
 }
 
@@ -179,7 +182,10 @@ function makeDefaultChannels(): ParentReportChannelAdapter[] {
   return [new SmtpParentReportAdapter(), new FeishuParentReportAdapter()];
 }
 
-function getFailureArchivePaths(semesterId: string, snapshot: ParentReportSnapshot): { htmlPath: string; summaryPath: string } {
+function getFailureArchivePaths(
+  semesterId: string,
+  snapshot: ParentReportSnapshot
+): { htmlPath: string; summaryPath: string } {
   const directory = getSemesterParentReportArchiveDir(semesterId);
   const fileStem = `report-${snapshot.reportDate}`;
   return {
@@ -242,7 +248,9 @@ export class ParentReportDeliveryService {
               AND (d.next_retry_at IS NULL OR d.next_retry_at <= ?)
               ${input.reportKey ? 'AND p.report_key = ?' : ''}`
         )
-        .all(...(input.reportKey ? [MAX_AUTOMATIC_ATTEMPTS, now, input.reportKey] : [MAX_AUTOMATIC_ATTEMPTS, now])) as Array<{ content_json: string }>;
+        .all(
+          ...(input.reportKey ? [MAX_AUTOMATIC_ATTEMPTS, now, input.reportKey] : [MAX_AUTOMATIC_ATTEMPTS, now])
+        ) as Array<{ content_json: string }>;
       snapshots = rows.map((row) => parseSnapshot(row.content_json));
     } finally {
       db.close();
@@ -297,11 +305,19 @@ export class ParentReportDeliveryService {
       return;
     }
 
-    if (smtp.status === 'sent' || smtp.status === 'deduplicated' || feishu.status === 'sent' || feishu.status === 'deduplicated') {
+    if (
+      smtp.status === 'sent' ||
+      smtp.status === 'deduplicated' ||
+      feishu.status === 'sent' ||
+      feishu.status === 'deduplicated'
+    ) {
       await Promise.all([fs.rm(htmlPath, { force: true }), fs.rm(summaryPath, { force: true })]);
     }
   }
-  private async getOrCreateSnapshot(semesterId: string, reportDate: string): Promise<{ snapshot: ParentReportSnapshot; created: boolean }> {
+  private async getOrCreateSnapshot(
+    semesterId: string,
+    reportDate: string
+  ): Promise<{ snapshot: ParentReportSnapshot; created: boolean }> {
     const reportKey = `report:${reportDate}`;
     const existing = this.readSnapshot(semesterId, reportKey);
     if (existing) return { snapshot: existing, created: false };
@@ -326,11 +342,20 @@ export class ParentReportDeliveryService {
              (report_key, report_date, timezone, generated_at, content_json, content_hash, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?)`
           )
-          .run(reportKey, reportDate, PARENT_REPORT_TIMEZONE, snapshot.generatedAt, contentJson, contentHash, this.now());
+          .run(
+            reportKey,
+            reportDate,
+            PARENT_REPORT_TIMEZONE,
+            snapshot.generatedAt,
+            contentJson,
+            contentHash,
+            this.now()
+          );
         return insert.changes === 1;
       })();
       if (created) return { snapshot, created: true };
-      const row = db.prepare('SELECT content_json FROM parent_reports WHERE report_key = ?').get(reportKey) as { content_json: string } | undefined;
+      const row = db.prepare('SELECT content_json FROM parent_reports WHERE report_key = ?').get(reportKey) as
+        { content_json: string } | undefined;
       if (!row) throw new Error('PARENT_REPORT_SNAPSHOT_UNAVAILABLE');
       return { snapshot: parseSnapshot(row.content_json), created: false };
     } finally {
@@ -341,7 +366,8 @@ export class ParentReportDeliveryService {
   private readSnapshot(semesterId: string, reportKey: string): ParentReportSnapshot | undefined {
     const db = this.openSemesterDb(semesterId);
     try {
-      const row = db.prepare('SELECT content_json FROM parent_reports WHERE report_key = ?').get(reportKey) as { content_json: string } | undefined;
+      const row = db.prepare('SELECT content_json FROM parent_reports WHERE report_key = ?').get(reportKey) as
+        { content_json: string } | undefined;
       return row ? parseSnapshot(row.content_json) : undefined;
     } finally {
       db.close();
@@ -352,17 +378,38 @@ export class ParentReportDeliveryService {
     const reportInputs: GenerateParentReportInput[] = [
       { semesterId, reportType: 'daily', periodStart: reportDate, periodEnd: reportDate },
     ];
-    if (isSunday(reportDate)) reportInputs.push({ semesterId, reportType: 'weekly', periodStart: addUtcDays(reportDate, -6), periodEnd: reportDate });
-    if (isMonthEnd(reportDate)) reportInputs.push({ semesterId, reportType: 'monthly', periodStart: `${reportDate.slice(0, 7)}-01`, periodEnd: reportDate });
+    if (isSunday(reportDate))
+      reportInputs.push({
+        semesterId,
+        reportType: 'weekly',
+        periodStart: addUtcDays(reportDate, -6),
+        periodEnd: reportDate,
+      });
+    if (isMonthEnd(reportDate))
+      reportInputs.push({
+        semesterId,
+        reportType: 'monthly',
+        periodStart: `${reportDate.slice(0, 7)}-01`,
+        periodEnd: reportDate,
+      });
 
     const reports: ParentReportResult[] = [];
     for (const input of reportInputs) reports.push(await this.reportGenerator.generateReport(input));
-    const reminder = await this.reportGenerator.generateReport({ semesterId, reportType: 'exam_reminder', periodStart: reportDate, periodEnd: reportDate });
+    const reminder = await this.reportGenerator.generateReport({
+      semesterId,
+      reportType: 'exam_reminder',
+      periodStart: reportDate,
+      periodEnd: reportDate,
+    });
     if (hasExamReminder(reminder)) reports.push(reminder);
     return reports.map(toFrozenBlock);
   }
 
-  private async deliverChannel(semesterId: string, snapshot: ParentReportSnapshot, channel: ParentReportChannel): Promise<{ status: ParentReportDeliveryStatus; errorSummary?: string; nextRetryAt?: string }> {
+  private async deliverChannel(
+    semesterId: string,
+    snapshot: ParentReportSnapshot,
+    channel: ParentReportChannel
+  ): Promise<{ status: ParentReportDeliveryStatus; errorSummary?: string; nextRetryAt?: string }> {
     const adapter = this.channels.get(channel);
     if (!adapter || !adapter.isConfigured()) return { status: 'skipped_unconfigured' };
 
@@ -378,7 +425,9 @@ export class ParentReportDeliveryService {
       const payload: ParentReportChannelPayload = {
         channel,
         snapshot,
-        ...(channel === 'smtp' ? { html: renderParentReportHtml(snapshot) } : { card: renderFeishuParentReportCard(snapshot) }),
+        ...(channel === 'smtp'
+          ? { html: renderParentReportHtml(snapshot) }
+          : { card: renderFeishuParentReportCard(snapshot) }),
       };
       await adapter.send(payload);
       this.markSent(semesterId, snapshot.reportKey, channel);
@@ -397,14 +446,18 @@ export class ParentReportDeliveryService {
     try {
       return db.transaction((): ClaimedDelivery => {
         const row = db
-          .prepare('SELECT status, attempt_count, error_summary, next_retry_at, lease_expires_at FROM report_deliveries WHERE report_key = ? AND channel = ?')
+          .prepare(
+            'SELECT status, attempt_count, error_summary, next_retry_at, lease_expires_at FROM report_deliveries WHERE report_key = ? AND channel = ?'
+          )
           .get(reportKey, channel) as DeliveryRow | undefined;
         if (row?.status === 'sent') return { shouldSend: false, status: 'deduplicated' };
-        if (row?.status === 'sending' && row.lease_expires_at && row.lease_expires_at > now) return { shouldSend: false, status: 'in_progress' };
+        if (row?.status === 'sending' && row.lease_expires_at && row.lease_expires_at > now)
+          return { shouldSend: false, status: 'in_progress' };
         if (row?.status === 'failed' && row.attempt_count >= MAX_AUTOMATIC_ATTEMPTS) {
           return { shouldSend: false, status: 'failed', errorSummary: row.error_summary ?? undefined };
         }
-        if (row?.status === 'failed' && row.next_retry_at && row.next_retry_at > now) return { shouldSend: false, status: 'deferred', nextRetryAt: row.next_retry_at };
+        if (row?.status === 'failed' && row.next_retry_at && row.next_retry_at > now)
+          return { shouldSend: false, status: 'deferred', nextRetryAt: row.next_retry_at };
 
         if (!row) {
           db.prepare(
@@ -442,20 +495,28 @@ export class ParentReportDeliveryService {
     }
   }
 
-  private markFailed(semesterId: string, reportKey: string, channel: ParentReportChannel, errorSummary: string): string | undefined {
+  private markFailed(
+    semesterId: string,
+    reportKey: string,
+    channel: ParentReportChannel,
+    errorSummary: string
+  ): string | undefined {
     const now = this.now();
     const db = this.openSemesterDb(semesterId);
     try {
-      const row = db.prepare('SELECT attempt_count FROM report_deliveries WHERE report_key = ? AND channel = ?').get(reportKey, channel) as { attempt_count: number } | undefined;
+      const row = db
+        .prepare('SELECT attempt_count FROM report_deliveries WHERE report_key = ? AND channel = ?')
+        .get(reportKey, channel) as { attempt_count: number } | undefined;
       const attemptCount = row?.attempt_count ?? 1;
       const delay = RETRY_DELAYS_MS[Math.min(Math.max(attemptCount - 1, 0), RETRY_DELAYS_MS.length - 1)];
-      const nextRetryAt = attemptCount < MAX_AUTOMATIC_ATTEMPTS ? new Date(Date.parse(now) + delay).toISOString() : null;
+      const nextRetryAt =
+        attemptCount < MAX_AUTOMATIC_ATTEMPTS ? new Date(Date.parse(now) + delay).toISOString() : null;
       db.prepare(
         `UPDATE report_deliveries
          SET status = 'failed', error_summary = ?, next_retry_at = ?, updated_at = ?, lease_expires_at = NULL
          WHERE report_key = ? AND channel = ?`
-       ).run(errorSummary, nextRetryAt, now, reportKey, channel);
-       return nextRetryAt ?? undefined;
+      ).run(errorSummary, nextRetryAt, now, reportKey, channel);
+      return nextRetryAt ?? undefined;
     } finally {
       db.close();
     }
@@ -520,7 +581,8 @@ export class FeishuParentReportAdapter implements ParentReportChannelAdapter {
       throw new Error('FEISHU_RESPONSE_INVALID');
     }
     if (!body || typeof body !== 'object') throw new Error('FEISHU_RESPONSE_INVALID');
-    const code = (body as { code?: unknown; StatusCode?: unknown }).code ?? (body as { StatusCode?: unknown }).StatusCode;
+    const code =
+      (body as { code?: unknown; StatusCode?: unknown }).code ?? (body as { StatusCode?: unknown }).StatusCode;
     if (code !== 0) throw new Error('FEISHU_BUSINESS_FAILED');
   }
 }
@@ -546,7 +608,10 @@ export function renderParentReportHtml(snapshot: ParentReportSnapshot): string {
 export function renderFeishuParentReportCard(snapshot: ParentReportSnapshot): Record<string, unknown> {
   const elements = snapshot.reports.flatMap((report) => [
     { tag: 'markdown', content: `**${reportTypeLabel(report.reportType)}**\n${report.ruleReport.summary}` },
-    ...report.ruleReport.sections.map((section) => ({ tag: 'markdown', content: `**${section.title}**\n${section.summary}` })),
+    ...report.ruleReport.sections.map((section) => ({
+      tag: 'markdown',
+      content: `**${section.title}**\n${section.summary}`,
+    })),
   ]);
   return {
     msg_type: 'interactive',

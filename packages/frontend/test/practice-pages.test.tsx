@@ -96,13 +96,7 @@ describe('S3 练习前端交互', () => {
   it('多选题按稳定字母顺序回传答案', async () => {
     const onChange = vi.fn();
     await act(async () => {
-      root.render(
-        <PracticeQuestion
-          question={session.questions[1]}
-          value=""
-          onChange={onChange}
-        />
-      );
+      root.render(<PracticeQuestion question={session.questions[1]} value="" onChange={onChange} />);
     });
     const inputs = container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     await click(inputs[2]);

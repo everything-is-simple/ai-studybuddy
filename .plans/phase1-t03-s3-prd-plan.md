@@ -32,26 +32,31 @@
 ## 4. 关键设计决策（PRD 中要明确的）
 
 ### 4.1 练习与知识模块的关系
+
 - 每道题必须关联至少一个 `knowledge_module_id`
 - 练习从知识模块发起：学生选择一组模块 → AI 生成对应题目
 - 题目保留 `source_evidence` 回链原始资料
 
 ### 4.2 题目类型边界
+
 - MVP 只做：单选题、多选题、填空题（客观题，规则批改）
 - 后续：简答题、计算题（主观题，AI 批改）
 - 不做：编程题、论述题、实验题
 
 ### 4.3 限时机制
+
 - 练习 session 有可选 `time_limit_seconds`
 - 超时后可继续提交但标记 `overtime: true`
 - 不做强制倒计时锁屏
 
 ### 4.4 批改规则
+
 - 单选题：精确匹配
 - 多选题：全选对得满分，漏选/错选不得分（MVP 不做半分）
 - 填空题：去空格、统一大小写后精确匹配；可配置多个正确答案
 
 ### 4.5 题目生成 AI 策略
+
 - 使用与 S2 相同的 `AiProviderRouter`
 - 输入：知识模块标题 + content_summary + source_evidence + 难度
 - 输出：JSON 格式的题目数组
@@ -59,21 +64,23 @@
 - prompt 版本管理：`s3-practice-v1.0`
 
 ### 4.6 与 S4 错题的边界
+
 - S3 只负责：记录每题作答是否正确、用时
 - S3 不负责：错题归档、薄弱点归纳、复习排程
 - S3 输出一个 `practice_answer.is_correct = false` 的事实，S4 消费该事实
 
 ### 4.7 StudyEvent 写入
+
 - 练习完成后写入 `practice_completed` 事件到 S1 时间线
 - 包含：练习 ID、题目数、正确率、用时
 
 ## 5. 涉及文件
 
-| 文件 | 动作 |
-| --- | --- |
-| `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | 新建 |
-| `docs/00-文档索引-Index.md` | 更新 S3 行状态为"已创建" |
-| `docs/04-开发任务清单-Todo-List.md` | 将 T03 PRD 标为完成 |
+| 文件                                                        | 动作                     |
+| ----------------------------------------------------------- | ------------------------ |
+| `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` | 新建                     |
+| `docs/00-文档索引-Index.md`                                 | 更新 S3 行状态为"已创建" |
+| `docs/04-开发任务清单-Todo-List.md`                         | 将 T03 PRD 标为完成      |
 
 ## 6. 不做什么
 

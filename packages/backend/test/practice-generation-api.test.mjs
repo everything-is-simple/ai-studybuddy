@@ -319,7 +319,9 @@ test('AI provider failures return an error and do not create empty practice sess
 
 test('invalid AI question JSON is rejected without partial inserts', async (t) => {
   const moduleId = crypto.randomUUID();
-  const mockAi = await startMockAi(t, [{ content: JSON.stringify({ questions: [{ ...sampleQuestions(moduleId).questions[0] }] }) }]);
+  const mockAi = await startMockAi(t, [
+    { content: JSON.stringify({ questions: [{ ...sampleQuestions(moduleId).questions[0] }] }) },
+  ]);
   const backend = await startBackend(t, mockAi.baseUrl);
   const semesterId = await initializeReadySemester(backend.port);
   const course = await createCourse(backend.port, semesterId, '线性代数');

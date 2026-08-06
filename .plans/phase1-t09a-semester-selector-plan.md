@@ -20,13 +20,13 @@
 
 ### 0.2 T09A 做与不做
 
-| 范围 | 本计划结论 |
-| --- | --- |
-| 创建新学期 | 输入名称、起止日期；第一次还输入学生姓名；上传课程表图像，得到可编辑的课程/课表预览后一次确认创建。 |
-| 学期列表、当前状态、选择/切换 | 后端列出可选择学期、读写当前学期；前端显示名称、日期、当前状态，并在切换后回到安全的 `/courses`。 |
-| 首次使用与错误 | 无学期时直接引导 `/semesters`；覆盖重复名称、非法日期、文件真实性/OCR/预览过期、创建失败与 stale current。 |
-| 隔离与刷新 | 既有业务 API 继续显式接收 App 控制的 `semesterId`；E2E 证明切换后课程、考试、任务、时间线互斥，刷新恢复当前学期。 |
-| 不做 | 不做 T09B 每日首页、T09C 已建课表查看/编辑、T09D 全局导航重构、T09E 历史/归档 UI、S5、S7、家长 Web 面板、云同步或多用户。 |
+| 范围                          | 本计划结论                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 创建新学期                    | 输入名称、起止日期；第一次还输入学生姓名；上传课程表图像，得到可编辑的课程/课表预览后一次确认创建。                       |
+| 学期列表、当前状态、选择/切换 | 后端列出可选择学期、读写当前学期；前端显示名称、日期、当前状态，并在切换后回到安全的 `/courses`。                         |
+| 首次使用与错误                | 无学期时直接引导 `/semesters`；覆盖重复名称、非法日期、文件真实性/OCR/预览过期、创建失败与 stale current。                |
+| 隔离与刷新                    | 既有业务 API 继续显式接收 App 控制的 `semesterId`；E2E 证明切换后课程、考试、任务、时间线互斥，刷新恢复当前学期。         |
+| 不做                          | 不做 T09B 每日首页、T09C 已建课表查看/编辑、T09D 全局导航重构、T09E 历史/归档 UI、S5、S7、家长 Web 面板、云同步或多用户。 |
 
 ### 0.3 不变量
 
@@ -41,13 +41,13 @@
 
 统一响应为 `{ success, data, error }`；所有错误使用稳定代码与可展示中文消息，响应不含路径/stack/OCR 原文。
 
-| 方法与路径 | 成功数据/状态 | 输入与失败语义 |
-| --- | --- | --- |
-| `GET /api/semesters` | 200，`SemesterSummaryDto[]`；仅返回可选择 active 学期，`name` 映射既有 `semester_code` | 若存在坏 `ready=1` 行则跳过并记录脱敏诊断；不暴露路径。 |
-| `GET /api/semesters/current` | 200，`CurrentSemesterDto`，固定为 `{ semester: SemesterSummaryDto | null, recoveredFromStaleCurrent: boolean }` | stale key 在服务端 transaction 中删除，随后返回 `{ semester: null, recoveredFromStaleCurrent: true }`；首次无学期则为 `{ semester: null, recoveredFromStaleCurrent: false }`；不能返回 409。 |
-| `PUT /api/semesters/current` | 200，选中的 `SemesterSummaryDto` | body `{ semesterId }`；空/格式错误 400；不存在或不可选择 409 `SEMESTER_NOT_SELECTABLE`；失败不得更改旧 current。 |
-| `POST /api/semesters/previews` | 201，`SemesterPreviewDto`（含 `previewId`、`requiresStudentName`、课程与课表草稿、规则解析置信度及 warnings） | `multipart/form-data`：`name`、`teachingStartDate`、`teachingEndDate`、首次所需的 `studentName`、字段 `timetableImage`。日期/名称/学生 400，伪 MIME/魔数 415，大小/像素超限 413，OCR/无法解析 422。 |
-| `POST /api/semesters/previews/:previewId/confirm` | 201，创建的 `SemesterSummaryDto`，并成为 current | body 是完整修正后的 `SemesterConfirmDto`；preview 不存在/过期 410；重复名称 409 `SEMESTER_CODE_EXISTS`；同 preview 并发 confirm 单飞并返回同一成功结果或同一可恢复失败。 |
+| 方法与路径                                        | 成功数据/状态                                                                                                 | 输入与失败语义                                                                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/semesters`                              | 200，`SemesterSummaryDto[]`；仅返回可选择 active 学期，`name` 映射既有 `semester_code`                        | 若存在坏 `ready=1` 行则跳过并记录脱敏诊断；不暴露路径。                                                                                                                                             |
+| `GET /api/semesters/current`                      | 200，`CurrentSemesterDto`，固定为 `{ semester: SemesterSummaryDto                                             | null, recoveredFromStaleCurrent: boolean }`                                                                                                                                                         | stale key 在服务端 transaction 中删除，随后返回 `{ semester: null, recoveredFromStaleCurrent: true }`；首次无学期则为 `{ semester: null, recoveredFromStaleCurrent: false }`；不能返回 409。 |
+| `PUT /api/semesters/current`                      | 200，选中的 `SemesterSummaryDto`                                                                              | body `{ semesterId }`；空/格式错误 400；不存在或不可选择 409 `SEMESTER_NOT_SELECTABLE`；失败不得更改旧 current。                                                                                    |
+| `POST /api/semesters/previews`                    | 201，`SemesterPreviewDto`（含 `previewId`、`requiresStudentName`、课程与课表草稿、规则解析置信度及 warnings） | `multipart/form-data`：`name`、`teachingStartDate`、`teachingEndDate`、首次所需的 `studentName`、字段 `timetableImage`。日期/名称/学生 400，伪 MIME/魔数 415，大小/像素超限 413，OCR/无法解析 422。 |
+| `POST /api/semesters/previews/:previewId/confirm` | 201，创建的 `SemesterSummaryDto`，并成为 current                                                              | body 是完整修正后的 `SemesterConfirmDto`；preview 不存在/过期 410；重复名称 409 `SEMESTER_CODE_EXISTS`；同 preview 并发 confirm 单飞并返回同一成功结果或同一可恢复失败。                            |
 
 `SemesterPreviewDto` 和 `SemesterConfirmDto` 的限制固定为：名称/学生姓名各 trim + Unicode NFC 后 1–100 字符；课程 1–80 门；每门名称 1–100 字符；课表 1–400 条；`location` 最长 160；`clientId` 全局唯一且仅 `[A-Za-z0-9_-]{1,64}`；`weekday` 为整数 0–6；时间严格 `HH:mm` 且 end 大于 start；同课程不得有同一 `(weekday,startTime,endTime)` 重复条目。所有校验由服务端重新执行，前端只是帮助用户修正。
 
@@ -73,34 +73,34 @@
 
 ## 1. 预期文件结构（批准后）
 
-| 文件 | 操作 | 单一职责 |
-| --- | --- | --- |
-| `packages/shared/src/types.ts` | 修改 | `SemesterSummaryDto`、`CurrentSemesterDto`、preview/confirm DTO、稳定 error code 所需共享契约。 |
-| `packages/backend/src/db/sql/migration-semester-v8.ts` | 新建 | 仅升级既有 `schedule_entries` 的元数据、索引和约束 trigger。 |
-| `packages/backend/src/db/migrations.ts` | 修改 | 把 v8 追加在 v7 后，绝不重排历史版本。 |
-| `packages/backend/src/db/connection.ts` | 修改 | 增加不会创建/写 pragma 的 `openReadOnlyExistingDbAtPath()`。 |
-| `packages/backend/src/db/ready-semester-upgrader.ts` | 新建 | bootstrap 前有界升级 canonical `ready=1` 学期库；不升级坏路径。 |
-| `packages/backend/src/db/semester-initializer.ts` | 修改 | 可注入候选初始课程/课表、checkpoint 顺序、current 原子提交、仅清 candidate 的补偿与脱敏维护日志。 |
-| `packages/backend/src/services/timetable-recognizer.ts` | 新建 | 生产 OCR wrapper 与可测试接口。 |
-| `packages/backend/src/services/timetable-rule-parser.ts` | 新建 | 将识别文本转为受限 preview 草稿与规则解析置信度。 |
-| `packages/backend/src/services/timetable-image-validation.ts` | 新建 | 验证 PNG/JPEG/WebP magic bytes 和像素上限；不写文件。 |
-| `packages/backend/src/services/semester-selector-service.ts` | 新建 | selectable 判定、学生解析、preview、confirm 单飞、列表/current/select。 |
-| `packages/backend/src/api/semester-selector.ts` | 新建 | multer、HTTP DTO 与错误信封映射；不含业务事务。 |
-| `packages/backend/src/app.ts`、`packages/backend/src/bootstrap.ts` | 修改 | 在现有 `/api` origin policy 后注册 selector router；启动期调用 ready-semester upgrader。 |
-| `packages/backend/test/semester-initialization.test.mjs` | 修改 | v7→v8 数据升级、启动升级、状态机和各失败阶段补偿。 |
-| `packages/backend/test/semester-selector-api.test.mjs` | 新建 | HTTP 合同、文件安全、preview/confirm/选择和学生归属集成测试。 |
-| `packages/frontend/src/api/semester-api.ts` | 新建 | 学期 API 封装；使用 `FormData` 时不手写 multipart Content-Type。 |
-| `packages/frontend/src/pages/semester-selector-page.tsx` | 新建 | 首次/列表、创建表单、上传、可编辑预览、确认、错误与键盘焦点。 |
-| `packages/frontend/src/components/current-semester-control.tsx` | 新建 | 仅展示当前名称/日期/状态与“管理学期”，不显示 UUID。 |
-| `packages/frontend/src/app.tsx` | 修改 | 后端 current 启动状态机、路由守卫、切换回调，删除旧浏览器 UUID 表单。 |
-| `packages/frontend/src/pages/course-page.tsx` | 修改 | 无 current 时提供“前往创建或选择学期”，不再提示手输 ID。 |
-| `packages/frontend/src/components/app-navigation.tsx`、`packages/frontend/src/styles/global.css` | 修改 | 最小导航入口与学期向导/状态/error 样式；不实施 T09D 重构。 |
-| 既有前端测试文件或 `packages/frontend/src/**/__tests__/semester-selector*.test.*` | 新建/修改 | API、启动状态、表单与切换 UI 断言，沿用仓库实际 Vitest 结构。 |
-| `packages/backend/test/e2e-server.ts` | 新建 | 仅 Playwright 使用的 app/server harness，显式注入 `FakeTimetableRecognizer`；生产 server 不接受测试替换。 |
-| `playwright.config.ts` | 修改 | 后端 webServer 改为启动 E2E harness，并保持正式 `server.ts` 无测试入口。 |
-| `e2e/semester-selector.spec.ts` | 新建 | 无 E2E 外部 OCR 依赖的创建、切换、刷新和隔离验收。 |
-| `e2e/*.spec.ts` | 修改 | 移除旧浏览器 UUID 注入和 UUID 输入交互，改走受控测试 current API/fixture。 |
-| `docs/00-文档索引-Index.md`、`docs/04-开发任务清单-Todo-List.md` | 计划/实现收尾时修改 | 同步计划存在、审查/批准状态；实现完成后才勾选 T09A 并登记 branch/hash/master/push/验证。 |
+| 文件                                                                                             | 操作                | 单一职责                                                                                                  |
+| ------------------------------------------------------------------------------------------------ | ------------------- | --------------------------------------------------------------------------------------------------------- |
+| `packages/shared/src/types.ts`                                                                   | 修改                | `SemesterSummaryDto`、`CurrentSemesterDto`、preview/confirm DTO、稳定 error code 所需共享契约。           |
+| `packages/backend/src/db/sql/migration-semester-v8.ts`                                           | 新建                | 仅升级既有 `schedule_entries` 的元数据、索引和约束 trigger。                                              |
+| `packages/backend/src/db/migrations.ts`                                                          | 修改                | 把 v8 追加在 v7 后，绝不重排历史版本。                                                                    |
+| `packages/backend/src/db/connection.ts`                                                          | 修改                | 增加不会创建/写 pragma 的 `openReadOnlyExistingDbAtPath()`。                                              |
+| `packages/backend/src/db/ready-semester-upgrader.ts`                                             | 新建                | bootstrap 前有界升级 canonical `ready=1` 学期库；不升级坏路径。                                           |
+| `packages/backend/src/db/semester-initializer.ts`                                                | 修改                | 可注入候选初始课程/课表、checkpoint 顺序、current 原子提交、仅清 candidate 的补偿与脱敏维护日志。         |
+| `packages/backend/src/services/timetable-recognizer.ts`                                          | 新建                | 生产 OCR wrapper 与可测试接口。                                                                           |
+| `packages/backend/src/services/timetable-rule-parser.ts`                                         | 新建                | 将识别文本转为受限 preview 草稿与规则解析置信度。                                                         |
+| `packages/backend/src/services/timetable-image-validation.ts`                                    | 新建                | 验证 PNG/JPEG/WebP magic bytes 和像素上限；不写文件。                                                     |
+| `packages/backend/src/services/semester-selector-service.ts`                                     | 新建                | selectable 判定、学生解析、preview、confirm 单飞、列表/current/select。                                   |
+| `packages/backend/src/api/semester-selector.ts`                                                  | 新建                | multer、HTTP DTO 与错误信封映射；不含业务事务。                                                           |
+| `packages/backend/src/app.ts`、`packages/backend/src/bootstrap.ts`                               | 修改                | 在现有 `/api` origin policy 后注册 selector router；启动期调用 ready-semester upgrader。                  |
+| `packages/backend/test/semester-initialization.test.mjs`                                         | 修改                | v7→v8 数据升级、启动升级、状态机和各失败阶段补偿。                                                        |
+| `packages/backend/test/semester-selector-api.test.mjs`                                           | 新建                | HTTP 合同、文件安全、preview/confirm/选择和学生归属集成测试。                                             |
+| `packages/frontend/src/api/semester-api.ts`                                                      | 新建                | 学期 API 封装；使用 `FormData` 时不手写 multipart Content-Type。                                          |
+| `packages/frontend/src/pages/semester-selector-page.tsx`                                         | 新建                | 首次/列表、创建表单、上传、可编辑预览、确认、错误与键盘焦点。                                             |
+| `packages/frontend/src/components/current-semester-control.tsx`                                  | 新建                | 仅展示当前名称/日期/状态与“管理学期”，不显示 UUID。                                                       |
+| `packages/frontend/src/app.tsx`                                                                  | 修改                | 后端 current 启动状态机、路由守卫、切换回调，删除旧浏览器 UUID 表单。                                     |
+| `packages/frontend/src/pages/course-page.tsx`                                                    | 修改                | 无 current 时提供“前往创建或选择学期”，不再提示手输 ID。                                                  |
+| `packages/frontend/src/components/app-navigation.tsx`、`packages/frontend/src/styles/global.css` | 修改                | 最小导航入口与学期向导/状态/error 样式；不实施 T09D 重构。                                                |
+| 既有前端测试文件或 `packages/frontend/src/**/__tests__/semester-selector*.test.*`                | 新建/修改           | API、启动状态、表单与切换 UI 断言，沿用仓库实际 Vitest 结构。                                             |
+| `packages/backend/test/e2e-server.ts`                                                            | 新建                | 仅 Playwright 使用的 app/server harness，显式注入 `FakeTimetableRecognizer`；生产 server 不接受测试替换。 |
+| `playwright.config.ts`                                                                           | 修改                | 后端 webServer 改为启动 E2E harness，并保持正式 `server.ts` 无测试入口。                                  |
+| `e2e/semester-selector.spec.ts`                                                                  | 新建                | 无 E2E 外部 OCR 依赖的创建、切换、刷新和隔离验收。                                                        |
+| `e2e/*.spec.ts`                                                                                  | 修改                | 移除旧浏览器 UUID 注入和 UUID 输入交互，改走受控测试 current API/fixture。                                |
+| `docs/00-文档索引-Index.md`、`docs/04-开发任务清单-Todo-List.md`                                 | 计划/实现收尾时修改 | 同步计划存在、审查/批准状态；实现完成后才勾选 T09A 并登记 branch/hash/master/push/验证。                  |
 
 ---
 
@@ -272,17 +272,17 @@
 
 ## 3. 验收矩阵
 
-| 场景 | 自动化证据 | 浏览器证据 |
-| --- | --- | --- |
-| v7→v8 升级 | 原 `schedule_entries` 课程关联、weekday、时间、地点不丢失，新列为 `legacy`/null | 不适用 |
-| 历史升级/selectable/stale | v7 ready 在启动时升级到 v8，v8 幂等；future/损坏 DB 不可选择；list/current/select 对坏记录一致；stale current 返回确定 `CurrentSemesterDto` | 启动一次提示并落 `/semesters`，无白屏/循环 |
-| 第一次创建 | 空库需要学生姓名；创建后 ready/current/student/课程/课表均一致 | 无学期直接进入创建页并成功确认 |
-| 后续创建 | 复用唯一学生，不改写其资料；重复 canonical name 409 | 第二次无需学生姓名，重复错误可修正 |
-| 文件与 OCR | MIME+magic、尺寸、TTL、symlink、OCR failure、无路径/原文泄漏 | 上传/解析失败输入仍可重试 |
-| 失败补偿 | course write/checkpoint/rename/final transaction 每个失败点：candidate 无残留；有旧 current 时它保持 | 不显示半个候选学期 |
-| 切换/刷新 | current 写入后重建服务仍读同一学期 | header 状态正确，切换到 `/courses` 后刷新保持 |
-| 跨学期隔离 | 两个 semester DB 的课程/考试/任务/事件/时间线查询互斥 | 页面不显示另一学期数据 |
-| 消除手输 | 源码搜索与 E2E 不含旧学生可见 UUID 输入 | header 无 UUID 文本框 |
+| 场景                      | 自动化证据                                                                                                                                  | 浏览器证据                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| v7→v8 升级                | 原 `schedule_entries` 课程关联、weekday、时间、地点不丢失，新列为 `legacy`/null                                                             | 不适用                                        |
+| 历史升级/selectable/stale | v7 ready 在启动时升级到 v8，v8 幂等；future/损坏 DB 不可选择；list/current/select 对坏记录一致；stale current 返回确定 `CurrentSemesterDto` | 启动一次提示并落 `/semesters`，无白屏/循环    |
+| 第一次创建                | 空库需要学生姓名；创建后 ready/current/student/课程/课表均一致                                                                              | 无学期直接进入创建页并成功确认                |
+| 后续创建                  | 复用唯一学生，不改写其资料；重复 canonical name 409                                                                                         | 第二次无需学生姓名，重复错误可修正            |
+| 文件与 OCR                | MIME+magic、尺寸、TTL、symlink、OCR failure、无路径/原文泄漏                                                                                | 上传/解析失败输入仍可重试                     |
+| 失败补偿                  | course write/checkpoint/rename/final transaction 每个失败点：candidate 无残留；有旧 current 时它保持                                        | 不显示半个候选学期                            |
+| 切换/刷新                 | current 写入后重建服务仍读同一学期                                                                                                          | header 状态正确，切换到 `/courses` 后刷新保持 |
+| 跨学期隔离                | 两个 semester DB 的课程/考试/任务/事件/时间线查询互斥                                                                                       | 页面不显示另一学期数据                        |
+| 消除手输                  | 源码搜索与 E2E 不含旧学生可见 UUID 输入                                                                                                     | header 无 UUID 文本框                         |
 
 ---
 
@@ -307,12 +307,12 @@
 
 ## 6. 独立审查记录
 
-| 版本 | 日期 | 审查状态 | 结论 |
-| --- | --- | --- | --- |
-| v1 | 2026-07-18 | 不通过 | 发现 P0：第二课表表、学生归属遗漏、旧 current 补偿矛盾；并记录 selectable、文件边界、OCR 注入、stale、幂等、merge 等 P1。不得据此实施。 |
-| v2 | 2026-07-18 | 不通过 | 已修正 v1 P0，但复审发现历史 ready 学期未升级、只读 API/DTO/E2E harness/日志与文档收尾不完整。不得据此实施。 |
-| v3 | 2026-07-18 | 不通过 | 已解决 v2 主要问题，但复审发现 Playwright backend `webServer.command` 裸 `tsx` 在仓库根目录不可执行。不得据此实施。 |
-| v4 | 2026-07-18 | 复审通过 | 独立复审确认 v2/v3 阻塞项均已关闭，允许进入“计划已创建并待用户批准”状态；用户明确批准前不得实施。 |
+| 版本 | 日期       | 审查状态 | 结论                                                                                                                                    |
+| ---- | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| v1   | 2026-07-18 | 不通过   | 发现 P0：第二课表表、学生归属遗漏、旧 current 补偿矛盾；并记录 selectable、文件边界、OCR 注入、stale、幂等、merge 等 P1。不得据此实施。 |
+| v2   | 2026-07-18 | 不通过   | 已修正 v1 P0，但复审发现历史 ready 学期未升级、只读 API/DTO/E2E harness/日志与文档收尾不完整。不得据此实施。                            |
+| v3   | 2026-07-18 | 不通过   | 已解决 v2 主要问题，但复审发现 Playwright backend `webServer.command` 裸 `tsx` 在仓库根目录不可执行。不得据此实施。                     |
+| v4   | 2026-07-18 | 复审通过 | 独立复审确认 v2/v3 阻塞项均已关闭，允许进入“计划已创建并待用户批准”状态；用户明确批准前不得实施。                                       |
 
 ---
 

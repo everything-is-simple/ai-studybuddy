@@ -50,7 +50,9 @@ export function PracticeHistoryResultPage() {
 
       <section className="panel">
         <h2>{result.courseName}</h2>
-        <p>{result.assessmentName ?? '未关联考试'} · {result.questionCount} 题 · 正确率 {percent(result.correctRate)}</p>
+        <p>
+          {result.assessmentName ?? '未关联考试'} · {result.questionCount} 题 · 正确率 {percent(result.correctRate)}
+        </p>
         <p>只读查看：学生答案、正确答案、解析、课程/考试引用和知识模块引用会保留。</p>
       </section>
 
@@ -59,7 +61,11 @@ export function PracticeHistoryResultPage() {
         <ol className="practice-history-answer-list">
           {result.answers.map((answer) => (
             <li key={answer.questionId}>
-              <p><strong>{answer.answerOrder}. {answer.stem}</strong></p>
+              <p>
+                <strong>
+                  {answer.answerOrder}. {answer.stem}
+                </strong>
+              </p>
               <p>知识模块：{answer.knowledgeModuleTitle}</p>
               <p>你的答案：{answer.studentAnswer ?? '未作答'}</p>
               <p>正确答案：{answer.correctAnswer}</p>

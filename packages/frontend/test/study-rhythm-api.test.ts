@@ -92,11 +92,7 @@ describe('study-rhythm API client', () => {
     await getExams('semester-1');
     await getStudyTasks('semester-1');
 
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(
-      1,
-      `${baseUrl}/exams?semesterId=semester-1`,
-      expect.any(Object)
-    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(1, `${baseUrl}/exams?semesterId=semester-1`, expect.any(Object));
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       2,
       `${baseUrl}/study-tasks?semesterId=semester-1`,
@@ -171,17 +167,77 @@ describe('study-rhythm API client', () => {
     mockSuccess({ id: 'result' });
     await updateCourse('semester-1', 'course/1', { name: '高等数学' });
     await getScheduleEntries('semester-1');
-    await createScheduleEntry({ semesterId: 'semester-1', courseInstanceId: 'course/1', weekday: 1, startTime: '08:00', endTime: '09:30', location: 'A101' });
-    await updateScheduleEntry('semester-1', 'entry/1', { courseInstanceId: 'course/1', weekday: 2, startTime: '10:00', endTime: '11:30', location: 'B202' });
+    await createScheduleEntry({
+      semesterId: 'semester-1',
+      courseInstanceId: 'course/1',
+      weekday: 1,
+      startTime: '08:00',
+      endTime: '09:30',
+      location: 'A101',
+    });
+    await updateScheduleEntry('semester-1', 'entry/1', {
+      courseInstanceId: 'course/1',
+      weekday: 2,
+      startTime: '10:00',
+      endTime: '11:30',
+      location: 'B202',
+    });
     await deleteScheduleEntry('semester-1', 'entry/1');
     await updateExam('semester-1', 'exam/1', { name: '期末考试', goal: '通过复习' });
 
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(1, `${baseUrl}/courses/course%2F1`, expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ semesterId: 'semester-1', name: '高等数学' }) }));
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(2, `${baseUrl}/schedule-entries?semesterId=semester-1`, expect.any(Object));
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(3, `${baseUrl}/schedule-entries`, expect.objectContaining({ method: 'POST', body: JSON.stringify({ semesterId: 'semester-1', courseInstanceId: 'course/1', weekday: 1, startTime: '08:00', endTime: '09:30', location: 'A101' }) }));
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(4, `${baseUrl}/schedule-entries/entry%2F1`, expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ semesterId: 'semester-1', courseInstanceId: 'course/1', weekday: 2, startTime: '10:00', endTime: '11:30', location: 'B202' }) }));
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(5, `${baseUrl}/schedule-entries/entry%2F1?semesterId=semester-1`, expect.objectContaining({ method: 'DELETE' }));
-    expect(globalThis.fetch).toHaveBeenNthCalledWith(6, `${baseUrl}/exams/exam%2F1`, expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ semesterId: 'semester-1', name: '期末考试', goal: '通过复习' }) }));
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      1,
+      `${baseUrl}/courses/course%2F1`,
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ semesterId: 'semester-1', name: '高等数学' }) })
+    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      `${baseUrl}/schedule-entries?semesterId=semester-1`,
+      expect.any(Object)
+    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      3,
+      `${baseUrl}/schedule-entries`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          semesterId: 'semester-1',
+          courseInstanceId: 'course/1',
+          weekday: 1,
+          startTime: '08:00',
+          endTime: '09:30',
+          location: 'A101',
+        }),
+      })
+    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      4,
+      `${baseUrl}/schedule-entries/entry%2F1`,
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({
+          semesterId: 'semester-1',
+          courseInstanceId: 'course/1',
+          weekday: 2,
+          startTime: '10:00',
+          endTime: '11:30',
+          location: 'B202',
+        }),
+      })
+    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      5,
+      `${baseUrl}/schedule-entries/entry%2F1?semesterId=semester-1`,
+      expect.objectContaining({ method: 'DELETE' })
+    );
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      6,
+      `${baseUrl}/exams/exam%2F1`,
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ semesterId: 'semester-1', name: '期末考试', goal: '通过复习' }),
+      })
+    );
   });
   it('returns the flat timeline array and appends repeated eventType query parameters', async () => {
     const events = [

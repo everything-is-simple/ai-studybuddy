@@ -112,6 +112,7 @@
 ### Task 1: 锁定现有契约并写失败测试
 
 **Files:**
+
 - Create: `packages/backend/test/production-attack-surface-error-boundary.test.mjs`
 - Create: `packages/backend/test/env-boundary.test.mjs`
 - Modify: `packages/backend/test/app-bootstrap.test.mjs`
@@ -147,11 +148,12 @@ pnpm -r --filter backend run build
 pnpm --dir packages/backend exec node --test --test-concurrency=1 test/production-attack-surface-error-boundary.test.mjs test/env-boundary.test.mjs
 ```
 
-  **Expected:** 新增断言在实现前至少因 `nodeEnv`、`enableDevRoutes` 或统一错误响应尚不存在而失败；不得用放宽断言、跳过测试或修改生产语义消除红灯。
+**Expected:** 新增断言在实现前至少因 `nodeEnv`、`enableDevRoutes` 或统一错误响应尚不存在而失败；不得用放宽断言、跳过测试或修改生产语义消除红灯。
 
 ### Task 2: 实现配置边界和显式生产模式
 
 **Files:**
+
 - Modify: `packages/backend/src/config/env.ts`
 - Modify: `packages/backend/src/server.ts`
 - Modify: `scripts/start-production.ps1`
@@ -183,11 +185,12 @@ $env:APP_DATA_ROOT = 'H:\ai-studybuddy-tmp\runs\phase3-t02a-config-boundary'
 pnpm --dir packages/backend exec node --test --test-concurrency=1 test/env-boundary.test.mjs
 ```
 
-  **Expected:** 合法运行模式和 `127.0.0.1` 通过；非法运行模式和非回环主机在配置初始化阶段失败，错误输出不含原始秘密或环境全文。
+**Expected:** 合法运行模式和 `127.0.0.1` 通过；非法运行模式和非回环主机在配置初始化阶段失败，错误输出不含原始秘密或环境全文。
 
 ### Task 3: 实现生产 dev API 隔离
 
 **Files:**
+
 - Modify: `packages/backend/src/app.ts`
 - Modify: `packages/backend/src/server.ts`
 - Test: `packages/backend/test/production-attack-surface-error-boundary.test.mjs`
@@ -214,11 +217,12 @@ $env:APP_DATA_ROOT = 'H:\ai-studybuddy-tmp\runs\phase3-t02a-production-dev-route
 pnpm --dir packages/backend exec node --test --test-concurrency=1 test/production-attack-surface-error-boundary.test.mjs test/production-static-host.test.mjs test/dev-converter-api.test.mjs test/dev-storage-api.test.mjs
 ```
 
-  **Expected:** 生产 dev API 全部 404 且 JSON；`NODE_ENV=test` 的 converter/storage 既有 roundtrip 和边界测试继续通过。
+**Expected:** 生产 dev API 全部 404 且 JSON；`NODE_ENV=test` 的 converter/storage 既有 roundtrip 和边界测试继续通过。
 
 ### Task 4: 实现统一 JSON 错误边界
 
 **Files:**
+
 - Create: `packages/backend/src/middleware/api-error-handler.ts`
 - Modify: `packages/backend/src/app.ts`
 - Modify: `packages/backend/test/app-bootstrap.test.mjs`
@@ -246,11 +250,12 @@ $env:APP_DATA_ROOT = 'H:\ai-studybuddy-tmp\runs\phase3-t02a-error-boundary'
 pnpm --dir packages/backend exec node --test --test-concurrency=1 test/app-bootstrap.test.mjs test/production-attack-surface-error-boundary.test.mjs test/production-static-host.test.mjs
 ```
 
-  **Expected:** 畸形 JSON 为脱敏 JSON 400；未知异常为固定中文 JSON 500；所有断言确认响应不含 `stack`、本机路径、storage key、原始异常文本或秘密。
+**Expected:** 畸形 JSON 为脱敏 JSON 400；未知异常为固定中文 JSON 500；所有断言确认响应不含 `stack`、本机路径、storage key、原始异常文本或秘密。
 
 ### Task 5: 回归、文档和独立审查
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify if required: `docs/00-文档索引-Index.md`
 - Test: all files changed above
@@ -272,7 +277,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
 git diff --check
 ```
 
-  **Expected:** type-check、后端/前端构建、专项测试、全量测试、文档治理和 diff 检查均 exit code 0；所有运行数据只落在仓库外隔离目录。
+**Expected:** type-check、后端/前端构建、专项测试、全量测试、文档治理和 diff 检查均 exit code 0；所有运行数据只落在仓库外隔离目录。
 
 - [ ] **Step 3: 独立审查安全负面断言**
   - 搜索本次差异中是否出现 `process.env` 全量输出、`err.stack`、`err.message` 外部回显、绝对盘符、生产 dev route 挂载、未显式 `NODE_ENV` 的生产启动路径。
@@ -293,7 +298,7 @@ git diff --cached --check
 git commit -m "fix(phase3): 收紧生产攻击面与统一错误边界"
 ```
 
-  **Expected:** 仅纳入批准范围内的源码、测试和文档；提交成功后仍需按仓库规则 rebase/fast-forward 合回 `master` 并重新验证，未合回前不得报告主线完成。
+**Expected:** 仅纳入批准范围内的源码、测试和文档；提交成功后仍需按仓库规则 rebase/fast-forward 合回 `master` 并重新验证，未合回前不得报告主线完成。
 
 ## 5. 风险分级与完成门槛
 

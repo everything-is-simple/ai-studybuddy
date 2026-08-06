@@ -20,10 +20,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   outputDir: path.join(evidenceRoot, 'test-results'),
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: path.join(evidenceRoot, 'html-report'), open: 'never' }],
-  ],
+  reporter: [['list'], ['html', { outputFolder: path.join(evidenceRoot, 'html-report'), open: 'never' }]],
   use: {
     ...devices['Desktop Chrome'],
     baseURL: 'http://127.0.0.1:4173',

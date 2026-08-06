@@ -37,7 +37,8 @@ async function withTempDir(prefix, fn) {
 
 test('backend config rejects invalid AI_PROVIDERS without echoing raw provider secrets', async () => {
   await withTempDir('studybuddy-phase3-t02c-env-', async (dataRoot) => {
-    const rawProviders = '{"baseUrl":"https://phase3-t02c-provider.invalid/v1","apiKey":"phase3-t02c-provider-key-sentinel"';
+    const rawProviders =
+      '{"baseUrl":"https://phase3-t02c-provider.invalid/v1","apiKey":"phase3-t02c-provider-key-sentinel"';
     const result = spawnSync(process.execPath, ['-e', "require('./dist/config/env.js')"], {
       cwd: backendDir,
       encoding: 'utf8',
@@ -65,7 +66,11 @@ test('backend .env.local parser reports invalid lines, empty keys, and duplicate
   const cases = [
     ['APP_DATA_ROOT=ok\nnot an env line phase3-t02c-illegal-env-line-secret\n', 'INVALID_ENV_LINE', /line 2/i],
     ['=phase3-t02c-illegal-env-line-secret\n', 'INVALID_ENV_LINE', /line 1/i],
-    ['APP_DATA_ROOT=first\napp_data_root=phase3-t02c-data-root-sentinel\n', 'DUPLICATE_ENV_KEY', /APP_DATA_ROOT|app_data_root/],
+    [
+      'APP_DATA_ROOT=first\napp_data_root=phase3-t02c-data-root-sentinel\n',
+      'DUPLICATE_ENV_KEY',
+      /APP_DATA_ROOT|app_data_root/,
+    ],
   ];
   for (const [content, code, allowedContext] of cases) {
     await withTempDir('studybuddy-phase3-t02c-dotenv-', async (dir) => {

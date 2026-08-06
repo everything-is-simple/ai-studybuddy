@@ -56,14 +56,16 @@ async function startMockAi(t, handlers) {
       return;
     }
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({
-      id: `chatcmpl-${crypto.randomUUID()}`,
-      object: 'chat.completion',
-      created: Math.floor(Date.now() / 1000),
-      model: result.model ?? 'mock-s5-model',
-      choices: [{ index: 0, message: { role: 'assistant', content: result.content }, finish_reason: 'stop' }],
-      usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
-    }));
+    response.end(
+      JSON.stringify({
+        id: `chatcmpl-${crypto.randomUUID()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: result.model ?? 'mock-s5-model',
+        choices: [{ index: 0, message: { role: 'assistant', content: result.content }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
+      })
+    );
   });
   await new Promise((resolve, reject) => {
     server.once('error', reject);
@@ -160,10 +162,12 @@ function seedKnowledgeModule(dataRoot, semesterId, courseInstanceId, overrides =
   try {
     const now = '2026-07-20T00:00:00.000Z';
     const id = overrides.id ?? crypto.randomUUID();
-    db.prepare(`INSERT INTO knowledge_modules (
+    db.prepare(
+      `INSERT INTO knowledge_modules (
       id, course_instance_id, material_id, title, importance, difficulty,
       source_evidence, learn_status, content_summary, exam_relevance, created_at, updated_at
-    ) VALUES (?, ?, NULL, ?, ?, ?, ?, 'not_started', ?, ?, ?, ?)`).run(
+    ) VALUES (?, ?, NULL, ?, ?, ?, ?, 'not_started', ?, ?, ?, ?)`
+    ).run(
       id,
       courseInstanceId,
       overrides.title ?? '函数定义',
@@ -186,10 +190,12 @@ function seedS4WeakPoint(dataRoot, semesterId, courseInstanceId, moduleId) {
   try {
     const now = '2026-07-20T00:00:00.000Z';
     const weakPointId = crypto.randomUUID();
-    db.prepare(`INSERT INTO weak_points (
+    db.prepare(
+      `INSERT INTO weak_points (
       id, course_instance_id, knowledge_module_id, status, evidence_count,
       first_detected_at, latest_detected_at, created_at, updated_at
-    ) VALUES (?, ?, ?, 'active', 2, ?, ?, ?, ?)`).run(weakPointId, courseInstanceId, moduleId, now, now, now, now);
+    ) VALUES (?, ?, ?, 'active', 2, ?, ?, ?, ?)`
+    ).run(weakPointId, courseInstanceId, moduleId, now, now, now, now);
     return { weakPointId };
   } finally {
     db.close();
@@ -207,7 +213,11 @@ function countMockExamRows(dataRoot, semesterId) {
       analyses: db.prepare('SELECT COUNT(*) AS count FROM mock_exam_module_analyses').get().count,
       mistakes: db.prepare('SELECT COUNT(*) AS count FROM mistakes').get().count,
       weakPoints: db.prepare('SELECT COUNT(*) AS count FROM weak_points').get().count,
-      s5Events: db.prepare("SELECT COUNT(*) AS count FROM study_events WHERE source_system = 'S5' AND event_type = 'mock_exam_completed'").get().count,
+      s5Events: db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM study_events WHERE source_system = 'S5' AND event_type = 'mock_exam_completed'"
+        )
+        .get().count,
     };
   } finally {
     db.close();
@@ -318,10 +328,17 @@ test('POST creates a mock exam paper from confirmed exam and returns answer-hidd
   assert.equal(created.json.data.timeLimitSeconds, 600);
   assert.equal(created.json.data.sourceSummary.weakPointCount, 1);
   assert.equal(created.json.data.sourceSummary.activeMistakeCount, 0);
-  assert.deepEqual(created.json.data.questions.map((question) => question.questionOrder), [1, 2, 3, 4, 5]);
+  assert.deepEqual(
+    created.json.data.questions.map((question) => question.questionOrder),
+    [1, 2, 3, 4, 5]
+  );
   for (const question of created.json.data.questions) assertStudentQuestionShape(question);
 
-  const detail = await requestJson(backend.port, 'GET', `/api/mock-exam-papers/${created.json.data.id}?semesterId=${semesterId}`);
+  const detail = await requestJson(
+    backend.port,
+    'GET',
+    `/api/mock-exam-papers/${created.json.data.id}?semesterId=${semesterId}`
+  );
   assert.equal(detail.status, 200, detail.text);
   assert.deepEqual(detail.json.data.questions, created.json.data.questions);
   assert.deepEqual(countMockExamRows(backend.dataRoot, semesterId), {
@@ -349,7 +366,10 @@ test('mock exam generation rejects pending exam, AI failure, and cross-course mo
   const math = await createCourse(backend.port, semesterId, '数学');
   const english = await createCourse(backend.port, semesterId, '英语');
   const confirmed = await createExam(backend.port, semesterId, math.id);
-  const pending = await createExam(backend.port, semesterId, math.id, { confirmationStatus: 'pending', name: '待确认期末' });
+  const pending = await createExam(backend.port, semesterId, math.id, {
+    confirmationStatus: 'pending',
+    name: '待确认期末',
+  });
   seedKnowledgeModule(backend.dataRoot, semesterId, math.id, { id: moduleId });
   const wrongModuleId = seedKnowledgeModule(backend.dataRoot, semesterId, english.id, { title: '英语阅读' });
 
@@ -415,7 +435,9 @@ test('mock exam attempt submit grades answers, writes S5 analysis event, and doe
   });
   assert.equal(paper.status, 201, paper.text);
 
-  const started = await requestJson(backend.port, 'POST', `/api/mock-exam-papers/${paper.json.data.id}/attempts`, { semesterId });
+  const started = await requestJson(backend.port, 'POST', `/api/mock-exam-papers/${paper.json.data.id}/attempts`, {
+    semesterId,
+  });
   assert.equal(started.status, 201, started.text);
   assert.equal(started.json.data.status, 'in_progress');
   for (const question of started.json.data.questions) assertStudentQuestionShape(question);
@@ -446,7 +468,11 @@ test('mock exam attempt submit grades answers, writes S5 analysis event, and doe
   assert.ok(submitted.json.data.answers[0].correctAnswer);
   assert.ok(submitted.json.data.answers[0].explanation);
 
-  const detail = await requestJson(backend.port, 'GET', `/api/mock-exam-attempts/${started.json.data.id}?semesterId=${semesterId}`);
+  const detail = await requestJson(
+    backend.port,
+    'GET',
+    `/api/mock-exam-attempts/${started.json.data.id}?semesterId=${semesterId}`
+  );
   assert.equal(detail.status, 200, detail.text);
   assert.equal(detail.json.data.status, 'graded');
   assert.deepEqual(detail.json.data.result, submitted.json.data);

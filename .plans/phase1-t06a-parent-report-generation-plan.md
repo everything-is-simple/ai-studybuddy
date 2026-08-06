@@ -167,12 +167,7 @@ import { migrateSemesterDb } from '../db/migrations';
 export type ParentReportType = 'daily' | 'weekly' | 'monthly' | 'exam_reminder';
 export type ParentReportStatus = 'ok' | 'insufficient_data';
 export type ParentReportSectionKind =
-  | 'study_rhythm'
-  | 'materials'
-  | 'practice'
-  | 'mistakes'
-  | 'exam_reminder'
-  | 'data_quality';
+  'study_rhythm' | 'materials' | 'practice' | 'mistakes' | 'exam_reminder' | 'data_quality';
 
 export interface ParentReportPeriod {
   startDate: string;
@@ -236,7 +231,8 @@ function isUuid(value: string): boolean {
 }
 
 function assertDate(value: string, field: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new ParentReportError('REPORT_PERIOD_INVALID', 400, `${field} 必须是 YYYY-MM-DD`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value))
+    throw new ParentReportError('REPORT_PERIOD_INVALID', 400, `${field} 必须是 YYYY-MM-DD`);
   return value;
 }
 
@@ -277,12 +273,14 @@ export class ParentReportService {
     let globalDb: DatabaseType | undefined;
     try {
       globalDb = openExistingDbAtPath(getGlobalDbPath());
-      const row = globalDb.prepare('SELECT ready FROM semesters WHERE id = ?').get(semesterId) as { ready: number } | undefined;
+      const row = globalDb.prepare('SELECT ready FROM semesters WHERE id = ?').get(semesterId) as
+        { ready: number } | undefined;
       if (!row || row.ready !== 1) throw new ParentReportError('SEMESTER_NOT_READY', 409, '学期尚未就绪');
     } finally {
       globalDb?.close();
     }
-    if (!fs.existsSync(getSemesterDbPath(semesterId))) throw new ParentReportError('SEMESTER_DB_NOT_FOUND', 500, '学期数据库不存在');
+    if (!fs.existsSync(getSemesterDbPath(semesterId)))
+      throw new ParentReportError('SEMESTER_DB_NOT_FOUND', 500, '学期数据库不存在');
     const db = openExistingDbAtPath(getSemesterDbPath(semesterId));
     migrateSemesterDb(db);
     return db;
@@ -703,7 +701,13 @@ test('T06A AI summary uses sanitized rule report and appends optional summary', 
     now: () => '2026-06-01T20:00:00.000Z',
     summarizeWithAi: async (payload) => {
       seen.push(payload);
-      return { content: '今天节奏稳定，建议继续完成查漏补缺任务。', provider: 'fake', model: 'fake-parent-report', tokenUsed: 12, latencyMs: 1 };
+      return {
+        content: '今天节奏稳定，建议继续完成查漏补缺任务。',
+        provider: 'fake',
+        model: 'fake-parent-report',
+        tokenUsed: 12,
+        latencyMs: 1,
+      };
     },
   }).generateReport({
     semesterId: semester.semesterId,
@@ -762,7 +766,11 @@ export interface ParentReportAiResult {
 
 export interface ParentReportServiceOptions {
   now?: () => string;
-  summarizeWithAi?: (payload: { reportType: ParentReportType; period: ParentReportPeriod; sections: ParentReportSection[] }) => Promise<ParentReportAiResult>;
+  summarizeWithAi?: (payload: {
+    reportType: ParentReportType;
+    period: ParentReportPeriod;
+    sections: ParentReportSection[];
+  }) => Promise<ParentReportAiResult>;
 }
 ```
 

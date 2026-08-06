@@ -3,7 +3,11 @@ import multer from 'multer';
 import type { ApiError, ApiSuccess } from '@ai-studybuddy/shared';
 import { config } from '../config/env';
 import { NoteBuilderError } from '../services/note-builder-service';
-import { ClassCaptureError, ClassCaptureService, WhisperCppAuralConverterError } from '../services/class-capture-service';
+import {
+  ClassCaptureError,
+  ClassCaptureService,
+  WhisperCppAuralConverterError,
+} from '../services/class-capture-service';
 
 const router: Router = Router();
 const service = new ClassCaptureService();
@@ -19,7 +23,11 @@ function handle(error: unknown, res: Response): Response {
   if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json(fail('ASR_FILE_TOO_LARGE', '音频文件超过当前课堂转写大小限制'));
   }
-  if (error instanceof ClassCaptureError || error instanceof WhisperCppAuralConverterError || error instanceof NoteBuilderError) {
+  if (
+    error instanceof ClassCaptureError ||
+    error instanceof WhisperCppAuralConverterError ||
+    error instanceof NoteBuilderError
+  ) {
     return res.status(error.status).json(fail(error.code, error.message));
   }
   return res.status(500).json(fail('CLASS_CAPTURE_REQUEST_FAILED', '课堂录音请求处理失败，请稍后重试'));
@@ -35,7 +43,12 @@ router.post('/class-captures/transcribe', (req, res) =>
         title: req.body.title,
         permissionConfirmed: req.body.permissionConfirmed,
         file: req.file
-          ? { originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, buffer: req.file.buffer }
+          ? {
+              originalname: req.file.originalname,
+              mimetype: req.file.mimetype,
+              size: req.file.size,
+              buffer: req.file.buffer,
+            }
           : undefined,
       })
       .then((result) => res.status(200).json(ok(result)))

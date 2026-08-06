@@ -13,6 +13,7 @@
 ### Task 1: 共享部署脚本库
 
 **Files:**
+
 - Create: `scripts/lib/AIStudyBuddy.Deployment.psm1`
 - Test: `packages/backend/test/windows-deployment-scripts.test.mjs`
 
@@ -23,6 +24,7 @@
 ### Task 2: Bootstrap
 
 **Files:**
+
 - Create: `scripts/bootstrap-runtime.ps1`
 - Create: `deployment/runtime-compatibility.json`
 - Create: `deployment/.env.production.example`
@@ -35,6 +37,7 @@
 ### Task 3: 启停与只读检查
 
 **Files:**
+
 - Create: `scripts/start-production.ps1`
 - Create: `scripts/stop-production.ps1`
 - Create: `scripts/check-installation.ps1`

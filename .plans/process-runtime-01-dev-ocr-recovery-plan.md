@@ -13,6 +13,7 @@
 ### Task 1: 固化 OCR 依赖契约
 
 **Files:**
+
 - Create: `packages/backend/requirements-ocr.txt`
 - Modify: `.env.example`
 - Test: `packages/backend/test/ocr-runtime-contract.test.mjs`
@@ -25,6 +26,7 @@
 ### Task 2: 创建可重复 OCR smoke
 
 **Files:**
+
 - Create: `scripts/test-ocr-runtime.ps1`
 - Test: `packages/backend/test/ocr-runtime-script.test.mjs`
 
@@ -37,6 +39,7 @@
 ### Task 3: 恢复开发机配置与基线
 
 **Files:**
+
 - Local-only modify: `H:\ai-studybuddy\.env.local`
 - Runtime create: `H:\ai-studybuddy-runtime\runs\local-dev-20260723-001`, `logs`, `tmp`, `backups`
 

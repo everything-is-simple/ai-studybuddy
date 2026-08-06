@@ -194,7 +194,6 @@ test('T06B 未配置渠道跳过，不创建发送记录也不泄漏渠道地址
   });
 });
 
-
 test('T06B retryDue 恢复过期 sending 租约，只重试未成功渠道且复用冻结快照', async () => {
   const semester = createReadySemester();
   const generated = [];
@@ -255,8 +254,26 @@ test('T06B migration 从真实 v6 形态补齐缺失的快照与投递表及恢�
     assert.equal(getAppliedVersion(db, 'semester'), 11);
     assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'parent_reports'").get());
     const columns = db.pragma('table_info(report_deliveries)').map((column) => column.name);
-    for (const column of ['report_key', 'channel', 'status', 'sent_at', 'error_summary', 'attempt_count', 'last_attempt_at', 'next_retry_at', 'updated_at', 'lease_expires_at', 'created_at']) assert.ok(columns.includes(column));
-    assert.equal(db.pragma('foreign_key_list(report_deliveries)').some((foreignKey) => foreignKey.table === 'parent_reports' && foreignKey.from === 'report_key'), true);
+    for (const column of [
+      'report_key',
+      'channel',
+      'status',
+      'sent_at',
+      'error_summary',
+      'attempt_count',
+      'last_attempt_at',
+      'next_retry_at',
+      'updated_at',
+      'lease_expires_at',
+      'created_at',
+    ])
+      assert.ok(columns.includes(column));
+    assert.equal(
+      db
+        .pragma('foreign_key_list(report_deliveries)')
+        .some((foreignKey) => foreignKey.table === 'parent_reports' && foreignKey.from === 'report_key'),
+      true
+    );
   } finally {
     db.close();
   }
@@ -269,7 +286,14 @@ test('T06B 每渠道三次自动尝试后停止跨运行重试，并保留脱敏
     now: () => now,
     reportGenerator: createGenerator([]),
     channels: [
-      { channel: 'smtp', isConfigured: () => true, send: async () => { smtpAttempts += 1; throw new Error('SMTP_UNAVAILABLE'); } },
+      {
+        channel: 'smtp',
+        isConfigured: () => true,
+        send: async () => {
+          smtpAttempts += 1;
+          throw new Error('SMTP_UNAVAILABLE');
+        },
+      },
       { channel: 'feishu', isConfigured: () => false, send: async () => {} },
     ],
   });
@@ -291,7 +315,11 @@ test('T06B 每渠道三次自动尝试后停止跨运行重试，并保留脱敏
   assert.equal(smtpAttempts, 3);
 
   withSemesterDb(semester, (db) => {
-    const row = db.prepare("SELECT status, attempt_count, next_retry_at FROM report_deliveries WHERE report_key = 'report:2026-06-06' AND channel = 'smtp'").get();
+    const row = db
+      .prepare(
+        "SELECT status, attempt_count, next_retry_at FROM report_deliveries WHERE report_key = 'report:2026-06-06' AND channel = 'smtp'"
+      )
+      .get();
     assert.deepEqual(row, { status: 'failed', attempt_count: 3, next_retry_at: null });
   });
 });
@@ -302,8 +330,20 @@ test('T06B 双渠道均失败时原子留存脱敏 HTML 与错误摘要，成功
     now: () => '2026-06-05T14:30:00.000Z',
     reportGenerator: createGenerator([]),
     channels: [
-      { channel: 'smtp', isConfigured: () => true, send: async () => { throw new Error('smtp-password@example.test'); } },
-      { channel: 'feishu', isConfigured: () => true, send: async () => { throw new Error('https://hooks.example.test/secret'); } },
+      {
+        channel: 'smtp',
+        isConfigured: () => true,
+        send: async () => {
+          throw new Error('smtp-password@example.test');
+        },
+      },
+      {
+        channel: 'feishu',
+        isConfigured: () => true,
+        send: async () => {
+          throw new Error('https://hooks.example.test/secret');
+        },
+      },
     ],
   });
 

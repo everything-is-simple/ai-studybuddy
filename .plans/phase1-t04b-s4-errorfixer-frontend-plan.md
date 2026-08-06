@@ -40,9 +40,9 @@
 
 对照 PRD T04B 范围"错题列表、详情、错因确认、原题重做和工作台入口"，当前 Schema 有两处缺口：
 
-| 缺口 | 事实 | 影响 |
-| --- | --- | --- |
-| G1 错因确认无存储 | `mistakes` 表没有错因类别/备注/确认时间字段 | PRD 用户故事"确认错因"无法持久化 |
+| 缺口              | 事实                                                                                                    | 影响                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| G1 错因确认无存储 | `mistakes` 表没有错因类别/备注/确认时间字段                                                             | PRD 用户故事"确认错因"无法持久化                                |
 | G2 重做证据无类型 | `mistake_evidence.evidence_type` CHECK 只允许 `'practice_error'`；无重做 session 标记、无复制题溯源字段 | "原题重做产生独立、可追溯的批改证据"（PRD 验收第 5 条）无法入库 |
 
 **两个方案，请批准时二选一：**
@@ -51,7 +51,7 @@
   1. `mistakes` 增加 `error_cause_category TEXT NULL CHECK(... IN ('concept_unclear','misread','formula_error','step_missing','time_pressure','other'))`、`error_cause_note TEXT NULL`（≤500 字）、`error_cause_confirmed_at TEXT NULL`；
   2. `mistake_evidence.evidence_type` CHECK 扩展为 `('practice_error','redo_correct','redo_incorrect')`（SQLite 重建表迁移，保留数据）；
   3. `practice_sessions` 增加 `session_kind TEXT NOT NULL DEFAULT 'practice' CHECK(IN ('practice','mistake_redo'))` 与 `origin_mistake_id TEXT NULL REFERENCES mistakes(id)`；`questions` 增加 `origin_question_id TEXT NULL`（复制题溯源）。
-  理由：PRD 第 5 节明确"MVP 先保证原题重做可用"，第 9 节验收要求重做证据可追溯；不补 Schema 则 T04B 无法达到 PRD MVP 验收。
+     理由：PRD 第 5 节明确"MVP 先保证原题重做可用"，第 9 节验收要求重做证据可追溯；不补 Schema 则 T04B 无法达到 PRD MVP 验收。
 - **方案 B（保守拆分）**：本轮只做列表/详情/薄弱点/掌握标记 + 工作台入口（现有 Schema 可支撑）；错因确认与原题重做拆为 T04B-2，另立 Schema 计划。代价：docs/04 的 T04B 行"错题重做流程"本轮不能勾选，需拆行登记。
 
 以下第 3–6 节按方案 A 编写；若批准方案 B，则划去 G1/G2 相关条目，其余不变。
@@ -62,15 +62,15 @@
 
 新增 `packages/backend/src/api/error-fixer.ts` + `packages/backend/src/services/error-fixer-query-service.ts`（读取/操作与既有归档服务分离），挂载到 `/api`：
 
-| 端点 | 责任 | 关键规则 |
-| --- | --- | --- |
-| `GET /api/mistakes` | 错题列表 | 必填 `semesterId`+`courseInstanceId`；可选 `knowledgeModuleId`、`status` 筛选；默认 `pending_review`/`needs_review` 优先、`latest_error_at DESC`；分页同 knowledge-modules 模式 |
-| `GET /api/mistakes/:id` | 错题详情 | 返回原题（题干/选项/**正确答案/解析**——已批改事实允许展示）、学生原作答、错误次数、状态、错因、证据列表（含每条来源 practice_answer 时间与结果） |
-| `PATCH /api/mistakes/:id/error-cause` | 错因确认（G1） | 类别白名单 + 可选备注；记录确认时间；`pending_review` 确认后进入 `needs_review` |
-| `POST /api/mistakes/:id/redo` | 发起原题重做（G2） | 事务内创建 `session_kind='mistake_redo'` 的单题 session，复制原题（`origin_question_id` 溯源，不调 AI）；返回作答前 DTO（隐藏答案） |
-| `POST /api/practice-sessions/:id/submit`（复用） | 重做提交批改 | 复用现有规则批改；`mistake_redo` 场次不走 `archiveIncorrectPracticeAnswers`（防止复制题生成新 mistake），改写 `redo_correct`/`redo_incorrect` 证据：重做正确→掌握证据；重做错误→`error_count` 不变、保持/回到 `needs_review` |
-| `PATCH /api/mistakes/:id/status` | 掌握标记 | 仅允许 `needs_review→mastered`（须存在至少 1 条 `redo_correct` 证据或显式 `confirm:true` 学生确认）与 `mastered→needs_review` 手动重开；非法流转返回中文 `MISTAKE_STATUS_INVALID` |
-| `GET /api/weak-points` | 薄弱点列表 | 必填 `semesterId`+`courseInstanceId`；返回状态、证据计数、关联模块标题、最近时间；可展开证据来源（mistake 短链） |
+| 端点                                             | 责任               | 关键规则                                                                                                                                                                                                                     |
+| ------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/mistakes`                              | 错题列表           | 必填 `semesterId`+`courseInstanceId`；可选 `knowledgeModuleId`、`status` 筛选；默认 `pending_review`/`needs_review` 优先、`latest_error_at DESC`；分页同 knowledge-modules 模式                                              |
+| `GET /api/mistakes/:id`                          | 错题详情           | 返回原题（题干/选项/**正确答案/解析**——已批改事实允许展示）、学生原作答、错误次数、状态、错因、证据列表（含每条来源 practice_answer 时间与结果）                                                                             |
+| `PATCH /api/mistakes/:id/error-cause`            | 错因确认（G1）     | 类别白名单 + 可选备注；记录确认时间；`pending_review` 确认后进入 `needs_review`                                                                                                                                              |
+| `POST /api/mistakes/:id/redo`                    | 发起原题重做（G2） | 事务内创建 `session_kind='mistake_redo'` 的单题 session，复制原题（`origin_question_id` 溯源，不调 AI）；返回作答前 DTO（隐藏答案）                                                                                          |
+| `POST /api/practice-sessions/:id/submit`（复用） | 重做提交批改       | 复用现有规则批改；`mistake_redo` 场次不走 `archiveIncorrectPracticeAnswers`（防止复制题生成新 mistake），改写 `redo_correct`/`redo_incorrect` 证据：重做正确→掌握证据；重做错误→`error_count` 不变、保持/回到 `needs_review` |
+| `PATCH /api/mistakes/:id/status`                 | 掌握标记           | 仅允许 `needs_review→mastered`（须存在至少 1 条 `redo_correct` 证据或显式 `confirm:true` 学生确认）与 `mastered→needs_review` 手动重开；非法流转返回中文 `MISTAKE_STATUS_INVALID`                                            |
+| `GET /api/weak-points`                           | 薄弱点列表         | 必填 `semesterId`+`courseInstanceId`；返回状态、证据计数、关联模块标题、最近时间；可展开证据来源（mistake 短链）                                                                                                             |
 
 约束：全部走标准 `ApiSuccess/ApiError` 信封；学期隔离与既有 API 相同（`semesterId` 校验 + 跨学期 404）；错误消息一律中文；日志不记录题干、答案与完整 UUID。StudyEvent：重做完成写 `mistake_reviewed` 摘要事件（`evidence_ref=mistake:<id>`，不含正文），与 docs/04 T07 预告的事件名一致。
 
@@ -84,12 +84,12 @@
 
 ### 4.2 页面与路由（复用现有 App.tsx Routes 模式）
 
-| 路由 | 页面 | 责任 |
-| --- | --- | --- |
-| `/exams/:examId/mistakes` | 错题列表页 | 按状态/知识模块筛选；待复盘与需复习分区置顶；每项显示题型、模块、错误次数、最近错误时间；空状态文案"当前没有待处理的错题，去练习区做一组题吧" |
-| `/mistakes/:mistakeId` | 错题详情/改错页 | 原题+我的答案+正确答案+解析（KaTeX 渲染复用现有 markdown 组件）；错因确认表单（类别单选+备注）；证据时间线；"原题重做"按钮 → 创建 redo session 后跳 `/practice-sessions/:sessionId`（复用 S3 作答页，隐藏答案）；掌握标记/重开操作 |
-| 工作台 `查漏补缺` 区 | `exam-workbench-page.tsx` 新卡片 | 显示待复盘/需复习计数 + 薄弱点前 3 条 + "进入错题本"入口（仿"练习"区卡片模式） |
-| S3 结果页入口 | `practice-result-page.tsx` 增量 | 有错题时显示"N 道错题已进入错题本"提示与链接；不改变现有结果展示 |
+| 路由                      | 页面                             | 责任                                                                                                                                                                                                                               |
+| ------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/exams/:examId/mistakes` | 错题列表页                       | 按状态/知识模块筛选；待复盘与需复习分区置顶；每项显示题型、模块、错误次数、最近错误时间；空状态文案"当前没有待处理的错题，去练习区做一组题吧"                                                                                      |
+| `/mistakes/:mistakeId`    | 错题详情/改错页                  | 原题+我的答案+正确答案+解析（KaTeX 渲染复用现有 markdown 组件）；错因确认表单（类别单选+备注）；证据时间线；"原题重做"按钮 → 创建 redo session 后跳 `/practice-sessions/:sessionId`（复用 S3 作答页，隐藏答案）；掌握标记/重开操作 |
+| 工作台 `查漏补缺` 区      | `exam-workbench-page.tsx` 新卡片 | 显示待复盘/需复习计数 + 薄弱点前 3 条 + "进入错题本"入口（仿"练习"区卡片模式）                                                                                                                                                     |
+| S3 结果页入口             | `practice-result-page.tsx` 增量  | 有错题时显示"N 道错题已进入错题本"提示与链接；不改变现有结果展示                                                                                                                                                                   |
 
 薄弱点展示：并入错题列表页顶部区块（模块名、证据数、最近时间、点击过滤该模块错题），不单开路由，控制范围。
 
@@ -114,14 +114,14 @@
 
 ## 6. 验证计划
 
-| 命令 | 要求 |
-| --- | --- |
-| `pnpm type-check` | 零错误 |
-| `pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build` | 通过 |
-| `pnpm test` | 全量通过（后端现 142 基线 + 新增；前端 37 基线 + 新增） |
-| `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t04b-e2e npx playwright test` | 既有 3 条 + 新增 error-fixer spec 全过 |
-| `scripts/check-docs-governance.ps1`、`git diff --check` | 通过 |
-| 浏览器人工验收 | 空状态、成功路径、重做失败路径、刷新保持、证据目录仓库外留存 |
+| 命令                                                                                       | 要求                                                         |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `pnpm type-check`                                                                          | 零错误                                                       |
+| `pnpm -r --filter backend run build`、`pnpm -r --filter @ai-studybuddy/frontend run build` | 通过                                                         |
+| `pnpm test`                                                                                | 全量通过（后端现 142 基线 + 新增；前端 37 基线 + 新增）      |
+| `APP_DATA_ROOT=I:\ai-studybuddy-tmp\runs\phase1-t04b-e2e npx playwright test`              | 既有 3 条 + 新增 error-fixer spec 全过                       |
+| `scripts/check-docs-governance.ps1`、`git diff --check`                                    | 通过                                                         |
+| 浏览器人工验收                                                                             | 空状态、成功路径、重做失败路径、刷新保持、证据目录仓库外留存 |
 
 ## 7. 交付说明必含
 
@@ -131,17 +131,17 @@
 
 ## 8. 独立自审
 
-| 检查点 | 结论 |
-| --- | --- |
-| 是否只做 T04B 计划、未提前写代码 | ✅ 本轮仅产出本计划文件 |
-| 是否擅自修改 Schema | ✅ 未修改；G1/G2 为核查证实的 T04A 遗漏，已按"另行说明+用户裁决"处理（方案 A/B 二选一） |
-| 是否触碰未来模块 | ✅ T05/S5/S6/S7 均列入非目标；`mistake_reviewed` 事件仅按 S1 既有 StudyEvent 通道写摘要 |
-| 是否与 S4 PRD 一致 | ✅ 状态机（待复盘→需复习→已掌握→再错重开）、答案提交前隐藏、多证据薄弱点、掌握需证据、隐私边界均对齐 PRD 第 3/6/9 节 |
-| 与 S3 入口关系是否清楚 | ✅ 只读 `practice_answers` 事实；redo 复用 S3 session/submit 通道但以 `session_kind` 隔离归档旁路，不改 S3 语义 |
-| 学期隔离 | ✅ 全部 API 必填 semesterId，跨学期 404，测试覆盖 |
-| 中文错误提示 | ✅ API 错误码+中文消息；前端内联展示 |
-| 测试/治理/diff 检查 | ✅ 第 5/6 节已含 |
-| 风险点 | redo 旁路若漏判 `session_kind` 会重复建错题——已列专项回归测试；SQLite CHECK 扩展需重建表迁移——已列 v5→v6 保数据测试 |
+| 检查点                           | 结论                                                                                                                 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 是否只做 T04B 计划、未提前写代码 | ✅ 本轮仅产出本计划文件                                                                                              |
+| 是否擅自修改 Schema              | ✅ 未修改；G1/G2 为核查证实的 T04A 遗漏，已按"另行说明+用户裁决"处理（方案 A/B 二选一）                              |
+| 是否触碰未来模块                 | ✅ T05/S5/S6/S7 均列入非目标；`mistake_reviewed` 事件仅按 S1 既有 StudyEvent 通道写摘要                              |
+| 是否与 S4 PRD 一致               | ✅ 状态机（待复盘→需复习→已掌握→再错重开）、答案提交前隐藏、多证据薄弱点、掌握需证据、隐私边界均对齐 PRD 第 3/6/9 节 |
+| 与 S3 入口关系是否清楚           | ✅ 只读 `practice_answers` 事实；redo 复用 S3 session/submit 通道但以 `session_kind` 隔离归档旁路，不改 S3 语义      |
+| 学期隔离                         | ✅ 全部 API 必填 semesterId，跨学期 404，测试覆盖                                                                    |
+| 中文错误提示                     | ✅ API 错误码+中文消息；前端内联展示                                                                                 |
+| 测试/治理/diff 检查              | ✅ 第 5/6 节已含                                                                                                     |
+| 风险点                           | redo 旁路若漏判 `session_kind` 会重复建错题——已列专项回归测试；SQLite CHECK 扩展需重建表迁移——已列 v5→v6 保数据测试  |
 
 ## 9. 批准记录
 
@@ -155,13 +155,13 @@
 
 ## 10. 批准后补充自审（收窄版方案 A 范围核对）
 
-| 核对项 | 结论 |
-| --- | --- |
+| 核对项                      | 结论                                                                                                                                                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | v6 字段是否全部为 T04B 必需 | ✅ 错因三字段（类别/备注/确认时间）服务"错因确认"界面；证据类型扩展服务"重做证据入库"；`session_kind`+`origin_mistake_id`+`origin_question_id` 仅用于 redo 溯源与归档旁路判定。无任何字段服务 T05 优先级回流、S6 报告或 S5 冲刺 |
-| 是否有多余端点 | ✅ 7 组端点均一一对应 PRD 第 8 节产品界面；无导出、无统计聚合（S6 范围）、无排程（T05 范围） |
-| redo 是否改变 S3 语义 | ✅ 复用 create/submit 通道；普通 practice 场次行为完全不变；`mistake_redo` 场次仅旁路 archiveIncorrectPracticeAnswers 改写 redo 证据 |
-| StudyEvent 是否越权 | ✅ 仅新增 `mistake_reviewed` 摘要事件走 S1 既有通道（docs/04 T07 已预告该事件名），不实现 T07 的过滤/展示 |
-| 前端是否直读数据 | ✅ 全部经 error-fixer-api.ts → 后端 API |
-| 文档更新是否符合边界 7 | ✅ docs/04 只在 Phase 1-T04B 行登记完成与"含 T04A 遗漏的 Schema/API 补洞（migration v6）"字样；T04A 行及其收尾证据不改动 |
+| 是否有多余端点              | ✅ 7 组端点均一一对应 PRD 第 8 节产品界面；无导出、无统计聚合（S6 范围）、无排程（T05 范围）                                                                                                                                    |
+| redo 是否改变 S3 语义       | ✅ 复用 create/submit 通道；普通 practice 场次行为完全不变；`mistake_redo` 场次仅旁路 archiveIncorrectPracticeAnswers 改写 redo 证据                                                                                            |
+| StudyEvent 是否越权         | ✅ 仅新增 `mistake_reviewed` 摘要事件走 S1 既有通道（docs/04 T07 已预告该事件名），不实现 T07 的过滤/展示                                                                                                                       |
+| 前端是否直读数据            | ✅ 全部经 error-fixer-api.ts → 后端 API                                                                                                                                                                                         |
+| 文档更新是否符合边界 7      | ✅ docs/04 只在 Phase 1-T04B 行登记完成与"含 T04A 遗漏的 Schema/API 补洞（migration v6）"字样；T04A 行及其收尾证据不改动                                                                                                        |
 
 结论：范围与收窄版批准一致，未扩大。开始实现。

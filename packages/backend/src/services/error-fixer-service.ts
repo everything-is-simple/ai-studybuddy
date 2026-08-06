@@ -49,11 +49,7 @@ export class ErrorFixerService {
     this.feedbackRules = options?.feedbackRules ?? new FeedbackRulesService({ id: this.id });
   }
 
-  archiveIncorrectPracticeAnswers(
-    db: DatabaseType,
-    sessionId: string,
-    occurredAt: string
-  ): ArchiveMistakesResult {
+  archiveIncorrectPracticeAnswers(db: DatabaseType, sessionId: string, occurredAt: string): ArchiveMistakesResult {
     const result: ArchiveMistakesResult = {
       createdMistakes: 0,
       updatedMistakes: 0,
@@ -82,9 +78,7 @@ export class ErrorFixerService {
       )
       .all(sessionId) as IncorrectPracticeAnswerRow[];
 
-    const evidenceExists = db.prepare(
-      'SELECT 1 FROM mistake_evidence WHERE source_practice_answer_id = ?'
-    );
+    const evidenceExists = db.prepare('SELECT 1 FROM mistake_evidence WHERE source_practice_answer_id = ?');
     const findMistake = db.prepare('SELECT id, error_count FROM mistakes WHERE question_id = ?');
     const insertMistake = db.prepare(
       `INSERT INTO mistakes (
@@ -275,9 +269,10 @@ export class ErrorFixerService {
     );
 
     if (!isCorrect) {
-      db.prepare(
-        `UPDATE mistakes SET status = 'needs_review', updated_at = ? WHERE id = ?`
-      ).run(occurredAt, mistake.id);
+      db.prepare(`UPDATE mistakes SET status = 'needs_review', updated_at = ? WHERE id = ?`).run(
+        occurredAt,
+        mistake.id
+      );
 
       const evidenceStats = db
         .prepare(

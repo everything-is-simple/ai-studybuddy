@@ -1,8 +1,5 @@
 import { Dpapi, isPlatformSupported } from '@primno/dpapi';
-import {
-  SecretProtectionError,
-  type SecretProtector,
-} from './secret-protector';
+import { SecretProtectionError, type SecretProtector } from './secret-protector';
 
 export class DpapiProtector implements SecretProtector {
   readonly available = isPlatformSupported;

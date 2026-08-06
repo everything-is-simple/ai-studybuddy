@@ -117,6 +117,7 @@ Key columns:
 ## Task 1: Write Failing Schema Tests
 
 **Files:**
+
 - Create: `packages/backend/test/error-fixer-schema.test.mjs`
 
 - [ ] **Step 1: Add migration v5 schema tests**
@@ -148,6 +149,7 @@ Expected RED: tests fail because migration v5 / S4 tables do not exist.
 ## Task 2: Implement Migration v5 and Shared Types
 
 **Files:**
+
 - Create: `packages/backend/src/db/sql/migration-semester-v5.ts`
 - Modify: `packages/backend/src/db/migrations.ts`
 - Modify: `packages/shared/src/types.ts`
@@ -188,6 +190,7 @@ Expected GREEN: schema tests pass.
 ## Task 3: Write Failing Archive Integration Tests
 
 **Files:**
+
 - Create: `packages/backend/test/error-fixer-archive-api.test.mjs`
 
 - [ ] **Step 1: Add API integration tests**
@@ -218,6 +221,7 @@ Expected RED: tests fail because `ErrorFixerService` and S3 submit integration d
 ## Task 4: Implement Archive Service and S3 Submit Integration
 
 **Files:**
+
 - Create: `packages/backend/src/services/error-fixer-service.ts`
 - Modify: `packages/backend/src/services/practice-runner-service.ts`
 
@@ -265,6 +269,7 @@ Expected GREEN: archive tests pass.
 ## Task 5: Regression, Docs, Governance and Commit
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify if needed: `docs/08-共同底座架构-Architecture.md`
 

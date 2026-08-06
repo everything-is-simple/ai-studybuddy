@@ -5,7 +5,9 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const createdEnvDataRoot = process.env.APP_DATA_ROOT ? null : fs.mkdtempSync(path.join(os.tmpdir(), 'studybuddy-ocr-env-'));
+const createdEnvDataRoot = process.env.APP_DATA_ROOT
+  ? null
+  : fs.mkdtempSync(path.join(os.tmpdir(), 'studybuddy-ocr-env-'));
 if (createdEnvDataRoot) {
   process.env.APP_DATA_ROOT = createdEnvDataRoot;
   test.after(() => fs.rmSync(createdEnvDataRoot, { recursive: true, force: true }));
@@ -23,7 +25,9 @@ test('OcrConverter uses governed temp/cache roots and removes buffer temp file',
   const tempRoot = path.join(root, 'tmp');
   const cacheRoot = path.join(root, 'models', 'rapidocr');
   const workerPath = path.join(root, 'worker.js');
-  fs.writeFileSync(workerPath, `
+  fs.writeFileSync(
+    workerPath,
+    `
     const fs = require('node:fs');
     const imagePath = process.argv[2];
     const result = {
@@ -35,7 +39,8 @@ test('OcrConverter uses governed temp/cache roots and removes buffer temp file',
       imageExists: fs.existsSync(imagePath)
     };
     process.stdout.write(JSON.stringify(result));
-  `);
+  `
+  );
 
   try {
     const converter = new OcrConverter({
@@ -60,7 +65,10 @@ test('OcrConverter terminates a timed-out worker and cleans the temp input', asy
   const root = makeSandbox();
   const tempRoot = path.join(root, 'tmp');
   const workerPath = path.join(root, 'slow-worker.js');
-  fs.writeFileSync(workerPath, `setTimeout(() => process.stdout.write(JSON.stringify({ ok: true, text: 'late' })), 5000);`);
+  fs.writeFileSync(
+    workerPath,
+    `setTimeout(() => process.stdout.write(JSON.stringify({ ok: true, text: 'late' })), 5000);`
+  );
 
   try {
     const converter = new OcrConverter({

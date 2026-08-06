@@ -458,21 +458,21 @@ pending → converting → converted → note_generating → completed
 
 详细转换条件：
 
-| 当前状态              | 触发事件                                                               | 目标状态              | 副作用                                                                |
-| --------------------- | ---------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
-| pending               | Job Worker 领取转换任务                                                | converting            | 无                                                                    |
-| converting            | 转换成功                                                               | converted             | 创建 NormalizedText 记录                                              |
-| converting            | 转换失败且聚合 jobs.attempts < 3                                       | pending               | 写入转换错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
-| converting            | 转换失败且聚合 jobs.attempts 已达 3                                    | conversion_failed     | 写入 conversion_error_message                                         |
-| conversion_failed     | 手动重试转换，转换 Job 聚合 attempts < 3 且无 pending/running 同类 Job | conversion_failed     | 创建一个 pending material_convert Job；Worker 领取后转为 converting   |
-| conversion_failed     | 转换 Job 聚合 attempts >= 3 或同类 Job 已存在                          | conversion_failed     | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
-| conversion_failed     | 学生粘贴完整正文，且该 material 无 pending/running Job                 | converted             | 替换 normalized_texts；写入 manual 恢复元数据；清空失败摘要；创建新的 pending note_generate Job |
-| converted             | Job Worker 领取 AI 生成任务                                            | note_generating       | 无                                                                    |
-| note_generating       | AI 生成成功                                                            | completed             | 创建 StructuredNote、MindMap、KnowledgeModule 记录；写入 StudyEvent   |
-| note_generating       | AI 请求失败或超时且当前 Job attempts < 3                               | converted             | 写入 AI 错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒    |
-| note_generating       | AI 请求失败或超时且当前 Job attempts 已达 3                            | pending_quality_check | 写入 ai_generation_error_message                                      |
-| pending_quality_check | 手动触发 AI 补全，当前文本版本尚未耗尽且无 pending/running 同类 Job    | pending_quality_check | 创建一个 pending note_generate Job；Worker 领取后转为 note_generating |
-| pending_quality_check | 当前文本版本 attempts 已耗尽或同类 Job 已存在                          | pending_quality_check | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                      |
+| 当前状态              | 触发事件                                                               | 目标状态              | 副作用                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| pending               | Job Worker 领取转换任务                                                | converting            | 无                                                                                                          |
+| converting            | 转换成功                                                               | converted             | 创建 NormalizedText 记录                                                                                    |
+| converting            | 转换失败且聚合 jobs.attempts < 3                                       | pending               | 写入转换错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒                                          |
+| converting            | 转换失败且聚合 jobs.attempts 已达 3                                    | conversion_failed     | 写入 conversion_error_message                                                                               |
+| conversion_failed     | 手动重试转换，转换 Job 聚合 attempts < 3 且无 pending/running 同类 Job | conversion_failed     | 创建一个 pending material_convert Job；Worker 领取后转为 converting                                         |
+| conversion_failed     | 转换 Job 聚合 attempts >= 3 或同类 Job 已存在                          | conversion_failed     | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                                                            |
+| conversion_failed     | 学生粘贴完整正文，且该 material 无 pending/running Job                 | converted             | 替换 normalized_texts；写入 manual 恢复元数据；清空失败摘要；创建新的 pending note_generate Job             |
+| converted             | Job Worker 领取 AI 生成任务                                            | note_generating       | 无                                                                                                          |
+| note_generating       | AI 生成成功                                                            | completed             | 创建 StructuredNote、MindMap、KnowledgeModule 记录；写入 StudyEvent                                         |
+| note_generating       | AI 请求失败或超时且当前 Job attempts < 3                               | converted             | 写入 AI 错误摘要，并将同一 Job 的 available_at 设为当前时间后 5 秒                                          |
+| note_generating       | AI 请求失败或超时且当前 Job attempts 已达 3                            | pending_quality_check | 写入 ai_generation_error_message                                                                            |
+| pending_quality_check | 手动触发 AI 补全，当前文本版本尚未耗尽且无 pending/running 同类 Job    | pending_quality_check | 创建一个 pending note_generate Job；Worker 领取后转为 note_generating                                       |
+| pending_quality_check | 当前文本版本 attempts 已耗尽或同类 Job 已存在                          | pending_quality_check | 返回 MAX_RETRIES_EXCEEDED 或 JOB_ALREADY_PENDING                                                            |
 | pending_quality_check | 学生粘贴完整正文，且该 material 无 pending/running Job                 | converted             | 将手动正文视为新文本版本；替换 normalized_texts；写入 manual 恢复元数据；创建新的 pending note_generate Job |
 
 **转换失败恢复策略**：
@@ -932,7 +932,6 @@ pending → converting → converted → note_generating → completed
 | S2-v2.0                 | 多资料交叉知识图谱、知识模块自动合并去重                |
 
 > 当前实现完成证据以 `docs/04` 的 Phase 0.8-T07/T08/T09 与 Phase 1-T10 记录为准。以上验收清单保留完整产品契约，不表示 URL 批量导入、资料删除、章节分段合并或所有性能目标已经进入当前完成范围。Phase 1-T08 只改变 Provider 配置与降级入口，不改变 S2 数据对象或业务 API。
-
 
 ## S7-MVP 到 S2 的文本 handoff（2026-07-25，已完成主线复验并推送 `origin/master`）
 

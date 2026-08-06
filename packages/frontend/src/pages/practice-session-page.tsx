@@ -125,7 +125,11 @@ export function PracticeSessionPage({ semesterId, onSemesterError }: PracticeSes
             </div>
             <div className={timer.isOvertime ? 'practice-timer practice-overtime' : 'practice-timer'}>
               <span>{data.timeLimitSeconds === null ? '已用时间' : timer.isOvertime ? '已超时' : '剩余时间'}</span>
-              <strong>{formatSeconds(data.timeLimitSeconds === null ? timer.totalDurationSeconds : timer.remainingSeconds ?? 0)}</strong>
+              <strong>
+                {formatSeconds(
+                  data.timeLimitSeconds === null ? timer.totalDurationSeconds : (timer.remainingSeconds ?? 0)
+                )}
+              </strong>
               {timer.isOvertime && <small>超时后仍可继续作答并提交</small>}
             </div>
           </header>
@@ -174,7 +178,12 @@ export function PracticeSessionPage({ semesterId, onSemesterError }: PracticeSes
             )}
           </div>
           {activeIndex < questions.length - 1 && (
-            <button type="button" className="practice-submit-link" disabled={submitting} onClick={() => void handleSubmit()}>
+            <button
+              type="button"
+              className="practice-submit-link"
+              disabled={submitting}
+              onClick={() => void handleSubmit()}
+            >
               {submitting ? '正在提交并批改…' : '现在提交练习'}
             </button>
           )}

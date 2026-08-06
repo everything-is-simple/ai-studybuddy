@@ -13,6 +13,7 @@
 ### Task 1: 生产静态服务行为
 
 **Files:**
+
 - Modify: `packages/backend/src/app.ts`
 - Modify: `packages/backend/src/server.ts`
 - Test: `packages/backend/test/production-static-host.test.mjs`
@@ -25,6 +26,7 @@
 ### Task 2: 构建产物装配
 
 **Files:**
+
 - Create: `scripts/assemble-production.ps1`
 - Modify: `package.json`
 - Modify: `packages/backend/package.json`

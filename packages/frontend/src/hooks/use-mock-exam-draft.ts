@@ -43,7 +43,8 @@ function isSecondsRecord(value: unknown, allowedIds: Set<string>): value is Reco
     typeof value === 'object' &&
     value !== null &&
     Object.entries(value).every(
-      ([questionId, seconds]) => allowedIds.has(questionId) && typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0
+      ([questionId, seconds]) =>
+        allowedIds.has(questionId) && typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0
     )
   );
 }
@@ -78,7 +79,11 @@ function isDraft(value: unknown, attemptId: string, questionIds: readonly string
   );
 }
 
-export function readMockExamDraft(semesterId: string, attemptId: string, questionIds: readonly string[]): MockExamDraft {
+export function readMockExamDraft(
+  semesterId: string,
+  attemptId: string,
+  questionIds: readonly string[]
+): MockExamDraft {
   if (!semesterId || !attemptId) return createEmptyMockExamDraft(attemptId);
   try {
     const raw = window.sessionStorage.getItem(storageKey(semesterId, attemptId));

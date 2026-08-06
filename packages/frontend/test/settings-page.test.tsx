@@ -9,18 +9,122 @@ import { ApiClientError } from '../src/api/api-client';
 
 const presetsFixture = {
   ai: [
-    { id: 'openai', displayName: 'OpenAI', group: 'international', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-5.5', modelSuggestions: ['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna'], description: 'OpenAI 官方' },
-    { id: 'claude', displayName: 'Claude / Anthropic', group: 'international', protocol: 'anthropic-native', availability: 'coming-soon', baseUrl: 'https://api.anthropic.com/v1', defaultModel: '', modelSuggestions: [], description: '后续适配' },
-    { id: 'gemini', displayName: 'Gemini', group: 'international', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://gemini.invalid/v1', defaultModel: 'gemini-test', modelSuggestions: ['gemini-test'], description: 'Gemini 官方' },
-    { id: 'grok', displayName: 'Grok / xAI', group: 'international', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://grok.invalid/v1', defaultModel: 'grok-test', modelSuggestions: ['grok-test'], description: 'Grok 官方' },
-    { id: 'glm', displayName: '智谱 GLM', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://glm.invalid/v1', defaultModel: 'glm-test', modelSuggestions: ['glm-test'], description: 'GLM 官方' },
-    { id: 'kimi', displayName: 'Kimi / Moonshot', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://api.moonshot.cn/v1', defaultModel: 'kimi-k2.7-code', modelSuggestions: ['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6'], description: 'Kimi 官方' },
-    { id: 'deepseek', displayName: 'DeepSeek', group: 'mainland', protocol: 'openai-compatible', availability: 'available', baseUrl: 'https://deepseek.invalid/v1', defaultModel: 'deepseek-test', modelSuggestions: ['deepseek-test'], description: 'DeepSeek 官方' },
-    { id: 'relay-1', displayName: '中转站 1', group: 'relay', protocol: 'openai-compatible', availability: 'available', baseUrl: '', defaultModel: '', modelSuggestions: [], description: '自定义中转站', requiresBaseUrl: true, maxBaseUrls: 4 },
-    { id: 'relay-2', displayName: '中转站 2', group: 'relay', protocol: 'openai-compatible', availability: 'available', baseUrl: '', defaultModel: '', modelSuggestions: [], description: '自定义中转站', requiresBaseUrl: true, maxBaseUrls: 4 },
+    {
+      id: 'openai',
+      displayName: 'OpenAI',
+      group: 'international',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: 'https://api.openai.com/v1',
+      defaultModel: 'gpt-5.5',
+      modelSuggestions: ['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna'],
+      description: 'OpenAI 官方',
+    },
+    {
+      id: 'claude',
+      displayName: 'Claude / Anthropic',
+      group: 'international',
+      protocol: 'anthropic-native',
+      availability: 'coming-soon',
+      baseUrl: 'https://api.anthropic.com/v1',
+      defaultModel: '',
+      modelSuggestions: [],
+      description: '后续适配',
+    },
+    {
+      id: 'gemini',
+      displayName: 'Gemini',
+      group: 'international',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: 'https://gemini.invalid/v1',
+      defaultModel: 'gemini-test',
+      modelSuggestions: ['gemini-test'],
+      description: 'Gemini 官方',
+    },
+    {
+      id: 'grok',
+      displayName: 'Grok / xAI',
+      group: 'international',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: 'https://grok.invalid/v1',
+      defaultModel: 'grok-test',
+      modelSuggestions: ['grok-test'],
+      description: 'Grok 官方',
+    },
+    {
+      id: 'glm',
+      displayName: '智谱 GLM',
+      group: 'mainland',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: 'https://glm.invalid/v1',
+      defaultModel: 'glm-test',
+      modelSuggestions: ['glm-test'],
+      description: 'GLM 官方',
+    },
+    {
+      id: 'kimi',
+      displayName: 'Kimi / Moonshot',
+      group: 'mainland',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: 'https://api.moonshot.cn/v1',
+      defaultModel: 'kimi-k2.7-code',
+      modelSuggestions: ['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6'],
+      description: 'Kimi 官方',
+    },
+    {
+      id: 'deepseek',
+      displayName: 'DeepSeek',
+      group: 'mainland',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: 'https://deepseek.invalid/v1',
+      defaultModel: 'deepseek-test',
+      modelSuggestions: ['deepseek-test'],
+      description: 'DeepSeek 官方',
+    },
+    {
+      id: 'relay-1',
+      displayName: '中转站 1',
+      group: 'relay',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: '',
+      defaultModel: '',
+      modelSuggestions: [],
+      description: '自定义中转站',
+      requiresBaseUrl: true,
+      maxBaseUrls: 4,
+    },
+    {
+      id: 'relay-2',
+      displayName: '中转站 2',
+      group: 'relay',
+      protocol: 'openai-compatible',
+      availability: 'available',
+      baseUrl: '',
+      defaultModel: '',
+      modelSuggestions: [],
+      description: '自定义中转站',
+      requiresBaseUrl: true,
+      maxBaseUrls: 4,
+    },
   ],
-  smtp: { host: 'smtp.qq.com', port: 465, secure: true, userHint: '填写 QQ 邮箱账号', authCodeHint: '填写 SMTP 授权码，不是 QQ 登录密码', recipientHint: '填写收件邮箱' },
-  feishu: { webhookHint: '填写飞书群机器人 Webhook URL', securityHint: 'Webhook 会加密保存在本机、页面不回显、不要复制到截图或提交到 Git。' },
+  smtp: {
+    host: 'smtp.qq.com',
+    port: 465,
+    secure: true,
+    userHint: '填写 QQ 邮箱账号',
+    authCodeHint: '填写 SMTP 授权码，不是 QQ 登录密码',
+    recipientHint: '填写收件邮箱',
+  },
+  feishu: {
+    webhookHint: '填写飞书群机器人 Webhook URL',
+    securityHint: 'Webhook 会加密保存在本机、页面不回显、不要复制到截图或提交到 Git。',
+  },
   customProviderHint: '仅用于你自己的 OpenAI-compatible 服务；避免使用日抛、CPA 或来源不稳定的账号。',
 };
 
@@ -30,7 +134,14 @@ const mocks = vi.hoisted(() => ({
     ai: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
     smtp: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
     feishu: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
-    runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 5, nodeVersion: 'v22.test' },
+    runtime: {
+      dataDir: true,
+      aiAvailable: false,
+      smtpAvailable: false,
+      feishuAvailable: false,
+      uptime: 5,
+      nodeVersion: 'v22.test',
+    },
   },
   getConfigurationStatus: vi.fn(),
   getConfigurationPresets: vi.fn(),
@@ -65,8 +176,17 @@ beforeEach(() => {
   setItemSpy = vi.spyOn(localStorageShim, 'setItem');
   sessionSetItemSpy = vi.spyOn(sessionStorageShim, 'setItem');
   mocks.statusFixture = {
-    ai: { ...mocks.unconfigured }, smtp: { ...mocks.unconfigured }, feishu: { ...mocks.unconfigured },
-    runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 5, nodeVersion: 'v22.test' },
+    ai: { ...mocks.unconfigured },
+    smtp: { ...mocks.unconfigured },
+    feishu: { ...mocks.unconfigured },
+    runtime: {
+      dataDir: true,
+      aiAvailable: false,
+      smtpAvailable: false,
+      feishuAvailable: false,
+      uptime: 5,
+      nodeVersion: 'v22.test',
+    },
   };
   mocks.getConfigurationStatus.mockImplementation(async () => mocks.statusFixture);
   mocks.getConfigurationPresets.mockResolvedValue(presetsFixture);
@@ -92,17 +212,31 @@ afterEach(() => {
 function createStorageShim(): Storage {
   const store = new Map<string, string>();
   return {
-    get length() { return store.size; },
-    clear() { store.clear(); },
-    getItem(key: string) { return store.get(key) ?? null; },
-    key(index: number) { return [...store.keys()][index] ?? null; },
-    removeItem(key: string) { store.delete(key); },
-    setItem(key: string, value: string) { store.set(key, String(value)); },
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key: string) {
+      return store.get(key) ?? null;
+    },
+    key(index: number) {
+      return [...store.keys()][index] ?? null;
+    },
+    removeItem(key: string) {
+      store.delete(key);
+    },
+    setItem(key: string, value: string) {
+      store.set(key, String(value));
+    },
   };
 }
 
 async function flush() {
-  await act(async () => { for (let index = 0; index < 10; index += 1) await Promise.resolve(); });
+  await act(async () => {
+    for (let index = 0; index < 10; index += 1) await Promise.resolve();
+  });
 }
 
 async function renderSettingsPage() {
@@ -130,7 +264,9 @@ function select(testId: string): HTMLSelectElement {
 }
 
 function buttonContaining(label: string): HTMLButtonElement {
-  const button = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(label));
+  const button = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+    item.textContent?.includes(label)
+  );
   expect(button, `应找到按钮：${label}`).not.toBeNull();
   return button!;
 }
@@ -142,18 +278,25 @@ function buttonByAriaLabel(label: string): HTMLButtonElement {
 }
 
 function presetCard(name: string): HTMLElement {
-  const card = [...container.querySelectorAll<HTMLElement>('.provider-preset-card')].find((item) => item.querySelector('h4')?.textContent === name);
+  const card = [...container.querySelectorAll<HTMLElement>('.provider-preset-card')].find(
+    (item) => item.querySelector('h4')?.textContent === name
+  );
   expect(card, `应找到预设卡：${name}`).not.toBeNull();
   return card!;
 }
 
 async function setInput(element: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
-  await act(async () => { setter.call(element, value); element.dispatchEvent(new Event('input', { bubbles: true })); });
+  await act(async () => {
+    setter.call(element, value);
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+  });
 }
 
 function cardButton(name: string, label: string): HTMLButtonElement {
-  const button = [...presetCard(name).querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(label));
+  const button = [...presetCard(name).querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+    item.textContent?.includes(label)
+  );
   expect(button, `应在卡片 ${name} 找到按钮：${label}`).not.toBeNull();
   return button!;
 }
@@ -179,13 +322,21 @@ describe('settings page', () => {
     expect(buttonContaining('Claude / Anthropic').disabled).toBe(true);
     expect(container.querySelector('[data-testid="official-openai-base-url"]')).toBeNull();
 
-    expect([...select('official-openai-model').options].map((option) => option.value)).toEqual(['gpt-5.5', 'gpt-5.4', 'gpt-5.6-terra', 'gpt-5.6-luna']);
-    expect([...select('official-kimi-model').options].map((option) => option.value)).toEqual(['kimi-k2.7-code', 'kimi-k2.7', 'kimi-k2.6']);
+    expect([...select('official-openai-model').options].map((option) => option.value)).toEqual([
+      'gpt-5.5',
+      'gpt-5.4',
+      'gpt-5.6-terra',
+      'gpt-5.6-luna',
+    ]);
+    expect([...select('official-kimi-model').options].map((option) => option.value)).toEqual([
+      'kimi-k2.7-code',
+      'kimi-k2.7',
+      'kimi-k2.6',
+    ]);
     expect(input('official-kimi-api-key').type).toBe('password');
     expect(container.textContent).toContain('配置中心测试激活的连接信息使用当前 Windows 用户的 DPAPI 加密存储');
     expect(container.textContent).toContain('环境 fallback 来自进程环境或命中的配置文件');
   });
-
 
   it('reveals only the current sentinel secret and resets masking after remount without browser storage', async () => {
     await renderSettingsPage();
@@ -240,7 +391,9 @@ describe('settings page', () => {
     await flush();
 
     expect(mocks.testAndActivate).toHaveBeenCalledWith('ai', {
-      providers: [{ kind: 'official', presetId: 'kimi', apiKey: 'FAKE_KIMI_SECRET', model: 'kimi-k2.7-code', priority: 1 }],
+      providers: [
+        { kind: 'official', presetId: 'kimi', apiKey: 'FAKE_KIMI_SECRET', model: 'kimi-k2.7-code', priority: 1 },
+      ],
     });
     expect(input('official-kimi-api-key').value).toBe('');
     expect(container.textContent).toContain('还没有加入 fallback 的 Provider。');
@@ -259,11 +412,19 @@ describe('settings page', () => {
     expect(items()).toHaveLength(2);
     expect(items()[0].textContent).toContain('Kimi / Moonshot');
     expect(items()[1].textContent).toContain('OpenAI');
-    await act(async () => [...items()[1].querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '上移')!.click());
+    await act(async () =>
+      [...items()[1].querySelectorAll<HTMLButtonElement>('button')]
+        .find((button) => button.textContent === '上移')!
+        .click()
+    );
     await flush();
     expect(items()[0].textContent).toContain('OpenAI');
     expect(items()[0].textContent).toContain('优先级 1');
-    await act(async () => [...items()[0].querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '移除')!.click());
+    await act(async () =>
+      [...items()[0].querySelectorAll<HTMLButtonElement>('button')]
+        .find((button) => button.textContent === '移除')!
+        .click()
+    );
     await flush();
     expect(items()).toHaveLength(1);
     expect(items()[0].textContent).toContain('Kimi / Moonshot');
@@ -273,11 +434,17 @@ describe('settings page', () => {
     await renderSettingsPage();
 
     expect(container.querySelector('details[data-testid="custom-provider-advanced"]')).not.toBeNull();
-    expect((container.querySelector('details[data-testid="custom-provider-advanced"]') as HTMLDetailsElement).open).toBe(true);
+    expect(
+      (container.querySelector('details[data-testid="custom-provider-advanced"]') as HTMLDetailsElement).open
+    ).toBe(true);
     expect(container.querySelector('details[data-testid="smtp-advanced"]')).not.toBeNull();
     expect((container.querySelector('details[data-testid="smtp-advanced"]') as HTMLDetailsElement).open).toBe(false);
-    expect(container.querySelector('[data-testid="smtp-host"]')?.closest('details')).toBe(container.querySelector('details[data-testid="smtp-advanced"]'));
-    expect(container.querySelector('[data-testid="smtp-port"]')?.closest('details')).toBe(container.querySelector('details[data-testid="smtp-advanced"]'));
+    expect(container.querySelector('[data-testid="smtp-host"]')?.closest('details')).toBe(
+      container.querySelector('details[data-testid="smtp-advanced"]')
+    );
+    expect(container.querySelector('[data-testid="smtp-port"]')?.closest('details')).toBe(
+      container.querySelector('details[data-testid="smtp-advanced"]')
+    );
     expect(input('smtp-user').type).toBe('text');
     expect(input('smtp-auth-code').type).toBe('password');
     expect(input('smtp-to').type).toBe('text');
@@ -332,7 +499,9 @@ describe('settings page', () => {
 
     await setInput(input('official-relay-1-api-key'), 'FAKE_RELAY_KEY');
     await setInput(input('official-relay-1-base-url-0'), 'https://relay-a.invalid/v1');
-    await act(async () => container.querySelector<HTMLButtonElement>('[data-testid="official-relay-1-add-base-url"]')!.click());
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-testid="official-relay-1-add-base-url"]')!.click()
+    );
     await flush();
     await setInput(input('official-relay-1-base-url-1'), 'https://relay-b.invalid/v1');
 
@@ -348,7 +517,10 @@ describe('settings page', () => {
     });
 
     // 模型来自中转站实际返回，而不是预设。
-    expect([...select('official-relay-1-model').options].map((option) => option.value)).toEqual(['relay-gpt-4o', 'relay-claude']);
+    expect([...select('official-relay-1-model').options].map((option) => option.value)).toEqual([
+      'relay-gpt-4o',
+      'relay-claude',
+    ]);
     expect(presetCard('中转站 1').textContent).toContain('https://relay-b.invalid/v1');
 
     await act(async () => cardButton('中转站 1', '加入 fallback').click());
@@ -358,7 +530,16 @@ describe('settings page', () => {
 
     // 激活时必须带上测通的那个地址，否则后端不知道该请求哪里。
     expect(mocks.testAndActivate).toHaveBeenCalledWith('ai', {
-      providers: [{ kind: 'official', presetId: 'relay-1', baseUrl: 'https://relay-b.invalid/v1', apiKey: 'FAKE_RELAY_KEY', model: 'relay-gpt-4o', priority: 1 }],
+      providers: [
+        {
+          kind: 'official',
+          presetId: 'relay-1',
+          baseUrl: 'https://relay-b.invalid/v1',
+          apiKey: 'FAKE_RELAY_KEY',
+          model: 'relay-gpt-4o',
+          priority: 1,
+        },
+      ],
     });
   });
 

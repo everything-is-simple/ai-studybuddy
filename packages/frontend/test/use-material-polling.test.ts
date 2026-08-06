@@ -91,14 +91,12 @@ describe('useMaterialPolling', () => {
     const pendingMaterial = { id: 'material-1', status: 'pending' } as MaterialDto;
     let resolveNextRequest: ((page: ReturnType<typeof materialPage>) => void) | undefined;
 
-    mockedGetMaterials
-      .mockResolvedValueOnce(materialPage([pendingMaterial]))
-      .mockImplementationOnce(
-        () =>
-          new Promise<ReturnType<typeof materialPage>>((resolve) => {
-            resolveNextRequest = resolve;
-          }),
-      );
+    mockedGetMaterials.mockResolvedValueOnce(materialPage([pendingMaterial])).mockImplementationOnce(
+      () =>
+        new Promise<ReturnType<typeof materialPage>>((resolve) => {
+          resolveNextRequest = resolve;
+        })
+    );
 
     await act(async () => {
       root.render(createElement(PollingProbe, { semesterId: 'semester-1', courseInstanceId: 'course-1' }));

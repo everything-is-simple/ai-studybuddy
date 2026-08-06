@@ -28,14 +28,14 @@
 
 ### 0.2 本任务做与不做
 
-| 范围 | T09C 结论 |
-| --- | --- |
-| 课程 | 在当前 `/courses` 体验中读取当前学期课程并允许编辑**课程名称**；不删除课程、不变更重修关联。 |
-| 周课表 | 使用已有 `schedule_entries` 展示完整周（`weekday: 0..6`）课表；支持新增、编辑、移除单个课表条目。 |
-| 考试 | 编辑已有考试的名称、日期和目标文本；展示已确认考试的倒计时；日期改动按 T11 确认语义重新进入待确认。 |
-| 学期与隔离 | 复用 T09A current semester 恢复、应用壳的显式 `semesterId` 和 ready 学期校验；不新增学期选择器、浏览器持久化或跨学期读取。 |
-| API | 扩展课程编辑、课表条目读写和考试编辑 API，所有响应保持 `{ success, data, error }`。 |
-| 不做 | 不做课程或考试删除、学期归档、历史列表、跨学期汇总、全局导航或响应式收尾（T09D）、练习历史或归档（T09E）、S5/S7、家长 Web 面板、云同步/多用户、复杂排程、AI 或真实渠道验证。 |
+| 范围       | T09C 结论                                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 课程       | 在当前 `/courses` 体验中读取当前学期课程并允许编辑**课程名称**；不删除课程、不变更重修关联。                                                                                 |
+| 周课表     | 使用已有 `schedule_entries` 展示完整周（`weekday: 0..6`）课表；支持新增、编辑、移除单个课表条目。                                                                            |
+| 考试       | 编辑已有考试的名称、日期和目标文本；展示已确认考试的倒计时；日期改动按 T11 确认语义重新进入待确认。                                                                          |
+| 学期与隔离 | 复用 T09A current semester 恢复、应用壳的显式 `semesterId` 和 ready 学期校验；不新增学期选择器、浏览器持久化或跨学期读取。                                                   |
+| API        | 扩展课程编辑、课表条目读写和考试编辑 API，所有响应保持 `{ success, data, error }`。                                                                                          |
+| 不做       | 不做课程或考试删除、学期归档、历史列表、跨学期汇总、全局导航或响应式收尾（T09D）、练习历史或归档（T09E）、S5/S7、家长 Web 面板、云同步/多用户、复杂排程、AI 或真实渠道验证。 |
 
 ### 0.3 不变量和失败语义
 
@@ -51,14 +51,14 @@
 
 实现时沿用 `packages/backend/src/api/study-rhythm.ts` 的路由挂载和统一错误处理，所有成功与失败均使用标准信封。以下为必须实现/扩展的契约；准确错误码沿用现有 API 错误体系，但语义不得弱于本表。
 
-| 方法与路径 | 成功 `data` | 输入与失败语义 |
-| --- | --- | --- |
-| `PATCH /api/courses/:id` | 更新后的 `CourseInstanceDto` | JSON `{ semesterId, name }`；仅更新名称。空白名称为 400；课程不存在或不属于该学期为安全的 404/不可操作错误。 |
-| `GET /api/schedule-entries?semesterId=...` | 按 `weekday`、`startTime`、稳定次序返回 `ScheduleEntryDto[]`，含课程展示名称 | 无当前/非 ready 学期失败；结果绝不混入其他学期。 |
-| `POST /api/schedule-entries` | 新建的 `ScheduleEntryDto` | `{ semesterId, courseInstanceId, weekday, startTime, endTime, location }`；服务端校验课程归属、时间/地点、v8 约束和重复时段，手工来源为 `student_confirmed`。 |
-| `PATCH /api/schedule-entries/:id` | 更新后的 `ScheduleEntryDto` | 请求显式包含 `semesterId` 和可编辑字段；先验证条目及目标课程归属，再校验规则；不能借 ID 跨学期移动/读取条目。 |
-| `DELETE /api/schedule-entries/:id?semesterId=...` | 被移除条目的最小确认 DTO 或 `{ id }` | 只删除该当前学期中的单个课表条目；不存在/跨学期失败，不删除课程或考试。 |
-| `PATCH /api/exams/:id` | 更新后的 `AssessmentAttemptDto` | JSON `{ semesterId, name?, examAt?, goal? }`；至少有一个允许字段。日期变化按本节第 5 条写历史并重新变为 `pending`；仅目标文本变化保持原确认状态。 |
+| 方法与路径                                        | 成功 `data`                                                                  | 输入与失败语义                                                                                                                                                |
+| ------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PATCH /api/courses/:id`                          | 更新后的 `CourseInstanceDto`                                                 | JSON `{ semesterId, name }`；仅更新名称。空白名称为 400；课程不存在或不属于该学期为安全的 404/不可操作错误。                                                  |
+| `GET /api/schedule-entries?semesterId=...`        | 按 `weekday`、`startTime`、稳定次序返回 `ScheduleEntryDto[]`，含课程展示名称 | 无当前/非 ready 学期失败；结果绝不混入其他学期。                                                                                                              |
+| `POST /api/schedule-entries`                      | 新建的 `ScheduleEntryDto`                                                    | `{ semesterId, courseInstanceId, weekday, startTime, endTime, location }`；服务端校验课程归属、时间/地点、v8 约束和重复时段，手工来源为 `student_confirmed`。 |
+| `PATCH /api/schedule-entries/:id`                 | 更新后的 `ScheduleEntryDto`                                                  | 请求显式包含 `semesterId` 和可编辑字段；先验证条目及目标课程归属，再校验规则；不能借 ID 跨学期移动/读取条目。                                                 |
+| `DELETE /api/schedule-entries/:id?semesterId=...` | 被移除条目的最小确认 DTO 或 `{ id }`                                         | 只删除该当前学期中的单个课表条目；不存在/跨学期失败，不删除课程或考试。                                                                                       |
+| `PATCH /api/exams/:id`                            | 更新后的 `AssessmentAttemptDto`                                              | JSON `{ semesterId, name?, examAt?, goal? }`；至少有一个允许字段。日期变化按本节第 5 条写历史并重新变为 `pending`；仅目标文本变化保持原确认状态。             |
 
 预定共享类型扩展（字段名在实施前后必须保持一致）：
 
@@ -107,6 +107,7 @@ export interface UpdateExamRequest {
 ### Task 1：定义共享 DTO 与 API 客户端边界
 
 **Files:**
+
 - Modify: `packages/shared/src/types.ts`
 - Modify: `packages/frontend/src/api/study-rhythm-api.ts`
 - Test: `packages/frontend/test/course-page.test.tsx`
@@ -155,6 +156,7 @@ export interface UpdateExamRequest {
 ### Task 2：在既有服务和路由中实现受学期约束的写入 API
 
 **Files:**
+
 - Modify: `packages/backend/src/services/study-rhythm-service.ts`
 - Modify: `packages/backend/src/api/study-rhythm.ts`
 - Test: `packages/backend/test/study-rhythm-api.test.mjs`
@@ -195,6 +197,7 @@ export interface UpdateExamRequest {
 ### Task 3：扩展 `/courses` 的当前学期课程、课表和考试编辑体验
 
 **Files:**
+
 - Modify: `packages/frontend/src/pages/course-page.tsx`
 - Modify: `packages/frontend/src/styles/global.css`
 - Modify: `packages/frontend/test/course-page.test.tsx`
@@ -228,6 +231,7 @@ export interface UpdateExamRequest {
 ### Task 4：补齐后端真实 SQLite 隔离和回归测试
 
 **Files:**
+
 - Modify: `packages/backend/test/study-rhythm-api.test.mjs`
 
 - [ ] **Step 1: 以两个独立 ready 学期构造回归夹具。**
@@ -256,6 +260,7 @@ export interface UpdateExamRequest {
 ### Task 5：执行隔离 Playwright E2E 并进行浏览器验收
 
 **Files:**
+
 - Create: `e2e/course-schedule-exam-goals.spec.ts`
 - Modify only if required by existing test convention: `playwright.config.ts`
 
@@ -281,6 +286,7 @@ export interface UpdateExamRequest {
 ### Task 6：实施收尾、独立代码复审与主线复验（仅获批后）
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify only when证据状态确有变化: `docs/00-文档索引-Index.md`
 - Modify: `.plans/phase1-t09c-course-schedule-exam-goals-plan.md`
@@ -334,16 +340,16 @@ export interface UpdateExamRequest {
 
 ## 2. 预定验收矩阵
 
-| 场景 | 必须证明的结果 |
-| --- | --- |
-| 两学期隔离 | 两个学期的课程、课表和考试互斥；任一另一学期资源 ID 的读写都安全失败，切换或刷新不显示旧内容。 |
-| 课程编辑 | 当前学期课程名称可保存、失败可重试；空白名称失败；没有课程删除入口。 |
-| 课表维护 | 显示完整七日；可新增、编辑、移除一个条目；非法星期/时间/地点和 migration v8 的重复时段失败，失败不产生部分数据。 |
-| 考试编辑 | 可编辑名称、日期、目标；目标文本可为空或按现有规则处理；无考试时有下一步引导。 |
-| 确认与倒计时 | 仅 `confirmed` 显示正式倒计时；确认后改日期写历史、变 `pending`、清除确认时间、要求重新确认；仅改目标不改变确认状态。 |
-| 页面状态 | 覆盖加载、无当前学期、空课表、无考试、保存成功、服务端失败和重试；所有反馈就近可见且不会因切换学期遗留。 |
-| 自动化验证 | 真实 SQLite API 集成测试、前端组件测试、指定 `APP_DATA_ROOT` 专项 E2E 和合入 `master` 后的全量 E2E 均通过。 |
-| 隐私与外部依赖 | 合成测试数据、仓库外证据目录；无真实 AI/SMTP/飞书调用、无秘密或资料原文进入响应/日志/提交。 |
+| 场景           | 必须证明的结果                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 两学期隔离     | 两个学期的课程、课表和考试互斥；任一另一学期资源 ID 的读写都安全失败，切换或刷新不显示旧内容。                        |
+| 课程编辑       | 当前学期课程名称可保存、失败可重试；空白名称失败；没有课程删除入口。                                                  |
+| 课表维护       | 显示完整七日；可新增、编辑、移除一个条目；非法星期/时间/地点和 migration v8 的重复时段失败，失败不产生部分数据。      |
+| 考试编辑       | 可编辑名称、日期、目标；目标文本可为空或按现有规则处理；无考试时有下一步引导。                                        |
+| 确认与倒计时   | 仅 `confirmed` 显示正式倒计时；确认后改日期写历史、变 `pending`、清除确认时间、要求重新确认；仅改目标不改变确认状态。 |
+| 页面状态       | 覆盖加载、无当前学期、空课表、无考试、保存成功、服务端失败和重试；所有反馈就近可见且不会因切换学期遗留。              |
+| 自动化验证     | 真实 SQLite API 集成测试、前端组件测试、指定 `APP_DATA_ROOT` 专项 E2E 和合入 `master` 后的全量 E2E 均通过。           |
+| 隐私与外部依赖 | 合成测试数据、仓库外证据目录；无真实 AI/SMTP/飞书调用、无秘密或资料原文进入响应/日志/提交。                           |
 
 ---
 
@@ -375,16 +381,16 @@ export interface UpdateExamRequest {
 
 **结论：** 通过。计划可登记为“等待用户明确批准”；用户批准前不得实施。
 
-| 复审项 | 复审结论 |
-| --- | --- |
-| T09C 单一责任 | 仅涵盖 `/courses` 中课程名称、周课表条目和考试目标/日期/倒计时；已明确排除 T09D 全局导航/响应式、T09E 历史/归档及其余阶段。 |
-| T09A/T09B 复用 | 复用 T09A current semester 恢复、ready 学期和显式 `semesterId`；复用 T09B 的当前学期应用壳读取和 stale 响应处理，不新建选择器或浏览器存储。 |
-| T11 语义 | 保留既有考试确认和工作台；确认考试日期变动被明确规定为历史记录 + `pending` + 清空 `confirmedAt` + 重新确认，目标文本单独编辑不影响确认态。 |
-| 课表事实源 | 只读写 `schedule_entries`，遵循现有 v8 校验；不新增 migration/schema/第二课表表，手工修改保持 `student_confirmed` 来源语义。 |
-| 隔离与状态 | 每个读写方法和 UI 状态都要求 ready/current/归属校验；计划覆盖切换、刷新、abort、空状态、服务端失败和重试，防止旧学期残留。 |
-| API/测试覆盖 | 已列出准确文件、接口、失败语义、真实 SQLite API 集成测试、前端组件测试、指定隔离目录 Playwright E2E、全量 E2E 和 fast-forward 后主线复验命令。 |
-| 文档与主线治理 | 计划阶段只更新 `docs/04`；实施完成才按事实更新完成证据。已纳入文档治理、双 diff 检查、显式暂存和 `master` 后复验要求。 |
-| 隐私与外部依赖 | 不新增真实 Provider/渠道测试；测试使用隔离根与合成数据，响应、日志、截图和提交不含敏感资料或秘密。 |
+| 复审项         | 复审结论                                                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| T09C 单一责任  | 仅涵盖 `/courses` 中课程名称、周课表条目和考试目标/日期/倒计时；已明确排除 T09D 全局导航/响应式、T09E 历史/归档及其余阶段。                    |
+| T09A/T09B 复用 | 复用 T09A current semester 恢复、ready 学期和显式 `semesterId`；复用 T09B 的当前学期应用壳读取和 stale 响应处理，不新建选择器或浏览器存储。    |
+| T11 语义       | 保留既有考试确认和工作台；确认考试日期变动被明确规定为历史记录 + `pending` + 清空 `confirmedAt` + 重新确认，目标文本单独编辑不影响确认态。     |
+| 课表事实源     | 只读写 `schedule_entries`，遵循现有 v8 校验；不新增 migration/schema/第二课表表，手工修改保持 `student_confirmed` 来源语义。                   |
+| 隔离与状态     | 每个读写方法和 UI 状态都要求 ready/current/归属校验；计划覆盖切换、刷新、abort、空状态、服务端失败和重试，防止旧学期残留。                     |
+| API/测试覆盖   | 已列出准确文件、接口、失败语义、真实 SQLite API 集成测试、前端组件测试、指定隔离目录 Playwright E2E、全量 E2E 和 fast-forward 后主线复验命令。 |
+| 文档与主线治理 | 计划阶段只更新 `docs/04`；实施完成才按事实更新完成证据。已纳入文档治理、双 diff 检查、显式暂存和 `master` 后复验要求。                         |
+| 隐私与外部依赖 | 不新增真实 Provider/渠道测试；测试使用隔离根与合成数据，响应、日志、截图和提交不含敏感资料或秘密。                                             |
 
 **复审后的停点：** 本计划已通过独立复审，但未获用户明确实施批准。因此不创建 `codex/phase1-t09c-course-schedule-exam-goals`，不执行任何业务实现步骤。
 ---

@@ -50,7 +50,10 @@ export function readCramSession(
     const snapshot = parsed as Partial<CramSessionSnapshot>;
     const knownIds = new Set(availableCardIds);
     const cardIds = uniqueKnownIds(snapshot.cardIds, knownIds);
-    const currentCardId = typeof snapshot.currentCardId === 'string' && knownIds.has(snapshot.currentCardId) ? snapshot.currentCardId : cardIds[0];
+    const currentCardId =
+      typeof snapshot.currentCardId === 'string' && knownIds.has(snapshot.currentCardId)
+        ? snapshot.currentCardId
+        : cardIds[0];
     const viewedCardIds = uniqueKnownIds(snapshot.viewedCardIds, knownIds);
     if (
       snapshot.version !== CRAM_SESSION_VERSION ||
@@ -60,14 +63,27 @@ export function readCramSession(
       typeof snapshot.endsAt !== 'number' ||
       !Number.isFinite(snapshot.endsAt) ||
       typeof snapshot.flipped !== 'boolean'
-    ) return null;
-    return { version: CRAM_SESSION_VERSION, assessmentAttemptId, cardIds, currentCardId, viewedCardIds, endsAt: snapshot.endsAt, flipped: snapshot.flipped };
+    )
+      return null;
+    return {
+      version: CRAM_SESSION_VERSION,
+      assessmentAttemptId,
+      cardIds,
+      currentCardId,
+      viewedCardIds,
+      endsAt: snapshot.endsAt,
+      flipped: snapshot.flipped,
+    };
   } catch {
     return null;
   }
 }
 
-export function writeCramSession(semesterId: string | null, assessmentAttemptId: string | null, snapshot: CramSessionSnapshot | null): boolean {
+export function writeCramSession(
+  semesterId: string | null,
+  assessmentAttemptId: string | null,
+  snapshot: CramSessionSnapshot | null
+): boolean {
   if (!semesterId || !assessmentAttemptId || !snapshot || !canUseSessionStorage()) return false;
   try {
     window.sessionStorage.setItem(cramSessionStorageKey(semesterId, assessmentAttemptId), JSON.stringify(snapshot));
@@ -79,7 +95,9 @@ export function writeCramSession(semesterId: string | null, assessmentAttemptId:
 
 export function clearCramSession(semesterId: string | null, assessmentAttemptId: string | null): void {
   if (!semesterId || !assessmentAttemptId || !canUseSessionStorage()) return;
-  try { window.sessionStorage.removeItem(cramSessionStorageKey(semesterId, assessmentAttemptId)); } catch {}
+  try {
+    window.sessionStorage.removeItem(cramSessionStorageKey(semesterId, assessmentAttemptId));
+  } catch {}
 }
 
 interface UseCramSessionOptions {
@@ -116,30 +134,40 @@ export function useCramSession({ semesterId, assessmentAttemptId, cardIds }: Use
   const remainingSeconds = snapshot ? Math.max(0, Math.ceil((snapshot.endsAt - now) / 1000)) : null;
   const currentIndex = snapshot ? Math.max(0, snapshot.cardIds.indexOf(snapshot.currentCardId)) : 0;
 
-  const start = useCallback((durationMinutes: 5 | 10 | 15) => {
-    if (!assessmentAttemptId || cardIds.length === 0) return;
-    const startedAt = Date.now();
-    setSnapshot({
-      version: CRAM_SESSION_VERSION,
-      assessmentAttemptId,
-      cardIds: [...cardIds],
-      currentCardId: cardIds[0],
-      viewedCardIds: [cardIds[0]],
-      endsAt: startedAt + durationMinutes * 60 * 1000,
-      flipped: false,
-    });
-    setNow(startedAt);
-  }, [assessmentAttemptId, cardIdsKey]);
+  const start = useCallback(
+    (durationMinutes: 5 | 10 | 15) => {
+      if (!assessmentAttemptId || cardIds.length === 0) return;
+      const startedAt = Date.now();
+      setSnapshot({
+        version: CRAM_SESSION_VERSION,
+        assessmentAttemptId,
+        cardIds: [...cardIds],
+        currentCardId: cardIds[0],
+        viewedCardIds: [cardIds[0]],
+        endsAt: startedAt + durationMinutes * 60 * 1000,
+        flipped: false,
+      });
+      setNow(startedAt);
+    },
+    [assessmentAttemptId, cardIdsKey]
+  );
 
   const visit = useCallback((cardId: string) => {
     setSnapshot((current) => {
       if (!current || Date.now() >= current.endsAt || !current.cardIds.includes(cardId)) return current;
-      return { ...current, currentCardId: cardId, viewedCardIds: current.viewedCardIds.includes(cardId) ? current.viewedCardIds : [...current.viewedCardIds, cardId], flipped: false };
+      return {
+        ...current,
+        currentCardId: cardId,
+        viewedCardIds: current.viewedCardIds.includes(cardId)
+          ? current.viewedCardIds
+          : [...current.viewedCardIds, cardId],
+        flipped: false,
+      };
     });
   }, []);
 
   const toggleFlipped = useCallback(() => {
-    setSnapshot((current) => current ? { ...current, flipped: !current.flipped } : current);
+    setSnapshot((current) => (current ? { ...current, flipped: !current.flipped } : current));
   }, []);
 
   const restart = useCallback(() => {

@@ -31,12 +31,15 @@ export function MockExamSessionPage({ semesterId, onSemesterError }: MockExamSes
   const [confirming, setConfirming] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [lockedAttempt, setLockedAttempt] = useState<MockExamAttemptDetailDto | null>(null);
-  const fetcher = useCallback(async (signal: AbortSignal): Promise<SessionData | null> => {
-    if (!semesterId || !attemptId) return null;
-    const attempt = await getMockExamAttempt(semesterId, attemptId, signal);
-    const paper = await getMockExamPaper(semesterId, attempt.paperId, signal);
-    return { attempt, paper };
-  }, [attemptId, semesterId]);
+  const fetcher = useCallback(
+    async (signal: AbortSignal): Promise<SessionData | null> => {
+      if (!semesterId || !attemptId) return null;
+      const attempt = await getMockExamAttempt(semesterId, attemptId, signal);
+      const paper = await getMockExamPaper(semesterId, attempt.paperId, signal);
+      return { attempt, paper };
+    },
+    [attemptId, semesterId]
+  );
   const { data, loading, error, refetch } = useApiRequest(fetcher, [fetcher]);
   const attempt = lockedAttempt ?? data?.attempt ?? null;
   const questions = attempt?.questions ?? [];
@@ -50,7 +53,7 @@ export function MockExamSessionPage({ semesterId, onSemesterError }: MockExamSes
   const activeIndex = Math.min(Math.max(0, draft.activeQuestionIndex), Math.max(questions.length - 1, 0));
   const activeQuestion = questions[activeIndex];
   const timer = usePracticeTimer({
-    activeQuestionId: isHydrated && attempt?.status === 'in_progress' ? activeQuestion?.id ?? null : null,
+    activeQuestionId: isHydrated && attempt?.status === 'in_progress' ? (activeQuestion?.id ?? null) : null,
     initialTotalSeconds: draft.totalDurationSeconds,
     initialQuestionSeconds: draft.questionSeconds,
     timeLimitSeconds: data?.paper.timeLimitSeconds ?? null,
@@ -65,7 +68,16 @@ export function MockExamSessionPage({ semesterId, onSemesterError }: MockExamSes
       totalDurationSeconds: timer.totalDurationSeconds,
       questionSeconds: timer.questionSeconds,
     }));
-  }, [activeIndex, attempt?.id, attempt?.status, isHydrated, questions.length, timer.questionSeconds, timer.totalDurationSeconds, updateDraft]);
+  }, [
+    activeIndex,
+    attempt?.id,
+    attempt?.status,
+    isHydrated,
+    questions.length,
+    timer.questionSeconds,
+    timer.totalDurationSeconds,
+    updateDraft,
+  ]);
 
   useEffect(() => {
     if (isHydrated && attempt && attempt.status !== 'in_progress') clearAnswerFields();
@@ -100,8 +112,7 @@ export function MockExamSessionPage({ semesterId, onSemesterError }: MockExamSes
           if (refreshed.status !== 'in_progress') {
             setLockedAttempt(refreshed);
             clearAnswerFields();
-          }
-          else setSubmitError('提交状态已刷新，请确认后重试。');
+          } else setSubmitError('提交状态已刷新，请确认后重试。');
         } catch {
           setSubmitError('提交状态刷新失败，请稍后重试。');
         }
@@ -117,7 +128,12 @@ export function MockExamSessionPage({ semesterId, onSemesterError }: MockExamSes
     }
   };
 
-  if (!semesterId) return <div className="page"><FeedbackMessage state="empty" message="请先创建或选择当前学期，才能继续作答。" /></div>;
+  if (!semesterId)
+    return (
+      <div className="page">
+        <FeedbackMessage state="empty" message="请先创建或选择当前学期，才能继续作答。" />
+      </div>
+    );
 
   return (
     <div className="page mock-exam-session-page">
@@ -128,27 +144,86 @@ export function MockExamSessionPage({ semesterId, onSemesterError }: MockExamSes
       {attempt && attempt.status !== 'in_progress' && (
         <section className="card">
           <FeedbackMessage state="empty" message="该模拟考已提交，不能再次修改答案。" />
-          <Link className="button-link" to={`/mock-exam-attempts/${encodeURIComponent(attempt.id)}/result`}>查看结果</Link>
+          <Link className="button-link" to={`/mock-exam-attempts/${encodeURIComponent(attempt.id)}/result`}>
+            查看结果
+          </Link>
         </section>
       )}
-      {data && !isHydrated && attempt?.status === 'in_progress' && <FeedbackMessage state="loading" message="正在恢复本次模拟考作答进度…" />}
+      {data && !isHydrated && attempt?.status === 'in_progress' && (
+        <FeedbackMessage state="loading" message="正在恢复本次模拟考作答进度…" />
+      )}
       {data && isHydrated && attempt?.status === 'in_progress' && activeQuestion && (
         <>
           <header className="card practice-session-header">
-            <div><p className="workbench-eyebrow">模拟考作答</p><h1>第 {activeIndex + 1} / {questions.length} 题</h1><p>已作答 {answeredCount} 题</p></div>
+            <div>
+              <p className="workbench-eyebrow">模拟考作答</p>
+              <h1>
+                第 {activeIndex + 1} / {questions.length} 题
+              </h1>
+              <p>已作答 {answeredCount} 题</p>
+            </div>
             <div className={timer.isOvertime ? 'practice-timer practice-overtime' : 'practice-timer'}>
-              <span>{timer.isOvertime ? '已超时' : '剩余时间'}</span><strong>{formatSeconds(timer.remainingSeconds ?? timer.totalDurationSeconds)}</strong>
+              <span>{timer.isOvertime ? '已超时' : '剩余时间'}</span>
+              <strong>{formatSeconds(timer.remainingSeconds ?? timer.totalDurationSeconds)}</strong>
               {timer.isOvertime && <small>超时后仍可提交，最终状态由服务端判定。</small>}
             </div>
           </header>
           <div className="practice-question-nav" aria-label="题目导航">
-            {questions.map((question, index) => <button type="button" key={question.id} disabled={submitting || !isHydrated} className={index === activeIndex ? 'active' : undefined} onClick={() => updateDraft((current) => ({ ...current, activeQuestionIndex: index }))}>{index + 1}</button>)}
+            {questions.map((question, index) => (
+              <button
+                type="button"
+                key={question.id}
+                disabled={submitting || !isHydrated}
+                className={index === activeIndex ? 'active' : undefined}
+                onClick={() => updateDraft((current) => ({ ...current, activeQuestionIndex: index }))}
+              >
+                {index + 1}
+              </button>
+            ))}
           </div>
-          <MockExamQuestion question={activeQuestion} value={draft.answers[activeQuestion.id] ?? ''} disabled={submitting || !isHydrated} onChange={(answer) => updateDraft((current) => ({ ...current, answers: { ...current.answers, [activeQuestion.id]: answer } }))} />
+          <MockExamQuestion
+            question={activeQuestion}
+            value={draft.answers[activeQuestion.id] ?? ''}
+            disabled={submitting || !isHydrated}
+            onChange={(answer) =>
+              updateDraft((current) => ({ ...current, answers: { ...current.answers, [activeQuestion.id]: answer } }))
+            }
+          />
           {confirming ? (
-            <section className="card" aria-label="提交确认"><h2>确认提交</h2><p>已答 {answeredCount} 题，未答 {questions.length - answeredCount} 题；总用时 {formatSeconds(timer.totalDurationSeconds)}。</p><button type="button" disabled={submitting || !isHydrated} onClick={() => void handleSubmit()}>{submitting ? '正在提交并批改…' : '确认提交'}</button><button type="button" disabled={submitting || !isHydrated} onClick={() => setConfirming(false)}>继续作答</button></section>
+            <section className="card" aria-label="提交确认">
+              <h2>确认提交</h2>
+              <p>
+                已答 {answeredCount} 题，未答 {questions.length - answeredCount} 题；总用时{' '}
+                {formatSeconds(timer.totalDurationSeconds)}。
+              </p>
+              <button type="button" disabled={submitting || !isHydrated} onClick={() => void handleSubmit()}>
+                {submitting ? '正在提交并批改…' : '确认提交'}
+              </button>
+              <button type="button" disabled={submitting || !isHydrated} onClick={() => setConfirming(false)}>
+                继续作答
+              </button>
+            </section>
           ) : (
-            <div className="practice-actions"><button type="button" className="button-secondary" disabled={submitting || !isHydrated || activeIndex === 0} onClick={() => updateDraft((current) => ({ ...current, activeQuestionIndex: activeIndex - 1 }))}>上一题</button><button type="button" disabled={submitting || !isHydrated || activeIndex === questions.length - 1} onClick={() => updateDraft((current) => ({ ...current, activeQuestionIndex: activeIndex + 1 }))}>下一题</button><button type="button" disabled={submitting || !isHydrated} onClick={() => setConfirming(true)}>提交模拟考</button></div>
+            <div className="practice-actions">
+              <button
+                type="button"
+                className="button-secondary"
+                disabled={submitting || !isHydrated || activeIndex === 0}
+                onClick={() => updateDraft((current) => ({ ...current, activeQuestionIndex: activeIndex - 1 }))}
+              >
+                上一题
+              </button>
+              <button
+                type="button"
+                disabled={submitting || !isHydrated || activeIndex === questions.length - 1}
+                onClick={() => updateDraft((current) => ({ ...current, activeQuestionIndex: activeIndex + 1 }))}
+              >
+                下一题
+              </button>
+              <button type="button" disabled={submitting || !isHydrated} onClick={() => setConfirming(true)}>
+                提交模拟考
+              </button>
+            </div>
           )}
         </>
       )}

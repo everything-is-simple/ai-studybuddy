@@ -32,8 +32,16 @@ test('deployment runtime helpers are packaged scripts, not inline native-code fr
 test('deployment entry scripts do not send source code through python -c or node -e', async () => {
   for (const name of productionScripts) {
     const source = await readScript(name);
-    assert.doesNotMatch(source, /(?:\$env:PYTHON_PATH|\$venvPython|\$PythonPath|\bpython(?:\.exe)?)\s+-c\b/i, `${name} must invoke a checked-in Python helper file instead of python -c`);
-    assert.doesNotMatch(source, /\bnode(?:\.exe)?\s+-e\b/i, `${name} must invoke a checked-in Node helper file instead of node -e`);
+    assert.doesNotMatch(
+      source,
+      /(?:\$env:PYTHON_PATH|\$venvPython|\$PythonPath|\bpython(?:\.exe)?)\s+-c\b/i,
+      `${name} must invoke a checked-in Python helper file instead of python -c`
+    );
+    assert.doesNotMatch(
+      source,
+      /\bnode(?:\.exe)?\s+-e\b/i,
+      `${name} must invoke a checked-in Node helper file instead of node -e`
+    );
   }
 });
 
@@ -45,7 +53,11 @@ test('deployment Node eligibility is centralized on the verified Node 24 baselin
   for (const name of ['start-production.ps1', 'bootstrap-runtime.ps1', 'check-installation.ps1']) {
     const source = await readScript(name);
     assert.match(source, /Test-AIStudyBuddySupportedNodeVersion\b/, `${name} must use the shared Node 24 gate`);
-    assert.doesNotMatch(source, /20-25|20–25|20, 22, or 24/, `${name} must not advertise a wider Node range than the verified Node 24 baseline`);
+    assert.doesNotMatch(
+      source,
+      /20-25|20–25|20, 22, or 24/,
+      `${name} must not advertise a wider Node range than the verified Node 24 baseline`
+    );
   }
 
   const manifest = JSON.parse(await readFile(path.join(repoRoot, 'deployment', 'runtime-compatibility.json'), 'utf8'));

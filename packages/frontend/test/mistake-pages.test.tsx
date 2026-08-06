@@ -93,9 +93,7 @@ const mistakeDetail: MistakeDetailDto = {
   errorCauseConfirmedAt: null,
   firstErrorAt: '2026-07-16T00:10:00.000Z',
   latestErrorAt: '2026-07-16T01:10:00.000Z',
-  evidence: [
-    { id: 'evidence-1', evidenceType: 'practice_error', occurredAt: '2026-07-16T00:10:00.000Z' },
-  ],
+  evidence: [{ id: 'evidence-1', evidenceType: 'practice_error', occurredAt: '2026-07-16T00:10:00.000Z' }],
 };
 
 let container: HTMLDivElement;
@@ -130,7 +128,10 @@ async function renderListPage() {
     root.render(
       <MemoryRouter initialEntries={['/exams/exam-1/mistakes']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          <Route path="/exams/:examId/mistakes" element={<MistakeListPage semesterId="22222222-2222-4222-8222-222222222222" />} />
+          <Route
+            path="/exams/:examId/mistakes"
+            element={<MistakeListPage semesterId="22222222-2222-4222-8222-222222222222" />}
+          />
         </Routes>
       </MemoryRouter>
     );
@@ -150,7 +151,10 @@ async function renderDetailPage() {
     root.render(
       <MemoryRouter initialEntries={['/mistakes/11111111-1111-4111-8111-111111111111?examId=exam-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          <Route path="/mistakes/:mistakeId" element={<MistakeDetailPage semesterId="22222222-2222-4222-8222-222222222222" />} />
+          <Route
+            path="/mistakes/:mistakeId"
+            element={<MistakeDetailPage semesterId="22222222-2222-4222-8222-222222222222" />}
+          />
           <Route path="/practice-sessions/:sessionId" element={<div data-testid="redo-session-page">重做作答页</div>} />
         </Routes>
       </MemoryRouter>

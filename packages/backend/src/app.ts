@@ -63,9 +63,15 @@ export function createApp(options: {
   if (staticRoot && fs.existsSync(staticRoot)) {
     app.use(express.static(staticRoot, { index: 'index.html' }));
     app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api/')) { next(); return; }
+      if (req.path.startsWith('/api/')) {
+        next();
+        return;
+      }
       const indexPath = path.join(staticRoot, 'index.html');
-      if (!fs.existsSync(indexPath)) { next(); return; }
+      if (!fs.existsSync(indexPath)) {
+        next();
+        return;
+      }
       res.sendFile(indexPath);
     });
   }

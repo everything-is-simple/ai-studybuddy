@@ -95,23 +95,34 @@ async function createAndConfirmExam(port, semesterId, courseInstanceId, name, ex
   return confirmed.json.data;
 }
 
-
 function seedTomorrowScheduleAndFailedMaterial(dataRoot, semesterId, courseInstanceId) {
   const db = new Database(path.join(dataRoot, 'semesters', semesterId, 'semester.db'));
   try {
     const now = '2026-05-10T08:00:00.000Z';
     const scheduleId = crypto.randomUUID();
     const materialId = crypto.randomUUID();
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO schedule_entries (id, course_instance_id, weekday, start_time, end_time, location, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(scheduleId, courseInstanceId, 1, '08:00', '09:40', '教学楼 A-101', now, now);
-    db.prepare(`
+    `
+    ).run(scheduleId, courseInstanceId, 1, '08:00', '09:40', '教学楼 A-101', now, now);
+    db.prepare(
+      `
       INSERT INTO materials (
         id, course_instance_id, file_type, storage_key, status, original_filename, title,
         file_size_bytes, created_at, updated_at
       ) VALUES (?, ?, 'pdf', ?, 'conversion_failed', ?, ?, 12, ?, ?)
-    `).run(materialId, courseInstanceId, `semesters/${semesterId}/files/${crypto.randomUUID()}.pdf`, '失败讲义.pdf', '失败讲义', now, now);
+    `
+    ).run(
+      materialId,
+      courseInstanceId,
+      `semesters/${semesterId}/files/${crypto.randomUUID()}.pdf`,
+      '失败讲义.pdf',
+      '失败讲义',
+      now,
+      now
+    );
     return { scheduleId, materialId };
   } finally {
     db.close();
@@ -124,12 +135,28 @@ test('daily study home aggregates only the requested ready semester and never wr
   const otherSemesterId = await initializeReadySemester(backend.port, `autumn-${crypto.randomUUID()}`);
   const primaryCourse = await createCourse(backend.port, primarySemesterId, '数学');
   const otherCourse = await createCourse(backend.port, otherSemesterId, '英语');
-  const task = await createTask(backend.port, primarySemesterId, primaryCourse.id, '完成函数练习', '2026-05-10T20:00:00.000Z');
+  const task = await createTask(
+    backend.port,
+    primarySemesterId,
+    primaryCourse.id,
+    '完成函数练习',
+    '2026-05-10T20:00:00.000Z'
+  );
   await createTask(backend.port, otherSemesterId, otherCourse.id, '不应泄漏的英语任务', '2026-05-10T08:00:00.000Z');
-  const exam = await createAndConfirmExam(backend.port, primarySemesterId, primaryCourse.id, '高数期中', '2026-05-12T08:00:00.000Z');
+  const exam = await createAndConfirmExam(
+    backend.port,
+    primarySemesterId,
+    primaryCourse.id,
+    '高数期中',
+    '2026-05-12T08:00:00.000Z'
+  );
 
   const beforeTasks = await requestJson(backend.port, 'GET', `/api/study-tasks?semesterId=${primarySemesterId}`);
-  const result = await requestJson(backend.port, 'GET', `/api/daily-study-home?semesterId=${primarySemesterId}&date=2026-05-10`);
+  const result = await requestJson(
+    backend.port,
+    'GET',
+    `/api/daily-study-home?semesterId=${primarySemesterId}&date=2026-05-10`
+  );
   const afterTasks = await requestJson(backend.port, 'GET', `/api/study-tasks?semesterId=${primarySemesterId}`);
 
   assert.equal(result.status, 200);
@@ -137,10 +164,20 @@ test('daily study home aggregates only the requested ready semester and never wr
   assert.deepEqual(result.json.data, {
     semesterId: primarySemesterId,
     date: '2026-05-10',
-    todayTasks: [{ id: task.id, title: '完成函数练习', courseName: '数学', deadlineAt: '2026-05-10T20:00:00.000Z', type: 'practice' }],
+    todayTasks: [
+      {
+        id: task.id,
+        title: '完成函数练习',
+        courseName: '数学',
+        deadlineAt: '2026-05-10T20:00:00.000Z',
+        type: 'practice',
+      },
+    ],
     tomorrowTasks: [],
     tomorrowSchedule: [],
-    upcomingExams: [{ id: exam.id, name: '高数期中', courseName: '数学', examAt: '2026-05-12T08:00:00.000Z', daysUntil: 2 }],
+    upcomingExams: [
+      { id: exam.id, name: '高数期中', courseName: '数学', examAt: '2026-05-12T08:00:00.000Z', daysUntil: 2 },
+    ],
     pendingQualityMaterials: [],
     errorReviews: [],
     nextAction: { kind: 'today_task', title: '完成函数练习', path: `/courses/${primaryCourse.id}` },
@@ -148,39 +185,54 @@ test('daily study home aggregates only the requested ready semester and never wr
   assert.deepEqual(afterTasks.json.data, beforeTasks.json.data, '首页读取不得写入或改变任务');
 });
 
-
 test('daily study home exposes existing tomorrow schedule and conversion-failed material facts', async (t) => {
   const backend = await startBackend(t);
   const semesterId = await initializeReadySemester(backend.port, `spring-${crypto.randomUUID()}`);
   const course = await createCourse(backend.port, semesterId, '物理');
   const { scheduleId, materialId } = seedTomorrowScheduleAndFailedMaterial(backend.dataRoot, semesterId, course.id);
 
-  const result = await requestJson(backend.port, 'GET', `/api/daily-study-home?semesterId=${semesterId}&date=2026-05-10`);
+  const result = await requestJson(
+    backend.port,
+    'GET',
+    `/api/daily-study-home?semesterId=${semesterId}&date=2026-05-10`
+  );
 
   assert.equal(result.status, 200);
-  assert.deepEqual(result.json.data.tomorrowSchedule, [{
-    id: scheduleId,
-    courseInstanceId: course.id,
-    courseName: '物理',
-    startTime: '08:00',
-    endTime: '09:40',
-    location: '教学楼 A-101',
-  }]);
-  assert.deepEqual(result.json.data.pendingQualityMaterials, [{
-    id: materialId,
-    courseInstanceId: course.id,
-    courseName: '物理',
-    title: '失败讲义',
-    status: 'conversion_failed',
-  }]);
+  assert.deepEqual(result.json.data.tomorrowSchedule, [
+    {
+      id: scheduleId,
+      courseInstanceId: course.id,
+      courseName: '物理',
+      startTime: '08:00',
+      endTime: '09:40',
+      location: '教学楼 A-101',
+    },
+  ]);
+  assert.deepEqual(result.json.data.pendingQualityMaterials, [
+    {
+      id: materialId,
+      courseInstanceId: course.id,
+      courseName: '物理',
+      title: '失败讲义',
+      status: 'conversion_failed',
+    },
+  ]);
 });
 
 test('daily study home rejects malformed semesterId and non-calendar date', async (t) => {
   const backend = await startBackend(t);
   const semesterId = await initializeReadySemester(backend.port, `spring-${crypto.randomUUID()}`);
 
-  const malformedSemester = await requestJson(backend.port, 'GET', '/api/daily-study-home?semesterId=not-a-uuid&date=2026-05-10');
-  const malformedDate = await requestJson(backend.port, 'GET', `/api/daily-study-home?semesterId=${semesterId}&date=2026-02-30`);
+  const malformedSemester = await requestJson(
+    backend.port,
+    'GET',
+    '/api/daily-study-home?semesterId=not-a-uuid&date=2026-05-10'
+  );
+  const malformedDate = await requestJson(
+    backend.port,
+    'GET',
+    `/api/daily-study-home?semesterId=${semesterId}&date=2026-02-30`
+  );
 
   assert.equal(malformedSemester.status, 404);
   assert.equal(malformedSemester.json.success, false);

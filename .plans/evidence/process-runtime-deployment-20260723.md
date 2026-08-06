@@ -27,7 +27,6 @@ $out='H:\ai-studybuddy-tmp\runs\process-runtime-deployment-package-20260723-3'
 
 注：该包为中间包；最终提交使用 20260723-4。
 
-
 ### 1b. 最终部署包 20260723-4
 
 命令：
@@ -145,7 +144,6 @@ pnpm --filter backend exec node --test test/parent-report-scheduler-script.test.
 
 - 注册脚本通过部署 wrapper 运行，含每日 22:30、登录补发和 StartWhenAvailable。
 - wrapper 校验运行根和回环监听，只调用部署包内已编译 runner。
-
 
 ### 8. 完整验证与 E2E
 

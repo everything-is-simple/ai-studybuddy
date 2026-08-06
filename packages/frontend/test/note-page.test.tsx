@@ -17,7 +17,9 @@ vi.mock('../src/api/note-builder-api', () => ({
   getKnowledgeModules: (...args: unknown[]) => getKnowledgeModulesMock(...args),
 }));
 vi.mock('../src/api/study-rhythm-api', () => ({ getStudyTasks: (...args: unknown[]) => getStudyTasksMock(...args) }));
-vi.mock('../src/components/markdown-note', () => ({ MarkdownNote: ({ markdown }: { markdown: string }) => <output>{markdown}</output> }));
+vi.mock('../src/components/markdown-note', () => ({
+  MarkdownNote: ({ markdown }: { markdown: string }) => <output>{markdown}</output>,
+}));
 vi.mock('../src/components/lazy-mind-map', () => ({ LazyMindMapSection: () => null }));
 vi.mock('../src/components/knowledge-module-list', () => ({ KnowledgeModuleList: () => null }));
 
@@ -42,7 +44,11 @@ const note = {
 };
 
 async function flush() {
-  await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
 }
 
 function renderPage() {
@@ -70,7 +76,10 @@ describe('NotePage 笔记编辑', () => {
     getStudyTasksMock.mockReset();
     getNoteMock.mockResolvedValue(note);
     updateNoteMock.mockResolvedValue({ id: note.id, updatedAt: '2026-07-30T00:01:00.000Z' });
-    getKnowledgeModulesMock.mockResolvedValue({ items: note.knowledgeModules, pagination: { page: 1, pageSize: 20, total: 1, hasMore: false } });
+    getKnowledgeModulesMock.mockResolvedValue({
+      items: note.knowledgeModules,
+      pagination: { page: 1, pageSize: 20, total: 1, hasMore: false },
+    });
     getStudyTasksMock.mockResolvedValue([]);
   });
 
@@ -87,7 +96,9 @@ describe('NotePage 笔记编辑', () => {
 
     const edit = [...container!.querySelectorAll('button')].find((button) => button.textContent === '编辑笔记');
     expect(edit).not.toBeNull();
-    await act(async () => { edit!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+    await act(async () => {
+      edit!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
 
     const textarea = container!.querySelector<HTMLTextAreaElement>('textarea[aria-label="编辑笔记正文"]');
     expect(textarea?.value).toBe(note.markdown);
@@ -98,7 +109,9 @@ describe('NotePage 笔记编辑', () => {
     });
 
     const save = [...container!.querySelectorAll('button')].find((button) => button.textContent === '保存笔记');
-    await act(async () => { save!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+    await act(async () => {
+      save!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     await flush();
 
     expect(updateNoteMock).toHaveBeenCalledWith('semester-1', 'note-1', '# 已编辑的合成笔记');

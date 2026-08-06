@@ -58,18 +58,18 @@ T02C 只收口配置加载和配置校验失败时的秘密回显边界：非法
 
 ### 3.3 错误矩阵
 
-| 场景 | 允许输出 | 禁止输出 | 建议错误码 |
-| --- | --- | --- | --- |
-| `.env` 非法行 | 固定提示、`lineNumber`、`sourceKind=env-file` | 原始行内容、路径、变量值 | `CONFIG_ENV_LINE_INVALID` |
-| `.env` 重复键 | 固定提示、键名 | 两次赋值内容、文件路径 | `CONFIG_ENV_DUPLICATE_KEY` |
-| `.env` 空 key / 非法 key | 固定提示、`lineNumber` | 原始行内容 | `CONFIG_ENV_KEY_INVALID` |
-| `NODE_ENV` 非法 | 键名、允许值类别、固定提示 | 非法值 | `CONFIG_NODE_ENV_INVALID` |
-| `BACKEND_HOST` 非法 | 键名、固定提示 | 实际 host 值 | `CONFIG_BACKEND_HOST_INVALID` |
-| `APP_DATA_ROOT` 缺失/不可写 | 键名、类别、固定提示 | 真实路径、底层 IO 错误原文 | `CONFIG_DATA_ROOT_INVALID` |
-| `AI_PROVIDERS` JSON 非法 | 键名、类别、固定提示 | 原始 JSON、URL、key、parser message | `CONFIG_AI_PROVIDERS_INVALID` |
-| Provider 字段非法 | provider index、字段名、固定提示 | `baseUrl`、`apiKey`、模型外秘密值 | `CONFIG_PROVIDER_INVALID` |
-| SMTP 配置非法 | 字段名、类别、固定提示 | host/user/auth code/to 原值 | `CONFIG_SMTP_INVALID` |
-| Webhook 配置非法 | 字段名、类别、固定提示 | URL 原文 | `CONFIG_WEBHOOK_INVALID` |
+| 场景                        | 允许输出                                      | 禁止输出                            | 建议错误码                    |
+| --------------------------- | --------------------------------------------- | ----------------------------------- | ----------------------------- |
+| `.env` 非法行               | 固定提示、`lineNumber`、`sourceKind=env-file` | 原始行内容、路径、变量值            | `CONFIG_ENV_LINE_INVALID`     |
+| `.env` 重复键               | 固定提示、键名                                | 两次赋值内容、文件路径              | `CONFIG_ENV_DUPLICATE_KEY`    |
+| `.env` 空 key / 非法 key    | 固定提示、`lineNumber`                        | 原始行内容                          | `CONFIG_ENV_KEY_INVALID`      |
+| `NODE_ENV` 非法             | 键名、允许值类别、固定提示                    | 非法值                              | `CONFIG_NODE_ENV_INVALID`     |
+| `BACKEND_HOST` 非法         | 键名、固定提示                                | 实际 host 值                        | `CONFIG_BACKEND_HOST_INVALID` |
+| `APP_DATA_ROOT` 缺失/不可写 | 键名、类别、固定提示                          | 真实路径、底层 IO 错误原文          | `CONFIG_DATA_ROOT_INVALID`    |
+| `AI_PROVIDERS` JSON 非法    | 键名、类别、固定提示                          | 原始 JSON、URL、key、parser message | `CONFIG_AI_PROVIDERS_INVALID` |
+| Provider 字段非法           | provider index、字段名、固定提示              | `baseUrl`、`apiKey`、模型外秘密值   | `CONFIG_PROVIDER_INVALID`     |
+| SMTP 配置非法               | 字段名、类别、固定提示                        | host/user/auth code/to 原值         | `CONFIG_SMTP_INVALID`         |
+| Webhook 配置非法            | 字段名、类别、固定提示                        | URL 原文                            | `CONFIG_WEBHOOK_INVALID`      |
 
 原则：启动期或脚本期错误可以带“变量名/类别/行号”，但不能带“变量值/原始行/路径/底层异常”。运行期公开 API 错误保持 T02A 的安全 JSON 契约，只给固定错误码和固定中文提示。
 

@@ -14,7 +14,6 @@ import { getDocxZipLimits as getZipLimits } from '../config/env';
 // 可通过环境变量覆盖，便于测试使用较小阈值；生产环境保持较大默认值。
 // 每次调用时重新读取，确保测试可以在同进程内调整阈值。
 
-
 const VISUAL_TAGS = [
   'w:drawing', // 图片、图表、SmartArt
   'w:pict', // VML 对象

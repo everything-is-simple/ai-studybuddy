@@ -93,11 +93,7 @@ test('SecureStore keeps channels isolated and removes only recognized temporary 
 
   assert.deepEqual((await store.read('ai')).data, { value: 'ai' });
   assert.deepEqual((await store.read('smtp')).data, { value: 'smtp' });
-  assert.deepEqual((await readdir(configDir)).sort(), [
-    'ai.active.enc',
-    'smtp.active.enc',
-    'unrelated.tmp',
-  ]);
+  assert.deepEqual((await readdir(configDir)).sort(), ['ai.active.enc', 'smtp.active.enc', 'unrelated.tmp']);
 });
 
 test('SecureStore removes a half-written temp file when encryption or activation fails', async (t) => {

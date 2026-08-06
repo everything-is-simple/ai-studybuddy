@@ -1,9 +1,17 @@
 import type { ClassCaptureSavedMaterialDto, ClassCaptureTranscriptDto } from '@ai-studybuddy/shared';
 import { NoteBuilderError, NoteBuilderService } from './note-builder-service';
-import { WhisperCppAuralConverter, WhisperCppAuralConverterError, type AuralUploadedFile } from '../adapters/aural/whispercpp-aural-converter';
+import {
+  WhisperCppAuralConverter,
+  WhisperCppAuralConverterError,
+  type AuralUploadedFile,
+} from '../adapters/aural/whispercpp-aural-converter';
 
 export class ClassCaptureError extends Error {
-  constructor(public readonly code: string, public readonly status: number, message: string) {
+  constructor(
+    public readonly code: string,
+    public readonly status: number,
+    message: string
+  ) {
     super(message);
     this.name = 'ClassCaptureError';
   }
@@ -65,7 +73,12 @@ export class ClassCaptureService {
     }
   }
 
-  private assertRequest(input: { semesterId: unknown; courseInstanceId: unknown; title: unknown; permissionConfirmed: unknown }): void {
+  private assertRequest(input: {
+    semesterId: unknown;
+    courseInstanceId: unknown;
+    title: unknown;
+    permissionConfirmed: unknown;
+  }): void {
     if (!confirmed(input.permissionConfirmed)) {
       throw new ClassCaptureError('CLASS_CAPTURE_PERMISSION_REQUIRED', 400, '请先确认课堂录音已获得相关人员允许');
     }

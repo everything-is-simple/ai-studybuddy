@@ -30,10 +30,13 @@ test('AI connection test checks every provider and passes when at least one pass
   // 只要有一家通就激活，失败的那家在结果里标出来但不阻塞。
   assert.equal(result.pass, true);
   assert.equal(calls.length, 2);
-  assert.deepEqual(result.providers.map(({ name, pass }) => ({ name, pass })), [
-    { name: 'primary', pass: true },
-    { name: 'backup', pass: false },
-  ]);
+  assert.deepEqual(
+    result.providers.map(({ name, pass }) => ({ name, pass })),
+    [
+      { name: 'primary', pass: true },
+      { name: 'backup', pass: false },
+    ]
+  );
   assert.equal(result.providers[1].errorCode, 'AI_UNKNOWN');
   assert.doesNotMatch(JSON.stringify(result), /secret-backup|backup\.invalid/);
 });
@@ -53,7 +56,10 @@ test('AI connection test fails only when every provider fails', async () => {
   const result = await tester.testAi(aiCandidate);
 
   assert.equal(result.pass, false);
-  assert.deepEqual(result.providers.map(({ pass }) => pass), [false, false]);
+  assert.deepEqual(
+    result.providers.map(({ pass }) => pass),
+    [false, false]
+  );
   assert.doesNotMatch(JSON.stringify(result), /secret-primary|secret-backup|primary\.invalid|backup\.invalid/);
 });
 
@@ -101,7 +107,9 @@ test('relay slots separate an unreachable address from a reachable one with a ba
   const tester = new ConnectionTester({
     createAiProvider: (config) => ({ name: config.name, generate: async () => ({ content: 'OK' }) }),
     // 地址连不上：fetch 直接抛，而不是返回 HTTP 错误。
-    fetch: async () => { throw new Error('getaddrinfo ENOTFOUND'); },
+    fetch: async () => {
+      throw new Error('getaddrinfo ENOTFOUND');
+    },
   });
 
   const unreachable = await tester.testSingleProvider({
@@ -176,7 +184,10 @@ test('relay slots report failure with per-address attempts when no address answe
   assert.equal(result.pass, false);
   assert.equal(result.errorCode, 'AI_AUTH_FAILED');
   assert.equal(result.attempts.length, 2);
-  assert.deepEqual(result.attempts.map(({ pass }) => pass), [false, false]);
+  assert.deepEqual(
+    result.attempts.map(({ pass }) => pass),
+    [false, false]
+  );
   assert.doesNotMatch(JSON.stringify(result), /secret-relay/);
 });
 
@@ -234,8 +245,12 @@ test('SMTP connection test verifies and optionally sends a fixed data-free messa
     },
   });
   const candidate = {
-    host: 'smtp.qq.com', port: 465, secure: true, user: 'sender@example.test',
-    authCode: 'smtp-secret', to: 'receiver@example.test',
+    host: 'smtp.qq.com',
+    port: 465,
+    secure: true,
+    user: 'sender@example.test',
+    authCode: 'smtp-secret',
+    to: 'receiver@example.test',
   };
 
   const result = await tester.testSmtp(candidate, true);
@@ -258,7 +273,12 @@ test('SMTP and Feishu failures return fixed sanitized codes', async () => {
   const secret = 'DO-NOT-LEAK';
   const tester = new ConnectionTester({
     createSmtpTransport() {
-      return { verify: async () => { throw Object.assign(new Error(secret), { code: 'EAUTH' }); }, sendMail: async () => {} };
+      return {
+        verify: async () => {
+          throw Object.assign(new Error(secret), { code: 'EAUTH' });
+        },
+        sendMail: async () => {},
+      };
     },
     fetch: async (_url, init) => {
       const body = JSON.parse(String(init.body));
@@ -271,9 +291,17 @@ test('SMTP and Feishu failures return fixed sanitized codes', async () => {
     },
   });
 
-  const smtp = await tester.testSmtp({
-    host: 'smtp.invalid', port: 465, secure: true, user: 'u', authCode: secret, to: 'to@example.test',
-  }, false);
+  const smtp = await tester.testSmtp(
+    {
+      host: 'smtp.invalid',
+      port: 465,
+      secure: true,
+      user: 'u',
+      authCode: secret,
+      to: 'to@example.test',
+    },
+    false
+  );
   const feishu = await tester.testFeishu({ webhookUrl: `https://example.invalid/${secret}` });
 
   assert.deepEqual(smtp, {
@@ -291,18 +319,15 @@ test('SMTP and Feishu failures return fixed sanitized codes', async () => {
 
 test('Feishu connection test accepts a successful fixed-card response', async () => {
   const tester = new ConnectionTester({
-    fetch: async () => new Response(JSON.stringify({ code: 0 }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    }),
+    fetch: async () =>
+      new Response(JSON.stringify({ code: 0 }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
   });
 
-  assert.deepEqual(
-    await tester.testFeishu({ webhookUrl: 'https://example.invalid/safe-hook' }),
-    { pass: true }
-  );
+  assert.deepEqual(await tester.testFeishu({ webhookUrl: 'https://example.invalid/safe-hook' }), { pass: true });
 });
-
 
 test('AI 429 and common SMTP transport failures use fixed actionable sanitized codes', async () => {
   const secret = 'DO-NOT-LEAK-M03';
@@ -326,9 +351,17 @@ test('AI 429 and common SMTP transport failures use fixed actionable sanitized c
   });
 
   const aiResult = await tester.testAi({ providers: [aiCandidate.providers[0]] });
-  const smtpResult = await tester.testSmtp({
-    host: 'smtp.invalid', port: 465, secure: true, user: 'sender@example.test', authCode: secret, to: 'receiver@example.test',
-  }, false);
+  const smtpResult = await tester.testSmtp(
+    {
+      host: 'smtp.invalid',
+      port: 465,
+      secure: true,
+      user: 'sender@example.test',
+      authCode: secret,
+      to: 'receiver@example.test',
+    },
+    false
+  );
 
   assert.equal(aiResult.providers[0].errorCode, 'AI_QUOTA_OR_RATE_LIMITED');
   assert.deepEqual(smtpResult, {

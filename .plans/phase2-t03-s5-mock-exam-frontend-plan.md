@@ -26,13 +26,13 @@
 
 所有端点以标准 envelope 返回：成功为 `{ success: true, data }`，失败为 `{ success: false, error: { code, message } }`。T03 必须复用 `packages/frontend/src/api/api-client.ts` 的 envelope/error 处理，不自行读取存储层。
 
-| 端点 | 请求 | 成功数据 | T03 消费位置 |
-| --- | --- | --- | --- |
-| `POST /api/mock-exam-papers` | `CreateMockExamPaperRequest`：`semesterId`、`courseInstanceId`、`assessmentAttemptId`；`knowledgeModuleIds`、`questionCount`、`difficultyPreference`、`timeLimitSeconds` 可选 | `MockExamPaperDetailDto` | 入口生成模拟卷后跳转试卷页 |
-| `GET /api/mock-exam-papers/:id?semesterId=...` | 路径 `id` 与查询 `semesterId` | `MockExamPaperDetailDto` | 试卷基本信息与开始尝试前复取 |
-| `POST /api/mock-exam-papers/:id/attempts` | `StartMockExamAttemptRequest`：`{ semesterId }` | `MockExamAttemptDetailDto`，初始状态为 `in_progress` | 开始答题后跳转尝试页 |
-| `GET /api/mock-exam-attempts/:id?semesterId=...` | 路径 `id` 与查询 `semesterId` | `MockExamAttemptDetailDto` | 刷新恢复、已提交状态判定与结果页重取 |
-| `POST /api/mock-exam-attempts/:id/submit` | `SubmitMockExamAttemptRequest`：`semesterId`、`totalDurationSeconds`、`answers: [{ questionId, answer, timeSpentSeconds }]` | `SubmitMockExamAttemptResponse` | 提交后即时结果并缓存导航目标 |
+| 端点                                             | 请求                                                                                                                                                                          | 成功数据                                             | T03 消费位置                         |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
+| `POST /api/mock-exam-papers`                     | `CreateMockExamPaperRequest`：`semesterId`、`courseInstanceId`、`assessmentAttemptId`；`knowledgeModuleIds`、`questionCount`、`difficultyPreference`、`timeLimitSeconds` 可选 | `MockExamPaperDetailDto`                             | 入口生成模拟卷后跳转试卷页           |
+| `GET /api/mock-exam-papers/:id?semesterId=...`   | 路径 `id` 与查询 `semesterId`                                                                                                                                                 | `MockExamPaperDetailDto`                             | 试卷基本信息与开始尝试前复取         |
+| `POST /api/mock-exam-papers/:id/attempts`        | `StartMockExamAttemptRequest`：`{ semesterId }`                                                                                                                               | `MockExamAttemptDetailDto`，初始状态为 `in_progress` | 开始答题后跳转尝试页                 |
+| `GET /api/mock-exam-attempts/:id?semesterId=...` | 路径 `id` 与查询 `semesterId`                                                                                                                                                 | `MockExamAttemptDetailDto`                           | 刷新恢复、已提交状态判定与结果页重取 |
+| `POST /api/mock-exam-attempts/:id/submit`        | `SubmitMockExamAttemptRequest`：`semesterId`、`totalDurationSeconds`、`answers: [{ questionId, answer, timeSpentSeconds }]`                                                   | `SubmitMockExamAttemptResponse`                      | 提交后即时结果并缓存导航目标         |
 
 必须严格使用以下已存在共享类型，类型从 `@ai-studybuddy/shared` 导入：
 
@@ -51,12 +51,12 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 
 后续获批实现时，修改 `packages/frontend/src/app.tsx`，以既有 `renderSemesterRoute`、懒加载和 `PageState` fallback 注册以下路由：
 
-| 路由 | 页面 | 责任 |
-| --- | --- | --- |
-| `/exams/:examId/mock-exam` | `MockExamStartPage` | 读取既有 `getExam(semesterId, examId)` 考试上下文，要求考试状态已确认；以该 DTO 的 `courseInstanceId` 与 `examId` 调用生成模拟卷。生成成功后导航到试卷路径。 |
-| `/mock-exam-papers/:paperId` | `MockExamPaperPage` | 请求模拟卷详情，展示标题、题数、限时、总分与来源摘要；由用户明确点击后创建尝试。 |
-| `/mock-exam-attempts/:attemptId` | `MockExamSessionPage` | 请求尝试、恢复草稿、计时、答题、确认提交与提交状态处理。 |
-| `/mock-exam-attempts/:attemptId/result` | `MockExamResultPage` | 从提交草稿中读取刚提交结果，或按尝试详情复取；只在已批改结果可用时显示解析与模块分析。 |
+| 路由                                    | 页面                  | 责任                                                                                                                                                         |
+| --------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/exams/:examId/mock-exam`              | `MockExamStartPage`   | 读取既有 `getExam(semesterId, examId)` 考试上下文，要求考试状态已确认；以该 DTO 的 `courseInstanceId` 与 `examId` 调用生成模拟卷。生成成功后导航到试卷路径。 |
+| `/mock-exam-papers/:paperId`            | `MockExamPaperPage`   | 请求模拟卷详情，展示标题、题数、限时、总分与来源摘要；由用户明确点击后创建尝试。                                                                             |
+| `/mock-exam-attempts/:attemptId`        | `MockExamSessionPage` | 请求尝试、恢复草稿、计时、答题、确认提交与提交状态处理。                                                                                                     |
+| `/mock-exam-attempts/:attemptId/result` | `MockExamResultPage`  | 从提交草稿中读取刚提交结果，或按尝试详情复取；只在已批改结果可用时显示解析与模块分析。                                                                       |
 
 路由不新增 `/exams/:examId/sprint`、不在工作台增加倒计时冲刺卡、不增加 T04 速背入口或 T05 每日计划入口；这些分别归 T04、T05、T06。
 
@@ -68,22 +68,22 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 
 ## 4. 未来实施的精确文件结构
 
-| 文件 | 操作 | 单一责任 |
-| --- | --- | --- |
-| `packages/frontend/src/api/mock-exam-api.ts` | 新增 | 以现有 API 客户端封装五个 T02 端点；仅导出 `createMockExamPaper`、`getMockExamPaper`、`startMockExamAttempt`、`getMockExamAttempt`、`submitMockExamAttempt`。 |
-| `packages/frontend/src/hooks/use-mock-exam-draft.ts` | 新增 | 定义、读取、校验、写入和删除一次模拟考尝试的 `sessionStorage` 草稿；损坏 JSON 安全降级为空草稿。 |
-| `packages/frontend/src/components/mock-exam-question.tsx` | 新增 | 基于 `MockExamQuestionForStudentDto` 渲染单选、多选、填空、简答输入与题号/分值；作答期间绝不接收正确答案或解析 props。 |
-| `packages/frontend/src/components/mock-exam-module-analysis.tsx` | 新增 | 仅基于 `MockExamModuleAnalysisDto[]` 渲染模块统计、正确率与 `weakSignal` 说明。 |
-| `packages/frontend/src/pages/mock-exam-start-page.tsx` | 新增 | 考试上下文加载、确认状态提示、生成模拟卷请求、生成中和错误重试。 |
-| `packages/frontend/src/pages/mock-exam-paper-page.tsx` | 新增 | 模拟卷详情、开始前确认、尝试创建中与创建失败状态。 |
-| `packages/frontend/src/pages/mock-exam-session-page.tsx` | 新增 | 尝试加载、草稿恢复、`usePracticeTimer` 复用、题目切换、提交确认、提交中互斥与状态冲突恢复。 |
-| `packages/frontend/src/pages/mock-exam-result-page.tsx` | 新增 | 已批改汇总、逐题结果、解析与模块分析；结果不可用时给出安全状态和回退入口。 |
-| `packages/frontend/src/app.tsx` | 修改 | 懒加载以上四页并注册四条路由，保留当前学期守卫与统一 fallback。 |
-| `packages/frontend/src/components/exam-context-nav.tsx` | 修改 | 新增模拟考导航项及其活跃状态。 |
-| `packages/frontend/test/mock-exam-api.test.ts` | 新增 | 验证五个请求的 method、URL、semesterId/query/body、标准 envelope 成功/失败处理与 AbortSignal 传递。 |
-| `packages/frontend/test/mock-exam-pages.test.tsx` | 新增 | 覆盖入口、试卷、答题、刷新恢复、提交、重复提交、已批改与结果/模块分析页面交互。 |
-| `packages/frontend/test/exam-context-nav.test.tsx` | 修改 | 断言“模拟考”链接、URL、`aria-current` 与原有导航项不回归。 |
-| `packages/frontend/test/app-semester.test.tsx` | 修改 | 断言四条模拟考路由仍经过当前学期恢复守卫与对应 loading fallback。 |
+| 文件                                                             | 操作 | 单一责任                                                                                                                                                      |
+| ---------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/frontend/src/api/mock-exam-api.ts`                     | 新增 | 以现有 API 客户端封装五个 T02 端点；仅导出 `createMockExamPaper`、`getMockExamPaper`、`startMockExamAttempt`、`getMockExamAttempt`、`submitMockExamAttempt`。 |
+| `packages/frontend/src/hooks/use-mock-exam-draft.ts`             | 新增 | 定义、读取、校验、写入和删除一次模拟考尝试的 `sessionStorage` 草稿；损坏 JSON 安全降级为空草稿。                                                              |
+| `packages/frontend/src/components/mock-exam-question.tsx`        | 新增 | 基于 `MockExamQuestionForStudentDto` 渲染单选、多选、填空、简答输入与题号/分值；作答期间绝不接收正确答案或解析 props。                                        |
+| `packages/frontend/src/components/mock-exam-module-analysis.tsx` | 新增 | 仅基于 `MockExamModuleAnalysisDto[]` 渲染模块统计、正确率与 `weakSignal` 说明。                                                                               |
+| `packages/frontend/src/pages/mock-exam-start-page.tsx`           | 新增 | 考试上下文加载、确认状态提示、生成模拟卷请求、生成中和错误重试。                                                                                              |
+| `packages/frontend/src/pages/mock-exam-paper-page.tsx`           | 新增 | 模拟卷详情、开始前确认、尝试创建中与创建失败状态。                                                                                                            |
+| `packages/frontend/src/pages/mock-exam-session-page.tsx`         | 新增 | 尝试加载、草稿恢复、`usePracticeTimer` 复用、题目切换、提交确认、提交中互斥与状态冲突恢复。                                                                   |
+| `packages/frontend/src/pages/mock-exam-result-page.tsx`          | 新增 | 已批改汇总、逐题结果、解析与模块分析；结果不可用时给出安全状态和回退入口。                                                                                    |
+| `packages/frontend/src/app.tsx`                                  | 修改 | 懒加载以上四页并注册四条路由，保留当前学期守卫与统一 fallback。                                                                                               |
+| `packages/frontend/src/components/exam-context-nav.tsx`          | 修改 | 新增模拟考导航项及其活跃状态。                                                                                                                                |
+| `packages/frontend/test/mock-exam-api.test.ts`                   | 新增 | 验证五个请求的 method、URL、semesterId/query/body、标准 envelope 成功/失败处理与 AbortSignal 传递。                                                           |
+| `packages/frontend/test/mock-exam-pages.test.tsx`                | 新增 | 覆盖入口、试卷、答题、刷新恢复、提交、重复提交、已批改与结果/模块分析页面交互。                                                                               |
+| `packages/frontend/test/exam-context-nav.test.tsx`               | 修改 | 断言“模拟考”链接、URL、`aria-current` 与原有导航项不回归。                                                                                                    |
+| `packages/frontend/test/app-semester.test.tsx`                   | 修改 | 断言四条模拟考路由仍经过当前学期恢复守卫与对应 loading fallback。                                                                                             |
 
 不新建后端、共享类型、数据库、migration、Worker、Provider、运行目录访问或外部服务文件。样式只在后续实现中按项目既有页面 className 和全局样式组织；若现有样式文件需要最小扩展，实施任务必须先确认实际样式入口并将它列入变更集和测试审查，不能在本计划阶段预写样式。
 
@@ -154,6 +154,7 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 ### Task 1：API 封装与 API 契约测试
 
 **Files:**
+
 - Create: `packages/frontend/src/api/mock-exam-api.ts`
 - Test: `packages/frontend/test/mock-exam-api.test.ts`
 
@@ -165,6 +166,7 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 ### Task 2：草稿 Hook、计时复用与单题组件
 
 **Files:**
+
 - Create: `packages/frontend/src/hooks/use-mock-exam-draft.ts`
 - Create: `packages/frontend/src/components/mock-exam-question.tsx`
 - Test: `packages/frontend/test/mock-exam-pages.test.tsx`
@@ -177,6 +179,7 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 ### Task 3：入口、试卷和路由导航
 
 **Files:**
+
 - Create: `packages/frontend/src/pages/mock-exam-start-page.tsx`
 - Create: `packages/frontend/src/pages/mock-exam-paper-page.tsx`
 - Modify: `packages/frontend/src/components/exam-context-nav.tsx`
@@ -194,6 +197,7 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 ### Task 4：答题、提交、并发冲突与结果页
 
 **Files:**
+
 - Create: `packages/frontend/src/pages/mock-exam-session-page.tsx`
 - Create: `packages/frontend/src/pages/mock-exam-result-page.tsx`
 - Create: `packages/frontend/src/components/mock-exam-module-analysis.tsx`
@@ -207,6 +211,7 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 ### Task 5：回归、构建与人工浏览器验收
 
 **Files:**
+
 - Modify only when Task 1–4 的失败测试或既有项目样式入口证明有必要；任何额外文件必须先在任务执行报告中说明其与上述责任的直接关系。
 
 - [ ] 运行 `pnpm type-check`。
@@ -218,16 +223,16 @@ T02 服务的实际语义必须成为实现约束：每次开始会新建一个 
 
 ## 8. 获批后的浏览器验收矩阵
 
-| 场景 | 操作 | 可观察验收 |
-| --- | --- | --- |
-| 首屏与未确认考试 | 进入 `/exams/:examId/mock-exam`，分别使用确认与未确认考试 | 显示考试上下文；未确认考试不发生成请求；确认考试显示生成入口。 |
-| 正常生成、答题与提交 | 生成模拟卷、开始尝试、作答、确认提交 | 请求契约正确；计时和答案保存；提交后显示成绩、逐题结果与模块分析。 |
-| 刷新恢复 | 在作答中刷新；在结果页刷新 | 作答答案/题号/计时从 sessionStorage 恢复并以 GET 尝试状态校验；无结果缓存的结果页显示结果不可用而不泄露内容。 |
-| API 失败 | 分别使生成、详情、开始尝试、读取尝试、提交返回错误 | 显示可重试错误；未提交答案草稿不丢失；不显示伪造分数或解析。 |
-| 重复提交 | 在提交中重复点击，并模拟 `409 MOCK_EXAM_ATTEMPT_STATE_INVALID` | 单一请求在途；409 后重取状态，已批改时停止编辑并提供结果入口。 |
-| 已提交尝试 | 直接访问非 `in_progress` 尝试 URL | 不显示编辑控件；不写作答草稿；展示结果入口或结果不可用状态。 |
-| 结果和模块分析 | 使用含答案结果、解析和多模块分析的提交响应 | 只有结果页显示正确答案/解析；模块题数、得分、正确率与弱项标志来自 DTO。 |
-| 窄屏与宽屏 | 在窄屏和宽屏浏览器尺寸走完整答题与结果流程 | 导航、题目、题号控制、提交按钮和模块分析可操作、无横向遮挡和无不可达控件。 |
+| 场景                 | 操作                                                           | 可观察验收                                                                                                    |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 首屏与未确认考试     | 进入 `/exams/:examId/mock-exam`，分别使用确认与未确认考试      | 显示考试上下文；未确认考试不发生成请求；确认考试显示生成入口。                                                |
+| 正常生成、答题与提交 | 生成模拟卷、开始尝试、作答、确认提交                           | 请求契约正确；计时和答案保存；提交后显示成绩、逐题结果与模块分析。                                            |
+| 刷新恢复             | 在作答中刷新；在结果页刷新                                     | 作答答案/题号/计时从 sessionStorage 恢复并以 GET 尝试状态校验；无结果缓存的结果页显示结果不可用而不泄露内容。 |
+| API 失败             | 分别使生成、详情、开始尝试、读取尝试、提交返回错误             | 显示可重试错误；未提交答案草稿不丢失；不显示伪造分数或解析。                                                  |
+| 重复提交             | 在提交中重复点击，并模拟 `409 MOCK_EXAM_ATTEMPT_STATE_INVALID` | 单一请求在途；409 后重取状态，已批改时停止编辑并提供结果入口。                                                |
+| 已提交尝试           | 直接访问非 `in_progress` 尝试 URL                              | 不显示编辑控件；不写作答草稿；展示结果入口或结果不可用状态。                                                  |
+| 结果和模块分析       | 使用含答案结果、解析和多模块分析的提交响应                     | 只有结果页显示正确答案/解析；模块题数、得分、正确率与弱项标志来自 DTO。                                       |
+| 窄屏与宽屏           | 在窄屏和宽屏浏览器尺寸走完整答题与结果流程                     | 导航、题目、题号控制、提交按钮和模块分析可操作、无横向遮挡和无不可达控件。                                    |
 
 ## 9. 独立复审检查表
 

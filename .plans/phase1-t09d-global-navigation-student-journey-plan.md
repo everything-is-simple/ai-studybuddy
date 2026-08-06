@@ -38,27 +38,27 @@
 
 ### 0.3 本任务做与不做
 
-| 范围 | T09D 结论 |
-| --- | --- |
-| 全局导航 | 在应用壳统一提供每日首页、课程/课表/考试、学期管理、资料与笔记、本机设置的稳定入口；移除页面内部重复全局导航。 |
-| 上下文能力 | 从课程考试卡进入考试工作台；工作台内提供资料、限时练习、错题和当前课程时间线的上下文入口，不创建缺少 `examId`/`noteId` 的无效全局链接。 |
-| 响应式 | 桌面使用持久侧边导航；窄屏收敛布局；移动端使用始终可达的底部主导航加“更多”面板，关键入口不因适配被隐藏。 |
-| 页面状态 | 统一加载、无 current、stale、普通错误/重试、空状态、安全 404/跨学期失败；切换学期先卸载旧学期路由内容。 |
-| 测试 | 新增导航/页面状态组件测试、T09D 导航响应式 E2E 和完整学生旅程 E2E，并回归 T09A/T09B/T09C。 |
-| 数据/API | **原则上不新增数据库 schema 或业务 API。** 仅允许新增 Task 4 明确列出的 test-only 文件：`packages/backend/test/e2e-server.ts`、`packages/backend/test/e2e-stale-current.ts`、`packages/backend/tsconfig.e2e.json` 与最小合成 PNG；其中 `e2e-server.ts` 只向现有 `createApp` 注入确定性 OCR 识别器，仍走真实 Express 路由、现有服务/事务/migration 和真实 SQLite；`e2e-stale-current.ts` 只能在本次隔离 `APP_DATA_ROOT` 中操作既有 schema 数据来制造 stale 前置条件，不得承担正常业务造数。生产 `server.ts`、业务接口与 schema 不得因测试注入改变。 |
-| 明确不做 | 不做 T09E 练习历史/筛选/学期归档/归档只读；不做课程、考试或学期删除；不做跨学期汇总/仪表盘；不做 schema/migration；不做 S5/S7、家长 Web 面板、AI/Provider 扩张、真实渠道 smoke、Phase 2/3、大规模品牌/设计系统重写或无关 CSS 清理。 |
+| 范围       | T09D 结论                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 全局导航   | 在应用壳统一提供每日首页、课程/课表/考试、学期管理、资料与笔记、本机设置的稳定入口；移除页面内部重复全局导航。                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 上下文能力 | 从课程考试卡进入考试工作台；工作台内提供资料、限时练习、错题和当前课程时间线的上下文入口，不创建缺少 `examId`/`noteId` 的无效全局链接。                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 响应式     | 桌面使用持久侧边导航；窄屏收敛布局；移动端使用始终可达的底部主导航加“更多”面板，关键入口不因适配被隐藏。                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 页面状态   | 统一加载、无 current、stale、普通错误/重试、空状态、安全 404/跨学期失败；切换学期先卸载旧学期路由内容。                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 测试       | 新增导航/页面状态组件测试、T09D 导航响应式 E2E 和完整学生旅程 E2E，并回归 T09A/T09B/T09C。                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 数据/API   | **原则上不新增数据库 schema 或业务 API。** 仅允许新增 Task 4 明确列出的 test-only 文件：`packages/backend/test/e2e-server.ts`、`packages/backend/test/e2e-stale-current.ts`、`packages/backend/tsconfig.e2e.json` 与最小合成 PNG；其中 `e2e-server.ts` 只向现有 `createApp` 注入确定性 OCR 识别器，仍走真实 Express 路由、现有服务/事务/migration 和真实 SQLite；`e2e-stale-current.ts` 只能在本次隔离 `APP_DATA_ROOT` 中操作既有 schema 数据来制造 stale 前置条件，不得承担正常业务造数。生产 `server.ts`、业务接口与 schema 不得因测试注入改变。 |
+| 明确不做   | 不做 T09E 练习历史/筛选/学期归档/归档只读；不做课程、考试或学期删除；不做跨学期汇总/仪表盘；不做 schema/migration；不做 S5/S7、家长 Web 面板、AI/Provider 扩张、真实渠道 smoke、Phase 2/3、大规模品牌/设计系统重写或无关 CSS 清理。                                                                                                                                                                                                                                                                                                                |
 
 ### 0.4 导航信息架构冻结
 
 #### 全局主入口
 
-| 入口 | 路由 | 当前学期要求 | 说明 |
-| --- | --- | --- | --- |
-| 今日学习 | `/` | 是 | T09B 每日学习首页。 |
-| 课程与考试 | `/courses` | 是 | T09C 课程、完整周课表、考试目标与倒计时。 |
-| 学期管理 | `/semesters` | 否 | T09A 创建、选择、切换 current semester。 |
-| 资料与笔记 | `/materials` | 是 | 资料列表/上传是稳定入口，具体笔记继续从资料结果进入 `/notes/:noteId`。 |
-| 本机设置 | `/settings` | 否 | T08 本机配置中心；导航不展示或持久化秘密值。 |
+| 入口       | 路由         | 当前学期要求 | 说明                                                                   |
+| ---------- | ------------ | ------------ | ---------------------------------------------------------------------- |
+| 今日学习   | `/`          | 是           | T09B 每日学习首页。                                                    |
+| 课程与考试 | `/courses`   | 是           | T09C 课程、完整周课表、考试目标与倒计时。                              |
+| 学期管理   | `/semesters` | 否           | T09A 创建、选择、切换 current semester。                               |
+| 资料与笔记 | `/materials` | 是           | 资料列表/上传是稳定入口，具体笔记继续从资料结果进入 `/notes/:noteId`。 |
+| 本机设置   | `/settings`  | 否           | T08 本机配置中心；导航不展示或持久化秘密值。                           |
 
 #### 考试上下文入口
 
@@ -69,17 +69,17 @@
 
 ### 0.5 失败语义冻结
 
-| 场景 | 预期体验 | 安全边界 |
-| --- | --- | --- |
-| current semester 恢复中 | 应用壳显示统一加载状态；不渲染学期业务内容。 | 不显示上次学期页面缓存。 |
-| 无 current semester | 允许访问学期管理/设置；其他全局入口禁用或引导到 `/semesters`。 | 不猜测或从浏览器存储恢复学期。 |
-| stale current semester | 复用 T09A/T09B 服务端清理结果，显示“失效已清理”和前往学期管理的明确下一步。 | 不循环重试、不回退另一学期。 |
-| current semester 读取失败 | 留在统一壳错误状态，提供显式“重试”；不静默重定向。 | 不把网络错误当作“无学期”。 |
-| 普通页面 API 失败 | 在当前内容区显示安全错误和重试；保留可恢复的导航。 | 不展示 stack、数据库路径、Provider URL、完整 UUID 或另一学期数据。 |
-| 页面空数据 | 按领域给出下一步：建课程、维护课表、建/确认考试、上传资料或开始准备。 | 不为填满页面生成虚假数据。 |
-| 学期切换 | current 更新后立即卸载旧 `semesterId` 路由树，显示新学期加载态，再展示新数据。 | 任何一帧都不得显示上一学期课程、考试、资料或时间线。 |
-| 路由不存在 | 显示安全 404 与“今日学习/课程/学期管理”入口。 | 不再静默跳到可能错误的 `/courses`。 |
-| 资源不存在或跨学期 | 使用既有安全 API 错误，显示返回相关列表/工作台入口。 | 不泄露资源是否存在于另一学期。 |
+| 场景                      | 预期体验                                                                       | 安全边界                                                           |
+| ------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| current semester 恢复中   | 应用壳显示统一加载状态；不渲染学期业务内容。                                   | 不显示上次学期页面缓存。                                           |
+| 无 current semester       | 允许访问学期管理/设置；其他全局入口禁用或引导到 `/semesters`。                 | 不猜测或从浏览器存储恢复学期。                                     |
+| stale current semester    | 复用 T09A/T09B 服务端清理结果，显示“失效已清理”和前往学期管理的明确下一步。    | 不循环重试、不回退另一学期。                                       |
+| current semester 读取失败 | 留在统一壳错误状态，提供显式“重试”；不静默重定向。                             | 不把网络错误当作“无学期”。                                         |
+| 普通页面 API 失败         | 在当前内容区显示安全错误和重试；保留可恢复的导航。                             | 不展示 stack、数据库路径、Provider URL、完整 UUID 或另一学期数据。 |
+| 页面空数据                | 按领域给出下一步：建课程、维护课表、建/确认考试、上传资料或开始准备。          | 不为填满页面生成虚假数据。                                         |
+| 学期切换                  | current 更新后立即卸载旧 `semesterId` 路由树，显示新学期加载态，再展示新数据。 | 任何一帧都不得显示上一学期课程、考试、资料或时间线。               |
+| 路由不存在                | 显示安全 404 与“今日学习/课程/学期管理”入口。                                  | 不再静默跳到可能错误的 `/courses`。                                |
+| 资源不存在或跨学期        | 使用既有安全 API 错误，显示返回相关列表/工作台入口。                           | 不泄露资源是否存在于另一学期。                                     |
 
 ---
 
@@ -159,6 +159,7 @@
 ### Task 1：先用失败测试冻结导航信息架构和页面状态契约
 
 **Files:**
+
 - Create: `packages/frontend/test/app-navigation.test.tsx`
 - Create: `packages/frontend/test/page-state.test.tsx`
 - Modify: `packages/frontend/test/app-semester.test.tsx`
@@ -190,6 +191,7 @@
 ### Task 2：实现唯一应用壳、响应式全局导航和学期作用域路由
 
 **Files:**
+
 - Modify: `packages/frontend/src/app.tsx`
 - Modify: `packages/frontend/src/components/app-navigation.tsx`
 - Create: `packages/frontend/src/components/page-state.tsx`
@@ -231,6 +233,7 @@
 ### Task 3：把既有页面接入统一壳、上下文导航和页面状态
 
 **Files:**
+
 - Modify: `packages/frontend/src/pages/course-page.tsx`
 - Modify: `packages/frontend/src/pages/daily-study-home-page.tsx`
 - Modify: `packages/frontend/src/pages/semester-page.tsx`
@@ -276,6 +279,7 @@
 ### Task 4：建立确定性、真实后端的 Playwright server harness
 
 **Files:**
+
 - Create: `packages/backend/test/e2e-server.ts`
 - Create: `packages/backend/test/e2e-stale-current.ts`
 - Create: `packages/backend/tsconfig.e2e.json`
@@ -318,6 +322,7 @@
 ### Task 5：新增 T09D 导航与响应式 Playwright 专项验收
 
 **Files:**
+
 - Reuse: `packages/backend/test/e2e-server.ts`
 - Reuse: `packages/backend/test/e2e-stale-current.ts`
 - Create: `e2e/global-navigation-responsive.spec.ts`
@@ -352,6 +357,7 @@
 ### Task 6：新增首次使用到日常学习的完整学生旅程 E2E
 
 **Files:**
+
 - Reuse: `packages/backend/test/e2e-server.ts`
 - Reuse: `e2e/fixtures/synthetic-timetable.png`
 - Create: `e2e/student-journey.spec.ts`
@@ -396,6 +402,7 @@
 ### Task 7：完成类型、构建、单元/集成和专项回归
 
 **Files:**
+
 - No new production scope; fix only regressions caused by Tasks 1–6.
 
 - [ ] **Step 1: 运行静态与构建验证。**
@@ -445,6 +452,7 @@
 ### Task 8：独立代码复审、修复和全量 E2E
 
 **Files:**
+
 - Review all T09D implementation/test diffs; no unrelated changes.
 
 - [ ] **Step 1: 请求独立 fresh-pass 代码复审。**
@@ -478,6 +486,7 @@
 ### Task 9：登记实施证据并完成实现分支交付
 
 **Files:**
+
 - Modify: `.plans/phase1-t09d-global-navigation-student-journey-plan.md`
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 
@@ -629,19 +638,19 @@
 
 **审查者：** 独立只读审查。
 
-| # | 检查项 | 结果 |
-| --- | --- | --- |
-| 1 | 严格限于 T09D，排除 T09E/删除/跨学期汇总/S5/S7/未来阶段 | 通过 |
-| 2 | 复用 T09A/T09B/T09C/T11，不重做既有业务能力 | 通过 |
-| 3 | `App` 保持唯一 current semester，导航不创建第二套状态或持久化 | 通过 |
-| 4 | 切换、刷新与真实 stale 恢复不会展示旧学期数据 | 通过 |
-| 5 | 桌面、窄屏、移动端关键入口均可达 | 通过 |
-| 6 | `PageState` 仅做最小渐进统一，不触发设计系统重构 | 通过 |
-| 7 | test-only harness 仍走真实 Express/SQLite/隔离根，OCR 仅替换外部边界 | 通过 |
-| 8 | 日期由 Playwright 浏览器 `Asia/Shanghai` 日历相对生成 | 通过 |
-| 9 | 无生产业务 API/shared DTO/schema/migration 计划；四项 test-only 例外清单一致 | 通过 |
-| 10 | UI/截图/提交文件/文档不泄露密钥、Provider URL、资料原文、完整 UUID 或正式数据 | 通过 |
-| 11 | 验证矩阵覆盖 E2E harness 类型检查、构建、回归、全量 E2E、独立代码复审、治理和主线复验 | 通过 |
-| 12 | T09E 仍未创建计划、未启动 | 通过 |
+| #   | 检查项                                                                                | 结果 |
+| --- | ------------------------------------------------------------------------------------- | ---- |
+| 1   | 严格限于 T09D，排除 T09E/删除/跨学期汇总/S5/S7/未来阶段                               | 通过 |
+| 2   | 复用 T09A/T09B/T09C/T11，不重做既有业务能力                                           | 通过 |
+| 3   | `App` 保持唯一 current semester，导航不创建第二套状态或持久化                         | 通过 |
+| 4   | 切换、刷新与真实 stale 恢复不会展示旧学期数据                                         | 通过 |
+| 5   | 桌面、窄屏、移动端关键入口均可达                                                      | 通过 |
+| 6   | `PageState` 仅做最小渐进统一，不触发设计系统重构                                      | 通过 |
+| 7   | test-only harness 仍走真实 Express/SQLite/隔离根，OCR 仅替换外部边界                  | 通过 |
+| 8   | 日期由 Playwright 浏览器 `Asia/Shanghai` 日历相对生成                                 | 通过 |
+| 9   | 无生产业务 API/shared DTO/schema/migration 计划；四项 test-only 例外清单一致          | 通过 |
+| 10  | UI/截图/提交文件/文档不泄露密钥、Provider URL、资料原文、完整 UUID 或正式数据         | 通过 |
+| 11  | 验证矩阵覆盖 E2E harness 类型检查、构建、回归、全量 E2E、独立代码复审、治理和主线复验 | 通过 |
+| 12  | T09E 仍未创建计划、未启动                                                             | 通过 |
 
 **结论：** 通过，等待用户明确批准

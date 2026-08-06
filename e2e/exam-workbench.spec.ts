@@ -115,7 +115,9 @@ test('学生完成多考试确认、切换、任务闭环并刷新读回', async
   const mobileCramSection = page.getByTestId('workbench-cram');
   await expect(mobileCramSection.getByRole('link', { name: '查看完整冲刺计划' })).toBeVisible();
   await expect(mobileCramSection.getByRole('link', { name: '临考速背' })).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(
+    true
+  );
 
   const evidenceRoot = path.join(process.env.APP_DATA_ROOT!, 'playwright');
   fs.mkdirSync(evidenceRoot, { recursive: true });

@@ -26,11 +26,17 @@ function registerDbCleanup(t, db, dir) {
 }
 
 function columnNames(db, table) {
-  return db.prepare(`PRAGMA table_info(${table})`).all().map((row) => row.name);
+  return db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all()
+    .map((row) => row.name);
 }
 
 function indexNames(db, table) {
-  return db.prepare(`PRAGMA index_list(${table})`).all().map((row) => row.name);
+  return db
+    .prepare(`PRAGMA index_list(${table})`)
+    .all()
+    .map((row) => row.name);
 }
 
 function triggerNames(db) {
@@ -46,13 +52,9 @@ function seedFoundation(db) {
     ['course-1', 'semester-1', '线性代数'],
     ['course-2', 'semester-1', '概率论'],
   ]) {
-    db.prepare('INSERT INTO course_instances (id, semester_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').run(
-      id,
-      semesterId,
-      name,
-      now,
-      now
-    );
+    db.prepare(
+      'INSERT INTO course_instances (id, semester_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(id, semesterId, name, now, now);
   }
 
   for (const [id, courseId, name] of [
@@ -306,11 +308,7 @@ test('fresh semester database applies current migrations with S4 tables, indexes
     ],
     [
       'mistake_evidence',
-      [
-        'idx_mistake_evidence_mistake',
-        'idx_mistake_evidence_module',
-        'idx_mistake_evidence_source_answer',
-      ],
+      ['idx_mistake_evidence_mistake', 'idx_mistake_evidence_module', 'idx_mistake_evidence_source_answer'],
     ],
     ['weak_points', ['idx_weak_points_course_status', 'idx_weak_points_module']],
   ]) {
@@ -375,7 +373,12 @@ test('S4 tables enforce incorrect-answer evidence, idempotent source answer, and
   insertSession(db, { id: 'session-1', questionCount: 3 });
   insertQuestion(db, { id: 'question-1', questionOrder: 1 });
   insertQuestion(db, { id: 'question-2', questionOrder: 2 });
-  insertQuestion(db, { id: 'question-3', courseInstanceId: 'course-1', knowledgeModuleId: 'module-1', questionOrder: 3 });
+  insertQuestion(db, {
+    id: 'question-3',
+    courseInstanceId: 'course-1',
+    knowledgeModuleId: 'module-1',
+    questionOrder: 3,
+  });
   insertAnswer(db, { id: 'answer-1', questionId: 'question-1', answerOrder: 1, isCorrect: 0 });
   insertAnswer(db, { id: 'answer-2', questionId: 'question-2', answerOrder: 2, isCorrect: 1 });
 
@@ -398,7 +401,12 @@ test('S4 tables enforce incorrect-answer evidence, idempotent source answer, and
   insertEvidence(db, { id: 'evidence-1' });
   assert.throws(() => insertEvidence(db, { id: 'evidence-duplicate' }), /UNIQUE constraint failed/);
   assert.throws(
-    () => insertEvidence(db, { id: 'bad-evidence-correct-answer', sourcePracticeAnswerId: 'answer-2', questionId: 'question-2' }),
+    () =>
+      insertEvidence(db, {
+        id: 'bad-evidence-correct-answer',
+        sourcePracticeAnswerId: 'answer-2',
+        questionId: 'question-2',
+      }),
     /mistake evidence source mismatch/
   );
 
@@ -462,9 +470,18 @@ test('v5 semester database upgrades through current migrations preserving mistak
     'practice_error'
   );
   // 新列存在且默认值正确
-  assert.equal(db.prepare('SELECT error_cause_category FROM mistakes WHERE id = ?').get('mistake-1').error_cause_category, null);
-  assert.equal(db.prepare('SELECT session_kind FROM practice_sessions WHERE id = ?').get('session-1').session_kind, 'practice');
-  assert.equal(db.prepare('SELECT origin_question_id FROM questions WHERE id = ?').get('question-1').origin_question_id, null);
+  assert.equal(
+    db.prepare('SELECT error_cause_category FROM mistakes WHERE id = ?').get('mistake-1').error_cause_category,
+    null
+  );
+  assert.equal(
+    db.prepare('SELECT session_kind FROM practice_sessions WHERE id = ?').get('session-1').session_kind,
+    'practice'
+  );
+  assert.equal(
+    db.prepare('SELECT origin_question_id FROM questions WHERE id = ?').get('question-1').origin_question_id,
+    null
+  );
   // 唯一索引仍生效
   assert.throws(() => insertEvidence(db, { id: 'evidence-duplicate' }), /UNIQUE constraint failed/);
 });

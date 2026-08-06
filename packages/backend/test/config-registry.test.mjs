@@ -49,7 +49,9 @@ test('AiRouterProxy reuses the active router and switches new requests atomicall
 
 test('an in-flight proxy request keeps its original router after activation changes', async () => {
   let release;
-  const blocked = new Promise((resolve) => { release = resolve; });
+  const blocked = new Promise((resolve) => {
+    release = resolve;
+  });
   const first = {
     async generate() {
       await blocked;
@@ -82,5 +84,7 @@ test('SMTP and Feishu registry snapshots cannot be mutated by callers', () => {
 
   assert.equal(getCurrentSmtpConfig().authCode, 'secret');
   assert.equal(getCurrentFeishuConfig().webhookUrl, 'https://example.invalid/hook');
-  assert.throws(() => { getCurrentSmtpConfig().host = 'mutated'; }, TypeError);
+  assert.throws(() => {
+    getCurrentSmtpConfig().host = 'mutated';
+  }, TypeError);
 });

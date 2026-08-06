@@ -12,7 +12,7 @@ async function listTypeScriptFiles(directory) {
   const files = [];
   for (const entry of entries) {
     const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...await listTypeScriptFiles(entryPath));
+    if (entry.isDirectory()) files.push(...(await listTypeScriptFiles(entryPath)));
     if (entry.isFile() && entry.name.endsWith('.ts')) files.push(entryPath);
   }
   return files;

@@ -33,11 +33,12 @@ export function openExistingDbAtPath(dbPath: string): DatabaseType {
     throw new Error(`DB_NOT_FOUND ${dbPath}`);
   }
   const db = new Database(dbPath, { fileMustExist: true });
-  db.pragma('journal_mode = WAL');
+  // WAL is a persistent database setting established on create/write paths.
+  // Reissuing "journal_mode = WAL" on every existing-DB connection is write-capable
+  // and can serialize concurrent API reads, stalling route transitions.
   db.pragma('foreign_keys = ON');
   return db;
 }
-
 
 /**
  * 只读打开已存在数据库，禁止创建文件、目录或 WAL 副作用。
@@ -112,9 +113,7 @@ export function getAllActiveSemesterDbPaths(): string[] {
       )
       .all() as { semester_id: string }[];
 
-    return rows
-      .map(row => getSemesterDbPath(row.semester_id))
-      .filter(dbPath => fs.existsSync(dbPath));
+    return rows.map((row) => getSemesterDbPath(row.semester_id)).filter((dbPath) => fs.existsSync(dbPath));
   } finally {
     globalDb.close();
   }

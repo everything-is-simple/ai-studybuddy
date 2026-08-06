@@ -7,12 +7,7 @@ import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
 export type ParentReportType = 'daily' | 'weekly' | 'monthly' | 'exam_reminder';
 export type ParentReportStatus = 'ok' | 'insufficient_data';
 export type ParentReportSectionKind =
-  | 'study_rhythm'
-  | 'materials'
-  | 'practice'
-  | 'mistakes'
-  | 'exam_reminder'
-  | 'data_quality';
+  'study_rhythm' | 'materials' | 'practice' | 'mistakes' | 'exam_reminder' | 'data_quality';
 
 export interface ParentReportPeriod {
   startDate: string;
@@ -176,8 +171,7 @@ export class ParentReportService {
     try {
       globalDb = openExistingDbAtPath(getGlobalDbPath());
       const row = globalDb.prepare('SELECT ready FROM semesters WHERE id = ?').get(semesterId) as
-        | { ready: number }
-        | undefined;
+        { ready: number } | undefined;
       if (!row) {
         throw new ParentReportError('SEMESTER_NOT_FOUND', 404, '学期不存在');
       }
@@ -387,13 +381,25 @@ export class ParentReportService {
     const evidenceSignals = sections.reduce((total, section) => {
       switch (section.kind) {
         case 'study_rhythm':
-          return total + numberOrZero(section.metrics.totalTasks as number) + numberOrZero(section.metrics.visibleEvents as number);
+          return (
+            total +
+            numberOrZero(section.metrics.totalTasks as number) +
+            numberOrZero(section.metrics.visibleEvents as number)
+          );
         case 'materials':
-          return total + numberOrZero(section.metrics.totalMaterials as number) + numberOrZero(section.metrics.knowledgeModules as number);
+          return (
+            total +
+            numberOrZero(section.metrics.totalMaterials as number) +
+            numberOrZero(section.metrics.knowledgeModules as number)
+          );
         case 'practice':
           return total + numberOrZero(section.metrics.gradedSessions as number);
         case 'mistakes':
-          return total + numberOrZero(section.metrics.openMistakes as number) + numberOrZero(section.metrics.activeWeakPoints as number);
+          return (
+            total +
+            numberOrZero(section.metrics.openMistakes as number) +
+            numberOrZero(section.metrics.activeWeakPoints as number)
+          );
         case 'exam_reminder':
           return total + numberOrZero(section.metrics.confirmedExamReminders as number);
         default:

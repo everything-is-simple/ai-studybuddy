@@ -24,7 +24,10 @@ afterEach(() => {
 function renderContextNav(active: Parameters<typeof ExamContextNav>[0]['active'] = 'overview') {
   act(() => {
     root.render(
-      <MemoryRouter initialEntries={['/exams/exam-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter
+        initialEntries={['/exams/exam-1']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <ExamContextNav examId="exam-1" courseInstanceId="course-1" active={active} />
       </MemoryRouter>
     );
@@ -58,7 +61,9 @@ describe('ExamContextNav', () => {
   it('marks the active cram-plan entry', () => {
     renderContextNav('cram_plan');
 
-    const cramPlan = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '冲刺计划');
+    const cramPlan = [...container.querySelectorAll<HTMLAnchorElement>('a')].find(
+      (item) => item.textContent === '冲刺计划'
+    );
     expect(cramPlan?.getAttribute('aria-current')).toBe('page');
   });
 });

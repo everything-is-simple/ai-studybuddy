@@ -72,7 +72,9 @@ vi.mock('../src/api/study-rhythm-api', () => ({
 }));
 
 vi.mock('../src/api/note-builder-api', () => ({
-  getOriginalPdfUrl: vi.fn((semesterId: string, materialId: string) => `/api/materials/${materialId}/original-pdf?semesterId=${semesterId}`),
+  getOriginalPdfUrl: vi.fn(
+    (semesterId: string, materialId: string) => `/api/materials/${materialId}/original-pdf?semesterId=${semesterId}`
+  ),
   getMaterials: vi.fn(async () => ({
     items: mockMaterials,
     pagination: { page: 1, pageSize: 20, total: mockMaterials.length, hasMore: false },
@@ -120,10 +122,7 @@ function LocationProbe() {
 async function renderPage(initialEntry = '/materials') {
   await act(async () => {
     root.render(
-      <MemoryRouter
-        initialEntries={[initialEntry]}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
+      <MemoryRouter initialEntries={[initialEntry]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <LocationProbe />
         <MaterialUploadPage semesterId="sem-1" />
       </MemoryRouter>
@@ -224,7 +223,6 @@ describe('MaterialUploadPage 人工补文恢复闭环', () => {
     expect(container.textContent).not.toContain('已有待执行或运行中的任务');
   });
 });
-
 
 describe('MaterialUploadPage PDF 原件重新打开', () => {
   it('仅为 PDF 资料提供受控的新标签页重新打开入口', async () => {

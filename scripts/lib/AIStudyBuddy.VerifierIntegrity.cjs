@@ -25,7 +25,8 @@ function __TEST_ONLY_createVerifierIntegrity(options) {
   let releaseIdentity;
   let provider;
   try {
-    if (!options || typeof options !== 'object' || Array.isArray(options)) return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
+    if (!options || typeof options !== 'object' || Array.isArray(options))
+      return fail('TRUSTED_VERIFIER_INTEGRITY_UNPROVEN');
     contractVersion = options.contractVersion;
     anchorKeyId = options.anchorKeyId;
     anchorFingerprint = options.anchorFingerprint;
@@ -48,14 +49,17 @@ function __TEST_ONLY_createVerifierIntegrity(options) {
   }
 
   const assertion = Object.freeze(Object.create(null));
-  TEST_ASSERTIONS.set(assertion, Object.freeze({
-    contractVersion,
-    anchorKeyId,
-    anchorFingerprint,
-    anchorMetadataVersion,
-    releaseIdentity,
-    provider,
-  }));
+  TEST_ASSERTIONS.set(
+    assertion,
+    Object.freeze({
+      contractVersion,
+      anchorKeyId,
+      anchorFingerprint,
+      anchorMetadataVersion,
+      releaseIdentity,
+      provider,
+    })
+  );
   return assertion;
 }
 

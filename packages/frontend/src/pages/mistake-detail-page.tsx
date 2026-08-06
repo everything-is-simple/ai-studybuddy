@@ -1,12 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { MistakeErrorCauseCategory } from '@ai-studybuddy/shared';
-import {
-  confirmMistakeErrorCause,
-  createMistakeRedo,
-  getMistake,
-  updateMistakeStatus,
-} from '../api/error-fixer-api';
+import { confirmMistakeErrorCause, createMistakeRedo, getMistake, updateMistakeStatus } from '../api/error-fixer-api';
 import { ApiClientError } from '../api/api-client';
 import { ExamContextNav } from '../components/exam-context-nav';
 import { FeedbackMessage } from '../components/feedback-message';
@@ -208,7 +203,10 @@ export function MistakeDetailPage({ semesterId, onSemesterError }: MistakeDetail
             {data.errorCauseCategory ? (
               <p>
                 已确认错因：
-                <strong>{CAUSE_OPTIONS.find((item) => item.value === data.errorCauseCategory)?.label ?? data.errorCauseCategory}</strong>
+                <strong>
+                  {CAUSE_OPTIONS.find((item) => item.value === data.errorCauseCategory)?.label ??
+                    data.errorCauseCategory}
+                </strong>
                 {data.errorCauseNote ? ` — ${data.errorCauseNote}` : ''}
                 {data.errorCauseConfirmedAt ? `（${formatDateTime(data.errorCauseConfirmedAt)}）` : ''}
               </p>

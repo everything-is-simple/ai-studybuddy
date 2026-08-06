@@ -13,7 +13,19 @@ await writeFile(path.join(staticRoot, 'assets', 'app.txt'), 'asset-ok');
 process.env.APP_DATA_ROOT = dataRoot;
 const { createApp } = await import('../dist/app.js');
 const service = {
-  getAllStatus: () => ({ ai: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null }, smtp: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null }, feishu: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null }, runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 1, nodeVersion: 'test' } }),
+  getAllStatus: () => ({
+    ai: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
+    smtp: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
+    feishu: { status: 'unconfigured', lastVerified: null, summary: null, errorCode: null },
+    runtime: {
+      dataDir: true,
+      aiAvailable: false,
+      smtpAvailable: false,
+      feishuAvailable: false,
+      uptime: 1,
+      nodeVersion: 'test',
+    },
+  }),
   getActiveSnapshot: () => null,
   testAndActivate: async () => ({ activated: false, test: { pass: false } }),
   retest: async () => null,

@@ -11,16 +11,17 @@
 
 T09 未通过后，按阻塞第一个里程碑的程度重排：
 
-| 级别 | 问题 | 是否本计划 |
-| --- | --- | --- |
-| **P0-1** | AI 笔记生成 `JSON.parse` 失败：真实 Provider 三次成功响应，但笔记/导图/知识模块全部落不了盘 | **是** |
-| **P0-2** | 考试表单受控 `value` 依赖 `creatingExamFor`，提交前该值为 `null`，输入框显示始终为空 | **是** |
-| P0.5 | Worker `setInterval` 不等上一轮 `runOnce` | 否 → 待真实复现后立项 |
-| P1 | 补文契约（前端入口 vs 服务端 `replaceText` 允许状态） | 否 → T10 独立立项 |
-| P1 | 浏览器任务创建 / 考试确认 UI | 否 → T11 独立立项 |
-| P2 | 轮询 `visibilitychange`、tmp 清理复测 | 否 → tmp 清理并入本计划复验 Step |
+| 级别     | 问题                                                                                        | 是否本计划                       |
+| -------- | ------------------------------------------------------------------------------------------- | -------------------------------- |
+| **P0-1** | AI 笔记生成 `JSON.parse` 失败：真实 Provider 三次成功响应，但笔记/导图/知识模块全部落不了盘 | **是**                           |
+| **P0-2** | 考试表单受控 `value` 依赖 `creatingExamFor`，提交前该值为 `null`，输入框显示始终为空        | **是**                           |
+| P0.5     | Worker `setInterval` 不等上一轮 `runOnce`                                                   | 否 → 待真实复现后立项            |
+| P1       | 补文契约（前端入口 vs 服务端 `replaceText` 允许状态）                                       | 否 → T10 独立立项                |
+| P1       | 浏览器任务创建 / 考试确认 UI                                                                | 否 → T11 独立立项                |
+| P2       | 轮询 `visibilitychange`、tmp 清理复测                                                       | 否 → tmp 清理并入本计划复验 Step |
 
 **取舍**：P0-2 跨 S1，微违反「每个 PR 只主攻一个子系统」的默认约束。但 T09 本身就跨 S1/S2 验收，本次目标是「让 T09 通过 + 里程碑可勾选」，且修复极小（几行 + 一个前端测试）。用户批准范围时请显式选定：
+
 - **方案 A（最小）**：仅 P0-1。P0-2 留到独立小修复。
 - **方案 B（推荐）**：P0-1 + P0-2 一次批修完。
 
@@ -62,7 +63,7 @@ value={creatingExamFor === course.id ? examForm.name : ''}
 
 - `parseAi(content)` 顶部新增私有纯函数 `sanitizeAiJson(raw: string): string`：
   1. `trim`；
-  2. 若被 ```` ```json … ``` ```` 或 ```` ``` … ``` ```` 围栏包裹，剥掉围栏（含大小写与语言标记容错）；
+  2. 若被 ` ```json … ``` ` 或 ` ``` … ``` ` 围栏包裹，剥掉围栏（含大小写与语言标记容错）；
   3. 兜底：截取第一个 `{` 到最后一个 `}` 之间的子串。
 - `parseAi` 用 `try/catch` 单独包裹 `JSON.parse`，失败时抛出：`AI 输出无法解析为 JSON（前120字符：…）`。截断片段**不含**完整正文、不含密钥；已有的 500 字符截断（`retryOrFail`）保持不变。
 - 现有的 schema 校验（`markdown`/`highlights`/`knowledgeModules`/`mindMap`）**保持不变**。清洗只负责「拿到 JSON 字符串」，校验仍然严格。
@@ -82,7 +83,7 @@ value={creatingExamFor === course.id ? examForm.name : ''}
 
 - `packages/backend/test/note-builder-api.test.mjs`（或新增 `note-generation-parsing.test.mjs`）保留原干净 JSON 主路径，**追加**四类 mock：
   1. 裸 JSON（现状回归）；
-  2. ```` ```json\n{…}\n``` ```` 围栏包裹 —— 断言 `completed`、笔记/导图/模块落盘；
+  2. ` ```json\n{…}\n``` ` 围栏包裹 —— 断言 `completed`、笔记/导图/模块落盘；
   3. 前置一句中文解说 + JSON —— 断言可提取并落盘；
   4. 彻底非 JSON 的自由文本 —— 断言 3 次重试后 `pending_quality_check`、`normalized_text` 保留、`error_summary` 不含密钥/正文。
 - Mock 通过 `MaterialJobWorker` 构造函数注入 `ai`，不接触真实 Provider。

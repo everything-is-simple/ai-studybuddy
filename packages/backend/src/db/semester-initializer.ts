@@ -117,9 +117,8 @@ export function createMaintenanceFailureLogEntry(
     level: 'WARN',
     errorCode: toSafeLogErrorCode({ code: originalError.code }, 'SEMESTER_INITIALIZATION_FAILED'),
     cleanupErrorCount: cleanupErrors.length,
-    cleanupErrorCode: cleanupErrors.length === 0
-      ? null
-      : toSafeLogErrorCode(cleanupErrors[0], 'MAINTENANCE_CLEANUP_FAILED'),
+    cleanupErrorCode:
+      cleanupErrors.length === 0 ? null : toSafeLogErrorCode(cleanupErrors[0], 'MAINTENANCE_CLEANUP_FAILED'),
     timestamp: new Date().toISOString(),
   };
 }

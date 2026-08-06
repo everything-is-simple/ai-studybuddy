@@ -13,6 +13,7 @@
 ### Task 1: 备份脚本
 
 **Files:**
+
 - Create: `scripts/backup-data.ps1`
 - Test: `packages/backend/test/data-backup-script.test.mjs`
 
@@ -23,6 +24,7 @@
 ### Task 2: 恢复与数据库预检
 
 **Files:**
+
 - Create: `scripts/restore-data.ps1`
 - Create: `scripts/test-data-integrity.ps1`
 - Test: `packages/backend/test/data-restore-script.test.mjs`
@@ -34,6 +36,7 @@
 ### Task 3: 家长报告计划任务适配
 
 **Files:**
+
 - Modify: `scripts/register-parent-report-task.ps1`
 - Modify: `scripts/unregister-parent-report-task.ps1`
 - Test: `packages/backend/test/parent-report-scheduler-script.test.mjs`

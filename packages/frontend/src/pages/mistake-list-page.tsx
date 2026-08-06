@@ -229,9 +229,7 @@ export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPage
             <FeedbackMessage
               state="empty"
               message={
-                statusFilter || moduleFilter
-                  ? '当前筛选条件下没有错题。'
-                  : '当前没有待处理的错题，去练习区做一组题吧。'
+                statusFilter || moduleFilter ? '当前筛选条件下没有错题。' : '当前没有待处理的错题，去练习区做一组题吧。'
               }
             />
           ) : (
@@ -253,7 +251,10 @@ export function MistakeListPage({ semesterId, onSemesterError }: MistakeListPage
                         ? ` · 错因：${CAUSE_LABELS[mistake.errorCauseCategory] ?? mistake.errorCauseCategory}`
                         : ''}
                     </span>
-                    <Link className="button-link" to={isGlobalMode ? `/mistakes/${mistake.id}` : `/mistakes/${mistake.id}?examId=${examId}`}>
+                    <Link
+                      className="button-link"
+                      to={isGlobalMode ? `/mistakes/${mistake.id}` : `/mistakes/${mistake.id}?examId=${examId}`}
+                    >
                       查看与改错
                     </Link>
                   </div>

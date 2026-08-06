@@ -59,12 +59,12 @@ T03 只改善和规范化 ASR 输入；它**不得承诺**修复 T02 静音/轻�
 
 执行前必须把候选来源、下载 URL、获取日期、release/tag、架构、许可证/NOTICE、SHA-256、`ffmpeg -version`、`ffmpeg -buildconf` 和依赖摘要写入 Composer `shared/` 的脱敏证据；任何一项不可复核即停止该候选。
 
-| 候选 | 用途与优点 | 风险/结论 |
-| --- | --- | --- |
-| 已存在系统 FFmpeg 的只读检测 | 仅确认系统是否已有命令及基础版本信息 | 只作环境输入；若来源、版本、许可证、哈希与 Composer 隔离无法同时证明，绝不作为实际 smoke 二进制，不复制、不调用其进行转换。 |
+| 候选                                                         | 用途与优点                                                                                                  | 风险/结论                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 已存在系统 FFmpeg 的只读检测                                 | 仅确认系统是否已有命令及基础版本信息                                                                        | 只作环境输入；若来源、版本、许可证、哈希与 Composer 隔离无法同时证明，绝不作为实际 smoke 二进制，不复制、不调用其进行转换。                                                                                                                |
 | **Gyan 固定 release essentials ZIP（推荐且唯一可执行路径）** | 便携、带 release 版本和 sidecar SHA-256；可仅把必要的 `ffmpeg.exe`、`ffprobe.exe` 与许可证材料放在 Composer | 固定使用 `ffmpeg-8.1.2-essentials_build.zip`，预期 SHA-256 为 `db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec`。只能在发布页、sidecar、本地重算和 build configuration 全部一致时执行；不得改用浮动 `latest`/git master。 |
-| BtbN 固定 release 的 `lgpl` 构建 | 有明确 `gpl`/`lgpl` 变体，可作为替代调研输入 | 不在本计划中启用。若推荐候选被阻断，必须另建计划，固定 release asset 与 SHA-256，并重新审查依赖、架构、NOTICE、`-version/-buildconf`。 |
-| Chocolatey、Scoop、Winget 等包管理器 | 可比较可用性 | 只分析系统写入、缓存、PATH 与来源风险；本计划下不得安装或采用。 |
+| BtbN 固定 release 的 `lgpl` 构建                             | 有明确 `gpl`/`lgpl` 变体，可作为替代调研输入                                                                | 不在本计划中启用。若推荐候选被阻断，必须另建计划，固定 release asset 与 SHA-256，并重新审查依赖、架构、NOTICE、`-version/-buildconf`。                                                                                                     |
+| Chocolatey、Scoop、Winget 等包管理器                         | 可比较可用性                                                                                                | 只分析系统写入、缓存、PATH 与来源风险；本计划下不得安装或采用。                                                                                                                                                                            |
 
 来源依据仅记录为复核入口，而不构成分发授权：[FFmpeg 下载页](https://www.ffmpeg.org/download.html)、[Gyan Windows builds](https://www.gyan.dev/ffmpeg/builds/) 与 [BtbN FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds)。FFmpeg 代码库主要为 LGPL，且可选组件可能使构建落入 GPL；必须以所选二进制的实际 build configuration、许可证和 NOTICE 判断本机研究、未来集成与再分发责任，不能凭候选名称推断。
 
@@ -100,17 +100,17 @@ T03 只改善和规范化 ASR 输入；它**不得承诺**修复 T02 静音/轻�
 
 所有样例均在获得 T03 明确批准后创建，必须是可再生、合成、非敏感内容；不允许真实课堂录音或可识别语音。成功预处理输出的唯一目标形态是 **PCM WAV、16 kHz、单声道、明确样本格式**，作为未来 ASR 输入评估边界，不是产品 API/Adapter 契约。
 
-| Case | 安全输入 | 预期与记录 |
-| --- | --- | --- |
-| `wav-baseline` | 标准 WAV | 识别元数据并复制/规范化；记录 codec、采样率、声道、位深、时长和输入/输出哈希。 |
-| `compressed-input` | 合成的常见压缩音频 | 受控转换为目标 WAV；不承诺所有编码器均支持，未支持应受控拒绝。 |
-| `nonstandard-layout` | 非 16 kHz、非单声道合成样例 | 验证重采样与声道规范化，结果严格符合目标形态。 |
-| `silence` | 标准静音音频 | 只验证预处理的元数据、转换、切片和可观测性；不得把输出存在解释为 no-speech 或 ASR 质量结论。 |
-| `light-noise` | 可再生轻噪声样例 | 记录转换与资源边界；不得宣称处理或修复 T02 false positive。 |
-| `corrupt-file` | 固定无效字节/截断音频 | 预期受控解码失败，不产出伪成功 WAV。 |
-| `unsupported-format` | 明确非音频小文件或不支持容器 | 预期格式拒绝、无异常输出。 |
-| `timeout-resource-output` | 可控合成长样例或故障注入 | 验证超时、CPU/内存/磁盘上限、写入失败/异常输出时的错误码、清理和残留检查。 |
-| `long-slice` | 合成长音频 | 验证固定切片时长、相邻片段重叠、首尾边界、排序和总时长覆盖；记录每片哈希及可重复性。 |
+| Case                      | 安全输入                     | 预期与记录                                                                                   |
+| ------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------- |
+| `wav-baseline`            | 标准 WAV                     | 识别元数据并复制/规范化；记录 codec、采样率、声道、位深、时长和输入/输出哈希。               |
+| `compressed-input`        | 合成的常见压缩音频           | 受控转换为目标 WAV；不承诺所有编码器均支持，未支持应受控拒绝。                               |
+| `nonstandard-layout`      | 非 16 kHz、非单声道合成样例  | 验证重采样与声道规范化，结果严格符合目标形态。                                               |
+| `silence`                 | 标准静音音频                 | 只验证预处理的元数据、转换、切片和可观测性；不得把输出存在解释为 no-speech 或 ASR 质量结论。 |
+| `light-noise`             | 可再生轻噪声样例             | 记录转换与资源边界；不得宣称处理或修复 T02 false positive。                                  |
+| `corrupt-file`            | 固定无效字节/截断音频        | 预期受控解码失败，不产出伪成功 WAV。                                                         |
+| `unsupported-format`      | 明确非音频小文件或不支持容器 | 预期格式拒绝、无异常输出。                                                                   |
+| `timeout-resource-output` | 可控合成长样例或故障注入     | 验证超时、CPU/内存/磁盘上限、写入失败/异常输出时的错误码、清理和残留检查。                   |
+| `long-slice`              | 合成长音频                   | 验证固定切片时长、相邻片段重叠、首尾边界、排序和总时长覆盖；记录每片哈希及可重复性。         |
 
 切片规则在执行前固定到 `shared/`：切片时长、重叠时长、最后一片最小时长、时间戳格式和命名序号。不得在运行中修改规则或用人工拼接掩盖边界错误。每个 case 至少重复两次；同一二进制、同一输入、同一参数的输出格式、元数据和 SHA-256 必须一致，否则记录为不可重复。
 
@@ -125,7 +125,13 @@ T03 只改善和规范化 ASR 输入；它**不得承诺**修复 T02 静音/轻�
   "case_id": "wav-baseline",
   "status": "PASS",
   "input_summary": { "format": "wav", "duration_ms": 0, "sha256_short": "..." },
-  "output_summary": { "format": "pcm_s16le_wav", "sample_rate_hz": 16000, "channels": 1, "duration_ms": 0, "sha256_short": "..." },
+  "output_summary": {
+    "format": "pcm_s16le_wav",
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "duration_ms": 0,
+    "sha256_short": "..."
+  },
   "ffmpeg_version": "...",
   "source_ref": "gyan-release-8.1.2",
   "license_review": "RECORDED_NOT_REDISTRIBUTION_APPROVED",
@@ -172,17 +178,16 @@ T04 可使用的只有“受控 FFmpeg 在本机将指定安全样例规范化�
 
 **审查范围**：以 `f54f8fc` 的 T02 `PARTIAL` 结论、S7 PRD、架构、测试、数据模型、接口契约、开发规范和本计划为准；审查只检查计划与文档，不执行 FFmpeg/Composer/业务操作。
 
-| 检查项 | 结论 | 处理 |
-| --- | --- | --- |
-| T02 结论与后续门禁 | PASS | 保留 `PARTIAL`，明确不修复 false positive、immutable revision、离线隔离或 no-speech 门禁。 |
-| T03 单一责任与 T04–T06 隔离 | PASS | 只计划预处理证据；禁止 `AuralConverter`、ASR、后端、Worker 和前端。 |
-| Composer 白名单与回滚 | PASS | 固定六个可写子目录、差集回滚和禁止全局/未知清理。 |
-| 来源、版本、哈希与许可证 | PASS | 固定 Gyan 8.1.2 ZIP + SHA-256；BtbN/包管理器不作为本计划执行路径；许可证结论不越权。 |
-| smoke 矩阵、资源与结构化证据 | PASS | 覆盖正常、异常、长切片、重复性、资源、残留与脱敏 JSON/能力卡。 |
-| 文档/Git 边界 | PASS | 仅本计划与 `docs/04` 可变；只推任务分支，禁止合入/推送 `master`。 |
+| 检查项                       | 结论 | 处理                                                                                       |
+| ---------------------------- | ---- | ------------------------------------------------------------------------------------------ |
+| T02 结论与后续门禁           | PASS | 保留 `PARTIAL`，明确不修复 false positive、immutable revision、离线隔离或 no-speech 门禁。 |
+| T03 单一责任与 T04–T06 隔离  | PASS | 只计划预处理证据；禁止 `AuralConverter`、ASR、后端、Worker 和前端。                        |
+| Composer 白名单与回滚        | PASS | 固定六个可写子目录、差集回滚和禁止全局/未知清理。                                          |
+| 来源、版本、哈希与许可证     | PASS | 固定 Gyan 8.1.2 ZIP + SHA-256；BtbN/包管理器不作为本计划执行路径；许可证结论不越权。       |
+| smoke 矩阵、资源与结构化证据 | PASS | 覆盖正常、异常、长切片、重复性、资源、残留与脱敏 JSON/能力卡。                             |
+| 文档/Git 边界                | PASS | 仅本计划与 `docs/04` 可变；只推任务分支，禁止合入/推送 `master`。                          |
 
 **fresh-pass 结论（预批准历史记录）**：计划覆盖 T03 所需的前处理能力、隔离、来源、回滚、验收与 T04 证据边界；当时该审查仅确认“计划已审查”，不自行授权实际执行。用户随后已于 2026-07-22 明确批准，执行结果见第 10 节。
-
 
 ---
 
@@ -214,6 +219,7 @@ T04 可使用的只有“受控 FFmpeg 在本机将指定安全样例规范化�
 **T03 Composer 预处理 smoke 结论：`PASS`。** 此结论仅表示固定、隔离的 Windows 本机 FFmpeg 二进制在非敏感合成样例上具备可追溯的格式识别、受控转换、16 kHz 单声道 PCM WAV 规范化、切片、异常受控失败、资源记录和无残留进程证据。
 
 它**不**修复或关闭 T02 的 `PARTIAL`：静音/轻噪声 false positive、模型 immutable revision、离线防火墙隔离和 no-speech 门禁仍未关闭；也不构成 ASR/S7 完成、生产接入、`AuralConverter` 契约、正式 API/MIME 白名单或产品许可证/再分发结论。T04 是否可启动仍必须有独立计划、fresh-pass 审查和用户明确批准。本分支尚未合入 `master`。
+
 ### 10.5 执行后 fresh-pass 审查
 
 独立执行后审查逐项复核并通过：计划固定值、发布方 sidecar 与本地归档 SHA-256 三者一致；19 条 JSONL 结果完整（15 `PASS`、4 `EXPECTED_FAIL`、0 `FAIL`），所有正常输出均为 `pcm_s16le` / 16 kHz / 单声道 WAV，峰值内存字段完整且基线输出哈希可重复；Composer 顶层仅有六个白名单目录、日志不含 Composer 原始绝对路径、无 `ffmpeg`/`ffprobe` 残留 PID；Git 工作树仅修改本计划与 `docs/04-开发任务清单-Todo-List.md`。审查再次确认 T02 仍为 `PARTIAL`，许可证/再分发结论未越权，T04–T06 未被触发，且本分支未合入 `master`。

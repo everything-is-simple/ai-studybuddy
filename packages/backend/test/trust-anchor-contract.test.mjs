@@ -1,4 +1,3 @@
-
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRequire } from 'node:module';
@@ -9,13 +8,19 @@ const { requireTrustedApprovalAnchor } = require('../../../scripts/lib/AIStudyBu
 
 test('production trust-anchor boundary is fixed fail-closed before touching caller input', () => {
   let touched = false;
-  const input = new Proxy({}, {
-    get() {
-      touched = true;
-      throw new Error('must not read production input');
-    },
-  });
-  assert.throws(() => requireTrustedApprovalAnchor(input), (error) => assertFixedError(error, 'TRUSTED_ANCHOR_UNAVAILABLE'));
+  const input = new Proxy(
+    {},
+    {
+      get() {
+        touched = true;
+        throw new Error('must not read production input');
+      },
+    }
+  );
+  assert.throws(
+    () => requireTrustedApprovalAnchor(input),
+    (error) => assertFixedError(error, 'TRUSTED_ANCHOR_UNAVAILABLE')
+  );
   assert.equal(touched, false);
 });
 

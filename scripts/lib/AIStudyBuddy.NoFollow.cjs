@@ -1,6 +1,15 @@
 'use strict';
 
-const REMOTE_VOLUME_KINDS = new Set(['remote', 'unc', 'mapped-remote', 'subst', 'mup', 'lanmanredirector', 'webdavredirector', 'rdbss']);
+const REMOTE_VOLUME_KINDS = new Set([
+  'remote',
+  'unc',
+  'mapped-remote',
+  'subst',
+  'mup',
+  'lanmanredirector',
+  'webdavredirector',
+  'rdbss',
+]);
 const UNPROVEN_VOLUME_KINDS = new Set(['removable', 'cdrom', 'ram', 'unknown', 'mount-point']);
 
 function fail(code) {
@@ -35,16 +44,26 @@ function assertMetadata(metadata, expectedKind) {
   if (!metadata || typeof metadata !== 'object') return fail('NOFOLLOW_LOCAL_VOLUME_UNPROVEN');
   const volumeKind = metadata.volumeKind;
   if (REMOTE_VOLUME_KINDS.has(volumeKind)) return fail('NOFOLLOW_REMOTE_OR_UNPROVEN_VOLUME');
-  if (UNPROVEN_VOLUME_KINDS.has(volumeKind) || volumeKind !== 'local-fixed') return fail('NOFOLLOW_LOCAL_VOLUME_UNPROVEN');
+  if (UNPROVEN_VOLUME_KINDS.has(volumeKind) || volumeKind !== 'local-fixed')
+    return fail('NOFOLLOW_LOCAL_VOLUME_UNPROVEN');
   if (metadata.reparse === true) return fail('NOFOLLOW_REPARSE_RISK');
-  if (metadata.kind !== expectedKind || typeof metadata.objectId !== 'string' || typeof metadata.parentId !== 'string' || typeof metadata.contentVersion !== 'string') {
+  if (
+    metadata.kind !== expectedKind ||
+    typeof metadata.objectId !== 'string' ||
+    typeof metadata.parentId !== 'string' ||
+    typeof metadata.contentVersion !== 'string'
+  ) {
     return fail('NOFOLLOW_OBJECT_KIND_MISMATCH');
   }
   return metadata;
 }
 
 function sameIdentity(before, after) {
-  return before.objectId === after.objectId && before.parentId === after.parentId && before.contentVersion === after.contentVersion;
+  return (
+    before.objectId === after.objectId &&
+    before.parentId === after.parentId &&
+    before.contentVersion === after.contentVersion
+  );
 }
 
 function closeQuietly(backend, handle) {
@@ -57,7 +76,12 @@ function closeQuietly(backend, handle) {
 
 function __TEST_ONLY_createNoFollowReader(options) {
   const backend = options?.backend;
-  if (!backend || typeof backend.open !== 'function' || typeof backend.verify !== 'function' || typeof backend.close !== 'function') {
+  if (
+    !backend ||
+    typeof backend.open !== 'function' ||
+    typeof backend.verify !== 'function' ||
+    typeof backend.close !== 'function'
+  ) {
     return fail('NOFOLLOW_HANDLE_UNSUPPORTED');
   }
 
@@ -76,7 +100,13 @@ function __TEST_ONLY_createNoFollowReader(options) {
   }
 
   function readComplete(input, expectedKind, readMethod) {
-    if (!input || typeof input !== 'object' || !input.opened || !Number.isSafeInteger(input.maxBytes) || input.maxBytes < 0) {
+    if (
+      !input ||
+      typeof input !== 'object' ||
+      !input.opened ||
+      !Number.isSafeInteger(input.maxBytes) ||
+      input.maxBytes < 0
+    ) {
       return fail('NOFOLLOW_READ_FAILED');
     }
     const handle = input.opened.handle;

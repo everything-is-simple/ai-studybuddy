@@ -10,11 +10,7 @@ const port = Number(process.env.BACKEND_PORT || '4311');
 const fakeTimetableRecognizer: TimetableRecognizer = {
   async recognize() {
     return {
-      text: [
-        '周一 08:00-08:45 数学 101',
-        '周三 10:00-10:45 英语 202',
-        '周五 14:00-14:45 物理 303',
-      ].join('\n'),
+      text: ['周一 08:00-08:45 数学 101', '周三 10:00-10:45 英语 202', '周五 14:00-14:45 物理 303'].join('\n'),
     };
   },
 };

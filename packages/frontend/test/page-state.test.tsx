@@ -23,7 +23,9 @@ afterEach(() => {
 describe('PageState', () => {
   it('renders loading, empty and error states with stable semantics', () => {
     act(() => root.render(<PageState state="loading" title="正在加载课程" />));
-    expect(container.querySelector('[data-testid="page-state"][data-page-state="loading"]')?.textContent).toContain('正在加载课程');
+    expect(container.querySelector('[data-testid="page-state"][data-page-state="loading"]')?.textContent).toContain(
+      '正在加载课程'
+    );
     expect(container.querySelector('[role="status"]')).not.toBeNull();
 
     act(() => root.render(<PageState state="empty" title="暂无课程" message="先创建课程或切换学期。" />));
@@ -31,7 +33,11 @@ describe('PageState', () => {
     expect(container.textContent).toContain('先创建课程或切换学期。');
 
     const retry = vi.fn();
-    act(() => root.render(<PageState state="error" title="课程加载失败" message="网络异常" actionLabel="重新加载" onAction={retry} />));
+    act(() =>
+      root.render(
+        <PageState state="error" title="课程加载失败" message="网络异常" actionLabel="重新加载" onAction={retry} />
+      )
+    );
     expect(container.querySelector('[data-page-state="error"]')?.textContent).toContain('网络异常');
     const button = container.querySelector('button');
     expect(button?.textContent).toBe('重新加载');
@@ -40,7 +46,13 @@ describe('PageState', () => {
   });
 
   it('renders success content without losing the state hook', () => {
-    act(() => root.render(<PageState state="success" title="课程已就绪"><p>数学</p></PageState>));
+    act(() =>
+      root.render(
+        <PageState state="success" title="课程已就绪">
+          <p>数学</p>
+        </PageState>
+      )
+    );
     expect(container.querySelector('[data-page-state="success"]')?.textContent).toContain('数学');
   });
 });

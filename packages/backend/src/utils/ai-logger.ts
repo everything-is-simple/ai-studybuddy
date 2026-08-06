@@ -31,7 +31,9 @@ export interface AiLogger {
   recordCircuitClosed(payload: AiCircuitClosedPayload): void;
 }
 
-function writeAllowedConsoleEntry(entry: Record<string, string | number | boolean | null | Array<{ provider: string; errorCode: string }>>): void {
+function writeAllowedConsoleEntry(
+  entry: Record<string, string | number | boolean | null | Array<{ provider: string; errorCode: string }>>
+): void {
   console.log(JSON.stringify(entry));
 }
 

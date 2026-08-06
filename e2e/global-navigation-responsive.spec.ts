@@ -102,24 +102,41 @@ test('T09D 全局导航覆盖桌面、窄屏、移动、考试上下文与 curre
   await page.getByTestId('mobile-more-navigation').locator('summary').click();
   await page.getByRole('link', { name: '设置' }).click();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '设置' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '设置' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
 
   await page.goto(`/exams/${exam.id}`);
   await expect(page.getByRole('heading', { name: 'T09D 导航期末考试', level: 1 })).toBeVisible();
-  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '课程' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '课程' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
   const contextNav = page.getByTestId('exam-context-navigation');
   await expect(contextNav).toBeVisible();
   await expect(contextNav.getByRole('link', { name: '总览' })).toHaveAttribute('aria-current', 'page');
-  await expect(contextNav.getByRole('link', { name: '资料' })).toHaveAttribute('href', `/materials?courseInstanceId=${course.id}`);
+  await expect(contextNav.getByRole('link', { name: '资料' })).toHaveAttribute(
+    'href',
+    `/materials?courseInstanceId=${course.id}`
+  );
   await expect(contextNav.getByRole('link', { name: '练习' })).toHaveAttribute('href', `/exams/${exam.id}/practice`);
   await expect(contextNav.getByRole('link', { name: '错题' })).toHaveAttribute('href', `/exams/${exam.id}/mistakes`);
-  await expect(contextNav.getByRole('link', { name: '时间线' })).toHaveAttribute('href', `/exams/${exam.id}#recent-study-activity`);
+  await expect(contextNav.getByRole('link', { name: '时间线' })).toHaveAttribute(
+    'href',
+    `/exams/${exam.id}#recent-study-activity`
+  );
   await contextNav.getByRole('link', { name: '资料' }).click();
   await expect(page).toHaveURL(new RegExp(`/materials\\?courseInstanceId=${course.id}`));
-  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '资料' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('global-navigation').getByRole('link', { name: '资料' })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
 
   await page.goto('/not-a-real-entry');
-  await expect(page.getByTestId('page-state').or(page.locator('[data-page-state="error"]'))).toContainText('页面不存在');
+  await expect(page.getByTestId('page-state').or(page.locator('[data-page-state="error"]'))).toContainText(
+    '页面不存在'
+  );
   await expect(page.locator('body')).not.toContainText(uuidPattern);
 
   poisonCurrentSemesterForE2E();

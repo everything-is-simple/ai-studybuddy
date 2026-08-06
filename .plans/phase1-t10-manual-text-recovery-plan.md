@@ -22,12 +22,12 @@
 
 ### 3.1 状态与动作矩阵
 
-| Material 状态 | 学生可见动作 | 后端行为 |
-| --- | --- | --- |
-| `conversion_failed` | “粘贴完整正文后继续”与“重试转换” | 手动正文替换后进入 `converted`，创建 `note_generate` Job |
-| `pending_quality_check` | “重试生成笔记”与“替换正文后重新生成” | 重试沿用现有动作；替换正文后进入新的 AI 生成周期 |
-| `pending` / `converting` / `note_generating` | 不显示手动正文入口 | 保持 Worker 所有权，拒绝手动覆盖 |
-| `completed` | “查看笔记” | 不允许替换正文 |
+| Material 状态                                | 学生可见动作                         | 后端行为                                                 |
+| -------------------------------------------- | ------------------------------------ | -------------------------------------------------------- |
+| `conversion_failed`                          | “粘贴完整正文后继续”与“重试转换”     | 手动正文替换后进入 `converted`，创建 `note_generate` Job |
+| `pending_quality_check`                      | “重试生成笔记”与“替换正文后重新生成” | 重试沿用现有动作；替换正文后进入新的 AI 生成周期         |
+| `pending` / `converting` / `note_generating` | 不显示手动正文入口                   | 保持 Worker 所有权，拒绝手动覆盖                         |
+| `completed`                                  | “查看笔记”                           | 不允许替换正文                                           |
 
 ### 3.2 人工补文语义
 
@@ -53,18 +53,18 @@
 
 ## 4. 涉及文件与所有权
 
-| 文件 | 动作 | 责任 |
-| --- | --- | --- |
-| `docs/subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` | 更新 | 修正人工恢复状态与“每个文本版本”重试预算语义 |
-| `docs/04-开发任务清单-Todo-List.md` | 更新收尾 | 仅在全部验证和提交时把 Phase 1-T10 标为完成，并记录范围 |
-| `packages/backend/src/services/note-builder-service.ts` | 修改 | 将人工文本替换仅允许在失败恢复态，清理错误摘要，写入恢复来源元数据并安全创建新 Job |
-| `packages/backend/src/api/note-builder.ts` | 视需要修改 | 保持标准 API 信封；仅在需要更清晰输入校验时调整 |
-| `packages/backend/test/manual-text-recovery-api.test.mjs` | 新建 | API/DB 集成测试，不 mock DB |
-| `packages/backend/test/manual-text-recovery-worker.test.mjs` | 新建或合并现有 Worker 测试 | 用注入的假 AI 验证人工替换后可完成笔记、模块和 StudyEvent |
-| `packages/frontend/src/pages/material-upload-page.tsx` | 修改 | 接入 `replaceText`、表单状态、提交/取消/错误与刷新 |
-| `packages/frontend/src/components/material-status.tsx` | 修改 | 暴露状态说明、恢复动作与插槽/受控表单入口，保持状态卡职责清晰 |
-| `packages/frontend/test/material-upload-page.test.tsx` | 新建 | 验证 `pending_quality_check`/`conversion_failed` 的动作、表单、payload、成功与错误状态 |
-| `packages/frontend/src/styles/global.css` | 最小修改 | textarea 与恢复区域的紧凑可读样式；不重做页面视觉 |
+| 文件                                                         | 动作                       | 责任                                                                                   |
+| ------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------- |
+| `docs/subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md`     | 更新                       | 修正人工恢复状态与“每个文本版本”重试预算语义                                           |
+| `docs/04-开发任务清单-Todo-List.md`                          | 更新收尾                   | 仅在全部验证和提交时把 Phase 1-T10 标为完成，并记录范围                                |
+| `packages/backend/src/services/note-builder-service.ts`      | 修改                       | 将人工文本替换仅允许在失败恢复态，清理错误摘要，写入恢复来源元数据并安全创建新 Job     |
+| `packages/backend/src/api/note-builder.ts`                   | 视需要修改                 | 保持标准 API 信封；仅在需要更清晰输入校验时调整                                        |
+| `packages/backend/test/manual-text-recovery-api.test.mjs`    | 新建                       | API/DB 集成测试，不 mock DB                                                            |
+| `packages/backend/test/manual-text-recovery-worker.test.mjs` | 新建或合并现有 Worker 测试 | 用注入的假 AI 验证人工替换后可完成笔记、模块和 StudyEvent                              |
+| `packages/frontend/src/pages/material-upload-page.tsx`       | 修改                       | 接入 `replaceText`、表单状态、提交/取消/错误与刷新                                     |
+| `packages/frontend/src/components/material-status.tsx`       | 修改                       | 暴露状态说明、恢复动作与插槽/受控表单入口，保持状态卡职责清晰                          |
+| `packages/frontend/test/material-upload-page.test.tsx`       | 新建                       | 验证 `pending_quality_check`/`conversion_failed` 的动作、表单、payload、成功与错误状态 |
+| `packages/frontend/src/styles/global.css`                    | 最小修改                   | textarea 与恢复区域的紧凑可读样式；不重做页面视觉                                      |
 
 不修改 Provider Router、数据库 schema、共享 API 信封结构或 S3/S4 设计文档。
 
@@ -124,14 +124,14 @@ pnpm -r --filter backend run dev
 
 ## 8. 风险审查
 
-| 风险 | 处理方式 |
-| --- | --- |
-| 手动正文与正在运行的 Worker 竞争 | 只允许两个终态失败状态，不允许 `pending`/处理中状态；后端再次校验状态 |
-| AI 已用尽重试次数后仍无法恢复 | 让“完整正文替换”成为新文本版本，建立新的受限 Job；同步修正 S2 PRD |
-| 用户把“补文”理解为追加片段 | 文案明确要求粘贴完整正文；本期不做合并、Diff 或富文本编辑 |
-| 前端隐藏了原文，学生不知道输入什么 | 保留原始文件、状态提示和简短 normalized preview；不在列表直接回填完整长文本 |
-| 失败摘要或手动正文泄露 | 沿用脱敏错误摘要；不写浏览器持久化、不把正文写日志或测试输出 |
-| scope 扩张到 Provider 熔断或笔记编辑器 | 两者明确不属于 T10，分别保留到 T02 / 后续产品决策 |
+| 风险                                   | 处理方式                                                                    |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| 手动正文与正在运行的 Worker 竞争       | 只允许两个终态失败状态，不允许 `pending`/处理中状态；后端再次校验状态       |
+| AI 已用尽重试次数后仍无法恢复          | 让“完整正文替换”成为新文本版本，建立新的受限 Job；同步修正 S2 PRD           |
+| 用户把“补文”理解为追加片段             | 文案明确要求粘贴完整正文；本期不做合并、Diff 或富文本编辑                   |
+| 前端隐藏了原文，学生不知道输入什么     | 保留原始文件、状态提示和简短 normalized preview；不在列表直接回填完整长文本 |
+| 失败摘要或手动正文泄露                 | 沿用脱敏错误摘要；不写浏览器持久化、不把正文写日志或测试输出                |
+| scope 扩张到 Provider 熔断或笔记编辑器 | 两者明确不属于 T10，分别保留到 T02 / 后续产品决策                           |
 
 ## 9. 非目标
 
@@ -140,7 +140,6 @@ pnpm -r --filter backend run dev
 - 不做富文本笔记编辑、正文拼接、版本历史 UI、云同步或多端协作。
 - 不创建 S3/S4 PRD，不实现练习和错题功能。
 - 不实现 T11 的考试/任务浏览器闭环或“考试项目工作台”。
-
 
 ## 9. 执行记录
 

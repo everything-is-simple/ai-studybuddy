@@ -12,10 +12,7 @@ interface ConfigurationServicePort {
     candidate: ChannelConfigMap[C],
     options?: { sendTestEmail?: boolean }
   ): Promise<TestAndActivateResult>;
-  retest(
-    channel: ConfigChannel,
-    options?: { sendTestEmail?: boolean }
-  ): Promise<TestAndActivateResult | null>;
+  retest(channel: ConfigChannel, options?: { sendTestEmail?: boolean }): Promise<TestAndActivateResult | null>;
   testSingleProvider?(provider: {
     name: string;
     baseUrl?: string;
@@ -215,9 +212,7 @@ function validateOfficialAiProvider(value: Record<string, unknown>): ChannelConf
       ? ['kind', 'presetId', 'baseUrl', 'apiKey', 'model', 'priority']
       : ['kind', 'presetId', 'apiKey', 'model', 'priority']
   );
-  const baseUrl = preset.requiresBaseUrl
-    ? validateProviderUrl(cleanString(value.baseUrl, 500))
-    : preset.baseUrl;
+  const baseUrl = preset.requiresBaseUrl ? validateProviderUrl(cleanString(value.baseUrl, 500)) : preset.baseUrl;
 
   // 官方 Provider 的模型必须在白名单内；中转站的模型是测试时从对方 /models 拿到的，
   // 无法预先枚举，只做基本字符串校验。
@@ -237,7 +232,7 @@ function validateOfficialAiProvider(value: Record<string, unknown>): ChannelConf
 
 function validateCustomAiProvider(
   value: Record<string, unknown>,
-  hasKind: boolean,
+  hasKind: boolean
 ): ChannelConfigMap['ai']['providers'][number] {
   if (hasKind) assertOnlyFields(value, ['kind', 'name', 'baseUrl', 'apiKey', 'model', 'priority']);
   return {

@@ -239,7 +239,10 @@ test('submit archives incorrect and unanswered practice answers and creates weak
   assert.equal(state.weakPoints[0].evidence_count, 2);
   assert.deepEqual(
     state.evidence.map((row) => row.source_practice_answer_id).sort(),
-    state.answers.filter((answer) => answer.is_correct === 0).map((answer) => answer.id).sort()
+    state.answers
+      .filter((answer) => answer.is_correct === 0)
+      .map((answer) => answer.id)
+      .sort()
   );
 });
 

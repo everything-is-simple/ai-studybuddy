@@ -115,7 +115,9 @@ describe('PracticeHistory pages', () => {
     expect(container.textContent).toContain('练习历史');
     expect(container.textContent).toContain('数学');
     expect(container.textContent).toContain('期中考试');
-    const resultLink = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent?.includes('查看结果'));
+    const resultLink = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) =>
+      item.textContent?.includes('查看结果')
+    );
     expect(resultLink?.href).toContain(`/semesters/${semesterId}/practice-history/${sessionId}`);
   });
 

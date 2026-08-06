@@ -68,14 +68,8 @@ async function ensureShared(t) {
 }
 
 async function setup(t) {
-  const {
-    dataRoot,
-    initializeSemester,
-    StudyRhythmService,
-    NoteBuilderService,
-    MaterialJobWorker,
-    StorageAdapter,
-  } = await ensureShared(t);
+  const { dataRoot, initializeSemester, StudyRhythmService, NoteBuilderService, MaterialJobWorker, StorageAdapter } =
+    await ensureShared(t);
   const semester = initializeSemester(
     {
       studentName: 'T09 Parsing',
@@ -110,9 +104,9 @@ async function drainConvertAndGenerate(worker, service, semesterId, terminate) {
     if (!progressed) {
       const db = service.openReadySemesterDb(semesterId);
       try {
-        db.prepare(
-          "UPDATE jobs SET available_at = ? WHERE status = 'pending' AND job_type = 'note_generate'"
-        ).run(new Date().toISOString());
+        db.prepare("UPDATE jobs SET available_at = ? WHERE status = 'pending' AND job_type = 'note_generate'").run(
+          new Date().toISOString()
+        );
       } finally {
         db.close();
       }
@@ -175,9 +169,7 @@ test('S2 彻底非 JSON 输出：3 次重试后进入 pending_quality_check，er
   // 从数据库直接读 ai_generation_error_message 断言不含原始正文
   const db = service.openReadySemesterDb(semesterId);
   try {
-    const row = db
-      .prepare('SELECT ai_generation_error_message FROM materials WHERE id = ?')
-      .get(materialId);
+    const row = db.prepare('SELECT ai_generation_error_message FROM materials WHERE id = ?').get(materialId);
     const errorSummary = String(row?.ai_generation_error_message ?? '');
     assert.ok(errorSummary.length > 0, 'error_summary 应有内容');
     assert.ok(!errorSummary.includes('死记硬背'), `error_summary 泄漏了原始正文：${errorSummary}`);
@@ -206,9 +198,7 @@ test('S2 畸形 JSON 含敏感哨兵时，error_summary 不得回显运行时 ca
 
   const db = service.openReadySemesterDb(semesterId);
   try {
-    const row = db
-      .prepare('SELECT ai_generation_error_message FROM materials WHERE id = ?')
-      .get(materialId);
+    const row = db.prepare('SELECT ai_generation_error_message FROM materials WHERE id = ?').get(materialId);
     const errorSummary = String(row?.ai_generation_error_message ?? '');
     assert.ok(errorSummary.length > 0);
     // 哨兵及其明显子串都不得出现。

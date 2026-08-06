@@ -5,8 +5,12 @@ import { DailyStudyHomeError, DailyStudyHomeService } from '../services/daily-st
 const router: Router = Router();
 const service = new DailyStudyHomeService();
 
-function ok<T>(data: T): ApiSuccess<T> { return { success: true, data }; }
-function fail(code: string, message: string): ApiError { return { success: false, error: { code, message } }; }
+function ok<T>(data: T): ApiSuccess<T> {
+  return { success: true, data };
+}
+function fail(code: string, message: string): ApiError {
+  return { success: false, error: { code, message } };
+}
 
 router.get('/daily-study-home', (req: Request, res: Response) => {
   try {

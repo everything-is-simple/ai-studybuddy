@@ -24,7 +24,10 @@ function success(data: unknown) {
 
 test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数据', async ({ page }) => {
   const semesters: Semester[] = [];
-  const courses = new Map<string, Array<{ id: string; semesterId: string; name: string; createdAt: string; updatedAt: string }>>();
+  const courses = new Map<
+    string,
+    Array<{ id: string; semesterId: string; name: string; createdAt: string; updatedAt: string }>
+  >();
   let currentSemesterId: string | null = null;
   let previewCount = 0;
 
@@ -44,7 +47,9 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
 
     if (request.method() === 'GET' && url.pathname === '/api/semesters/current') return json(success(currentDto()));
     if (request.method() === 'GET' && url.pathname === '/api/semesters') {
-      return json(success(semesters.map((semester) => ({ ...semester, isCurrent: semester.id === currentSemesterId }))));
+      return json(
+        success(semesters.map((semester) => ({ ...semester, isCurrent: semester.id === currentSemesterId })))
+      );
     }
     if (request.method() === 'GET' && url.pathname === '/api/semesters/archived') return json(success([]));
     if (request.method() === 'PUT' && url.pathname === '/api/semesters/current') {
@@ -59,26 +64,30 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
       previewCount += 1;
       const semesterCode = previewCount === 1 ? '2026 春季学期' : '2026 秋季学期';
       const courseName = previewCount === 1 ? '数学' : '英语';
-      return json(success({
-        previewId: `preview-${previewCount}`,
-        expiresAt: '2026-07-18T01:00:00.000Z',
-        semesterCode,
-        teachingStartDate: previewCount === 1 ? '2026-02-16' : '2026-09-01',
-        teachingEndDate: previewCount === 1 ? '2026-06-30' : '2027-01-20',
-        finalArchiveDate: null,
-        requiresStudentName: previewCount === 1,
-        entries: [{
-          clientId: `entry-${previewCount}`,
-          courseName,
-          weekday: 1,
-          startTime: '08:00',
-          endTime: '08:45',
-          location: '101',
-          parserConfidence: 0.8,
+      return json(
+        success({
+          previewId: `preview-${previewCount}`,
+          expiresAt: '2026-07-18T01:00:00.000Z',
+          semesterCode,
+          teachingStartDate: previewCount === 1 ? '2026-02-16' : '2026-09-01',
+          teachingEndDate: previewCount === 1 ? '2026-06-30' : '2027-01-20',
+          finalArchiveDate: null,
+          requiresStudentName: previewCount === 1,
+          entries: [
+            {
+              clientId: `entry-${previewCount}`,
+              courseName,
+              weekday: 1,
+              startTime: '08:00',
+              endTime: '08:45',
+              location: '101',
+              parserConfidence: 0.8,
+              warnings: [],
+            },
+          ],
           warnings: [],
-        }],
-        warnings: [],
-      }));
+        })
+      );
     }
     if (request.method() === 'POST' && url.pathname === '/api/semesters') {
       const body = request.postDataJSON() as {
@@ -103,26 +112,40 @@ test('T09A 首次创建、切换与刷新恢复当前学期，并隔离课程数
         updatedAt: now,
       };
       semesters.push(semester);
-      courses.set(id, body.entries.map((entry, index) => ({
-        id: `22222222-2222-4222-8222-${String(semesters.length * 10 + index).padStart(12, '0')}`,
-        semesterId: id,
-        name: entry.courseName,
-        createdAt: now,
-        updatedAt: now,
-      })));
+      courses.set(
+        id,
+        body.entries.map((entry, index) => ({
+          id: `22222222-2222-4222-8222-${String(semesters.length * 10 + index).padStart(12, '0')}`,
+          semesterId: id,
+          name: entry.courseName,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      );
       currentSemesterId = id;
       return json(success({ semester, current: currentDto() }), 201);
     }
-    if (request.method() === 'GET' && url.pathname === '/api/courses') return json(success(courses.get(url.searchParams.get('semesterId') ?? '') ?? []));
+    if (request.method() === 'GET' && url.pathname === '/api/courses')
+      return json(success(courses.get(url.searchParams.get('semesterId') ?? '') ?? []));
     if (request.method() === 'GET' && url.pathname === '/api/schedule-entries') return json(success([]));
-    if (request.method() === 'GET' && (url.pathname === '/api/exams' || url.pathname === '/api/study-tasks')) return json(success([]));
+    if (request.method() === 'GET' && (url.pathname === '/api/exams' || url.pathname === '/api/study-tasks'))
+      return json(success([]));
     if (request.method() === 'GET' && url.pathname === '/api/configuration/status') {
-      return json(success({
-        ai: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        smtp: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        feishu: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        runtime: { dataDir: true, aiAvailable: true, smtpAvailable: true, feishuAvailable: true, uptime: 1, nodeVersion: 'v-test' },
-      }));
+      return json(
+        success({
+          ai: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
+          smtp: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
+          feishu: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
+          runtime: {
+            dataDir: true,
+            aiAvailable: true,
+            smtpAvailable: true,
+            feishuAvailable: true,
+            uptime: 1,
+            nodeVersion: 'v-test',
+          },
+        })
+      );
     }
     return json({ success: false, error: { code: 'UNEXPECTED_REQUEST', message: '未预期的测试请求' } }, 500);
   });

@@ -6,12 +6,7 @@ import { migrateSemesterDb } from '../db/migrations';
 import { getGlobalDbPath, getSemesterDbPath } from '../db/paths';
 import { ErrorFixerService } from './error-fixer-service';
 import { assertSemesterWritable, SemesterAccessError } from './semester-access-service';
-import {
-  AiProviderError,
-  AiRouterProxy,
-  AllProvidersCoolingDownError,
-  AllProvidersFailedError,
-} from '../adapters';
+import { AiProviderError, AiRouterProxy, AllProvidersCoolingDownError, AllProvidersFailedError } from '../adapters';
 import type { AiProvider } from '../adapters';
 import type {
   CreatePracticeSessionRequest,
@@ -90,7 +85,6 @@ interface PracticeSessionRow {
   session_kind: 'practice' | 'mistake_redo';
   origin_mistake_id: string | null;
 }
-
 
 interface PracticeHistoryRow {
   id: string;
@@ -204,7 +198,6 @@ function delay(ms: number): Promise<void> {
   return ms <= 0 ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-
 function pageNumber(value: unknown): number {
   const parsed = Number(value ?? 1);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
@@ -254,8 +247,7 @@ function parseJsonArray(value: string | null, message: string): string[] {
 
 function normalizeStudentAnswer(value: unknown): string | null {
   if (value === undefined || value === null) return null;
-  if (typeof value !== 'string')
-    throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '答案格式不合法');
+  if (typeof value !== 'string') throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '答案格式不合法');
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
 }
@@ -270,11 +262,7 @@ function normalizeAnswerLetters(value: unknown, min: number, max: number): strin
           .filter(Boolean)
       : [];
   const unique = Array.from(new Set(rawLetters.map((letter) => String(letter).trim().toUpperCase()))).sort();
-  if (
-    unique.length < min ||
-    unique.length > max ||
-    unique.some((letter) => !OPTION_LETTERS.includes(letter))
-  )
+  if (unique.length < min || unique.length > max || unique.some((letter) => !OPTION_LETTERS.includes(letter)))
     throw new PracticeRunnerError('PRACTICE_GENERATION_FAILED', 502, 'AI 生成题目答案格式不符合要求');
   return unique.join(',');
 }
@@ -312,8 +300,7 @@ export class PracticeRunnerService {
     try {
       globalDb = openExistingDbAtPath(getGlobalDbPath());
       const row = globalDb.prepare('SELECT ready FROM semesters WHERE id = ?').get(semesterId) as
-        | { ready: number }
-        | undefined;
+        { ready: number } | undefined;
       if (!row) throw new PracticeRunnerError('SEMESTER_NOT_FOUND', 404, '学期不存在');
       if (row.ready !== 1) throw new PracticeRunnerError('SEMESTER_NOT_READY', 409, '学期尚未就绪');
     } catch (error) {
@@ -333,7 +320,6 @@ export class PracticeRunnerService {
       throw error;
     }
   }
-
 
   private assertWritableSemester(semesterId: string): void {
     try {
@@ -390,7 +376,11 @@ export class PracticeRunnerService {
     timeLimitSeconds: number | null;
   } {
     const semesterId = requiredUuid(input.semesterId, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
-    const courseInstanceId = requiredUuid(input.courseInstanceId, 'MISSING_REQUIRED_FIELD', 'courseInstanceId 不能为空');
+    const courseInstanceId = requiredUuid(
+      input.courseInstanceId,
+      'MISSING_REQUIRED_FIELD',
+      'courseInstanceId 不能为空'
+    );
     const assessmentAttemptId = optionalUuid(
       input.assessmentAttemptId,
       'PRACTICE_INPUT_INVALID',
@@ -410,7 +400,12 @@ export class PracticeRunnerService {
     if (knowledgeModuleIds.length !== input.knowledgeModuleIds.length)
       throw new PracticeRunnerError('PRACTICE_INPUT_INVALID', 400, 'knowledgeModuleIds 不能重复');
     const questionCount = input.questionCount ?? 10;
-    if (typeof questionCount !== 'number' || !Number.isInteger(questionCount) || questionCount < 5 || questionCount > 20)
+    if (
+      typeof questionCount !== 'number' ||
+      !Number.isInteger(questionCount) ||
+      questionCount < 5 ||
+      questionCount > 20
+    )
       throw new PracticeRunnerError('PRACTICE_INPUT_INVALID', 400, 'questionCount 必须是 5 到 20 的整数');
     const difficultyPreference = input.difficultyPreference ?? 'mixed';
     if (!DIFFICULTY_PREFERENCES.includes(difficultyPreference))
@@ -472,7 +467,12 @@ export class PracticeRunnerService {
   ): { stored: string | null; letters: string[] } {
     const raw = normalizeStudentAnswer(value);
     if (raw === null) return { stored: null, letters: [] };
-    const parts = multiple ? raw.split(',').map((part) => part.trim()).filter(Boolean) : [raw.trim()];
+    const parts = multiple
+      ? raw
+          .split(',')
+          .map((part) => part.trim())
+          .filter(Boolean)
+      : [raw.trim()];
     if (!multiple && (raw.includes(',') || parts.length !== 1))
       throw new PracticeRunnerError('PRACTICE_ANSWER_INVALID', 400, '单选题答案格式不合法');
     if (multiple && parts.length === 0) return { stored: null, letters: [] };
@@ -520,7 +520,10 @@ export class PracticeRunnerService {
       };
     }
     const studentAnswer = normalizeStudentAnswer(input?.answer);
-    const acceptableAnswers = [question.correct_answer, ...parseJsonArray(question.acceptable_answers_json, '填空题答案格式不合法')];
+    const acceptableAnswers = [
+      question.correct_answer,
+      ...parseJsonArray(question.acceptable_answers_json, '填空题答案格式不合法'),
+    ];
     const normalizedStudentAnswer = studentAnswer === null ? null : normalizeFillBlankAnswer(studentAnswer);
     return {
       questionId: question.id,
@@ -677,7 +680,8 @@ export class PracticeRunnerService {
   }
 
   private toQuestionDto(row: Record<string, unknown>): PracticeQuestionForStudentDto {
-    const optionsJson = row.options_json === null || row.options_json === undefined ? undefined : String(row.options_json);
+    const optionsJson =
+      row.options_json === null || row.options_json === undefined ? undefined : String(row.options_json);
     return {
       id: String(row.id),
       type: String(row.type) as PracticeQuestionType,
@@ -691,8 +695,7 @@ export class PracticeRunnerService {
 
   private toSessionDto(db: DatabaseType, sessionId: string): PracticeSessionDetailDto {
     const session = db.prepare('SELECT * FROM practice_sessions WHERE id = ?').get(sessionId) as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     if (!session) throw new PracticeRunnerError('PRACTICE_SESSION_NOT_FOUND', 404, '练习不存在');
     const questions = db
       .prepare('SELECT * FROM questions WHERE practice_session_id = ? ORDER BY question_order ASC')
@@ -712,8 +715,7 @@ export class PracticeRunnerService {
           : Number(session.time_limit_seconds),
       difficultyPreference: String(session.difficulty_preference) as PracticeDifficultyPreference,
       sessionKind: (session.session_kind === 'mistake_redo' ? 'mistake_redo' : 'practice') as
-        | 'practice'
-        | 'mistake_redo',
+        'practice' | 'mistake_redo',
       originMistakeId:
         session.origin_mistake_id === null || session.origin_mistake_id === undefined
           ? null
@@ -806,10 +808,7 @@ export class PracticeRunnerService {
     }
   }
 
-  submitPracticeSession(
-    sessionIdValue: unknown,
-    input: SubmitPracticeSessionRequest
-  ): SubmitPracticeSessionResponse {
+  submitPracticeSession(sessionIdValue: unknown, input: SubmitPracticeSessionRequest): SubmitPracticeSessionResponse {
     const sessionId = requiredUuid(sessionIdValue, 'PRACTICE_SESSION_NOT_FOUND', '练习不存在');
     const valid = this.validateSubmitInput(input);
     this.assertWritableSemester(valid.semesterId);
@@ -817,8 +816,7 @@ export class PracticeRunnerService {
     try {
       return db.transaction(() => {
         const session = db.prepare('SELECT * FROM practice_sessions WHERE id = ?').get(sessionId) as
-          | PracticeSessionRow
-          | undefined;
+          PracticeSessionRow | undefined;
         if (!session) throw new PracticeRunnerError('PRACTICE_SESSION_NOT_FOUND', 404, '练习不存在');
         if (session.status !== 'in_progress')
           throw new PracticeRunnerError('PRACTICE_SESSION_STATE_INVALID', 409, '当前练习状态不允许提交');
@@ -841,7 +839,9 @@ export class PracticeRunnerService {
         }
 
         const submittedByQuestionId = new Map(valid.answers.map((answer) => [answer.questionId, answer]));
-        const gradedAnswers = questions.map((question) => this.gradeQuestion(question, submittedByQuestionId.get(question.id)));
+        const gradedAnswers = questions.map((question) =>
+          this.gradeQuestion(question, submittedByQuestionId.get(question.id))
+        );
         const totalScore = gradedAnswers.filter((answer) => answer.isCorrect).length;
         const correctRate = questions.length === 0 ? 0 : totalScore / questions.length;
         const overtime =
@@ -943,7 +943,6 @@ export class PracticeRunnerService {
     }
   }
 
-
   listPracticeHistory(input: {
     semesterId: unknown;
     courseInstanceId?: unknown;
@@ -954,9 +953,10 @@ export class PracticeRunnerService {
     pageSize?: unknown;
   }): PracticeHistoryListResponseDto {
     const semesterId = requiredUuid(input.semesterId, 'MISSING_REQUIRED_FIELD', 'semesterId 不能为空');
-    const courseInstanceId = input.courseInstanceId === undefined || input.courseInstanceId === ''
-      ? null
-      : requiredUuid(input.courseInstanceId, 'COURSE_INSTANCE_NOT_FOUND', '课程不存在');
+    const courseInstanceId =
+      input.courseInstanceId === undefined || input.courseInstanceId === ''
+        ? null
+        : requiredUuid(input.courseInstanceId, 'COURSE_INSTANCE_NOT_FOUND', '课程不存在');
     const status = input.status === undefined || input.status === '' ? null : String(input.status);
     if (status !== null && !PRACTICE_STATUSES.includes(status as PracticeSessionStatus)) {
       throw new PracticeRunnerError('PRACTICE_HISTORY_FILTER_INVALID', 400, '练习状态筛选不合法');
@@ -970,10 +970,25 @@ export class PracticeRunnerService {
     const pageSize = pageSizeNumber(input.pageSize);
     const db = this.openReadySemesterDb(semesterId);
     try {
-      const { where, params } = this.buildPracticeHistoryWhere({ semesterId, courseInstanceId, status, dateFrom, dateTo });
-      const total = Number((db.prepare(`SELECT count(*) AS total FROM practice_sessions ps JOIN course_instances c ON c.id = ps.course_instance_id LEFT JOIN assessment_attempts a ON a.id = ps.assessment_attempt_id ${where}`).get(...params) as { total: number }).total);
-      const rows = db.prepare(
-        `SELECT ps.id, c.semester_id, ps.course_instance_id, c.name AS course_name,
+      const { where, params } = this.buildPracticeHistoryWhere({
+        semesterId,
+        courseInstanceId,
+        status,
+        dateFrom,
+        dateTo,
+      });
+      const total = Number(
+        (
+          db
+            .prepare(
+              `SELECT count(*) AS total FROM practice_sessions ps JOIN course_instances c ON c.id = ps.course_instance_id LEFT JOIN assessment_attempts a ON a.id = ps.assessment_attempt_id ${where}`
+            )
+            .get(...params) as { total: number }
+        ).total
+      );
+      const rows = db
+        .prepare(
+          `SELECT ps.id, c.semester_id, ps.course_instance_id, c.name AS course_name,
                 ps.assessment_attempt_id, a.name AS assessment_name, ps.status,
                 ps.session_kind, ps.origin_mistake_id, ps.question_count,
                 ps.total_score, ps.correct_rate, ps.overtime, ps.total_duration_seconds,
@@ -985,7 +1000,8 @@ export class PracticeRunnerService {
          ${where}
          ORDER BY COALESCE(ps.graded_at, ps.submitted_at, ps.started_at, ps.created_at) DESC, ps.id DESC
          LIMIT ? OFFSET ?`
-      ).all(...params, pageSize, (page - 1) * pageSize) as PracticeHistoryRow[];
+        )
+        .all(...params, pageSize, (page - 1) * pageSize) as PracticeHistoryRow[];
       return {
         items: rows.map((row) => this.toPracticeHistoryItem(row)),
         pagination: { page, pageSize, total, hasMore: page * pageSize < total },
@@ -1000,8 +1016,9 @@ export class PracticeRunnerService {
     const sessionId = requiredUuid(sessionIdValue, 'PRACTICE_SESSION_NOT_FOUND', '练习不存在');
     const db = this.openReadySemesterDb(semesterId);
     try {
-      const row = db.prepare(
-        `SELECT ps.id, c.semester_id, ps.course_instance_id, c.name AS course_name,
+      const row = db
+        .prepare(
+          `SELECT ps.id, c.semester_id, ps.course_instance_id, c.name AS course_name,
                 ps.assessment_attempt_id, a.name AS assessment_name, ps.status,
                 ps.session_kind, ps.origin_mistake_id, ps.question_count,
                 ps.total_score, ps.correct_rate, ps.overtime, ps.total_duration_seconds,
@@ -1011,13 +1028,15 @@ export class PracticeRunnerService {
          JOIN course_instances c ON c.id = ps.course_instance_id
          LEFT JOIN assessment_attempts a ON a.id = ps.assessment_attempt_id
          WHERE ps.id = ? AND c.semester_id = ?`
-      ).get(sessionId, semesterId) as PracticeHistoryRow | undefined;
+        )
+        .get(sessionId, semesterId) as PracticeHistoryRow | undefined;
       if (!row) throw new PracticeRunnerError('PRACTICE_SESSION_NOT_FOUND', 404, '练习不存在');
       if (row.status !== 'graded') {
         throw new PracticeRunnerError('PRACTICE_SESSION_NOT_GRADED', 409, '练习尚未批改，不能查看结果');
       }
-      const answers = db.prepare(
-        `SELECT q.id AS question_id, q.type, q.stem, q.correct_answer, q.difficulty,
+      const answers = db
+        .prepare(
+          `SELECT q.id AS question_id, q.type, q.stem, q.correct_answer, q.difficulty,
                 q.explanation, q.source_evidence, q.knowledge_module_id,
                 km.title AS knowledge_module_title, a.student_answer, a.is_correct,
                 a.time_spent_seconds, a.answer_order
@@ -1026,7 +1045,8 @@ export class PracticeRunnerService {
          LEFT JOIN practice_answers a ON a.question_id = q.id AND a.session_id = q.practice_session_id
          WHERE q.practice_session_id = ?
          ORDER BY q.question_order ASC, a.answer_order ASC`
-      ).all(sessionId) as PracticeHistoryAnswerRow[];
+        )
+        .all(sessionId) as PracticeHistoryAnswerRow[];
       return {
         ...this.toPracticeHistoryItem(row),
         correctRate: Number(row.correct_rate ?? 0),

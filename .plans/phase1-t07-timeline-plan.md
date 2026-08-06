@@ -23,16 +23,16 @@
 
 T07 展示和回归测试覆盖当前已存在的正式事件：
 
-| 来源 | 事件类型 | 当前生产位置 | T07 展示语义 |
-| --- | --- | --- | --- |
-| S1 | `assessment_attempt_confirmed` | `StudyRhythmService.confirmAssessmentAttempt()` | 考试日期已确认 |
-| S1 | `study_task_completed` | `StudyRhythmService.updateTaskStatus()` | 学习任务已完成 |
-| S2 | `material_note_completed` | `MaterialJobWorker` | 资料笔记已生成 |
-| S2 | `knowledge_module_status_changed` | `NoteBuilderService` | 知识模块状态已更新 |
-| S3 | `practice_completed` | `PracticeRunnerService` | 限时练习已完成 |
-| S4 | `mistake_reviewed` | `PracticeRunnerService` 的错题重做分支 | 错题重做结果 |
-| S4 | `feedback_review_required` | `FeedbackRulesService` | 知识模块需要复习 |
-| S4 | `feedback_review_mastered` | `FeedbackRulesService` | 错题复习已掌握 |
+| 来源 | 事件类型                          | 当前生产位置                                    | T07 展示语义       |
+| ---- | --------------------------------- | ----------------------------------------------- | ------------------ |
+| S1   | `assessment_attempt_confirmed`    | `StudyRhythmService.confirmAssessmentAttempt()` | 考试日期已确认     |
+| S1   | `study_task_completed`            | `StudyRhythmService.updateTaskStatus()`         | 学习任务已完成     |
+| S2   | `material_note_completed`         | `MaterialJobWorker`                             | 资料笔记已生成     |
+| S2   | `knowledge_module_status_changed` | `NoteBuilderService`                            | 知识模块状态已更新 |
+| S3   | `practice_completed`              | `PracticeRunnerService`                         | 限时练习已完成     |
+| S4   | `mistake_reviewed`                | `PracticeRunnerService` 的错题重做分支          | 错题重做结果       |
+| S4   | `feedback_review_required`        | `FeedbackRulesService`                          | 知识模块需要复习   |
+| S4   | `feedback_review_mastered`        | `FeedbackRulesService`                          | 错题复习已掌握     |
 
 `POST /api/study-events` 仍允许调用方写入任意合法来源、非空事件类型和不超过 200 字符的标题，不能据此证明某条“已知类型”事件一定来自受控生产者。因此前端对已知类型只显示固定中文文案，对未知类型显示通用“未分类学习活动”，任何类型都不渲染数据库 `title`；上表不做成数据库约束或封闭枚举。
 

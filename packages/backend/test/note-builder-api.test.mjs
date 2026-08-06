@@ -321,7 +321,10 @@ test('S2 worker runOnce generates notes, modules, list metadata, and study evide
 
   const repairedDb = service.openReadySemesterDb(semester.semesterId);
   try {
-    const jobColumns = repairedDb.prepare('PRAGMA table_info(jobs)').all().map((column) => column.name);
+    const jobColumns = repairedDb
+      .prepare('PRAGMA table_info(jobs)')
+      .all()
+      .map((column) => column.name);
     assert.ok(jobColumns.includes('material_id'));
   } finally {
     repairedDb.close();

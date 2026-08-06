@@ -118,7 +118,6 @@ export class StudyRhythmService {
     return openExistingDbAtPath(dbPath);
   }
 
-
   private assertWritableSemester(semesterId: unknown): void {
     try {
       assertSemesterWritable(semesterId);
@@ -419,42 +418,74 @@ export class StudyRhythmService {
       const course = this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
       const now = new Date().toISOString();
       const name = input.name.trim();
-      db.prepare('UPDATE course_instances SET name = ?, updated_at = ? WHERE id = ?').run(name, now, input.courseInstanceId);
+      db.prepare('UPDATE course_instances SET name = ?, updated_at = ? WHERE id = ?').run(
+        name,
+        now,
+        input.courseInstanceId
+      );
       return this.toCourseDto({ ...course, name, updated_at: now });
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   }
 
   listScheduleEntries(semesterId: unknown): ScheduleEntryDto[] {
     if (!isUuid(semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     const db = this.openReadySemesterDb(semesterId);
     try {
-      const rows = db.prepare(
-        `SELECT s.*, c.semester_id, c.name AS course_name
+      const rows = db
+        .prepare(
+          `SELECT s.*, c.semester_id, c.name AS course_name
          FROM schedule_entries s JOIN course_instances c ON c.id = s.course_instance_id
          WHERE c.semester_id = ?
          ORDER BY s.weekday ASC, s.start_time ASC, s.end_time ASC, s.id ASC`
-      ).all(semesterId) as Record<string, unknown>[];
+        )
+        .all(semesterId) as Record<string, unknown>[];
       return rows.map((row) => this.toScheduleEntryDto(row));
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   }
 
-  createScheduleEntry(input: { semesterId: unknown; courseInstanceId: unknown; weekday: unknown; startTime: unknown; endTime: unknown; location?: unknown }): ScheduleEntryDto {
+  createScheduleEntry(input: {
+    semesterId: unknown;
+    courseInstanceId: unknown;
+    weekday: unknown;
+    startTime: unknown;
+    endTime: unknown;
+    location?: unknown;
+  }): ScheduleEntryDto {
     if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     const data = this.validateScheduleEntryInput(input);
     this.assertWritableSemester(input.semesterId);
     const db = this.openReadySemesterDb(input.semesterId);
     try {
       this.requireCourse(db, input.semesterId, data.courseInstanceId);
-      const now = new Date().toISOString(); const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const id = crypto.randomUUID();
       try {
-        db.prepare(`INSERT INTO schedule_entries (id, course_instance_id, weekday, start_time, end_time, location, source, source_confidence, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 'student_confirmed', NULL, ?, ?)`).run(id, data.courseInstanceId, data.weekday, data.startTime, data.endTime, data.location, now, now);
-      } catch (error) { this.rethrowScheduleWriteError(error); }
+        db.prepare(
+          `INSERT INTO schedule_entries (id, course_instance_id, weekday, start_time, end_time, location, source, source_confidence, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'student_confirmed', NULL, ?, ?)`
+        ).run(id, data.courseInstanceId, data.weekday, data.startTime, data.endTime, data.location, now, now);
+      } catch (error) {
+        this.rethrowScheduleWriteError(error);
+      }
       return this.toScheduleEntryDto(this.requireScheduleEntry(db, input.semesterId, id));
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   }
 
-  updateScheduleEntry(input: { semesterId: unknown; scheduleEntryId: unknown; courseInstanceId: unknown; weekday: unknown; startTime: unknown; endTime: unknown; location?: unknown }): ScheduleEntryDto {
+  updateScheduleEntry(input: {
+    semesterId: unknown;
+    scheduleEntryId: unknown;
+    courseInstanceId: unknown;
+    weekday: unknown;
+    startTime: unknown;
+    endTime: unknown;
+    location?: unknown;
+  }): ScheduleEntryDto {
     if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     const data = this.validateScheduleEntryInput(input);
     this.assertWritableSemester(input.semesterId);
@@ -464,12 +495,26 @@ export class StudyRhythmService {
       this.requireCourse(db, input.semesterId, data.courseInstanceId);
       const now = new Date().toISOString();
       try {
-        db.prepare(`UPDATE schedule_entries
+        db.prepare(
+          `UPDATE schedule_entries
                     SET course_instance_id = ?, weekday = ?, start_time = ?, end_time = ?, location = ?, source = 'student_confirmed', source_confidence = NULL, updated_at = ?
-                    WHERE id = ?`).run(data.courseInstanceId, data.weekday, data.startTime, data.endTime, data.location, now, input.scheduleEntryId);
-      } catch (error) { this.rethrowScheduleWriteError(error); }
+                    WHERE id = ?`
+        ).run(
+          data.courseInstanceId,
+          data.weekday,
+          data.startTime,
+          data.endTime,
+          data.location,
+          now,
+          input.scheduleEntryId
+        );
+      } catch (error) {
+        this.rethrowScheduleWriteError(error);
+      }
       return this.toScheduleEntryDto(this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId)));
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   }
 
   deleteScheduleEntry(input: { semesterId: unknown; scheduleEntryId: unknown }): ScheduleEntryDto {
@@ -480,10 +525,18 @@ export class StudyRhythmService {
       const entry = this.requireScheduleEntry(db, input.semesterId, String(input.scheduleEntryId));
       db.prepare('DELETE FROM schedule_entries WHERE id = ?').run(input.scheduleEntryId);
       return this.toScheduleEntryDto(entry);
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   }
 
-  updateExam(input: { semesterId: unknown; assessmentAttemptId: unknown; name?: unknown; examAt?: unknown; goal?: unknown }): AssessmentAttemptDto {
+  updateExam(input: {
+    semesterId: unknown;
+    assessmentAttemptId: unknown;
+    name?: unknown;
+    examAt?: unknown;
+    goal?: unknown;
+  }): AssessmentAttemptDto {
     if (!isUuid(input.semesterId)) throw new StudyRhythmError('SEMESTER_NOT_FOUND', 404, '学期不存在');
     if (input.name === undefined && input.examAt === undefined && input.goal === undefined) {
       throw new StudyRhythmError('EXAM_INPUT_INVALID', 400, '至少需要提供一个可编辑字段');
@@ -507,19 +560,27 @@ export class StudyRhythmService {
       const dateChanged = input.examAt !== undefined && normalizeIsoDatetime(String(existing.exam_at)) !== examAt;
       const resetConfirmation = dateChanged && existing.confirmation_status === 'confirmed';
       const confirmationStatus = resetConfirmation ? 'pending' : String(existing.confirmation_status);
-      const confirmedAt = resetConfirmation ? null : existing.confirmed_at ?? null;
+      const confirmedAt = resetConfirmation ? null : (existing.confirmed_at ?? null);
       const now = new Date().toISOString();
       const update = db.transaction(() => {
         if (resetConfirmation) {
-          db.prepare(`INSERT INTO assessment_date_changes (id, assessment_attempt_id, previous_exam_at, next_exam_at, source, changed_at)
-                      VALUES (?, ?, ?, ?, 'student_confirmed', ?)`).run(crypto.randomUUID(), input.assessmentAttemptId, existing.exam_at, examAt, now);
+          db.prepare(
+            `INSERT INTO assessment_date_changes (id, assessment_attempt_id, previous_exam_at, next_exam_at, source, changed_at)
+                      VALUES (?, ?, ?, ?, 'student_confirmed', ?)`
+          ).run(crypto.randomUUID(), input.assessmentAttemptId, existing.exam_at, examAt, now);
         }
-        db.prepare(`UPDATE assessment_attempts SET name = ?, exam_at = ?, goal = ?, confirmation_status = ?, confirmed_at = ? WHERE id = ?`)
-          .run(name, examAt, goal, confirmationStatus, confirmedAt, input.assessmentAttemptId);
-        return db.prepare('SELECT * FROM assessment_attempts WHERE id = ?').get(input.assessmentAttemptId) as Record<string, unknown>;
+        db.prepare(
+          `UPDATE assessment_attempts SET name = ?, exam_at = ?, goal = ?, confirmation_status = ?, confirmed_at = ? WHERE id = ?`
+        ).run(name, examAt, goal, confirmationStatus, confirmedAt, input.assessmentAttemptId);
+        return db.prepare('SELECT * FROM assessment_attempts WHERE id = ?').get(input.assessmentAttemptId) as Record<
+          string,
+          unknown
+        >;
       });
       return this.toExamDto(update());
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   }
   createCourse(input: { semesterId: unknown; name: unknown; retakeOfCourseInstanceId?: unknown }): CourseInstanceDto {
     if (!isNonEmptyString(input.name) || input.name.trim().length > 200) {
@@ -565,7 +626,10 @@ export class StudyRhythmService {
     try {
       const course = this.requireCourse(db, input.semesterId, String(input.courseInstanceId));
       try {
-        db.prepare('DELETE FROM course_instances WHERE id = ? AND semester_id = ?').run(input.courseInstanceId, input.semesterId);
+        db.prepare('DELETE FROM course_instances WHERE id = ? AND semester_id = ?').run(
+          input.courseInstanceId,
+          input.semesterId
+        );
       } catch (error) {
         if (error instanceof Error && /constraint/i.test(error.message)) {
           throw new StudyRhythmError('COURSE_HAS_DEPENDENCIES', 409, '课程已有课表、考试或学习资料，不能直接删除');
@@ -762,13 +826,7 @@ export class StudyRhythmService {
             id, course_instance_id, source_system, event_type, title,
             evidence_ref, parent_visible, occurred_at, created_at
           ) VALUES (?, ?, 'S1', 'assessment_attempt_confirmed', '考试日期已确认', ?, 1, ?, ?)`
-        ).run(
-          crypto.randomUUID(),
-          row.course_instance_id,
-          `assessment_attempt:${input.assessmentAttemptId}`,
-          now,
-          now
-        );
+        ).run(crypto.randomUUID(), row.course_instance_id, `assessment_attempt:${input.assessmentAttemptId}`, now, now);
 
         return this.toExamDto({
           ...row,

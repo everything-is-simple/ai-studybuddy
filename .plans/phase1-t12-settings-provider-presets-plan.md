@@ -44,7 +44,15 @@
 ```ts
 type ConfigurationPresets = {
   ai: AiProviderPreset[];
-  smtp: { host: 'smtp.qq.com'; port: 465; secure: true; userHint: string; authCodeHint: string; toHint: string; note: string };
+  smtp: {
+    host: 'smtp.qq.com';
+    port: 465;
+    secure: true;
+    userHint: string;
+    authCodeHint: string;
+    toHint: string;
+    note: string;
+  };
   feishu: { webhookHint: string; note: string };
   customRelayGuidance: string[];
 };

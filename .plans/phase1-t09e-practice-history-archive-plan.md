@@ -327,6 +327,7 @@ export function assertSemesterWritable(semesterId: unknown): SemesterAccessInfo;
 ### Task 1: Backend tests for archive state and migration
 
 **Files:**
+
 - Create: `packages/backend/test/semester-archive-api.test.mjs`
 - Later modify: `packages/backend/src/db/sql/migration-global-v2.ts`
 - Later modify: `packages/backend/src/db/sql/schema-global.ts`
@@ -366,6 +367,7 @@ pnpm --filter @ai-studybuddy/backend exec node --test packages/backend/test/seme
 ### Task 2: Semester archive API and shared DTO
 
 **Files:**
+
 - Modify: `packages/shared/src/types.ts`
 - Modify: `packages/backend/src/services/semester-selector-service.ts`
 - Modify: `packages/backend/src/api/semester-selector.ts`
@@ -418,6 +420,7 @@ pnpm type-check
 ### Task 3: Central archived write protection
 
 **Files:**
+
 - Create: `packages/backend/src/services/semester-access-service.ts`
 - Modify: `packages/backend/src/services/study-rhythm-service.ts`
 - Modify: `packages/backend/src/services/note-builder-service.ts`
@@ -443,7 +446,11 @@ export interface SemesterAccessInfo {
 }
 
 export class SemesterAccessError extends Error {
-  constructor(public code: string, public status: number, message: string) {
+  constructor(
+    public code: string,
+    public status: number,
+    message: string
+  ) {
     super(message);
   }
 }
@@ -463,6 +470,7 @@ pnpm --filter @ai-studybuddy/backend exec node --test packages/backend/test/seme
 ### Task 4: Practice history API and persisted result query
 
 **Files:**
+
 - Modify: `packages/shared/src/types.ts`
 - Modify: `packages/backend/src/services/practice-runner-service.ts`
 - Modify: `packages/backend/src/api/practice-runner.ts`
@@ -512,6 +520,7 @@ pnpm type-check
 ### Task 5: Frontend API clients and routes
 
 **Files:**
+
 - Modify: `packages/frontend/src/api/semester-api.ts`
 - Modify: `packages/frontend/src/api/practice-runner-api.ts`
 - Modify: `packages/frontend/src/app.tsx`
@@ -528,8 +537,15 @@ pnpm type-check
 ```ts
 export function listArchivedSemesters(signal?: AbortSignal): Promise<SemesterSummaryDto[]>;
 export function archiveSemester(semesterId: string, signal?: AbortSignal): Promise<SemesterSummaryDto>;
-export function listPracticeHistory(filters: PracticeHistoryFilters, signal?: AbortSignal): Promise<PracticeHistoryResponseDto>;
-export function getPracticeHistoryResult(semesterId: string, sessionId: string, signal?: AbortSignal): Promise<PracticeHistoryResultDto>;
+export function listPracticeHistory(
+  filters: PracticeHistoryFilters,
+  signal?: AbortSignal
+): Promise<PracticeHistoryResponseDto>;
+export function getPracticeHistoryResult(
+  semesterId: string,
+  sessionId: string,
+  signal?: AbortSignal
+): Promise<PracticeHistoryResultDto>;
 ```
 
 - [ ] **Step 3: 在 `app.tsx` 新增 routes**
@@ -546,6 +562,7 @@ pnpm --filter @ai-studybuddy/frontend exec vitest run packages/frontend/test/sem
 ### Task 6: Frontend pages and accessibility states
 
 **Files:**
+
 - Modify: `packages/frontend/src/pages/semester-page.tsx`
 - Create: `packages/frontend/src/pages/practice-history-page.tsx`
 - Create: `packages/frontend/src/pages/practice-history-result-page.tsx`
@@ -587,6 +604,7 @@ pnpm --filter @ai-studybuddy/frontend exec vitest run
 ### Task 7: Playwright E2E for history and archive
 
 **Files:**
+
 - Create: `e2e/practice-history-archive.spec.ts`
 - Reuse: `packages/backend/test/e2e-server.ts`
 
@@ -613,6 +631,7 @@ pnpm exec playwright test e2e/practice-history-archive.spec.ts
 ### Task 8: Documentation, review, and integration gates
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Optionally modify: `docs/00-文档索引-Index.md`
 
@@ -683,16 +702,16 @@ pnpm exec playwright test e2e/practice-history-archive.spec.ts
 
 ## 8. 当前计划的独立审查结论
 
-| 审查项 | 结论 | 修订/约束 |
-| ------ | ---- | --------- |
-| 范围是否越界 | 通过 | 只做 T09E；明确不做 S5/S7、家长 Web、真实外部渠道 smoke。 |
-| 是否错误触发未来 PRD | 通过 | 不创建 S5/S7 PRD，不新增未来系统文档。 |
-| 是否把归档做成删除/迁移 | 通过 | 归档仅更新 global status 与 archivedAt；不删除、不移动、不复制学期库。 |
-| 是否破坏 current semester 语义 | 通过 | `GET /semesters` active-only 保持不变；archived 不可选为 current；current 学期不能归档。 |
-| 是否存在不必要 schema/migration | 需最小 migration | 仅增加 global `archived_at` 用于真实操作时间；不做 semester schema migration。 |
-| 测试是否足以证明历史与归档行为 | 通过 | 后端集成、前端组件、Playwright E2E 覆盖历史筛选、持久化结果、归档状态、后端写保护与 current 语义。 |
-| 是否误改 T09D 已完成导航范围 | 通过 | 不新增全局导航项；入口挂在学期管理页。 |
-| archived 写保护是否只靠前端 | 已修订 | 审查要求增加后端 `assertSemesterWritable`，覆盖所有 semester-scoped 写入口。 |
+| 审查项                          | 结论             | 修订/约束                                                                                          |
+| ------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| 范围是否越界                    | 通过             | 只做 T09E；明确不做 S5/S7、家长 Web、真实外部渠道 smoke。                                          |
+| 是否错误触发未来 PRD            | 通过             | 不创建 S5/S7 PRD，不新增未来系统文档。                                                             |
+| 是否把归档做成删除/迁移         | 通过             | 归档仅更新 global status 与 archivedAt；不删除、不移动、不复制学期库。                             |
+| 是否破坏 current semester 语义  | 通过             | `GET /semesters` active-only 保持不变；archived 不可选为 current；current 学期不能归档。           |
+| 是否存在不必要 schema/migration | 需最小 migration | 仅增加 global `archived_at` 用于真实操作时间；不做 semester schema migration。                     |
+| 测试是否足以证明历史与归档行为  | 通过             | 后端集成、前端组件、Playwright E2E 覆盖历史筛选、持久化结果、归档状态、后端写保护与 current 语义。 |
+| 是否误改 T09D 已完成导航范围    | 通过             | 不新增全局导航项；入口挂在学期管理页。                                                             |
+| archived 写保护是否只靠前端     | 已修订           | 审查要求增加后端 `assertSemesterWritable`，覆盖所有 semester-scoped 写入口。                       |
 
 审查后的关键修订：
 
@@ -710,7 +729,6 @@ pnpm exec playwright test e2e/practice-history-archive.spec.ts
 - 运行实现级 type-check/build/test/E2E；
 - 更新 docs/04 为实现完成状态；
 - 合入 `master` 并推送 `origin/master`。
-
 
 ## 9. 分支实施记录（2026-07-19）
 

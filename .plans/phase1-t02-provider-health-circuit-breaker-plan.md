@@ -94,15 +94,15 @@ export interface AiCircuitClosedPayload {
 
 ## 3. 文件范围
 
-| 文件 | 动作 | 责任 |
-| --- | --- | --- |
-| `packages/backend/src/adapters/ai/router.ts` | 修改 | 健康状态、可控时钟、熔断/恢复、冷却错误与 fallback 语义 |
-| `packages/backend/src/utils/ai-logger.ts` | 修改 | 增加脱敏熔断开启/结束事件 |
-| `packages/backend/src/adapters/ai/index.ts` | 修改 | 导出新的冷却错误类型 |
-| `packages/backend/src/adapters/index.ts` | 修改 | 从统一 Adapter 入口导出新的冷却错误类型 |
-| `packages/backend/test/ai-router.test.mjs` | 修改 | 单元与 Adapter 集成回归测试 |
-| `docs/04-开发任务清单-Todo-List.md` | 实现完成后修改 | 标记 T02 完成并记录验证证据 |
-| `docs/00-文档索引-Index.md` | 仅在完成态需要时修改 | 同步当前正式下一任务状态，不创建新设计文档 |
+| 文件                                         | 动作                 | 责任                                                    |
+| -------------------------------------------- | -------------------- | ------------------------------------------------------- |
+| `packages/backend/src/adapters/ai/router.ts` | 修改                 | 健康状态、可控时钟、熔断/恢复、冷却错误与 fallback 语义 |
+| `packages/backend/src/utils/ai-logger.ts`    | 修改                 | 增加脱敏熔断开启/结束事件                               |
+| `packages/backend/src/adapters/ai/index.ts`  | 修改                 | 导出新的冷却错误类型                                    |
+| `packages/backend/src/adapters/index.ts`     | 修改                 | 从统一 Adapter 入口导出新的冷却错误类型                 |
+| `packages/backend/test/ai-router.test.mjs`   | 修改                 | 单元与 Adapter 集成回归测试                             |
+| `docs/04-开发任务清单-Todo-List.md`          | 实现完成后修改       | 标记 T02 完成并记录验证证据                             |
+| `docs/00-文档索引-Index.md`                  | 仅在完成态需要时修改 | 同步当前正式下一任务状态，不创建新设计文档              |
 
 不修改 `env.ts`，因为 5 次和 10 分钟是已确认的产品规则，不增加运行时调参面；不新增数据库迁移。
 
@@ -111,6 +111,7 @@ export interface AiCircuitClosedPayload {
 ### Task 1：先用失败测试锁定健康状态与优先级行为
 
 **Files:**
+
 - Modify: `packages/backend/test/ai-router.test.mjs`
 - Test: `packages/backend/test/ai-router.test.mjs`
 
@@ -171,6 +172,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 ### Task 2：实现最小健康状态、熔断和冷却跳过
 
 **Files:**
+
 - Modify: `packages/backend/src/adapters/ai/router.ts`
 - Modify: `packages/backend/src/utils/ai-logger.ts`
 
@@ -240,6 +242,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 ### Task 3：锁定冷却恢复、成功清零和重新熔断
 
 **Files:**
+
 - Modify: `packages/backend/test/ai-router.test.mjs`
 - Modify: `packages/backend/src/adapters/ai/router.ts`
 
@@ -267,6 +270,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 ### Task 4：增加多 Provider 隔离和全冷却错误语义
 
 **Files:**
+
 - Modify: `packages/backend/src/adapters/ai/router.ts`
 - Modify: `packages/backend/src/adapters/ai/index.ts`
 - Modify: `packages/backend/src/adapters/index.ts`
@@ -303,6 +307,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 ### Task 5：验证 Adapter 级 fallback 与日志脱敏
 
 **Files:**
+
 - Modify: `packages/backend/test/ai-router.test.mjs`
 - Modify: `packages/backend/src/utils/ai-logger.ts`
 
@@ -315,8 +320,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 从 recording logger 读取 OPENED/CLOSED payload，断言键集合只包含：
 
 ```js
-['provider', 'cooldownStartedAt', 'cooldownEndsAt']
-['provider', 'cooldownEndedAt']
+['provider', 'cooldownStartedAt', 'cooldownEndsAt'][('provider', 'cooldownEndedAt')];
 ```
 
 把测试输入设置为明显敏感占位文本，并断言序列化日志不包含输入正文、测试 Key、`.invalid` URL 或原始错误消息。
@@ -333,6 +337,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/ai-router
 ### Task 6：全量验证、文档收尾与提交准备
 
 **Files:**
+
 - Modify after implementation: `docs/04-开发任务清单-Todo-List.md`
 - Modify if needed: `docs/00-文档索引-Index.md`
 

@@ -1,4 +1,3 @@
-
 'use strict';
 
 const crypto = require('node:crypto');
@@ -76,14 +75,17 @@ function __TEST_ONLY_createTrustedApprovalAnchor(options) {
   }
 
   const anchor = Object.freeze(Object.create(null));
-  TEST_ANCHORS.set(anchor, Object.freeze({
-    verificationKey,
-    keyId,
-    fingerprint: actualFingerprint,
-    metadataVersion,
-    releaseIdentity,
-    contractVersion,
-  }));
+  TEST_ANCHORS.set(
+    anchor,
+    Object.freeze({
+      verificationKey,
+      keyId,
+      fingerprint: actualFingerprint,
+      metadataVersion,
+      releaseIdentity,
+      contractVersion,
+    })
+  );
   return anchor;
 }
 

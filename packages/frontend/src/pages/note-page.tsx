@@ -135,7 +135,11 @@ export function NotePage({ semesterId }: NotePageProps) {
           <section className="card">
             <div className="section-header">
               <h2>笔记正文</h2>
-              {!editing && <button type="button" onClick={startEditing}>编辑笔记</button>}
+              {!editing && (
+                <button type="button" onClick={startEditing}>
+                  编辑笔记
+                </button>
+              )}
             </div>
             {editing ? (
               <form
@@ -161,8 +165,14 @@ export function NotePage({ semesterId }: NotePageProps) {
                 <div className="manual-text-footer">
                   <span>{markdownDraft.trim().length.toLocaleString()} / 1,048,576 字</span>
                   <div className="manual-text-buttons">
-                    <button type="button" onClick={cancelEditing} disabled={saving}>取消</button>
-                    <button type="submit" className="button-primary" disabled={saving || markdownDraft.trim().length === 0}>
+                    <button type="button" onClick={cancelEditing} disabled={saving}>
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      className="button-primary"
+                      disabled={saving || markdownDraft.trim().length === 0}
+                    >
                       {saving ? '保存中…' : '保存笔记'}
                     </button>
                   </div>

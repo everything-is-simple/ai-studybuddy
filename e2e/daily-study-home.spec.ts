@@ -5,7 +5,7 @@ const backendBaseUrl = 'http://127.0.0.1:4311/api';
 async function postData<T>(request: APIRequestContext, pathName: string, data: object): Promise<T> {
   const response = await request.post(`${backendBaseUrl}${pathName}`, { data });
   expect(response.ok(), `${pathName}: ${await response.text()}`).toBe(true);
-  const body = await response.json() as { success: boolean; data: T };
+  const body = (await response.json()) as { success: boolean; data: T };
   expect(body.success).toBe(true);
   return body.data;
 }

@@ -69,7 +69,6 @@ powershell -ExecutionPolicy Bypass -File scripts/check-docs-governance.ps1
 git diff --check
 ```
 
-
 验收条件：
 
 - 页面主标题在无障碍树中是 `heading`，名称“错题详情”，等级 1。
@@ -86,6 +85,7 @@ git diff --check
 - **安全与隔离**：只用合成测试数据和隔离 APP_DATA_ROOT；不读取 `.env.local`，不执行真实渠道 smoke。
 
 审查结论：方案 A 的实现范围、测试策略和非目标清晰，可进入实施。
+
 ## 七、实施与验证结果（2026-07-19）
 
 - **实现**：`packages/frontend/src/pages/mistake-detail-page.tsx` 仅将“错题详情”从 `<p className="workbench-eyebrow">` 改为 `<h1 className="workbench-eyebrow">`；未改 CSS、API、路由、SQLite、领域规则或 Playwright 标题断言。

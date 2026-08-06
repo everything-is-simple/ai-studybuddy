@@ -35,9 +35,7 @@ function runSqlitePrecheck(databasePath, scope) {
       .get();
     let version = 0;
     if (migrationTable) {
-      const row = db
-        .prepare('SELECT MAX(version) AS v FROM schema_migrations WHERE scope = ?')
-        .get(scope);
+      const row = db.prepare('SELECT MAX(version) AS v FROM schema_migrations WHERE scope = ?').get(scope);
       version = Number(row?.v ?? 0);
     }
     emit(true, 'sqlite-precheck', { quick, version });

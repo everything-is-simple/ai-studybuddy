@@ -23,7 +23,8 @@ const helperConsumerPaths = new Set([
   'packages/backend/test/nofollow-contract.test.mjs',
   'packages/backend/test/trust-anchor-contract.test.mjs',
 ]);
-const providerModulePattern = /AIStudyBuddy\.[\s\S]{0,50}?(?:TrustedApproval|VerifierIntegrity|NoFollow|TrustAnchor)\.cjs/;
+const providerModulePattern =
+  /AIStudyBuddy\.[\s\S]{0,50}?(?:TrustedApproval|VerifierIntegrity|NoFollow|TrustAnchor)\.cjs/;
 function staticStringValue(node) {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
   if (ts.isParenthesizedExpression(node)) return staticStringValue(node.expression);
@@ -42,10 +43,20 @@ function scriptKindFor(relativePath) {
 }
 
 function containsComputedFactoryMarker(source, relativePath) {
-  const sourceFile = ts.createSourceFile(relativePath, source, ts.ScriptTarget.ES2022, false, scriptKindFor(relativePath));
+  const sourceFile = ts.createSourceFile(
+    relativePath,
+    source,
+    ts.ScriptTarget.ES2022,
+    false,
+    scriptKindFor(relativePath)
+  );
   let found = false;
   const inspect = (node) => {
-    const expression = ts.isElementAccessExpression(node) ? node.argumentExpression : ts.isComputedPropertyName(node) ? node.expression : undefined;
+    const expression = ts.isElementAccessExpression(node)
+      ? node.argumentExpression
+      : ts.isComputedPropertyName(node)
+        ? node.expression
+        : undefined;
     if (expression !== undefined && staticStringValue(expression)?.includes(MARKER)) found = true;
     if (!found) ts.forEachChild(node, inspect);
   };
@@ -55,7 +66,10 @@ function containsComputedFactoryMarker(source, relativePath) {
 
 function trackedSources(root) {
   const raw = execFileSync('git', ['ls-files', '-z', '--', 'scripts', 'packages'], { cwd: root, encoding: 'buffer' });
-  return raw.toString('utf8').split('\0').filter((file) => /\.(?:cjs|js|mjs|cts|ts|mts|tsx)$/.test(file));
+  return raw
+    .toString('utf8')
+    .split('\0')
+    .filter((file) => /\.(?:cjs|js|mjs|cts|ts|mts|tsx)$/.test(file));
 }
 
 function assertSourcePolicy(relativePath, source) {
@@ -68,7 +82,11 @@ function assertSourcePolicy(relativePath, source) {
   assert.equal(source.includes(MARKER), false, `unexpected factory marker: ${relativePath}`);
   assert.equal(containsComputedFactoryMarker(source, relativePath), false, `computed factory marker: ${relativePath}`);
   if (!helperConsumerPaths.has(relativePath)) {
-    assert.equal(source.includes('trusted-approval-fixture'), false, `unexpected fixture helper reference: ${relativePath}`);
+    assert.equal(
+      source.includes('trusted-approval-fixture'),
+      false,
+      `unexpected fixture helper reference: ${relativePath}`
+    );
   }
 }
 
@@ -78,19 +96,57 @@ test('test-only factories are isolated to the exact tracked-source allowlist', (
   assert.equal(sources.includes(helperPath), true);
   for (const relativePath of definitionPaths) assert.equal(sources.includes(relativePath), true);
   for (const relativePath of sources) assertSourcePolicy(relativePath, readFileSync(join(root, relativePath), 'utf8'));
-  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const x = module['__TEST' + '_ONLY_factory'];"));
-  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const module = require('./AIStudyBuddy.' + 'TrustedApproval.cjs'); module['__TEST' + '_ONLY_factory'];"));
-  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "const factory = module['__TE' + 'ST_ONLY_createTrustedApprovalVerifier'];"));
-  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"));
-  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "module['__TEST' /* split */ + '_ONLY_createTrustedApprovalVerifier'];"));
-  assert.throws(() => assertSourcePolicy('packages/backend/src/rogue.ts', "const factory = module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"));
-  assert.throws(() => assertSourcePolicy('packages/backend/test/rogue.mjs', "export * from './helpers/trusted-approval-fixture.mjs';"));
+  assert.throws(() =>
+    assertSourcePolicy('packages/backend/test/rogue.mjs', "const x = module['__TEST' + '_ONLY_factory'];")
+  );
+  assert.throws(() =>
+    assertSourcePolicy(
+      'packages/backend/test/rogue.mjs',
+      "const module = require('./AIStudyBuddy.' + 'TrustedApproval.cjs'); module['__TEST' + '_ONLY_factory'];"
+    )
+  );
+  assert.throws(() =>
+    assertSourcePolicy(
+      'packages/backend/test/rogue.mjs',
+      "const factory = module['__TE' + 'ST_ONLY_createTrustedApprovalVerifier'];"
+    )
+  );
+  assert.throws(() =>
+    assertSourcePolicy(
+      'packages/backend/test/rogue.mjs',
+      "module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"
+    )
+  );
+  assert.throws(() =>
+    assertSourcePolicy(
+      'packages/backend/test/rogue.mjs',
+      "module['__TEST' /* split */ + '_ONLY_createTrustedApprovalVerifier'];"
+    )
+  );
+  assert.throws(() =>
+    assertSourcePolicy(
+      'packages/backend/src/rogue.ts',
+      "const factory = module[('__TEST' + '_ONLY') + '_createTrustedApprovalVerifier'];"
+    )
+  );
+  assert.throws(() =>
+    assertSourcePolicy('packages/backend/test/rogue.mjs', "export * from './helpers/trusted-approval-fixture.mjs';")
+  );
 });
 
 test('no-follow production module contains no ordinary path or ACL fallback token', () => {
   const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
   const source = readFileSync(join(root, 'scripts/lib/AIStudyBuddy.NoFollow.cjs'), 'utf8');
-  for (const forbidden of [new RegExp('(?:node:)?f' + 's\\.readFile'), /lstat/, /stat/, /realpath/, /Get-Acl/, /Set-Acl/, /icacls/, /PowerShell/]) {
+  for (const forbidden of [
+    new RegExp('(?:node:)?f' + 's\\.readFile'),
+    /lstat/,
+    /stat/,
+    /realpath/,
+    /Get-Acl/,
+    /Set-Acl/,
+    /icacls/,
+    /PowerShell/,
+  ]) {
     assert.equal(forbidden.test(source), false);
   }
 });

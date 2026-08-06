@@ -65,18 +65,13 @@ export class ConnectionTester {
         providers: [],
       };
     }
-    const providers = await Promise.all(
-      candidate.providers.map((provider) => this.testOneAiProvider(provider))
-    );
+    const providers = await Promise.all(candidate.providers.map((provider) => this.testOneAiProvider(provider)));
     // 至少一个 Provider 测试通过就算成功，失败的会被自动跳过
     const hasAtLeastOnePass = providers.some((provider) => provider.pass);
     return { pass: hasAtLeastOnePass, providers };
   }
 
-  async testSmtp(
-    candidate: SmtpChannelConfig,
-    sendTestEmail: boolean
-  ): Promise<ConnectionTestResult> {
+  async testSmtp(candidate: SmtpChannelConfig, sendTestEmail: boolean): Promise<ConnectionTestResult> {
     try {
       const transport = this.createSmtpTransport(candidate);
       await transport.verify();
@@ -154,9 +149,7 @@ export class ConnectionTester {
     resolvedBaseUrl?: string;
     attempts?: Array<{ baseUrl: string; pass: boolean; errorCode?: string }>;
   }> {
-    const candidates = expandBaseUrlCandidates(
-      provider.baseUrls?.length ? provider.baseUrls : [provider.baseUrl]
-    );
+    const candidates = expandBaseUrlCandidates(provider.baseUrls?.length ? provider.baseUrls : [provider.baseUrl]);
 
     if (candidates.length === 0) {
       return fixedFailure('AI_BASE_URL_REQUIRED', '请填写至少一个 API 请求地址');
@@ -192,7 +185,10 @@ export class ConnectionTester {
               ? fixedFailure('AI_BASE_URL_UNREACHABLE', '该 API 请求地址连不上，请检查地址是否正确')
               : listing.status === 401 || listing.status === 403
                 ? fixedFailure('AI_AUTH_FAILED', 'AI Provider 身份验证失败')
-                : fixedFailure('AI_NO_MODEL_AVAILABLE', '地址可以连通但 /models 接口没返回模型，请手动填写模型名后重试');
+                : fixedFailure(
+                    'AI_NO_MODEL_AVAILABLE',
+                    '地址可以连通但 /models 接口没返回模型，请手动填写模型名后重试'
+                  );
             if (lastFailure.errorCode === 'AI_AUTH_FAILED') authFailure = lastFailure;
             attempts.push({ baseUrl, pass: false, errorCode: lastFailure.errorCode });
             continue;

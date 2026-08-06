@@ -76,15 +76,15 @@
 
 以下候选是计划创建时的审计/实施起点；除后续“本次已实施”表中明确列出的文件外，仍为**候选/待实施**，不代表已修改、已验证或将必然修改：
 
-| 类别 | 候选/待实施文件或位置 | 未来目的 |
-| --- | --- | --- |
-| 日志抽象 | `packages/backend/src/utils/ai-logger.ts`（候选） | 将 AI 事件的字段 allowlist、异常摘要与输出目的地纳入受控契约。 |
-| 维护失败日志 | `packages/backend/src/db/semester-initializer.ts`（候选） | 审计 JSONL 原始错误消息和清理错误消息的脱敏边界。 |
-| 运行路径 | `packages/backend/src/db/paths.ts`、`packages/backend/src/config/env.ts`（候选） | 定义日志根配置、路径规范化与受保护根比较的可复用边界。 |
-| 启动/运维输出 | `packages/backend/src/server.ts`、`packages/backend/src/scripts/parent-report-runner.ts`、`scripts/*.ps1`、`scripts/lib/AIStudyBuddy.Deployment.psm1`（候选，只读审计起点） | 审计启动、部署和计划任务错误的最小化输出；不处理部署包输出或 staging 删除边界。 |
-| 后端测试 | `packages/backend/test/log-redaction-rotation-retention-boundary.test.mjs`（候选新增） | 覆盖日志字段、异常/子进程输出、路径与危险目标拒绝。 |
-| PowerShell 测试 | `scripts/test-log-redaction-rotation-retention-boundary.ps1`（候选新增） | 仅用仓库外合成夹具覆盖部署/运维日志路径与错误输出契约（如实施确有 PowerShell 范围）。 |
-| 相邻回归 | `packages/backend/test/ai-router.test.mjs`、`packages/backend/test/semester-initialization.test.mjs`、`packages/backend/test/env-error-redaction.test.mjs`、`packages/backend/test/subprocess-environment-boundary.test.mjs`（候选） | 保持既有日志/异常/子进程脱敏约束，并添加最小必要回归。 |
+| 类别            | 候选/待实施文件或位置                                                                                                                                                                                                                | 未来目的                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| 日志抽象        | `packages/backend/src/utils/ai-logger.ts`（候选）                                                                                                                                                                                    | 将 AI 事件的字段 allowlist、异常摘要与输出目的地纳入受控契约。                        |
+| 维护失败日志    | `packages/backend/src/db/semester-initializer.ts`（候选）                                                                                                                                                                            | 审计 JSONL 原始错误消息和清理错误消息的脱敏边界。                                     |
+| 运行路径        | `packages/backend/src/db/paths.ts`、`packages/backend/src/config/env.ts`（候选）                                                                                                                                                     | 定义日志根配置、路径规范化与受保护根比较的可复用边界。                                |
+| 启动/运维输出   | `packages/backend/src/server.ts`、`packages/backend/src/scripts/parent-report-runner.ts`、`scripts/*.ps1`、`scripts/lib/AIStudyBuddy.Deployment.psm1`（候选，只读审计起点）                                                          | 审计启动、部署和计划任务错误的最小化输出；不处理部署包输出或 staging 删除边界。       |
+| 后端测试        | `packages/backend/test/log-redaction-rotation-retention-boundary.test.mjs`（候选新增）                                                                                                                                               | 覆盖日志字段、异常/子进程输出、路径与危险目标拒绝。                                   |
+| PowerShell 测试 | `scripts/test-log-redaction-rotation-retention-boundary.ps1`（候选新增）                                                                                                                                                             | 仅用仓库外合成夹具覆盖部署/运维日志路径与错误输出契约（如实施确有 PowerShell 范围）。 |
+| 相邻回归        | `packages/backend/test/ai-router.test.mjs`、`packages/backend/test/semester-initialization.test.mjs`、`packages/backend/test/env-error-redaction.test.mjs`、`packages/backend/test/subprocess-environment-boundary.test.mjs`（候选） | 保持既有日志/异常/子进程脱敏约束，并添加最小必要回归。                                |
 
 | 本次已实施：边界模块 | `packages/backend/src/utils/runtime-log-boundary.ts` | 仅管理固定 allowlist 的运行、维护和运维日志文件；拒绝空/相对/根/受保护/重解析点目标，并仅对匹配的合成 rotated 文件执行保留。 |
 | 本次已实施：调用点 | `packages/backend/src/utils/ai-logger.ts`、`packages/backend/src/db/semester-initializer.ts` | 将 AI 与维护失败日志收缩为字段 allowlist 与稳定错误码；维护日志改写到 `APP_DATA_ROOT` 同级受控日志根。 |

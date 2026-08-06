@@ -11,8 +11,17 @@ async function createApi(t, overrides = {}) {
   const calls = [];
   const service = {
     getAllStatus: () => ({
-      ai: unconfigured, smtp: unconfigured, feishu: unconfigured,
-      runtime: { dataDir: true, aiAvailable: false, smtpAvailable: false, feishuAvailable: false, uptime: 1, nodeVersion: 'v22.test' },
+      ai: unconfigured,
+      smtp: unconfigured,
+      feishu: unconfigured,
+      runtime: {
+        dataDir: true,
+        aiAvailable: false,
+        smtpAvailable: false,
+        feishuAvailable: false,
+        uptime: 1,
+        nodeVersion: 'v22.test',
+      },
     }),
     getActiveSnapshot: () => null,
     testAndActivate: async (channel, candidate, options) => {
@@ -58,12 +67,24 @@ test('AI activation sanitizes controls, validates limits, and stable-sorts prior
   });
 
   assert.equal(response.status, 200);
-  assert.deepEqual(calls[0].candidate.providers.map((item) => item.name), ['first-a', 'first-b', 'second']);
+  assert.deepEqual(
+    calls[0].candidate.providers.map((item) => item.name),
+    ['first-a', 'first-b', 'second']
+  );
   assert.equal(calls[0].candidate.providers[2].model, 'm2');
 
   const tooMany = await fetch(`${base}/ai/test-and-activate`, {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ providers: Array.from({ length: 11 }, (_, index) => ({ name: `p${index}`, baseUrl: 'https://x.invalid', apiKey: 'k', model: 'm', priority: 1 })) }),
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      providers: Array.from({ length: 11 }, (_, index) => ({
+        name: `p${index}`,
+        baseUrl: 'https://x.invalid',
+        apiKey: 'k',
+        model: 'm',
+        priority: 1,
+      })),
+    }),
   });
   assert.equal(tooMany.status, 400);
   assert.equal((await tooMany.json()).error.code, 'CONFIG_PROVIDER_COUNT_INVALID');
@@ -73,19 +94,37 @@ test('config API rejects invalid channels, fields, protocols, and non-JSON write
   const { base } = await createApi(t);
   const cases = [
     [`${base}/unknown/test-and-activate`, { value: true }, 'CONFIG_CHANNEL_INVALID'],
-    [`${base}/smtp/test-and-activate`, { host: 'h', port: 70000, secure: true, user: 'u', authCode: 'a', to: 'a@b' }, 'CONFIG_SMTP_PORT_INVALID'],
+    [
+      `${base}/smtp/test-and-activate`,
+      { host: 'h', port: 70000, secure: true, user: 'u', authCode: 'a', to: 'a@b' },
+      'CONFIG_SMTP_PORT_INVALID',
+    ],
     [`${base}/feishu/test-and-activate`, { webhookUrl: 'http://example.invalid/hook' }, 'CONFIG_URL_INVALID'],
-    [`${base}/ai/test-and-activate`, { providers: [{ name: 'x'.repeat(51), baseUrl: 'https://x.invalid', apiKey: 'k', model: 'm', priority: 1 }] }, 'CONFIG_FIELD_TOO_LONG'],
-    [`${base}/ai/test-and-activate`, { providers: [{ name: 'p', baseUrl: 'http://remote.invalid', apiKey: 'k', model: 'm', priority: 1 }] }, 'CONFIG_URL_INVALID'],
+    [
+      `${base}/ai/test-and-activate`,
+      { providers: [{ name: 'x'.repeat(51), baseUrl: 'https://x.invalid', apiKey: 'k', model: 'm', priority: 1 }] },
+      'CONFIG_FIELD_TOO_LONG',
+    ],
+    [
+      `${base}/ai/test-and-activate`,
+      { providers: [{ name: 'p', baseUrl: 'http://remote.invalid', apiKey: 'k', model: 'm', priority: 1 }] },
+      'CONFIG_URL_INVALID',
+    ],
   ];
   for (const [url, body, code] of cases) {
-    const response = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
     assert.equal(response.status, 400);
     assert.equal((await response.json()).error.code, code);
   }
 
   const form = await fetch(`${base}/smtp/test-and-activate`, {
-    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'authCode=DO-NOT-LEAK',
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: 'authCode=DO-NOT-LEAK',
   });
   assert.equal(form.status, 415);
   const formBody = await form.json();
@@ -101,14 +140,19 @@ test('failed activation is returned sanitized and retest without active is 404',
     }),
   });
   const failed = await fetch(`${base}/ai/test-and-activate`, {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ providers: [{ name: 'p', baseUrl: 'https://x.invalid', apiKey: 'secret', model: 'm', priority: 1 }] }),
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      providers: [{ name: 'p', baseUrl: 'https://x.invalid', apiKey: 'secret', model: 'm', priority: 1 }],
+    }),
   });
   assert.equal(failed.status, 422);
   assert.doesNotMatch(JSON.stringify(await failed.json()), /secret|x\.invalid/);
 
   const retest = await fetch(`${base}/ai/retest`, {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}',
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{}',
   });
   assert.equal(retest.status, 404);
   assert.equal((await retest.json()).error.code, 'CONFIG_NOT_FOUND');
@@ -124,12 +168,14 @@ test('configuration presets expose only approved non-secret official metadata', 
   assert.equal(body.error, undefined);
   // 三组九家：国内主流 3 + 国外主流 3 + 中转站 3 个自定义槽位。
   assert.equal(body.data.ai.length, 9);
-  assert.deepEqual(body.data.ai.map((preset) => preset.id), [
-    'deepseek', 'kimi', 'glm', 'openai', 'anthropic', 'gemini', 'relay-1', 'relay-2', 'relay-3',
-  ]);
-  assert.deepEqual(body.data.ai.map((preset) => preset.group), [
-    'mainland', 'mainland', 'mainland', 'international', 'international', 'international', 'relay', 'relay', 'relay',
-  ]);
+  assert.deepEqual(
+    body.data.ai.map((preset) => preset.id),
+    ['deepseek', 'kimi', 'glm', 'openai', 'anthropic', 'gemini', 'relay-1', 'relay-2', 'relay-3']
+  );
+  assert.deepEqual(
+    body.data.ai.map((preset) => preset.group),
+    ['mainland', 'mainland', 'mainland', 'international', 'international', 'international', 'relay', 'relay', 'relay']
+  );
 
   const openai = body.data.ai.find((preset) => preset.id === 'openai');
   assert.equal(openai.baseUrl, 'https://api.openai.com/v1');
@@ -177,60 +223,92 @@ test('configuration presets expose only approved non-secret official metadata', 
 
 test('official AI candidates resolve fixed presets and reject unavailable or altered fields', async (t) => {
   const { base, calls } = await createApi(t);
-  const activate = async (providers) => fetch(`${base}/ai/test-and-activate`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ providers }),
-  });
+  const activate = async (providers) =>
+    fetch(`${base}/ai/test-and-activate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ providers }),
+    });
 
-  const accepted = await activate([{
-    kind: 'official',
-    presetId: 'kimi',
-    apiKey: 'FAKE_T12_KIMI_KEY',
-    model: 'moonshot-v1-8k',
-    priority: 1,
-  }]);
-  assert.equal(accepted.status, 200);
-  assert.deepEqual(calls[0].candidate, {
-    providers: [{
-      name: 'Kimi（月之暗面）',
-      baseUrl: 'https://api.moonshot.cn/v1',
+  const accepted = await activate([
+    {
+      kind: 'official',
+      presetId: 'kimi',
       apiKey: 'FAKE_T12_KIMI_KEY',
       model: 'moonshot-v1-8k',
       priority: 1,
-    }],
+    },
+  ]);
+  assert.equal(accepted.status, 200);
+  assert.deepEqual(calls[0].candidate, {
+    providers: [
+      {
+        name: 'Kimi（月之暗面）',
+        baseUrl: 'https://api.moonshot.cn/v1',
+        apiKey: 'FAKE_T12_KIMI_KEY',
+        model: 'moonshot-v1-8k',
+        priority: 1,
+      },
+    ],
   });
 
   // 中转站可以带用户自己填的地址，模型不受预设白名单限制（由对方 /models 决定）。
-  const relayAccepted = await activate([{
-    kind: 'official',
-    presetId: 'relay-1',
-    baseUrl: 'https://relay.example.test/v1',
-    apiKey: 'FAKE_T12_RELAY_KEY',
-    model: 'whatever-the-relay-offers',
-    priority: 1,
-  }]);
-  assert.equal(relayAccepted.status, 200);
-  assert.deepEqual(calls[1].candidate, {
-    providers: [{
-      name: '中转站 1',
+  const relayAccepted = await activate([
+    {
+      kind: 'official',
+      presetId: 'relay-1',
       baseUrl: 'https://relay.example.test/v1',
       apiKey: 'FAKE_T12_RELAY_KEY',
       model: 'whatever-the-relay-offers',
       priority: 1,
-    }],
+    },
+  ]);
+  assert.equal(relayAccepted.status, 200);
+  assert.deepEqual(calls[1].candidate, {
+    providers: [
+      {
+        name: '中转站 1',
+        baseUrl: 'https://relay.example.test/v1',
+        apiKey: 'FAKE_T12_RELAY_KEY',
+        model: 'whatever-the-relay-offers',
+        priority: 1,
+      },
+    ],
   });
 
   for (const [provider, code] of [
     [{ kind: 'official', presetId: 'unknown', apiKey: 'FAKE', model: 'x', priority: 1 }, 'CONFIG_PRESET_INVALID'],
     [{ kind: 'official', presetId: 'kimi', apiKey: 'FAKE', model: 'other', priority: 1 }, 'CONFIG_MODEL_INVALID'],
     // 官方 Provider 的地址固定，带 baseUrl 必须被拒绝而不是被忽略。
-    [{ kind: 'official', presetId: 'kimi', baseUrl: 'https://attacker.invalid', apiKey: 'FAKE', model: 'moonshot-v1-8k', priority: 1 }, 'CONFIG_FIELD_INVALID'],
+    [
+      {
+        kind: 'official',
+        presetId: 'kimi',
+        baseUrl: 'https://attacker.invalid',
+        apiKey: 'FAKE',
+        model: 'moonshot-v1-8k',
+        priority: 1,
+      },
+      'CONFIG_FIELD_INVALID',
+    ],
     // 中转站缺地址不能激活。
     [{ kind: 'official', presetId: 'relay-1', apiKey: 'FAKE', model: 'm', priority: 1 }, 'CONFIG_FIELD_INVALID'],
     // 中转站地址必须是 https（或本机），不能是任意协议。
-    [{ kind: 'official', presetId: 'relay-1', baseUrl: 'ftp://relay.invalid', apiKey: 'FAKE', model: 'm', priority: 1 }, 'CONFIG_URL_INVALID'],
-    [{ kind: 'unsupported-kind', name: 'x', baseUrl: 'https://x.invalid', apiKey: 'FAKE', model: 'm', priority: 1 }, 'CONFIG_FIELD_INVALID'],
+    [
+      {
+        kind: 'official',
+        presetId: 'relay-1',
+        baseUrl: 'ftp://relay.invalid',
+        apiKey: 'FAKE',
+        model: 'm',
+        priority: 1,
+      },
+      'CONFIG_URL_INVALID',
+    ],
+    [
+      { kind: 'unsupported-kind', name: 'x', baseUrl: 'https://x.invalid', apiKey: 'FAKE', model: 'm', priority: 1 },
+      'CONFIG_FIELD_INVALID',
+    ],
   ]) {
     const rejected = await activate([provider]);
     assert.equal(rejected.status, 400);

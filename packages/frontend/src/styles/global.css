@@ -554,7 +554,6 @@ button:disabled {
   background: var(--color-primary-hover);
 }
 
-
 .material-status-description {
   margin: 0 0 8px;
   color: var(--color-text-muted);
@@ -937,7 +936,6 @@ button:disabled {
   margin-top: 0;
   font-size: 1rem;
 }
-
 
 .semester-status-card {
   display: flex;
@@ -1350,18 +1348,68 @@ button:disabled {
 }
 
 /* ===== T09B 每日学习首页 ===== */
-.daily-home-header { display: flex; align-items: start; justify-content: space-between; gap: var(--gap); margin-bottom: var(--gap); }
-.daily-home-header h1, .daily-home-card h2, .daily-home-next h2 { margin: 0; }
-.daily-home-header p { color: var(--color-text-muted); margin: 4px 0 0; }
-.daily-home-next, .daily-home-card { background: var(--color-surface); border: 1px solid var(--color-secondary); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
-.daily-home-next { margin-bottom: var(--gap); border-left: 4px solid var(--color-primary); }
-.daily-home-next a { display: inline-block; margin-top: 8px; font-weight: 600; }
-.daily-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--gap); }
-.daily-home-card ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
-.daily-home-card li { display: grid; gap: 2px; }
-.daily-home-card li span, .daily-home-empty { color: var(--color-text-muted); font-size: 0.9rem; }
-.daily-home-empty { margin: 12px 0 0; }
-@media (max-width: 560px) { .daily-home-header { flex-direction: column; } }
+.daily-home-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.daily-home-header h1,
+.daily-home-card h2,
+.daily-home-next h2 {
+  margin: 0;
+}
+.daily-home-header p {
+  color: var(--color-text-muted);
+  margin: 4px 0 0;
+}
+.daily-home-next,
+.daily-home-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+.daily-home-next {
+  margin-bottom: var(--gap);
+  border-left: 4px solid var(--color-primary);
+}
+.daily-home-next a {
+  display: inline-block;
+  margin-top: 8px;
+  font-weight: 600;
+}
+.daily-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--gap);
+}
+.daily-home-card ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.daily-home-card li {
+  display: grid;
+  gap: 2px;
+}
+.daily-home-card li span,
+.daily-home-empty {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+.daily-home-empty {
+  margin: 12px 0 0;
+}
+@media (max-width: 560px) {
+  .daily-home-header {
+    flex-direction: column;
+  }
+}
 
 /* ===== T09C 课程、周课表与考试目标 ===== */
 .course-create-section,
@@ -1593,7 +1641,6 @@ button:disabled {
   background: #eff6ff;
   font-weight: 700;
 }
-
 
 /* ===== T09E 练习历史与学期归档 ===== */
 .semester-actions,
@@ -1834,38 +1881,119 @@ button:disabled {
   }
 }
 
-
 /* ===== Phase 2-T04 临考速背 ===== */
 .cram-header,
 .cram-setup,
 .cram-session,
-.cram-empty { display: grid; gap: 12px; }
+.cram-empty {
+  display: grid;
+  gap: 12px;
+}
 .cram-duration-options,
 .cram-controls,
 .cram-manual-links,
-.cram-source-list { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.cram-duration-options button.active { color: #1d4ed8; border-color: #93c5fd; background: #eff6ff; font-weight: 700; }
-.cram-session-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.cram-source-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.cram-duration-options button.active {
+  color: #1d4ed8;
+  border-color: #93c5fd;
+  background: #eff6ff;
+  font-weight: 700;
+}
+.cram-session-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
 .cram-session-header h2,
-.cram-session-header p { margin: 0; }
-.cram-timer { display: grid; min-width: 110px; padding: 10px; border: 1px solid var(--color-secondary); border-radius: var(--radius); text-align: right; }
-.cram-timer strong { font-variant-numeric: tabular-nums; font-size: 1.35rem; }
-.cram-timer span { color: var(--color-text-muted); font-size: .875rem; }
-.cram-flashcard { display: grid; gap: 16px; min-height: 230px; padding: 20px; border: 2px solid #bfdbfe; border-radius: var(--radius); background: linear-gradient(135deg, #f8fbff, #eff6ff); outline: none; }
-.cram-flashcard:focus-visible { box-shadow: 0 0 0 3px #93c5fd; }
-.cram-flashcard.is-flipped { border-color: #86efac; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.cram-session-header p {
+  margin: 0;
+}
+.cram-timer {
+  display: grid;
+  min-width: 110px;
+  padding: 10px;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+  text-align: right;
+}
+.cram-timer strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.35rem;
+}
+.cram-timer span {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+.cram-flashcard {
+  display: grid;
+  gap: 16px;
+  min-height: 230px;
+  padding: 20px;
+  border: 2px solid #bfdbfe;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #f8fbff, #eff6ff);
+  outline: none;
+}
+.cram-flashcard:focus-visible {
+  box-shadow: 0 0 0 3px #93c5fd;
+}
+.cram-flashcard.is-flipped {
+  border-color: #86efac;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+}
 .cram-flashcard h3,
-.cram-flashcard p { margin: 0; }
-.cram-card-face { display: grid; gap: 12px; align-content: start; }
-.cram-card-face > p:last-child { white-space: pre-wrap; line-height: 1.7; }
-.cram-flashcard footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: auto; }
-.cram-source-list span { padding: 3px 8px; border-radius: 999px; background: #e2e8f0; color: #334155; font-size: .875rem; }
+.cram-flashcard p {
+  margin: 0;
+}
+.cram-card-face {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.cram-card-face > p:last-child {
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+.cram-flashcard footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: auto;
+}
+.cram-source-list span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.875rem;
+}
 @media (max-width: 720px) {
-  .cram-session-header { flex-direction: column; }
-  .cram-timer { width: 100%; text-align: left; }
-  .cram-flashcard { min-height: 260px; padding: 16px; }
-  .cram-flashcard footer { align-items: flex-start; flex-direction: column; }
-  .cram-controls > * { flex: 1 1 28%; }
+  .cram-session-header {
+    flex-direction: column;
+  }
+  .cram-timer {
+    width: 100%;
+    text-align: left;
+  }
+  .cram-flashcard {
+    min-height: 260px;
+    padding: 16px;
+  }
+  .cram-flashcard footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .cram-controls > * {
+    flex: 1 1 28%;
+  }
 }
 
 /* ===== Phase 2-T05 冲刺计划 ===== */
@@ -1873,20 +2001,59 @@ button:disabled {
 .cram-plan-state,
 .cram-plan-day,
 .cram-plan-manual,
-.cram-plan-days { display: grid; gap: 12px; }
-.cram-plan-days { margin-top: 16px; }
-.cram-plan-days > .text-muted { margin: 0; }
+.cram-plan-days {
+  display: grid;
+  gap: 12px;
+}
+.cram-plan-days {
+  margin-top: 16px;
+}
+.cram-plan-days > .text-muted {
+  margin: 0;
+}
 .cram-plan-day h2,
 .cram-plan-day p,
-.cram-plan-manual h2 { margin: 0; }
-.cram-plan-day ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.cram-plan-suggestion { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px; border: 1px solid #dbe3ef; border-radius: var(--radius); }
-.cram-plan-suggestion > div { display: grid; gap: 6px; min-width: 0; }
-.cram-plan-suggestion p { color: var(--color-text-muted); line-height: 1.55; }
-.cram-plan-suggestion .button-link { flex: 0 0 auto; white-space: nowrap; }
+.cram-plan-manual h2 {
+  margin: 0;
+}
+.cram-plan-day ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cram-plan-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid #dbe3ef;
+  border-radius: var(--radius);
+}
+.cram-plan-suggestion > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.cram-plan-suggestion p {
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+.cram-plan-suggestion .button-link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 @media (max-width: 720px) {
-  .cram-plan-suggestion { align-items: stretch; flex-direction: column; }
-  .cram-plan-suggestion .button-link { width: 100%; text-align: center; }
+  .cram-plan-suggestion {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cram-plan-suggestion .button-link {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* ===== Phase 2-T06 工作台冲刺区 ===== */

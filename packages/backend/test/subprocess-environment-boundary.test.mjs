@@ -8,7 +8,9 @@ import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const createdDataRoot = process.env.APP_DATA_ROOT ? null : fs.mkdtempSync(path.join(os.tmpdir(), 'studybuddy-t02b-env-'));
+const createdDataRoot = process.env.APP_DATA_ROOT
+  ? null
+  : fs.mkdtempSync(path.join(os.tmpdir(), 'studybuddy-t02b-env-'));
 if (createdDataRoot) process.env.APP_DATA_ROOT = createdDataRoot;
 test.after(() => {
   if (createdDataRoot) fs.rmSync(createdDataRoot, { recursive: true, force: true });
@@ -96,7 +98,9 @@ test('OCR child receives only its explicit allowlist and no host secrets', async
   const cacheRoot = path.join(root, 'cache');
   const workerPath = path.join(root, 'inspect-worker.js');
   const expectedKeys = allowedKeys({ includePath: false, includeOcrCache: true });
-  fs.writeFileSync(workerPath, `
+  fs.writeFileSync(
+    workerPath,
+    `
     const allowed = new Set(${JSON.stringify(expectedKeys)});
     const keys = Object.keys(process.env).map((key) => key.toUpperCase());
     const forbidden = ${JSON.stringify(FORBIDDEN_KEYS)};
@@ -106,11 +110,18 @@ test('OCR child receives only its explicit allowlist and no host secrets', async
         forbiddenAbsent: forbidden.every((key) => !keys.includes(key))
       })
     }));
-  `);
+  `
+  );
 
   try {
     await withHostSentinels(async () => {
-      const converter = new OcrConverter({ pythonPath: process.execPath, workerPath, tempRoot, cacheRoot, timeoutMs: 5000 });
+      const converter = new OcrConverter({
+        pythonPath: process.execPath,
+        workerPath,
+        tempRoot,
+        cacheRoot,
+        timeoutMs: 5000,
+      });
       const result = await converter.convert(Buffer.from('synthetic-image'));
       assert.equal(result.ok, true);
       assert.deepEqual(JSON.parse(result.text), { forbiddenAbsent: true });
@@ -125,10 +136,19 @@ test('OCR path lookup allowlist never includes Python or host configuration vari
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'studybuddy-t02b-ocr-env-'));
   try {
     await withHostSentinels(async () => {
-      const environment = getOcrWorkerEnvironment({ tempRoot: path.join(root, 'tmp'), cacheRoot: path.join(root, 'cache'), requiresPathLookup: true });
-      const keys = Object.keys(environment).map((key) => key.toUpperCase()).sort();
+      const environment = getOcrWorkerEnvironment({
+        tempRoot: path.join(root, 'tmp'),
+        cacheRoot: path.join(root, 'cache'),
+        requiresPathLookup: true,
+      });
+      const keys = Object.keys(environment)
+        .map((key) => key.toUpperCase())
+        .sort();
       assert.deepEqual(keys, allowedKeys({ includePath: true, includeOcrCache: true }));
-      assert.equal(FORBIDDEN_KEYS.some((key) => Object.hasOwn(environment, key)), false);
+      assert.equal(
+        FORBIDDEN_KEYS.some((key) => Object.hasOwn(environment, key)),
+        false
+      );
     });
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -140,7 +160,12 @@ test('OCR failure does not expose child stderr or stdout', async () => {
   const workerPath = path.join(root, 'failing-worker.js');
   fs.writeFileSync(workerPath, "process.stderr.write('T02B_OCR_CHILD_SECRET'); process.exit(1);");
   try {
-    const result = await new OcrConverter({ pythonPath: process.execPath, workerPath, tempRoot: path.join(root, 'tmp'), timeoutMs: 5000 }).convert(Buffer.from('synthetic-image'));
+    const result = await new OcrConverter({
+      pythonPath: process.execPath,
+      workerPath,
+      tempRoot: path.join(root, 'tmp'),
+      timeoutMs: 5000,
+    }).convert(Buffer.from('synthetic-image'));
     assert.equal(result.ok, false);
     assert.equal(result.error.includes('T02B_OCR_CHILD_SECRET'), false);
   } finally {
@@ -172,12 +197,25 @@ test('whisper.cpp receives a request-scoped allowlist without host secrets', asy
         { cliPath, modelPath, timeoutMs: 5000, maxFileBytes: 1024 * 1024 },
         fakeSpawn
       );
-      const result = await converter.transcribe({ originalname: 'lesson.wav', mimetype: 'audio/wav', size: canonicalWav().length, buffer: canonicalWav() });
+      const result = await converter.transcribe({
+        originalname: 'lesson.wav',
+        mimetype: 'audio/wav',
+        size: canonicalWav().length,
+        buffer: canonicalWav(),
+      });
       assert.equal(result.text, '受控转写');
-      const keys = Object.keys(capturedEnvironment).map((key) => key.toUpperCase()).sort();
+      const keys = Object.keys(capturedEnvironment)
+        .map((key) => key.toUpperCase())
+        .sort();
       assert.deepEqual(keys, allowedKeys({ includePath: false, includeOcrCache: false }));
-      assert.equal(FORBIDDEN_KEYS.some((key) => Object.hasOwn(capturedEnvironment, key)), false);
-      assert.equal(capturedEnvironment.TEMP.startsWith(path.join(process.env.APP_DATA_ROOT, 'tmp', 'class-capture')), true);
+      assert.equal(
+        FORBIDDEN_KEYS.some((key) => Object.hasOwn(capturedEnvironment, key)),
+        false
+      );
+      assert.equal(
+        capturedEnvironment.TEMP.startsWith(path.join(process.env.APP_DATA_ROOT, 'tmp', 'class-capture')),
+        true
+      );
     });
   } finally {
     await fsp.rm(root, { recursive: true, force: true });
@@ -205,7 +243,13 @@ test('whisper.cpp failure keeps child stderr out of the public error', async () 
       fakeSpawn
     );
     await assert.rejects(
-      () => converter.transcribe({ originalname: 'lesson.wav', mimetype: 'audio/wav', size: canonicalWav().length, buffer: canonicalWav() }),
+      () =>
+        converter.transcribe({
+          originalname: 'lesson.wav',
+          mimetype: 'audio/wav',
+          size: canonicalWav().length,
+          buffer: canonicalWav(),
+        }),
       (error) => error.code === 'ASR_TRANSCRIPTION_FAILED' && !error.message.includes('T02B_WHISPER_CHILD_SECRET')
     );
   } finally {

@@ -54,7 +54,9 @@ describe('AppNavigation', () => {
 
   it('maps note routes to the materials global entry', () => {
     renderNavigation('/notes/note-1');
-    const materials = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '资料');
+    const materials = [...container.querySelectorAll<HTMLAnchorElement>('a')].find(
+      (item) => item.textContent === '资料'
+    );
     expect(materials?.getAttribute('aria-current')).toBe('page');
   });
 
@@ -69,7 +71,9 @@ describe('AppNavigation', () => {
 
     expect(container.querySelector('[data-testid="mobile-bottom-navigation"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="mobile-more-navigation"]')?.textContent).toContain('更多');
-    const settings = [...container.querySelectorAll<HTMLAnchorElement>('a')].find((item) => item.textContent === '设置');
+    const settings = [...container.querySelectorAll<HTMLAnchorElement>('a')].find(
+      (item) => item.textContent === '设置'
+    );
     expect(settings?.getAttribute('aria-current')).toBe('page');
   });
 });

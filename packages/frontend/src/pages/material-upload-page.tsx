@@ -336,12 +336,22 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
             disabled={classCaptureTranscribing || classCaptureSaving}
             accept=".wav,audio/wav,audio/x-wav"
           />
-          {classCaptureFile && <div className="selected-file">已选择：{classCaptureFile.name}（{formatBytes(classCaptureFile.size)}）</div>}
+          {classCaptureFile && (
+            <div className="selected-file">
+              已选择：{classCaptureFile.name}（{formatBytes(classCaptureFile.size)}）
+            </div>
+          )}
           <button
             type="button"
             className="button-primary"
             onClick={handleClassCaptureTranscribe}
-            disabled={!classCaptureFile || !classCapturePermissionConfirmed || !classCaptureTitle.trim() || classCaptureTranscribing || classCaptureSaving}
+            disabled={
+              !classCaptureFile ||
+              !classCapturePermissionConfirmed ||
+              !classCaptureTitle.trim() ||
+              classCaptureTranscribing ||
+              classCaptureSaving
+            }
           >
             {classCaptureTranscribing ? '转写中…' : '转写录音'}
           </button>
@@ -359,7 +369,12 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
               />
               <div className="manual-text-footer">
                 <span>{classCaptureText.trim().length.toLocaleString()} / 1,048,576 字</span>
-                <button type="button" className="button-primary" onClick={handleClassCaptureSave} disabled={!classCaptureText.trim() || classCaptureSaving}>
+                <button
+                  type="button"
+                  className="button-primary"
+                  onClick={handleClassCaptureSave}
+                  disabled={!classCaptureText.trim() || classCaptureSaving}
+                >
                   {classCaptureSaving ? '保存中…' : '保存为 S2 笔记输入'}
                 </button>
               </div>
@@ -372,9 +387,7 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
         <section className="card">
           <h2>资料处理状态</h2>
           {materialsLoading && materials.length === 0 && <FeedbackMessage state="loading" />}
-          {materialsError && (
-            <FeedbackMessage state="error" message={materialsError} onRetry={refetchMaterials} />
-          )}
+          {materialsError && <FeedbackMessage state="error" message={materialsError} onRetry={refetchMaterials} />}
           {sortedMaterials.length === 0 && !materialsLoading && !materialsError && (
             <FeedbackMessage state="empty" message="该课程还没有资料，上传一个吧" />
           )}
@@ -427,7 +440,11 @@ export function MaterialUploadPage({ semesterId, onSemesterError }: MaterialUplo
                             <button type="button" onClick={handleCancelReplaceText} disabled={isSubmittingReplacement}>
                               取消
                             </button>
-                            <button type="submit" className="button-primary" disabled={isSubmittingReplacement || trimmedLength === 0}>
+                            <button
+                              type="submit"
+                              className="button-primary"
+                              disabled={isSubmittingReplacement || trimmedLength === 0}
+                            >
                               {isSubmittingReplacement ? '提交中…' : '重新生成笔记'}
                             </button>
                           </div>

@@ -25,25 +25,25 @@
 
 ### 已核实的前置条件
 
-| 项目 | 结论 |
-| --- | --- |
-| 设计依据 | 已读 00、01、02、04、08、09、10、11、S1 PRD、S2 PRD；归档旧稿未作为依据。 |
-| Git 起点 | 创建本计划前工作区干净；当前分支为 t04a-docs-update。 |
-| Phase 0.7 | 开发机验收已完成；HP 16GB 复测非阻塞，不能伪写为已通过。 |
-| S1 / T06 | 课程、考试、任务、事件、时间线 API 已实现；priorityBucket 为读取时派生值。 |
-| S2 / T07 | 上传、转换、AI 笔记、模块、Worker、重试和待质检降级已实现。 |
-| T08 | /courses、/materials、/notes/:noteId 已实现；KaTeX、Markmap、资料轮询已接入。 |
-| T09 | 计划创建时任务清单为未完成；修复后复验已通过并回填完成结论。 |
+| 项目      | 结论                                                                          |
+| --------- | ----------------------------------------------------------------------------- |
+| 设计依据  | 已读 00、01、02、04、08、09、10、11、S1 PRD、S2 PRD；归档旧稿未作为依据。     |
+| Git 起点  | 创建本计划前工作区干净；当前分支为 t04a-docs-update。                         |
+| Phase 0.7 | 开发机验收已完成；HP 16GB 复测非阻塞，不能伪写为已通过。                      |
+| S1 / T06  | 课程、考试、任务、事件、时间线 API 已实现；priorityBucket 为读取时派生值。    |
+| S2 / T07  | 上传、转换、AI 笔记、模块、Worker、重试和待质检降级已实现。                   |
+| T08       | /courses、/materials、/notes/:noteId 已实现；KaTeX、Markmap、资料轮询已接入。 |
+| T09       | 计划创建时任务清单为未完成；修复后复验已通过并回填完成结论。                  |
 
 ## 2. 验收对象
 
-| 范围 | API / 页面 | 关键证明 |
-| --- | --- | --- |
-| 课程、考试 | POST/GET /api/courses、POST/GET /api/exams；/courses | 课程归属、目标、日期和 confirmationStatus 保存。 |
-| 任务与优先级 | POST/GET /api/study-tasks；笔记页 | 任务关联考试、模块；priorityBucket 不持久化而按状态/日期派生。 |
-| 上传与处理 | POST /api/materials/upload、GET /api/materials；/materials | pending 经转换和生成到终态，页面轮询展示中文状态。 |
-| 笔记与模块 | GET /api/notes/:id、GET /api/knowledge-modules；/notes/:noteId | Markdown、KaTeX、Markmap、来源证据和关联任务分别可见。 |
-| AI 降级 | retry API、资料页 | AI 失败仍保存 normalized text，最终为 pending_quality_check。 |
+| 范围         | API / 页面                                                     | 关键证明                                                       |
+| ------------ | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| 课程、考试   | POST/GET /api/courses、POST/GET /api/exams；/courses           | 课程归属、目标、日期和 confirmationStatus 保存。               |
+| 任务与优先级 | POST/GET /api/study-tasks；笔记页                              | 任务关联考试、模块；priorityBucket 不持久化而按状态/日期派生。 |
+| 上传与处理   | POST /api/materials/upload、GET /api/materials；/materials     | pending 经转换和生成到终态，页面轮询展示中文状态。             |
+| 笔记与模块   | GET /api/notes/:id、GET /api/knowledge-modules；/notes/:noteId | Markdown、KaTeX、Markmap、来源证据和关联任务分别可见。         |
+| AI 降级      | retry API、资料页                                              | AI 失败仍保存 normalized text，最终为 pending_quality_check。  |
 
 涉及数据对象：course_instances、assessment_attempts、study_tasks、materials、normalized_texts、structured_notes、mind_maps、knowledge_modules、study_events、jobs。
 
@@ -129,12 +129,12 @@ wall_clock_generation_ms,result_status,error_code
 
 必要时新增集成测试优先为 packages/backend/test/t09-end-to-end-validation.test.mjs，使用临时 APP_DATA_ROOT 和 mock AI；真实 Provider/凭据/PDF 不进入测试。
 
-| 候选缺口 | 当前事实 | 本计划的处理与门控 |
-| --- | --- | --- |
-| 考试确认 UI | T08 创建考试未传 confirmationStatus，后端默认 pending，页面没有确认操作。 | 先用 API 建 confirmed 对照；若要纯浏览器闭环，须获批后补 API/前端/测试并重新验收。 |
-| 创建任务 UI | T08 没有任务创建页；S2 Worker 只建模块和 StudyEvent，并不自动建 StudyTask。 | 用 API 建双关联验收任务；不能伪称 UI/Worker 已自动生成，修复须另行批准。 |
+| 候选缺口    | 当前事实                                                                                                                                                                                 | 本计划的处理与门控                                                                                                                                  |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 考试确认 UI | T08 创建考试未传 confirmationStatus，后端默认 pending，页面没有确认操作。                                                                                                                | 先用 API 建 confirmed 对照；若要纯浏览器闭环，须获批后补 API/前端/测试并重新验收。                                                                  |
+| 创建任务 UI | T08 没有任务创建页；S2 Worker 只建模块和 StudyEvent，并不自动建 StudyTask。                                                                                                              | 用 API 建双关联验收任务；不能伪称 UI/Worker 已自动生成，修复须另行批准。                                                                            |
 | 手动补文 UI | `material-status` 仅在 `pending_quality_check` 显示回调入口，但资料页未传 `replace-text` 回调；服务端当前只允许 `conversion_failed` 或 `pending` 调用 replace-text，和该 UI 状态不一致。 | 降级 run 要如实记录该 API 在 `pending_quality_check` 的实际结果；不能将其写成已可恢复。若立项，前后端状态契约、重复提交保护和回归测试必须一起修复。 |
-| Worker 重入 | setInterval 不等待上一轮 runOnce 结束，慢 AI 时需观察是否重叠。 | 记录 Job 数、attempts 和重复情况；仅复现后提出最小修复及回归测试。 |
+| Worker 重入 | setInterval 不等待上一轮 runOnce 结束，慢 AI 时需观察是否重叠。                                                                                                                          | 记录 Job 数、attempts 和重复情况；仅复现后提出最小修复及回归测试。                                                                                  |
 
 任何新缺陷都先形成最小脱敏复现（期望/实际/证据），请求用户批准修复范围，再改业务代码；修复后全量回归，不直接勾选 T09。
 
@@ -142,12 +142,12 @@ wall_clock_generation_ms,result_status,error_code
 
 本节只定义 T09 之后的**立项顺序与触发门槛**，不授权任何业务代码修改，也不把候选项计为 T09 已完成。T09 的两次隔离 run 完成后，先按下列门槛出具脱敏结论，再决定唯一的下一项任务。
 
-| T09 结论 | 下一步 | 原因与门控 |
-| --- | --- | --- |
-| 发现数据丢失、跨学期/课程串数据、Job 永久卡住、同一资料产生重复笔记/异常 attempts、tmp 误删风险或隐私泄露 | **P0：先修复该验收阻塞问题** | 先保存最小脱敏复现、界定受影响状态与数据，再由用户批准最小修复范围；修复后重跑 T09 两个 run。 |
-| 未发现 P0，但实际观察到 `startPolling()` 的重叠 `runOnce()` 导致重复领取、attempts 异常或终态错误 | **P0.5：Worker 执行控制** | 以 T09 的时间线、Job 数与 attempts 为证据；只修复已复现的重入路径，并新增慢 AI/重叠轮询回归测试。未复现则不得预防性大改队列。 |
-| 主路径和降级路径均无上述阻塞 | **推荐 T10：S2 人工补文恢复闭环** | 以最小增量让资料在 `pending_quality_check` 后仍能从浏览器恢复到笔记完成；它直接补齐 T08 已暴露的异常恢复断点。 |
-| T10 验收通过 | **推荐 T11：S1 学习任务闭环** | 再让确认后的考试、知识模块和学习任务进入浏览器可操作闭环，避免在资料处理稳定性未确认前扩展 S1 UI。 |
+| T09 结论                                                                                                  | 下一步                            | 原因与门控                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 发现数据丢失、跨学期/课程串数据、Job 永久卡住、同一资料产生重复笔记/异常 attempts、tmp 误删风险或隐私泄露 | **P0：先修复该验收阻塞问题**      | 先保存最小脱敏复现、界定受影响状态与数据，再由用户批准最小修复范围；修复后重跑 T09 两个 run。                                 |
+| 未发现 P0，但实际观察到 `startPolling()` 的重叠 `runOnce()` 导致重复领取、attempts 异常或终态错误         | **P0.5：Worker 执行控制**         | 以 T09 的时间线、Job 数与 attempts 为证据；只修复已复现的重入路径，并新增慢 AI/重叠轮询回归测试。未复现则不得预防性大改队列。 |
+| 主路径和降级路径均无上述阻塞                                                                              | **推荐 T10：S2 人工补文恢复闭环** | 以最小增量让资料在 `pending_quality_check` 后仍能从浏览器恢复到笔记完成；它直接补齐 T08 已暴露的异常恢复断点。                |
+| T10 验收通过                                                                                              | **推荐 T11：S1 学习任务闭环**     | 再让确认后的考试、知识模块和学习任务进入浏览器可操作闭环，避免在资料处理稳定性未确认前扩展 S1 UI。                            |
 
 ### 推荐 T10：人工补文恢复闭环（默认下一功能）
 
@@ -169,15 +169,15 @@ wall_clock_generation_ms,result_status,error_code
 
 ## 9. 独立风险审查与修订结论
 
-| 审查维度 | 风险 | 修订后的控制措施 |
-| --- | --- | --- |
-| Provider 不可用 | 成功路径不能依赖单一 Provider。 | 单独无 Provider run，验证 pending_quality_check 与文本保留。 |
-| 文本/扫描 PDF 与 OCR | 扫描件可无文本；OCR 等待不应冒充 PDF 主路径。 | 主路径固定文本 PDF；扫描/OCR 留作后续独立覆盖；采用 30/30/45 秒上限。 |
-| Job、轮询、终态重试 | 可能卡住、重复或重试耗尽。 | 记录状态/attempts/时间线，最多 3 次，检查 completed/conversion_failed/pending_quality_check。 |
-| confirmationStatus 与 priority | confirmed 才驱动 bucket 1，UI 现有缺口会造成假阳性。 | API 对照 + 明确候选 UI 修复，不把 pending UI 操作写成已触发。 |
-| 来源和关联 | 模块、资料、任务、事件不是同一件证据。 | 分别断言 material/sourceEvidence、两个任务外键、S2 Event，并截图。 |
-| tmp 清理 | 递归误删会损害 files/DB/其他学期。 | run-id 路径白名单、先列举核验、清理后重启读回、失败即止损。 |
-| 隐私 | 截图、API 和日志易泄露正文/密钥。 | 合成输入、字段白名单、短哈希、仓库外 evidence，禁截网络头/环境变量。 |
+| 审查维度                       | 风险                                                 | 修订后的控制措施                                                                              |
+| ------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Provider 不可用                | 成功路径不能依赖单一 Provider。                      | 单独无 Provider run，验证 pending_quality_check 与文本保留。                                  |
+| 文本/扫描 PDF 与 OCR           | 扫描件可无文本；OCR 等待不应冒充 PDF 主路径。        | 主路径固定文本 PDF；扫描/OCR 留作后续独立覆盖；采用 30/30/45 秒上限。                         |
+| Job、轮询、终态重试            | 可能卡住、重复或重试耗尽。                           | 记录状态/attempts/时间线，最多 3 次，检查 completed/conversion_failed/pending_quality_check。 |
+| confirmationStatus 与 priority | confirmed 才驱动 bucket 1，UI 现有缺口会造成假阳性。 | API 对照 + 明确候选 UI 修复，不把 pending UI 操作写成已触发。                                 |
+| 来源和关联                     | 模块、资料、任务、事件不是同一件证据。               | 分别断言 material/sourceEvidence、两个任务外键、S2 Event，并截图。                            |
+| tmp 清理                       | 递归误删会损害 files/DB/其他学期。                   | run-id 路径白名单、先列举核验、清理后重启读回、失败即止损。                                   |
+| 隐私                           | 截图、API 和日志易泄露正文/密钥。                    | 合成输入、字段白名单、短哈希、仓库外 evidence，禁截网络头/环境变量。                          |
 
 **修订结论**：采用“真实文本 PDF + 已配置 Provider”的成功 run 与“无 Provider”的降级 run，二者完全隔离；并显式记录考试确认、任务创建、手动补文三个前端缺口。priorityBucket 的 API 对照仅验证读取时派生逻辑，不等同于浏览器已支持考试确认或任务创建。缺口均为候选修复，不在批准前修改。
 
@@ -202,7 +202,7 @@ wall_clock_generation_ms,result_status,error_code
     packages/frontend/src/components/material-status.tsx
     packages/frontend/test/*.test.ts
 
-不会创建 S3/S4/S6 PRD，也不会创建 docs/12-*、docs/13-* 或 docs/14-*。
+不会创建 S3/S4/S6 PRD，也不会创建 docs/12-_、docs/13-_ 或 docs/14-*。
 
 ## 11. Step 6–16 执行记录（2026-07-14）
 

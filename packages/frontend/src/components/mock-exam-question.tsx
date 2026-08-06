@@ -13,7 +13,12 @@ function optionLabel(option: string): string {
 }
 
 export function MockExamQuestion({ question, value, disabled = false, onChange }: MockExamQuestionProps) {
-  const selected = new Set(value.split(',').map((item) => item.trim()).filter(Boolean));
+  const selected = new Set(
+    value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  );
   const inputId = `mock-exam-answer-${question.id}`;
 
   return (

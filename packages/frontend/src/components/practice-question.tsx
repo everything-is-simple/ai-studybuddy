@@ -13,13 +13,19 @@ function optionLabel(option: string): string {
 }
 
 export function PracticeQuestion({ question, value, disabled = false, onChange }: PracticeQuestionProps) {
-  const selected = new Set(value.split(',').map((item) => item.trim()).filter(Boolean));
+  const selected = new Set(
+    value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  );
   const inputId = `practice-answer-${question.id}`;
 
   return (
     <fieldset className="practice-question" disabled={disabled}>
       <legend>
-        第 {question.questionOrder} 题 · {question.type === 'single_choice' ? '单选题' : question.type === 'multiple_choice' ? '多选题' : '填空题'}
+        第 {question.questionOrder} 题 ·{' '}
+        {question.type === 'single_choice' ? '单选题' : question.type === 'multiple_choice' ? '多选题' : '填空题'}
       </legend>
       <p className="practice-stem">{question.stem}</p>
       {question.type === 'fill_blank' ? (

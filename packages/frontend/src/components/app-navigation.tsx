@@ -23,11 +23,7 @@ function activeKey(pathname: string): NavigationItem['key'] {
   if (pathname.startsWith('/materials') || pathname.startsWith('/notes')) return 'materials';
   if (pathname.startsWith('/mistakes')) return 'mistakes';
   if (pathname.startsWith('/settings')) return 'settings';
-  if (
-    pathname.startsWith('/courses') ||
-    pathname.startsWith('/exams') ||
-    pathname.startsWith('/practice-sessions')
-  ) {
+  if (pathname.startsWith('/courses') || pathname.startsWith('/exams') || pathname.startsWith('/practice-sessions')) {
     return 'courses';
   }
   return 'home';
@@ -59,7 +55,11 @@ export function AppNavigation() {
         {primaryItems.map((item) => (
           <NavigationLink key={item.key} item={item} current={current} />
         ))}
-        <details className="mobile-more-navigation" data-testid="mobile-more-navigation" open={secondaryItems.some((item) => item.key === current)}>
+        <details
+          className="mobile-more-navigation"
+          data-testid="mobile-more-navigation"
+          open={secondaryItems.some((item) => item.key === current)}
+        >
           <summary>更多</summary>
           <div className="mobile-more-panel">
             {secondaryItems.map((item) => (

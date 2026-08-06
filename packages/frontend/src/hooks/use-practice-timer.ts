@@ -64,7 +64,10 @@ export function usePracticeTimer({
 
   const roundedTotal = Math.max(0, Math.floor(totalDurationSeconds));
   const roundedQuestions = useMemo(
-    () => Object.fromEntries(Object.entries(questionSeconds).map(([id, seconds]) => [id, Math.max(0, Math.floor(seconds))])),
+    () =>
+      Object.fromEntries(
+        Object.entries(questionSeconds).map(([id, seconds]) => [id, Math.max(0, Math.floor(seconds))])
+      ),
     [questionSeconds]
   );
   const remainingSeconds = timeLimitSeconds === null ? null : Math.max(0, timeLimitSeconds - roundedTotal);

@@ -183,8 +183,7 @@ export class FeedbackRulesService {
          LIMIT 1`
       )
       .get(module.course_instance_id, module.id, ...OPEN_TASK_STATUSES) as
-      | { id: string; deadline_at: string | null }
-      | undefined;
+      { id: string; deadline_at: string | null } | undefined;
 
     if (openTask) {
       if (openTask.deadline_at === null || deadlineAt < openTask.deadline_at) {

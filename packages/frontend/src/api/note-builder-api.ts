@@ -104,7 +104,12 @@ export function getNote(semesterId: string, noteId: string, signal?: AbortSignal
   });
 }
 
-export function updateNote(semesterId: string, noteId: string, markdown: string, signal?: AbortSignal): Promise<{ id: string; updatedAt: string }> {
+export function updateNote(
+  semesterId: string,
+  noteId: string,
+  markdown: string,
+  signal?: AbortSignal
+): Promise<{ id: string; updatedAt: string }> {
   return request(`/notes/${encodeURIComponent(noteId)}`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },

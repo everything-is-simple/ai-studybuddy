@@ -88,16 +88,16 @@ R1 的最终签收只能表述为“对已批准的 Git 已跟踪清单与一个
 
 ### 4.3 R1 固定失败码（后续实现必须保持脱敏）
 
-| 代码 | fail-closed 条件 |
-| --- | --- |
-| `P1_APPROVAL_MISSING` | R1 单项人工批准、窗口或绑定字段缺失 |
-| `P1_WINDOW_INVALID` | 窗口过期、顺序错误或关联 ID 不匹配 |
-| `R1_TRACKED_LIST_UNAVAILABLE` | 无法取得精确 Git 已跟踪清单/提交身份 |
-| `R1_UNTRACKED_OR_OUT_OF_SCOPE` | 输入不在已跟踪清单或批准包根内 |
-| `R1_PACKAGE_IDENTITY_INVALID` | 包根、完整规范化 SHA-256 内容/树摘要、类型或前后复核不能与单项批准绑定 |
-| `R1_NOFOLLOW_RISK` | reparse、同一句柄身份变化、类型/大小/访问风险 |
-| `R1_OUTPUT_REDACTION_FAILED` | 输出模型不符合允许字段或可能泄露敏感信息 |
-| `R1_SCAN_INCOMPLETE` | 任一允许对象无法安全扫描或结果无法完整汇总 |
+| 代码                           | fail-closed 条件                                                       |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| `P1_APPROVAL_MISSING`          | R1 单项人工批准、窗口或绑定字段缺失                                    |
+| `P1_WINDOW_INVALID`            | 窗口过期、顺序错误或关联 ID 不匹配                                     |
+| `R1_TRACKED_LIST_UNAVAILABLE`  | 无法取得精确 Git 已跟踪清单/提交身份                                   |
+| `R1_UNTRACKED_OR_OUT_OF_SCOPE` | 输入不在已跟踪清单或批准包根内                                         |
+| `R1_PACKAGE_IDENTITY_INVALID`  | 包根、完整规范化 SHA-256 内容/树摘要、类型或前后复核不能与单项批准绑定 |
+| `R1_NOFOLLOW_RISK`             | reparse、同一句柄身份变化、类型/大小/访问风险                          |
+| `R1_OUTPUT_REDACTION_FAILED`   | 输出模型不符合允许字段或可能泄露敏感信息                               |
+| `R1_SCAN_INCOMPLETE`           | 任一允许对象无法安全扫描或结果无法完整汇总                             |
 
 ---
 
@@ -119,18 +119,18 @@ R2 每类目录只能输出固定逻辑类别、允许主体分类、继承/有�
 
 ### 5.3 R2 固定失败码（后续实现必须保持脱敏）
 
-| 代码 | fail-closed 条件 |
-| --- | --- |
-| `P1_APPROVAL_MISSING` | R2 单项人工批准、机器/类别/窗口绑定缺失 |
-| `P1_WINDOW_INVALID` | 窗口过期、顺序错误或关联 ID 不匹配 |
-| `R2_LOGICAL_SCOPE_INVALID` | 非六个固定逻辑类别，或目标未从批准安装实例派生 |
-| `R2_UNC_OR_MAPPED_VOLUME` | UNC、映射网络盘或远程卷 |
-| `R2_NONFIXED_VOLUME` | 非固定本地卷或卷类型不可证明 |
-| `R2_NOFOLLOW_RISK` | reparse、同一句柄身份变化或描述符读取风险 |
-| `R2_UNKNOWN_PRINCIPAL` | 未知主体、无法分类主体或 SID/名称解析不确定 |
-| `R2_DENY_OR_INHERITANCE_RISK` | deny ACE、继承异常或 owner/DACL/SACL 状态异常 |
-| `R2_EFFECTIVE_ACCESS_UNKNOWN` | 有效访问无法严格判定 |
-| `R2_OUTPUT_REDACTION_FAILED` | 输出可能包含路径、身份或 ACL 原文 |
+| 代码                          | fail-closed 条件                               |
+| ----------------------------- | ---------------------------------------------- |
+| `P1_APPROVAL_MISSING`         | R2 单项人工批准、机器/类别/窗口绑定缺失        |
+| `P1_WINDOW_INVALID`           | 窗口过期、顺序错误或关联 ID 不匹配             |
+| `R2_LOGICAL_SCOPE_INVALID`    | 非六个固定逻辑类别，或目标未从批准安装实例派生 |
+| `R2_UNC_OR_MAPPED_VOLUME`     | UNC、映射网络盘或远程卷                        |
+| `R2_NONFIXED_VOLUME`          | 非固定本地卷或卷类型不可证明                   |
+| `R2_NOFOLLOW_RISK`            | reparse、同一句柄身份变化或描述符读取风险      |
+| `R2_UNKNOWN_PRINCIPAL`        | 未知主体、无法分类主体或 SID/名称解析不确定    |
+| `R2_DENY_OR_INHERITANCE_RISK` | deny ACE、继承异常或 owner/DACL/SACL 状态异常  |
+| `R2_EFFECTIVE_ACCESS_UNKNOWN` | 有效访问无法严格判定                           |
+| `R2_OUTPUT_REDACTION_FAILED`  | 输出可能包含路径、身份或 ACL 原文              |
 
 ---
 
@@ -138,17 +138,17 @@ R2 每类目录只能输出固定逻辑类别、允许主体分类、继承/有�
 
 ### 6.1 可修改（仅在本计划独立审查通过且用户另行批准实现后）
 
-| 文件 | 最小责任 |
-| --- | --- |
-| `scripts/lib/AIStudyBuddy.SecretScan.cjs` | 将既有“显式已跟踪清单”边界接入批准的单一候选包根；维持无秘密输出与 no-follow 契约 |
-| `scripts/lib/AIStudyBuddy.NoFollow.cjs` | 补足 Windows 同一安全句柄的生产能力；能力无法认证时固定拒绝 |
-| `scripts/lib/AIStudyBuddy.Deployment.psm1` | 为六个固定逻辑类别提供只读、脱敏、fail-closed 的 ACL 证据适配层 |
-| `scripts/phase3-r1-controlled-secret-scan.ps1`（新增） | 一次性 R1 人工批准 Gate、受控调用和脱敏摘要；无自动调度/持久化批准 |
-| `scripts/phase3-r2-controlled-acl-evidence.ps1`（新增） | 一次性 R2 人工批准 Gate、六类目录只读调用和脱敏摘要；无任何 ACL 写入 |
-| `packages/backend/test/secret-scan-boundary.test.mjs` | R1 合成/替换竞争/脱敏合同测试 |
-| `packages/backend/test/nofollow-contract.test.mjs` | no-follow 同一句柄与替换竞争合同测试 |
-| `scripts/test-phase3-p1-controlled-readonly.ps1`（新增） | R2 合成卷/ACL 风险/无写入/脱敏合同测试 |
-| `.plans/`、`docs/04-开发任务清单-Todo-List.md` | 实施证据、审查与状态登记 |
+| 文件                                                     | 最小责任                                                                          |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `scripts/lib/AIStudyBuddy.SecretScan.cjs`                | 将既有“显式已跟踪清单”边界接入批准的单一候选包根；维持无秘密输出与 no-follow 契约 |
+| `scripts/lib/AIStudyBuddy.NoFollow.cjs`                  | 补足 Windows 同一安全句柄的生产能力；能力无法认证时固定拒绝                       |
+| `scripts/lib/AIStudyBuddy.Deployment.psm1`               | 为六个固定逻辑类别提供只读、脱敏、fail-closed 的 ACL 证据适配层                   |
+| `scripts/phase3-r1-controlled-secret-scan.ps1`（新增）   | 一次性 R1 人工批准 Gate、受控调用和脱敏摘要；无自动调度/持久化批准                |
+| `scripts/phase3-r2-controlled-acl-evidence.ps1`（新增）  | 一次性 R2 人工批准 Gate、六类目录只读调用和脱敏摘要；无任何 ACL 写入              |
+| `packages/backend/test/secret-scan-boundary.test.mjs`    | R1 合成/替换竞争/脱敏合同测试                                                     |
+| `packages/backend/test/nofollow-contract.test.mjs`       | no-follow 同一句柄与替换竞争合同测试                                              |
+| `scripts/test-phase3-p1-controlled-readonly.ps1`（新增） | R2 合成卷/ACL 风险/无写入/脱敏合同测试                                            |
+| `.plans/`、`docs/04-开发任务清单-Todo-List.md`           | 实施证据、审查与状态登记                                                          |
 
 实现前必须再次核验上述文件是否仍是主线实际接口。若需要新增其他业务、构建、部署或 manifest 文件，停止并重新计划；不得自行扩大范围。
 
@@ -163,12 +163,12 @@ R2 每类目录只能输出固定逻辑类别、允许主体分类、继承/有�
 
 ## 7. 测试矩阵与证据边界
 
-| 层级 | R1 | R2 | 禁止推断 |
-| --- | --- | --- | --- |
-| 静态/合同 | 已跟踪清单唯一输入、包根单一绑定、脱敏字段白名单、失败码稳定 | 六类逻辑类别唯一输入、固定卷/主体/ACE 规则、无写入 API | 不代表真实机器/真实包 |
-| 合成夹具 | 无效合成哨兵、敏感文件读取前跳过、未跟踪/越界拒绝、reparse/替换竞争、输出不含哨兵/路径 | 合成安全描述符、UNC/映射/非固定卷/reparse/未知主体/deny/继承/有效访问未知拒绝、输出不含路径/SID | 不代表真实 ACL 或真实文件 |
-| 实现分支验证 | 定向测试、type-check、后端/前端 build、隔离 `APP_DATA_ROOT` 全量测试、治理/差异检查 | 同左；且证明测试不创建真实运行目标、无 `Set-Acl`/写探针调用 | 不代表真实操作已获授权 |
-| 真实受控窗口（另批） | 只运行经单项批准的 R1，输出脱敏签收摘要 | 只运行经单项批准的 R2，输出脱敏签收摘要 | 一项结果不替代另一项，均不代表 T02/Phase 3 完成 |
+| 层级                 | R1                                                                                     | R2                                                                                              | 禁止推断                                        |
+| -------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 静态/合同            | 已跟踪清单唯一输入、包根单一绑定、脱敏字段白名单、失败码稳定                           | 六类逻辑类别唯一输入、固定卷/主体/ACE 规则、无写入 API                                          | 不代表真实机器/真实包                           |
+| 合成夹具             | 无效合成哨兵、敏感文件读取前跳过、未跟踪/越界拒绝、reparse/替换竞争、输出不含哨兵/路径 | 合成安全描述符、UNC/映射/非固定卷/reparse/未知主体/deny/继承/有效访问未知拒绝、输出不含路径/SID | 不代表真实 ACL 或真实文件                       |
+| 实现分支验证         | 定向测试、type-check、后端/前端 build、隔离 `APP_DATA_ROOT` 全量测试、治理/差异检查    | 同左；且证明测试不创建真实运行目标、无 `Set-Acl`/写探针调用                                     | 不代表真实操作已获授权                          |
+| 真实受控窗口（另批） | 只运行经单项批准的 R1，输出脱敏签收摘要                                                | 只运行经单项批准的 R2，输出脱敏签收摘要                                                         | 一项结果不替代另一项，均不代表 T02/Phase 3 完成 |
 
 任何测试夹具只能使用仓库内或仓库外隔离、可再生的无效合成数据；不读取真实候选包、真实审批记录、用户数据、正式日志或未跟踪目录。
 
@@ -176,14 +176,14 @@ R2 每类目录只能输出固定逻辑类别、允许主体分类、继承/有�
 
 ## 8. P0/P1 风险与最小缓解
 
-| 优先级 | 风险 | 最小缓解 |
-| --- | --- | --- |
-| P0 | 秘密、路径、SID、ACL 原文或环境变量进入输出 | 允许字段白名单、固定错误码、序列化/异常/日志脱敏测试；无法证明即拒绝 |
-| P0 | 路径替换、reparse 或 TOCTOU 让只读操作越界 | 每组件同一 no-follow 安全句柄与身份复核；不具备可信实现则固定拒绝 |
-| P0 | 未跟踪目录或整个工作区被扫描 | R1 只从 Git 已跟踪清单和一个明确批准包根建立候选集；禁止递归发现 |
-| P1 | 共同窗口被误解为共同授权 | R1/R2 各自用户批准、Gate、命令、证据和签收；失败不继承 |
-| P1 | 个人版人工批准被伪装成 production trust | production verifier 保持 fail-closed、不接入；不持久化、不复用、不后台执行 |
-| P1 | ACL 只读证据演变为修复 | 严格禁止所有写 ACL/写探针/服务/计划任务/backup/restore 调用 |
+| 优先级 | 风险                                        | 最小缓解                                                                   |
+| ------ | ------------------------------------------- | -------------------------------------------------------------------------- |
+| P0     | 秘密、路径、SID、ACL 原文或环境变量进入输出 | 允许字段白名单、固定错误码、序列化/异常/日志脱敏测试；无法证明即拒绝       |
+| P0     | 路径替换、reparse 或 TOCTOU 让只读操作越界  | 每组件同一 no-follow 安全句柄与身份复核；不具备可信实现则固定拒绝          |
+| P0     | 未跟踪目录或整个工作区被扫描                | R1 只从 Git 已跟踪清单和一个明确批准包根建立候选集；禁止递归发现           |
+| P1     | 共同窗口被误解为共同授权                    | R1/R2 各自用户批准、Gate、命令、证据和签收；失败不继承                     |
+| P1     | 个人版人工批准被伪装成 production trust     | production verifier 保持 fail-closed、不接入；不持久化、不复用、不后台执行 |
+| P1     | ACL 只读证据演变为修复                      | 严格禁止所有写 ACL/写探针/服务/计划任务/backup/restore 调用                |
 
 ---
 
@@ -217,7 +217,6 @@ R2 每类目录只能输出固定逻辑类别、允许主体分类、继承/有�
 ```text
 批准按 PHASE3-T02-R2-WINDOWS-ACL-EVIDENCE-20260728 在明确机器和时间窗口运行一次 R2 脱敏只读 ACL 证据采集。
 ```
-
 
 ---
 

@@ -31,7 +31,14 @@ async function mockNoteApis(page: Page, withMindMap: boolean) {
         ai: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
         smtp: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
         feishu: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        runtime: { dataDir: true, aiAvailable: true, smtpAvailable: true, feishuAvailable: true, uptime: 1, nodeVersion: 'v-test' },
+        runtime: {
+          dataDir: true,
+          aiAvailable: true,
+          smtpAvailable: true,
+          feishuAvailable: true,
+          uptime: 1,
+          nodeVersion: 'v-test',
+        },
       });
     }
     if (url.pathname.startsWith('/api/notes/')) {

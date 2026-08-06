@@ -31,10 +31,13 @@ export function createCourse(
 }
 
 export function deleteCourse(semesterId: string, courseId: string, signal?: AbortSignal): Promise<CourseInstanceDto> {
-  return request<CourseInstanceDto>('/courses/' + encodeURIComponent(courseId) + '?semesterId=' + encodeURIComponent(semesterId), {
-    method: 'DELETE',
-    signal,
-  });
+  return request<CourseInstanceDto>(
+    '/courses/' + encodeURIComponent(courseId) + '?semesterId=' + encodeURIComponent(semesterId),
+    {
+      method: 'DELETE',
+      signal,
+    }
+  );
 }
 
 export function updateCourse(
@@ -78,11 +81,18 @@ export function updateScheduleEntry(
   });
 }
 
-export function deleteScheduleEntry(semesterId: string, entryId: string, signal?: AbortSignal): Promise<ScheduleEntryDto> {
-  return request<ScheduleEntryDto>('/schedule-entries/' + encodeURIComponent(entryId) + '?semesterId=' + encodeURIComponent(semesterId), {
-    method: 'DELETE',
-    signal,
-  });
+export function deleteScheduleEntry(
+  semesterId: string,
+  entryId: string,
+  signal?: AbortSignal
+): Promise<ScheduleEntryDto> {
+  return request<ScheduleEntryDto>(
+    '/schedule-entries/' + encodeURIComponent(entryId) + '?semesterId=' + encodeURIComponent(semesterId),
+    {
+      method: 'DELETE',
+      signal,
+    }
+  );
 }
 
 export function updateExam(
@@ -108,20 +118,12 @@ export function getExams(
   return request<AssessmentAttemptDto[]>(`/exams?${params.toString()}`, { signal });
 }
 
-export function getExam(
-  semesterId: string,
-  examId: string,
-  signal?: AbortSignal
-): Promise<AssessmentAttemptDto> {
+export function getExam(semesterId: string, examId: string, signal?: AbortSignal): Promise<AssessmentAttemptDto> {
   const params = new URLSearchParams({ semesterId });
   return request<AssessmentAttemptDto>(`/exams/${encodeURIComponent(examId)}?${params.toString()}`, { signal });
 }
 
-export function confirmExam(
-  semesterId: string,
-  examId: string,
-  signal?: AbortSignal
-): Promise<AssessmentAttemptDto> {
+export function confirmExam(semesterId: string, examId: string, signal?: AbortSignal): Promise<AssessmentAttemptDto> {
   return request<AssessmentAttemptDto>(`/exams/${encodeURIComponent(examId)}/confirmation`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },

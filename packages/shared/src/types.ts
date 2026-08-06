@@ -460,7 +460,6 @@ export interface PracticeSessionDetailDto {
 
 export type CreatePracticeSessionResponse = PracticeSessionDetailDto;
 
-
 export interface PracticeHistoryListItemDto {
   id: string;
   semesterId: string;
@@ -717,12 +716,7 @@ export interface CramPlanResponseDto {
 // ============================================================
 
 export type MistakeErrorCauseCategory =
-  | 'concept_unclear'
-  | 'misread'
-  | 'formula_error'
-  | 'step_missing'
-  | 'time_pressure'
-  | 'other';
+  'concept_unclear' | 'misread' | 'formula_error' | 'step_missing' | 'time_pressure' | 'other';
 
 export interface MistakeListItemDto {
   id: string;

@@ -1,8 +1,20 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { CurrentSemesterDto, SemesterPreviewDto, SemesterSummaryDto, TimetablePreviewEntryDto } from '@ai-studybuddy/shared';
+import type {
+  CurrentSemesterDto,
+  SemesterPreviewDto,
+  SemesterSummaryDto,
+  TimetablePreviewEntryDto,
+} from '@ai-studybuddy/shared';
 import { ApiClientError } from '../api/api-client';
-import { archiveSemester, confirmSemester, listArchivedSemesters, listSemesters, previewSemesterTimetable, selectCurrentSemester } from '../api/semester-api';
+import {
+  archiveSemester,
+  confirmSemester,
+  listArchivedSemesters,
+  listSemesters,
+  previewSemesterTimetable,
+  selectCurrentSemester,
+} from '../api/semester-api';
 
 interface SemesterPageProps {
   current: SemesterSummaryDto | null;
@@ -80,14 +92,14 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
     }
   }
 
-
-
   async function handleArchive(semester: SemesterSummaryDto) {
     if (semester.id === currentId) {
       setError('当前学期不能归档，请先切换到其他学期。');
       return;
     }
-    const confirmed = window.confirm('归档后该学期只能查看历史，不能再切换为当前学期或新增/修改课程、考试、练习、错题数据。确认归档？');
+    const confirmed = window.confirm(
+      '归档后该学期只能查看历史，不能再切换为当前学期或新增/修改课程、考试、练习、错题数据。确认归档？'
+    );
     if (!confirmed) return;
     setSubmitting(true);
     setError(null);
@@ -186,28 +198,61 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
       </div>
 
       {!current && <div className="empty-state">还没有可用学期。请先创建第一个学期，之后系统会自动恢复当前学期。</div>}
-      {current && <div className="current-semester-card">当前学期：<strong>{current.semesterCode}</strong>（{current.teachingStartDate} 至 {current.teachingEndDate}）</div>}
-      {currentMessage && <p className="feedback warning" role="status">{currentMessage}</p>}
+      {current && (
+        <div className="current-semester-card">
+          当前学期：<strong>{current.semesterCode}</strong>（{current.teachingStartDate} 至 {current.teachingEndDate}）
+        </div>
+      )}
+      {currentMessage && (
+        <p className="feedback warning" role="status">
+          {currentMessage}
+        </p>
+      )}
       {listError && <p className="feedback error">{listError}</p>}
-      {error && <p className="feedback error" role="alert">{error}</p>}
-      {archiveMessage && <p className="feedback success" role="status">{archiveMessage}</p>}
+      {error && (
+        <p className="feedback error" role="alert">
+          {error}
+        </p>
+      )}
+      {archiveMessage && (
+        <p className="feedback success" role="status">
+          {archiveMessage}
+        </p>
+      )}
 
       <section className="panel">
         <h2>已有学期</h2>
-        {loading ? <p>正在加载学期列表…</p> : semesters.length === 0 ? <p>暂无学期。</p> : (
+        {loading ? (
+          <p>正在加载学期列表…</p>
+        ) : semesters.length === 0 ? (
+          <p>暂无学期。</p>
+        ) : (
           <ul className="semester-list">
             {semesters.map((semester) => (
               <li key={semester.id}>
                 <div>
                   <strong>{semester.semesterCode}</strong>
-                  <span>{semester.teachingStartDate} 至 {semester.teachingEndDate}</span>
+                  <span>
+                    {semester.teachingStartDate} 至 {semester.teachingEndDate}
+                  </span>
                 </div>
                 <div className="semester-actions">
                   <Link to={`/semesters/${semester.id}/practice-history`}>查看练习历史</Link>
-                  {semester.id === currentId ? <span className="semester-active">当前</span> : (
+                  {semester.id === currentId ? (
+                    <span className="semester-active">当前</span>
+                  ) : (
                     <>
-                      <button type="button" onClick={() => void handleSelect(semester.id)} disabled={submitting}>切换到此学期</button>
-                      <button type="button" className="secondary" onClick={() => void handleArchive(semester)} disabled={submitting}>归档此学期</button>
+                      <button type="button" onClick={() => void handleSelect(semester.id)} disabled={submitting}>
+                        切换到此学期
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => void handleArchive(semester)}
+                        disabled={submitting}
+                      >
+                        归档此学期
+                      </button>
                     </>
                   )}
                 </div>
@@ -217,16 +262,21 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
         )}
       </section>
 
-
       <section className="panel">
         <h2>归档学期</h2>
-        {loading ? <p>正在加载归档学期…</p> : archivedSemesters.length === 0 ? <p>暂无归档学期。</p> : (
+        {loading ? (
+          <p>正在加载归档学期…</p>
+        ) : archivedSemesters.length === 0 ? (
+          <p>暂无归档学期。</p>
+        ) : (
           <ul className="semester-list archived-semester-list">
             {archivedSemesters.map((semester) => (
               <li key={semester.id}>
                 <div>
                   <strong>{semester.semesterCode}</strong>
-                  <span>{semester.teachingStartDate} 至 {semester.teachingEndDate}</span>
+                  <span>
+                    {semester.teachingStartDate} 至 {semester.teachingEndDate}
+                  </span>
                   {semester.archivedAt && <span>归档时间：{semester.archivedAt.slice(0, 10)}</span>}
                 </div>
                 <div className="semester-actions">
@@ -243,27 +293,66 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
         <h2>创建新学期</h2>
         <form className="semester-form" onSubmit={(event) => void handlePreview(event)}>
           {requiresStudentName && (
-            <label>学生姓名
-              <input value={form.studentName} onChange={(event) => setForm({ ...form, studentName: event.target.value })} required aria-describedby="student-name-help" />
-              <span id="student-name-help" className="field-help">首次创建需要填写；后续学期会复用此学生。</span>
+            <label>
+              学生姓名
+              <input
+                value={form.studentName}
+                onChange={(event) => setForm({ ...form, studentName: event.target.value })}
+                required
+                aria-describedby="student-name-help"
+              />
+              <span id="student-name-help" className="field-help">
+                首次创建需要填写；后续学期会复用此学生。
+              </span>
             </label>
           )}
-          <label>学期名称
-            <input value={form.semesterCode} onChange={(event) => setForm({ ...form, semesterCode: event.target.value })} required placeholder="例如 2026 春季学期" />
+          <label>
+            学期名称
+            <input
+              value={form.semesterCode}
+              onChange={(event) => setForm({ ...form, semesterCode: event.target.value })}
+              required
+              placeholder="例如 2026 春季学期"
+            />
           </label>
-          <label>开始日期
-            <input type="date" value={form.teachingStartDate} onChange={(event) => setForm({ ...form, teachingStartDate: event.target.value })} required />
+          <label>
+            开始日期
+            <input
+              type="date"
+              value={form.teachingStartDate}
+              onChange={(event) => setForm({ ...form, teachingStartDate: event.target.value })}
+              required
+            />
           </label>
-          <label>结束日期
-            <input type="date" value={form.teachingEndDate} onChange={(event) => setForm({ ...form, teachingEndDate: event.target.value })} required />
+          <label>
+            结束日期
+            <input
+              type="date"
+              value={form.teachingEndDate}
+              onChange={(event) => setForm({ ...form, teachingEndDate: event.target.value })}
+              required
+            />
           </label>
-          <label>归档日期（可选）
-            <input type="date" value={form.finalArchiveDate} onChange={(event) => setForm({ ...form, finalArchiveDate: event.target.value })} />
+          <label>
+            归档日期（可选）
+            <input
+              type="date"
+              value={form.finalArchiveDate}
+              onChange={(event) => setForm({ ...form, finalArchiveDate: event.target.value })}
+            />
           </label>
-          <label>课程表图片
-            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setForm({ ...form, file: event.target.files?.[0] ?? null })} required />
+          <label>
+            课程表图片
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => setForm({ ...form, file: event.target.files?.[0] ?? null })}
+              required
+            />
           </label>
-          <button type="submit" disabled={submitting}>{submitting ? '处理中…' : '预览课程表'}</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? '处理中…' : '预览课程表'}
+          </button>
         </form>
       </section>
 
@@ -271,21 +360,69 @@ export function SemesterPage({ current, currentMessage = null, onCurrentChange }
         <section className="panel">
           <h2>确认课程表预览</h2>
           <p>规则解析置信度仅表示本机规则解析文本的把握度，请确认后再创建。</p>
-          {preview.warnings.map((warning) => <p className="feedback warning" key={warning}>{warning}</p>)}
-          <button type="button" className="secondary" onClick={addManualEntry} disabled={submitting}>新增课程表条目</button>
+          {preview.warnings.map((warning) => (
+            <p className="feedback warning" key={warning}>
+              {warning}
+            </p>
+          ))}
+          <button type="button" className="secondary" onClick={addManualEntry} disabled={submitting}>
+            新增课程表条目
+          </button>
           <div className="timetable-preview-table">
             {entries.map((entry) => (
               <div className="timetable-preview-row" key={entry.clientId}>
-                <label>课程<input value={entry.courseName} onChange={(event) => updateEntry(entry.clientId, { courseName: event.target.value })} /></label>
-                <label>星期<input type="number" min="0" max="6" value={entry.weekday} onChange={(event) => updateEntry(entry.clientId, { weekday: Number(event.target.value) as TimetablePreviewEntryDto['weekday'] })} /></label>
-                <label>开始<input value={entry.startTime} onChange={(event) => updateEntry(entry.clientId, { startTime: event.target.value })} /></label>
-                <label>结束<input value={entry.endTime} onChange={(event) => updateEntry(entry.clientId, { endTime: event.target.value })} /></label>
-                <label>地点<input value={entry.location ?? ''} onChange={(event) => updateEntry(entry.clientId, { location: event.target.value })} /></label>
-                <span>规则解析置信度：{entry.parserConfidence == null ? '—' : Math.round(entry.parserConfidence * 100) + '%'}</span>
+                <label>
+                  课程
+                  <input
+                    value={entry.courseName}
+                    onChange={(event) => updateEntry(entry.clientId, { courseName: event.target.value })}
+                  />
+                </label>
+                <label>
+                  星期
+                  <input
+                    type="number"
+                    min="0"
+                    max="6"
+                    value={entry.weekday}
+                    onChange={(event) =>
+                      updateEntry(entry.clientId, {
+                        weekday: Number(event.target.value) as TimetablePreviewEntryDto['weekday'],
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  开始
+                  <input
+                    value={entry.startTime}
+                    onChange={(event) => updateEntry(entry.clientId, { startTime: event.target.value })}
+                  />
+                </label>
+                <label>
+                  结束
+                  <input
+                    value={entry.endTime}
+                    onChange={(event) => updateEntry(entry.clientId, { endTime: event.target.value })}
+                  />
+                </label>
+                <label>
+                  地点
+                  <input
+                    value={entry.location ?? ''}
+                    onChange={(event) => updateEntry(entry.clientId, { location: event.target.value })}
+                  />
+                </label>
+                <span>
+                  规则解析置信度：
+                  {entry.parserConfidence == null ? '—' : Math.round(entry.parserConfidence * 100) + '%'}
+                </span>
               </div>
             ))}
           </div>
-          <button type="button" onClick={() => void handleConfirm()} disabled={submitting || entries.length === 0}>{submitting ? '创建中…' : '确认创建并切换'}</button>
+          <button type="button" onClick={() => void handleConfirm()} disabled={submitting || entries.length === 0}>
+            {submitting ? '创建中…' : '确认创建并切换'}
+          </button>
         </section>
       )}
     </section>

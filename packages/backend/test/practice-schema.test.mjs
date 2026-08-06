@@ -26,11 +26,17 @@ function registerDbCleanup(t, db, dir) {
 }
 
 function columnNames(db, table) {
-  return db.prepare(`PRAGMA table_info(${table})`).all().map((row) => row.name);
+  return db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all()
+    .map((row) => row.name);
 }
 
 function indexNames(db, table) {
-  return db.prepare(`PRAGMA index_list(${table})`).all().map((row) => row.name);
+  return db
+    .prepare(`PRAGMA index_list(${table})`)
+    .all()
+    .map((row) => row.name);
 }
 
 function triggerNames(db) {
@@ -369,7 +375,10 @@ test('practice_sessions enforce scalar constraints and assessment-course consist
   );
 
   const session = insertSession(db, { id: 'session-1', questionCount: 3 });
-  assert.equal(db.prepare('SELECT question_count FROM practice_sessions WHERE id = ?').get(session.id).question_count, 3);
+  assert.equal(
+    db.prepare('SELECT question_count FROM practice_sessions WHERE id = ?').get(session.id).question_count,
+    3
+  );
 });
 
 test('questions enforce type, JSON, ordering, and session-course-module consistency', async (t) => {
@@ -432,12 +441,7 @@ test('practice_answers enforce grading scalars, order, uniqueness, and question-
   insertQuestion(db, { id: 'question-2', questionOrder: 2 });
   insertQuestion(db, { id: 'question-other-session', practiceSessionId: 'session-2', questionOrder: 1 });
 
-  const invalidCheckCases = [
-    { isCorrect: 2 },
-    { isCorrect: 1.5 },
-    { timeSpentSeconds: -1 },
-    { timeSpentSeconds: 1.5 },
-  ];
+  const invalidCheckCases = [{ isCorrect: 2 }, { isCorrect: 1.5 }, { timeSpentSeconds: -1 }, { timeSpentSeconds: 1.5 }];
   for (const overrides of invalidCheckCases) {
     assert.throws(() => insertAnswer(db, overrides), /CHECK constraint failed/);
   }
@@ -451,10 +455,7 @@ test('practice_answers enforce grading scalars, order, uniqueness, and question-
   );
 
   insertAnswer(db, { id: 'answer-1', questionId: 'question-1', answerOrder: 1 });
-  assert.throws(
-    () => insertAnswer(db, { questionId: 'question-1', answerOrder: 1 }),
-    /UNIQUE constraint failed/
-  );
+  assert.throws(() => insertAnswer(db, { questionId: 'question-1', answerOrder: 1 }), /UNIQUE constraint failed/);
   insertAnswer(db, {
     id: 'answer-2',
     questionId: 'question-2',
@@ -475,7 +476,8 @@ test('assessment, session, and knowledge-module deletion semantics preserve or c
 
   db.prepare('DELETE FROM assessment_attempts WHERE id = ?').run('assessment-1');
   assert.equal(
-    db.prepare('SELECT assessment_attempt_id FROM practice_sessions WHERE id = ?').get('session-1').assessment_attempt_id,
+    db.prepare('SELECT assessment_attempt_id FROM practice_sessions WHERE id = ?').get('session-1')
+      .assessment_attempt_id,
     null
   );
 
@@ -514,13 +516,16 @@ test('parent and child updates cannot create dirty S3 cross-table relations', as
     /assessment practice course mismatch/
   );
   assert.throws(
-    () => db.prepare("UPDATE practice_sessions SET assessment_attempt_id = 'assessment-2' WHERE id = 'session-1'").run(),
+    () =>
+      db.prepare("UPDATE practice_sessions SET assessment_attempt_id = 'assessment-2' WHERE id = 'session-1'").run(),
     /practice session relation mismatch/
   );
   assert.throws(
     () =>
       db
-        .prepare("UPDATE practice_sessions SET course_instance_id = 'course-2', assessment_attempt_id = NULL WHERE id = 'session-1'")
+        .prepare(
+          "UPDATE practice_sessions SET course_instance_id = 'course-2', assessment_attempt_id = NULL WHERE id = 'session-1'"
+        )
         .run(),
     /practice session relation mismatch/
   );

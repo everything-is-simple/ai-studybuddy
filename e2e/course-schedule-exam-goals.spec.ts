@@ -10,14 +10,14 @@ type ScheduleEntry = { id: string };
 async function postData<T>(request: APIRequestContext, pathName: string, data: object): Promise<T> {
   const response = await request.post(`${backendBaseUrl}${pathName}`, { data });
   expect(response.ok(), `${pathName}: ${await response.text()}`).toBe(true);
-  const body = await response.json() as { success: boolean; data: T };
+  const body = (await response.json()) as { success: boolean; data: T };
   expect(body.success).toBe(true);
   return body.data;
 }
 
 async function expectFailure(response: Awaited<ReturnType<APIRequestContext['fetch']>>) {
   expect(response.ok(), await response.text()).toBe(false);
-  const body = await response.json() as { success: boolean; error?: { code?: string } };
+  const body = (await response.json()) as { success: boolean; error?: { code?: string } };
   expect(body.success).toBe(false);
 }
 
@@ -34,7 +34,10 @@ test('T09C 在当前学期维护课程、完整周课表和考试目标，并隔
   const firstSemesterId = firstSemester.semesterId;
   const selected = await request.put(`${backendBaseUrl}/semesters/current`, { data: { semesterId: firstSemesterId } });
   expect(selected.ok(), await selected.text()).toBe(true);
-  const firstCourse = await postData<CreatedCourse>(request, '/courses', { semesterId: firstSemesterId, name: 'T09C 原课程名称' });
+  const firstCourse = await postData<CreatedCourse>(request, '/courses', {
+    semesterId: firstSemesterId,
+    name: 'T09C 原课程名称',
+  });
 
   await page.goto('/courses');
   await expect(page.getByRole('heading', { name: '课程与考试目标', level: 1 })).toBeVisible();
@@ -60,9 +63,11 @@ test('T09C 在当前学期维护课程、完整周课表和考试目标，并隔
   await expect(page.getByText('10:00–11:30')).toBeVisible();
   await expect(page.getByText('B202', { exact: true })).toBeVisible();
 
-  const entriesResponse = await request.get(`${backendBaseUrl}/schedule-entries?semesterId=${encodeURIComponent(firstSemesterId)}`);
+  const entriesResponse = await request.get(
+    `${backendBaseUrl}/schedule-entries?semesterId=${encodeURIComponent(firstSemesterId)}`
+  );
   expect(entriesResponse.ok(), await entriesResponse.text()).toBe(true);
-  const entriesBody = await entriesResponse.json() as { success: boolean; data: ScheduleEntry[] };
+  const entriesBody = (await entriesResponse.json()) as { success: boolean; data: ScheduleEntry[] };
   expect(entriesBody.success).toBe(true);
   const firstEntry = entriesBody.data[0];
   expect(firstEntry).toBeTruthy();
@@ -81,9 +86,11 @@ test('T09C 在当前学期维护课程、完整周课表和考试目标，并隔
   await expect(page.getByText('T09C 期末考试', { exact: true })).toBeVisible();
   await expect(page.getByText('等待重新确认')).toBeVisible();
 
-  const examsResponse = await request.get(`${backendBaseUrl}/exams?semesterId=${encodeURIComponent(firstSemesterId)}&courseInstanceId=${encodeURIComponent(firstCourse.id)}`);
+  const examsResponse = await request.get(
+    `${backendBaseUrl}/exams?semesterId=${encodeURIComponent(firstSemesterId)}&courseInstanceId=${encodeURIComponent(firstCourse.id)}`
+  );
   expect(examsResponse.ok(), await examsResponse.text()).toBe(true);
-  const examsBody = await examsResponse.json() as { success: boolean; data: CreatedExam[] };
+  const examsBody = (await examsResponse.json()) as { success: boolean; data: CreatedExam[] };
   expect(examsBody.success).toBe(true);
   const firstExam = examsBody.data[0];
   expect(firstExam).toBeTruthy();
@@ -114,17 +121,39 @@ test('T09C 在当前学期维护课程、完整周课表和考试目标，并隔
     teachingEndDate: '2027-06-30',
   });
   const secondSemesterId = secondSemester.semesterId;
-  const secondCourse = await postData<CreatedCourse>(request, '/courses', { semesterId: secondSemesterId, name: 'T09C 第二学期课程' });
+  const secondCourse = await postData<CreatedCourse>(request, '/courses', {
+    semesterId: secondSemesterId,
+    name: 'T09C 第二学期课程',
+  });
 
-  await expectFailure(await request.patch(`${backendBaseUrl}/courses/${firstCourse.id}`, { data: { semesterId: secondSemesterId, name: '越权课程名' } }));
-  await expectFailure(await request.patch(`${backendBaseUrl}/schedule-entries/${firstEntry.id}`, { data: { semesterId: secondSemesterId, courseInstanceId: secondCourse.id, weekday: 2, startTime: '10:00', endTime: '11:30', location: '越权地点' } }));
-  await expectFailure(await request.get(`${backendBaseUrl}/exams/${firstExam.id}?semesterId=${encodeURIComponent(secondSemesterId)}`));
+  await expectFailure(
+    await request.patch(`${backendBaseUrl}/courses/${firstCourse.id}`, {
+      data: { semesterId: secondSemesterId, name: '越权课程名' },
+    })
+  );
+  await expectFailure(
+    await request.patch(`${backendBaseUrl}/schedule-entries/${firstEntry.id}`, {
+      data: {
+        semesterId: secondSemesterId,
+        courseInstanceId: secondCourse.id,
+        weekday: 2,
+        startTime: '10:00',
+        endTime: '11:30',
+        location: '越权地点',
+      },
+    })
+  );
+  await expectFailure(
+    await request.get(`${backendBaseUrl}/exams/${firstExam.id}?semesterId=${encodeURIComponent(secondSemesterId)}`)
+  );
 
   await page.getByRole('button', { name: '移除课表条目' }).click();
   await expect(page.getByText('课表条目已移除')).toBeVisible();
   await expect(page.getByText('暂无已登记课表')).toBeVisible();
 
-  const selectSecond = await request.put(`${backendBaseUrl}/semesters/current`, { data: { semesterId: secondSemesterId } });
+  const selectSecond = await request.put(`${backendBaseUrl}/semesters/current`, {
+    data: { semesterId: secondSemesterId },
+  });
   expect(selectSecond.ok(), await selectSecond.text()).toBe(true);
   await page.goto('/courses');
   await expect(page.getByLabel('课程列表').getByText('T09C 第二学期课程', { exact: true })).toBeVisible();

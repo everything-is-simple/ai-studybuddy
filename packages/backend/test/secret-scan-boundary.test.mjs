@@ -119,7 +119,6 @@ test('missing tracked files fail without exposing filesystem details', async () 
   }
 });
 
-
 function createControlledApproval(trackedFiles, packageContentIdentity = 'a'.repeat(64)) {
   return {
     fullCommit: 'b'.repeat(40),
@@ -135,8 +134,12 @@ function createControlledInput(reader, overrides = {}) {
   return {
     approval: overrides.approval ?? createControlledApproval(trackedFiles, packageContentIdentity),
     trackedFiles,
-    repositoryCandidates: overrides.repositoryCandidates ?? [{ relativePath: 'src/settings.txt', locator: 'synthetic-repository-file' }],
-    packageCandidates: overrides.packageCandidates ?? [{ relativePath: 'package/settings.txt', locator: 'synthetic-package-file' }],
+    repositoryCandidates: overrides.repositoryCandidates ?? [
+      { relativePath: 'src/settings.txt', locator: 'synthetic-repository-file' },
+    ],
+    packageCandidates: overrides.packageCandidates ?? [
+      { relativePath: 'package/settings.txt', locator: 'synthetic-package-file' },
+    ],
     packageIdentityBefore: overrides.packageIdentityBefore ?? packageContentIdentity,
     packageIdentityAfter: overrides.packageIdentityAfter ?? packageContentIdentity,
     reader,
@@ -148,12 +151,22 @@ test('controlled R1 synthetic boundary binds full identities and emits no path, 
   const fixture = createControlledSyntheticReader({ content: `API_KEY=${sentinel}\n` });
   const report = await scanControlledSecretBoundary(createControlledInput(fixture.reader));
   const summary = formatControlledScanSummary(report);
-  assert.deepEqual(Object.keys(report).sort(), ['artifactId', 'contractVersion', 'findingCount', 'ruleCounts', 'scannedFiles', 'skipped', 'status']);
+  assert.deepEqual(Object.keys(report).sort(), [
+    'artifactId',
+    'contractVersion',
+    'findingCount',
+    'ruleCounts',
+    'scannedFiles',
+    'skipped',
+    'status',
+  ]);
   assert.equal(report.contractVersion, 'phase3-p1-controlled-readonly-v1');
   assert.match(report.artifactId, /^[a-f0-9]{36}$/);
   assert.equal(report.scannedFiles, 2);
   assert.equal(report.findingCount, 2);
-  assert.deepEqual(report.ruleCounts, [{ ruleId: 'ASB-CREDENTIAL-ASSIGNMENT', category: 'credential-assignment', count: 2 }]);
+  assert.deepEqual(report.ruleCounts, [
+    { ruleId: 'ASB-CREDENTIAL-ASSIGNMENT', category: 'credential-assignment', count: 2 },
+  ]);
   assert.equal(summary.includes(sentinel), false);
   assert.equal(summary.includes('settings.txt'), false);
   assert.equal(summary.includes('a'.repeat(64)), false);
@@ -164,9 +177,12 @@ test('controlled R1 synthetic boundary binds full identities and emits no path, 
 test('controlled R1 rejects an untracked candidate before opening any handle', async () => {
   const fixture = createControlledSyntheticReader();
   await assert.rejects(
-    () => scanControlledSecretBoundary(createControlledInput(fixture.reader, {
-      repositoryCandidates: [{ relativePath: 'untracked/private.txt', locator: 'untracked-sentinel' }],
-    })),
+    () =>
+      scanControlledSecretBoundary(
+        createControlledInput(fixture.reader, {
+          repositoryCandidates: [{ relativePath: 'untracked/private.txt', locator: 'untracked-sentinel' }],
+        })
+      ),
     (error) => assertFixedError(error, 'R1_UNTRACKED_OR_OUT_OF_SCOPE', 'untracked-sentinel')
   );
   assert.equal(fixture.getMetrics().openedCount, 0);
@@ -199,7 +215,8 @@ test('controlled R1 skips sensitive candidates before any handle read and reject
 test('controlled R1 rejects unregistered readers before open and approval identity mismatch', async () => {
   const synthetic = createControlledSyntheticReader();
   await assert.rejects(
-    () => scanControlledSecretBoundary(createControlledInput(synthetic.reader, { packageIdentityAfter: 'c'.repeat(64) })),
+    () =>
+      scanControlledSecretBoundary(createControlledInput(synthetic.reader, { packageIdentityAfter: 'c'.repeat(64) })),
     (error) => assertFixedError(error, 'R1_PACKAGE_IDENTITY_INVALID')
   );
   let openCalls = 0;

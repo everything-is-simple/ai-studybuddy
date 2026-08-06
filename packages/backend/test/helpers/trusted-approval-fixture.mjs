@@ -3,9 +3,14 @@ import { createRequire } from 'node:module';
 import { createHash, generateKeyPairSync, randomBytes, sign } from 'node:crypto';
 
 const require = createRequire(import.meta.url);
-const { __TEST_ONLY_createTrustedApprovalVerifier } = require('../../../../scripts/lib/AIStudyBuddy.TrustedApproval.cjs');
+const {
+  __TEST_ONLY_createTrustedApprovalVerifier,
+} = require('../../../../scripts/lib/AIStudyBuddy.TrustedApproval.cjs');
 const { __TEST_ONLY_createVerifierIntegrity } = require('../../../../scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs');
-const { __TEST_ONLY_createTrustedApprovalAnchor, __TEST_ONLY_describeTrustedApprovalAnchor } = require('../../../../scripts/lib/AIStudyBuddy.TrustAnchor.cjs');
+const {
+  __TEST_ONLY_createTrustedApprovalAnchor,
+  __TEST_ONLY_describeTrustedApprovalAnchor,
+} = require('../../../../scripts/lib/AIStudyBuddy.TrustAnchor.cjs');
 const { __TEST_ONLY_createNoFollowReader } = require('../../../../scripts/lib/AIStudyBuddy.NoFollow.cjs');
 
 const DEFAULT_TEST_KEY_ID = 'asb-test-fixture-key';
@@ -30,7 +35,17 @@ export function createRecord(overrides = {}) {
     ...overrides,
   };
   const names = [
-    'format', 'keyId', 'policyId', 'purpose', 'fullCommit', 'contractVersion', 'notBeforeEpochMs', 'notAfterEpochMs', 'approvalId', 'scopeBinding', 'artifactContentIdentity',
+    'format',
+    'keyId',
+    'policyId',
+    'purpose',
+    'fullCommit',
+    'contractVersion',
+    'notBeforeEpochMs',
+    'notAfterEpochMs',
+    'approvalId',
+    'scopeBinding',
+    'artifactContentIdentity',
   ];
   return Buffer.from(`${names.map((name) => `${name}=${values[name]}`).join('\n')}\n`, 'ascii');
 }
@@ -59,14 +74,16 @@ export function createTrustAnchorFixture(overrides = {}) {
 
 export function createApprovalFixture(overrides = {}) {
   const anchorFixture = overrides.anchorFixture ?? createTrustAnchorFixture(overrides);
-  const integrity = overrides.integrity ?? __TEST_ONLY_createVerifierIntegrity({
-    contractVersion: '1',
-    anchorKeyId: anchorFixture.binding.keyId,
-    anchorFingerprint: anchorFixture.binding.fingerprint,
-    anchorMetadataVersion: anchorFixture.binding.metadataVersion,
-    releaseIdentity: anchorFixture.binding.releaseIdentity,
-    provider: overrides.provider,
-  });
+  const integrity =
+    overrides.integrity ??
+    __TEST_ONLY_createVerifierIntegrity({
+      contractVersion: '1',
+      anchorKeyId: anchorFixture.binding.keyId,
+      anchorFingerprint: anchorFixture.binding.fingerprint,
+      anchorMetadataVersion: anchorFixture.binding.metadataVersion,
+      releaseIdentity: anchorFixture.binding.releaseIdentity,
+      provider: overrides.provider,
+    });
   const verifier = __TEST_ONLY_createTrustedApprovalVerifier({
     trustAnchor: overrides.trustAnchor ?? anchorFixture.anchor,
     integrity,

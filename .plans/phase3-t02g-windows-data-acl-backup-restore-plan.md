@@ -77,16 +77,16 @@
 
 ## 3. 目录、所有权、生命周期与受控根模型
 
-| 逻辑目录 | 用途与数据级别 | 预期所有权/访问原则（待实施前复核） | 生命周期与写入方 | 受控根边界 |
-| --- | --- | --- | --- | --- |
-| `app` / `scripts` | 已部署应用与脚本，非用户学习数据 | 安装用户可读；是否可写、管理员更新模型与继承 ACL 均待目标机证据 | bootstrap/升级写入；运行时不应把用户数据写入此处 | 不得作为 `APP_DATA_ROOT`、备份 payload、临时输出或递归删除目标 |
-| `config` | DPAPI 受保护配置与无密钥运行字段 | 仅当前 Windows 用户/所需当前用户任务可访问；不得以 ACL 替代 DPAPI | 设置中心或 bootstrap 创建；备份必须排除 | 不得进入 backup payload、部署包、日志或合成测试输出 |
-| `data` / `APP_DATA_ROOT` | SQLite、学期库、资料、脱敏报告留档 | 当前用户为最小可用访问主体；其他主体权限须用真实证据决定 | 应用运行时读写；恢复仅在独立批准/停止服务后进行 | 受保护根：不得被 package/staging/tmp/log cleanup 作为目标；备份仅白名单读取 |
-| `logs` | T02F 受控 JSONL/后端 stdout/stderr，含敏感运行摘要风险 | 当前用户可写，避免宽泛共享；具体 ACL 待证据 | 运行时追加、T02F 控制的轮转/保留 | 与 data、backups、repo、用户目录不得重叠；T02G 不改日志逻辑 |
-| `backups` | 只读备份、manifest、README 与恢复点 | 当前用户管理；备份介质/共享/同步策略需真实机审查 | backup 创建；restore 创建 recovery point；仅未来批准操作可写 | 不得与 active data、package output、staging 或 tmp 同根/重叠；不得作为递归清理目标 |
-| `tmp` | 可再生中间文件、隔离测试夹具 | 当前用户可写；只允许受控清理 | Worker/转换/合成验证；不得储存唯一数据 | 必须证明位于隔离根、非 data/materials/backups/config；本计划不执行清理 |
-| `models` | OCR/ASR 本地模型和缓存 | 不含用户资料；访问和下载策略待另项审查 | 运行时缓存或受控安装 | 不进 Git、部署包、常规数据备份或清理目标 |
-| `runtime` / `run` | Python venv、PID 等运行控制资产 | 运行账户最小可用；升级/修复权限待实际证据 | bootstrap 创建，start/stop 使用 | 不属于 active data；不得混入 backup payload；不以本切片修改 |
+| 逻辑目录                 | 用途与数据级别                                         | 预期所有权/访问原则（待实施前复核）                               | 生命周期与写入方                                             | 受控根边界                                                                         |
+| ------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `app` / `scripts`        | 已部署应用与脚本，非用户学习数据                       | 安装用户可读；是否可写、管理员更新模型与继承 ACL 均待目标机证据   | bootstrap/升级写入；运行时不应把用户数据写入此处             | 不得作为 `APP_DATA_ROOT`、备份 payload、临时输出或递归删除目标                     |
+| `config`                 | DPAPI 受保护配置与无密钥运行字段                       | 仅当前 Windows 用户/所需当前用户任务可访问；不得以 ACL 替代 DPAPI | 设置中心或 bootstrap 创建；备份必须排除                      | 不得进入 backup payload、部署包、日志或合成测试输出                                |
+| `data` / `APP_DATA_ROOT` | SQLite、学期库、资料、脱敏报告留档                     | 当前用户为最小可用访问主体；其他主体权限须用真实证据决定          | 应用运行时读写；恢复仅在独立批准/停止服务后进行              | 受保护根：不得被 package/staging/tmp/log cleanup 作为目标；备份仅白名单读取        |
+| `logs`                   | T02F 受控 JSONL/后端 stdout/stderr，含敏感运行摘要风险 | 当前用户可写，避免宽泛共享；具体 ACL 待证据                       | 运行时追加、T02F 控制的轮转/保留                             | 与 data、backups、repo、用户目录不得重叠；T02G 不改日志逻辑                        |
+| `backups`                | 只读备份、manifest、README 与恢复点                    | 当前用户管理；备份介质/共享/同步策略需真实机审查                  | backup 创建；restore 创建 recovery point；仅未来批准操作可写 | 不得与 active data、package output、staging 或 tmp 同根/重叠；不得作为递归清理目标 |
+| `tmp`                    | 可再生中间文件、隔离测试夹具                           | 当前用户可写；只允许受控清理                                      | Worker/转换/合成验证；不得储存唯一数据                       | 必须证明位于隔离根、非 data/materials/backups/config；本计划不执行清理             |
+| `models`                 | OCR/ASR 本地模型和缓存                                 | 不含用户资料；访问和下载策略待另项审查                            | 运行时缓存或受控安装                                         | 不进 Git、部署包、常规数据备份或清理目标                                           |
+| `runtime` / `run`        | Python venv、PID 等运行控制资产                        | 运行账户最小可用；升级/修复权限待实际证据                         | bootstrap 创建，start/stop 使用                              | 不属于 active data；不得混入 backup payload；不以本切片修改                        |
 
 **根关系总则**：未来实现必须在任何枚举、复制、覆盖、创建、ACL 检查或删除前获取规范绝对路径，按 Windows 大小写不敏感和完整路径段比较，拒绝空值、相对路径、卷根、仓库根、用户主目录、外部 worktree、`APP_DATA_ROOT`、安装根、受保护根交叠、跨卷意外、`..` 逃逸与任一无法可靠处理的 reparse point。字符串前缀比较不足以证明包含关系。
 
@@ -94,17 +94,17 @@
 
 ## 4. 威胁模型与风险分级
 
-| 风险 | 等级 | 触发面 | 最小安全目标与未来门禁 |
-| --- | --- | --- | --- |
-| 恶意/误配 ACL 使其他本机用户或主体读到 data/config/backups | P1 | 默认继承、宽泛 Users/Everyone ACE、owner/继承不明、共享/同步目录 | 先只读采集 owner、DACL、继承和有效访问证据；未形成允许主体矩阵即阻断真实安装/ACL 修复声明 |
-| ACL 修复误锁当前用户、计划任务或恢复流程 | P1 | `Set-Acl`/`icacls`、继承替换、owner 变更 | 另建批准切片；先在合成目录模拟并有明确回滚/管理员门禁；本切片绝不执行 |
-| 恶意或损坏备份 manifest/payload 覆盖活动数据或逃逸目标 | P1 | 绝对路径、`..`、重解析点、重复/碰撞条目、hash/清单不一致 | 任何写入前验证 format、允许路径集合、规范化 payload 边界、重复/大小/数量上限、regular-file/reparse 状态和 hash；失败 fail closed |
-| 恢复前未停止服务或生成 recovery point 失败 | P1 | SQLite 打开、计划任务、磁盘不足、复制中断 | 真实恢复必须独立批准，先停止和确认服务/任务，再验证 recovery point 完整性；任一步失败不得写 payload |
-| manifest、控制台或错误输出泄露绝对宿主路径、资料名或秘密 | P1 | `sourceDataRoot`、异常 message、Copy/ACL 命令输出 | 未来 API/CLI 仅稳定错误码和脱敏类别；证据仅记录逻辑根、短哈希和非敏感结果；审查 `sourceDataRoot` 最小化方案 |
-| backup 输出根可被输入指向安装根/data/用户目录/外部 worktree | P1 | `-OutputRoot`、Name、符号链接、跨卷 | 在创建目录前验证显式受控根、目标新建性、非重解析点和 protected-root 不交叠；绝不默认在任意输入位置写入 |
-| bootstrap/check/start/health/stop 路径或错误串造成意外写入/信息泄露 | P2 | `InstallRoot`、PID、stdout/stderr、目录探针、启动失败 | 静态审计每个写入/删除点；合成夹具验证路径拒绝和错误脱敏；真实服务验证另批批准 |
-| logs 与 T02F 边界或 package staging 与 T02E 边界重新被扩大 | P2 | 共享 helper、宽泛“运行目录清理”实现 | 新代码只负责本计划明确的 ACL/backup/restore helper；调用接口/测试不触及 T02E/T02F 已保护路径 |
-| tmp/models 误被视为可无条件删除或可备份用户数据 | P2 | 通配符、递归枚举、缓存混入 | 路径类别白名单、受保护哨兵、reparse 拒绝和合成夹具；不执行真实清理 |
+| 风险                                                                | 等级 | 触发面                                                           | 最小安全目标与未来门禁                                                                                                           |
+| ------------------------------------------------------------------- | ---- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 恶意/误配 ACL 使其他本机用户或主体读到 data/config/backups          | P1   | 默认继承、宽泛 Users/Everyone ACE、owner/继承不明、共享/同步目录 | 先只读采集 owner、DACL、继承和有效访问证据；未形成允许主体矩阵即阻断真实安装/ACL 修复声明                                        |
+| ACL 修复误锁当前用户、计划任务或恢复流程                            | P1   | `Set-Acl`/`icacls`、继承替换、owner 变更                         | 另建批准切片；先在合成目录模拟并有明确回滚/管理员门禁；本切片绝不执行                                                            |
+| 恶意或损坏备份 manifest/payload 覆盖活动数据或逃逸目标              | P1   | 绝对路径、`..`、重解析点、重复/碰撞条目、hash/清单不一致         | 任何写入前验证 format、允许路径集合、规范化 payload 边界、重复/大小/数量上限、regular-file/reparse 状态和 hash；失败 fail closed |
+| 恢复前未停止服务或生成 recovery point 失败                          | P1   | SQLite 打开、计划任务、磁盘不足、复制中断                        | 真实恢复必须独立批准，先停止和确认服务/任务，再验证 recovery point 完整性；任一步失败不得写 payload                              |
+| manifest、控制台或错误输出泄露绝对宿主路径、资料名或秘密            | P1   | `sourceDataRoot`、异常 message、Copy/ACL 命令输出                | 未来 API/CLI 仅稳定错误码和脱敏类别；证据仅记录逻辑根、短哈希和非敏感结果；审查 `sourceDataRoot` 最小化方案                      |
+| backup 输出根可被输入指向安装根/data/用户目录/外部 worktree         | P1   | `-OutputRoot`、Name、符号链接、跨卷                              | 在创建目录前验证显式受控根、目标新建性、非重解析点和 protected-root 不交叠；绝不默认在任意输入位置写入                           |
+| bootstrap/check/start/health/stop 路径或错误串造成意外写入/信息泄露 | P2   | `InstallRoot`、PID、stdout/stderr、目录探针、启动失败            | 静态审计每个写入/删除点；合成夹具验证路径拒绝和错误脱敏；真实服务验证另批批准                                                    |
+| logs 与 T02F 边界或 package staging 与 T02E 边界重新被扩大          | P2   | 共享 helper、宽泛“运行目录清理”实现                              | 新代码只负责本计划明确的 ACL/backup/restore helper；调用接口/测试不触及 T02E/T02F 已保护路径                                     |
+| tmp/models 误被视为可无条件删除或可备份用户数据                     | P2   | 通配符、递归枚举、缓存混入                                       | 路径类别白名单、受保护哨兵、reparse 拒绝和合成夹具；不执行真实清理                                                               |
 
 P1 在未来实施或真实机器验收前必须闭合或由用户明确签收剩余风险；P2 必须有针对性测试、固定错误输出和文档登记。P3（可读性、诊断格式、非敏感文案）不得掩盖 P1/P2。
 
@@ -140,17 +140,17 @@ T02F 已负责运行日志的 allowlist、脱敏、轮转、保留和清理保�
 
 下表不是本轮修改清单，也不授权修改。候选文件必须在获批实施时重新从最新 `origin/master` 审计；若实际责任边界不同，应停止并更新计划，而非扩大实现。
 
-| 候选文件 | 未来审查/最小可能职责 |
-| --- | --- |
-| `scripts/lib/AIStudyBuddy.Deployment.psm1` | 统一安装根/受保护根分类、规范路径、reparse 检查、非破坏性 ACL 证据采集及 backup/restore 前置验证 helper；不得暗含 ACL 修改或宽泛删除 |
-| `scripts/backup-data.ps1` | 受控 output root、Name、白名单、manifest 最小化、regular-file/reparse 处理和脱敏错误；不得在实施前运行真实备份 |
-| `scripts/restore-data.ps1` | manifest/payload 预检、恢复目标保护、recovery point 原子门禁、服务停止证据接口、恢复写入顺序和脱敏失败；不得在实施前真实恢复 |
-| `scripts/test-data-integrity.ps1` | 对合成 backup fixture 进行格式/hash/排除项/manifest 脱敏断言；不读取真实备份 |
-| `scripts/bootstrap-runtime.ps1`、`scripts/check-installation.ps1` | 仅审计/证明目录创建、只读 ACL 检查、受保护根和错误输出边界；不在本计划中改变行为 |
-| `scripts/start-production.ps1`、`scripts/stop-production.ps1`、health 入口 | 审计 data/logs/tmp/models/backups 的路径、PID 与失败输出；真实启停/健康检查另行批准 |
-| `packages/backend/src/config/env.ts`、`packages/backend/src/db/paths.ts`、`packages/backend/src/db/backups.ts` | 核对 `APP_DATA_ROOT`、逻辑 `storage_key`、备份/恢复业务路径与部署根的映射；不改业务代码 |
-| `packages/backend/test/*deployment*`、`*backup*`、`*paths*`（候选，待实施前复核） | 仓库外合成夹具、失败矩阵、Windows reparse/ACL 只读证据抽象；不得接触真实数据 |
-| `docs/04-开发任务清单-Todo-List.md`、`docs/06-本地目录治理-Dev-Environment.md`、`docs/09-测试验收计划-Test-Plan.md`、`docs/13-部署运维指南-Deployment.md` | 仅在未来事实和验证证据已经成立时同步；不得提前宣称真实机 ACL 或恢复完成 |
+| 候选文件                                                                                                                                                  | 未来审查/最小可能职责                                                                                                                |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `scripts/lib/AIStudyBuddy.Deployment.psm1`                                                                                                                | 统一安装根/受保护根分类、规范路径、reparse 检查、非破坏性 ACL 证据采集及 backup/restore 前置验证 helper；不得暗含 ACL 修改或宽泛删除 |
+| `scripts/backup-data.ps1`                                                                                                                                 | 受控 output root、Name、白名单、manifest 最小化、regular-file/reparse 处理和脱敏错误；不得在实施前运行真实备份                       |
+| `scripts/restore-data.ps1`                                                                                                                                | manifest/payload 预检、恢复目标保护、recovery point 原子门禁、服务停止证据接口、恢复写入顺序和脱敏失败；不得在实施前真实恢复         |
+| `scripts/test-data-integrity.ps1`                                                                                                                         | 对合成 backup fixture 进行格式/hash/排除项/manifest 脱敏断言；不读取真实备份                                                         |
+| `scripts/bootstrap-runtime.ps1`、`scripts/check-installation.ps1`                                                                                         | 仅审计/证明目录创建、只读 ACL 检查、受保护根和错误输出边界；不在本计划中改变行为                                                     |
+| `scripts/start-production.ps1`、`scripts/stop-production.ps1`、health 入口                                                                                | 审计 data/logs/tmp/models/backups 的路径、PID 与失败输出；真实启停/健康检查另行批准                                                  |
+| `packages/backend/src/config/env.ts`、`packages/backend/src/db/paths.ts`、`packages/backend/src/db/backups.ts`                                            | 核对 `APP_DATA_ROOT`、逻辑 `storage_key`、备份/恢复业务路径与部署根的映射；不改业务代码                                              |
+| `packages/backend/test/*deployment*`、`*backup*`、`*paths*`（候选，待实施前复核）                                                                         | 仓库外合成夹具、失败矩阵、Windows reparse/ACL 只读证据抽象；不得接触真实数据                                                         |
+| `docs/04-开发任务清单-Todo-List.md`、`docs/06-本地目录治理-Dev-Environment.md`、`docs/09-测试验收计划-Test-Plan.md`、`docs/13-部署运维指南-Deployment.md` | 仅在未来事实和验证证据已经成立时同步；不得提前宣称真实机 ACL 或恢复完成                                                              |
 
 ---
 

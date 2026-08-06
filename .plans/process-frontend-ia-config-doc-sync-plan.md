@@ -13,6 +13,7 @@
 ### Task 1: 固化产品与安全边界
 
 **Files:**
+
 - Modify: `docs/15-前端信息架构与界面范围研究-Frontend-Information-Architecture.md`
 - Modify: `docs/08-共同底座架构-Architecture.md`
 - Modify: `docs/10-后端开发规范-Backend-Guidelines.md`
@@ -26,6 +27,7 @@
 ### Task 2: 登记后续任务而不改变当前门禁
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify: `docs/00-文档索引-Index.md`
 
@@ -36,6 +38,7 @@
 ### Task 3: 验证与交付
 
 **Files:**
+
 - Verify: `.plans/process-frontend-ia-config-doc-sync-plan.md`
 - Verify: `docs/00-文档索引-Index.md`
 - Verify: `docs/04-开发任务清单-Todo-List.md`

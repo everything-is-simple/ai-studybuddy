@@ -60,54 +60,137 @@ test.beforeEach(async ({ page }) => {
     const request = route.request();
     const url = new URL(request.url());
     const pathName = url.pathname;
-    const json = (body: unknown, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
     if (request.method() === 'GET' && pathName === '/api/semesters/current')
-      return json(success({
-        semester: {
-          id: semesterId,
-          semesterCode: 'E2E 合成学期',
-          studentName: 'E2E 合成学生',
-          teachingStartDate: '2026-02-16',
-          teachingEndDate: '2026-06-30',
-          finalArchiveDate: null,
-          status: 'active',
-          isCurrent: true,
-          createdAt: '2026-07-18T00:00:00.000Z',
-          updatedAt: '2026-07-18T00:00:00.000Z',
-        },
-        recoveredFromStaleCurrent: false,
-      }));
+      return json(
+        success({
+          semester: {
+            id: semesterId,
+            semesterCode: 'E2E 合成学期',
+            studentName: 'E2E 合成学生',
+            teachingStartDate: '2026-02-16',
+            teachingEndDate: '2026-06-30',
+            finalArchiveDate: null,
+            status: 'active',
+            isCurrent: true,
+            createdAt: '2026-07-18T00:00:00.000Z',
+            updatedAt: '2026-07-18T00:00:00.000Z',
+          },
+          recoveredFromStaleCurrent: false,
+        })
+      );
     if (request.method() === 'GET' && pathName === '/api/semesters')
-      return json(success([{
-        id: semesterId,
-        semesterCode: 'E2E 合成学期',
-        studentName: 'E2E 合成学生',
-        teachingStartDate: '2026-02-16',
-        teachingEndDate: '2026-06-30',
-        finalArchiveDate: null,
-        status: 'active',
-        isCurrent: true,
-        createdAt: '2026-07-18T00:00:00.000Z',
-        updatedAt: '2026-07-18T00:00:00.000Z',
-      }]));
+      return json(
+        success([
+          {
+            id: semesterId,
+            semesterCode: 'E2E 合成学期',
+            studentName: 'E2E 合成学生',
+            teachingStartDate: '2026-02-16',
+            teachingEndDate: '2026-06-30',
+            finalArchiveDate: null,
+            status: 'active',
+            isCurrent: true,
+            createdAt: '2026-07-18T00:00:00.000Z',
+            updatedAt: '2026-07-18T00:00:00.000Z',
+          },
+        ])
+      );
 
     if (request.method() === 'GET' && pathName === `/api/exams/${examId}`)
-      return json(success({ id: examId, courseInstanceId: courseId, name: 'T03D 合成考试', attemptType: 'normal', examAt: '2026-08-01T09:00:00.000Z', confirmationStatus: 'confirmed' }));
+      return json(
+        success({
+          id: examId,
+          courseInstanceId: courseId,
+          name: 'T03D 合成考试',
+          attemptType: 'normal',
+          examAt: '2026-08-01T09:00:00.000Z',
+          confirmationStatus: 'confirmed',
+        })
+      );
     if (request.method() === 'GET' && pathName === '/api/courses')
-      return json(success([{ id: courseId, semesterId, name: 'T03D 合成课程', createdAt: '2026-07-16T00:00:00.000Z', updatedAt: '2026-07-16T00:00:00.000Z' }]));
+      return json(
+        success([
+          {
+            id: courseId,
+            semesterId,
+            name: 'T03D 合成课程',
+            createdAt: '2026-07-16T00:00:00.000Z',
+            updatedAt: '2026-07-16T00:00:00.000Z',
+          },
+        ])
+      );
     if (request.method() === 'GET' && pathName === '/api/exams')
-      return json(success([{ id: examId, courseInstanceId: courseId, name: 'T03D 合成考试', attemptType: 'normal', examAt: '2026-08-01T09:00:00.000Z', confirmationStatus: 'confirmed' }]));
+      return json(
+        success([
+          {
+            id: examId,
+            courseInstanceId: courseId,
+            name: 'T03D 合成考试',
+            attemptType: 'normal',
+            examAt: '2026-08-01T09:00:00.000Z',
+            confirmationStatus: 'confirmed',
+          },
+        ])
+      );
     if (request.method() === 'GET' && pathName === '/api/study-tasks') return json(success([]));
     if (request.method() === 'GET' && pathName === '/api/knowledge-modules')
-      return json(success({ items: [{ id: moduleId, courseInstanceId: courseId, title: '矩阵基础', contentSummary: '矩阵基本运算', importance: 'high', difficulty: 'medium', learnStatus: 'learning', createdAt: '2026-07-16T00:00:00.000Z', updatedAt: '2026-07-16T00:00:00.000Z' }], pagination: { page: 1, pageSize: 20, total: 1, hasMore: false } }));
+      return json(
+        success({
+          items: [
+            {
+              id: moduleId,
+              courseInstanceId: courseId,
+              title: '矩阵基础',
+              contentSummary: '矩阵基本运算',
+              importance: 'high',
+              difficulty: 'medium',
+              learnStatus: 'learning',
+              createdAt: '2026-07-16T00:00:00.000Z',
+              updatedAt: '2026-07-16T00:00:00.000Z',
+            },
+          ],
+          pagination: { page: 1, pageSize: 20, total: 1, hasMore: false },
+        })
+      );
     if (request.method() === 'POST' && pathName === '/api/practice-sessions') return json(success(session), 201);
     if (request.method() === 'GET' && pathName === `/api/practice-sessions/${sessionId}`) return json(success(session));
     if (request.method() === 'POST' && pathName === `/api/practice-sessions/${sessionId}/submit`)
-      return json(success({ sessionId, status: 'graded', totalScore: 2, questionCount: 3, correctRate: 2 / 3, overtime: true, totalDurationSeconds: 2, answers: [
-        { questionId: questions[0].id, studentAnswer: 'A', correctAnswer: 'A', isCorrect: true, explanation: '单选解析' },
-        { questionId: questions[1].id, studentAnswer: 'A,C', correctAnswer: 'A,C', isCorrect: true, explanation: '多选解析' },
-        { questionId: questions[2].id, studentAnswer: '错误答案', correctAnswer: '正确答案', isCorrect: false, explanation: '填空解析' },
-      ] }));
+      return json(
+        success({
+          sessionId,
+          status: 'graded',
+          totalScore: 2,
+          questionCount: 3,
+          correctRate: 2 / 3,
+          overtime: true,
+          totalDurationSeconds: 2,
+          answers: [
+            {
+              questionId: questions[0].id,
+              studentAnswer: 'A',
+              correctAnswer: 'A',
+              isCorrect: true,
+              explanation: '单选解析',
+            },
+            {
+              questionId: questions[1].id,
+              studentAnswer: 'A,C',
+              correctAnswer: 'A,C',
+              isCorrect: true,
+              explanation: '多选解析',
+            },
+            {
+              questionId: questions[2].id,
+              studentAnswer: '错误答案',
+              correctAnswer: '正确答案',
+              isCorrect: false,
+              explanation: '填空解析',
+            },
+          ],
+        })
+      );
     if (request.method() === 'GET' && pathName.includes('/api/practice-sessions/'))
       return json({ success: false, error: { code: 'PRACTICE_SESSION_NOT_FOUND', message: '练习不存在' } }, 404);
     return json({ success: false, error: { code: 'UNEXPECTED_REQUEST', message: '未预期的测试请求' } }, 500);

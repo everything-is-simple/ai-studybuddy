@@ -223,19 +223,19 @@ Response 与 POST 成功响应同形，但从数据库读取并按 `questionOrde
 
 ## 6. 错误码草案
 
-| 错误码 | HTTP | 场景 |
-| --- | --- | --- |
-| `MISSING_REQUIRED_FIELD` | 400 | 缺少 semesterId/courseInstanceId/knowledgeModuleIds |
-| `PRACTICE_INPUT_INVALID` | 400 | 题数、难度、限时或枚举值非法 |
-| `SEMESTER_NOT_FOUND` | 404 | 学期不存在或不是 ready |
-| `COURSE_INSTANCE_NOT_FOUND` | 404 | 课程不存在或不属于学期 |
-| `ASSESSMENT_ATTEMPT_NOT_FOUND` | 404 | 考试不存在或不属于课程 |
-| `KNOWLEDGE_MODULE_NOT_FOUND` | 404 | 模块不存在、跨课程或数量不匹配 |
-| `AI_NOT_CONFIGURED` | 503 | 未配置 AI |
-| `AI_ALL_PROVIDERS_FAILED` | 502 | AI 调用失败且至少尝试过 Provider |
-| `AI_ALL_PROVIDERS_COOLING_DOWN` | 503 | 全部 Provider 冷却 |
-| `PRACTICE_GENERATION_FAILED` | 502 | AI 输出无法解析或不符合题目 JSON |
-| `PRACTICE_SESSION_NOT_FOUND` | 404 | GET 目标 session 不存在 |
+| 错误码                          | HTTP | 场景                                                |
+| ------------------------------- | ---- | --------------------------------------------------- |
+| `MISSING_REQUIRED_FIELD`        | 400  | 缺少 semesterId/courseInstanceId/knowledgeModuleIds |
+| `PRACTICE_INPUT_INVALID`        | 400  | 题数、难度、限时或枚举值非法                        |
+| `SEMESTER_NOT_FOUND`            | 404  | 学期不存在或不是 ready                              |
+| `COURSE_INSTANCE_NOT_FOUND`     | 404  | 课程不存在或不属于学期                              |
+| `ASSESSMENT_ATTEMPT_NOT_FOUND`  | 404  | 考试不存在或不属于课程                              |
+| `KNOWLEDGE_MODULE_NOT_FOUND`    | 404  | 模块不存在、跨课程或数量不匹配                      |
+| `AI_NOT_CONFIGURED`             | 503  | 未配置 AI                                           |
+| `AI_ALL_PROVIDERS_FAILED`       | 502  | AI 调用失败且至少尝试过 Provider                    |
+| `AI_ALL_PROVIDERS_COOLING_DOWN` | 503  | 全部 Provider 冷却                                  |
+| `PRACTICE_GENERATION_FAILED`    | 502  | AI 输出无法解析或不符合题目 JSON                    |
+| `PRACTICE_SESSION_NOT_FOUND`    | 404  | GET 目标 session 不存在                             |
 
 ---
 

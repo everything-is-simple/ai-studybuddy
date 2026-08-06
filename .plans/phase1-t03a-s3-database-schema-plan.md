@@ -92,6 +92,7 @@
 ### Task 1：先写 v4 migration 与约束的失败测试（RED）
 
 **Files:**
+
 - Create: `packages/backend/test/practice-schema.test.mjs`
 - Modify: `packages/backend/test/semester-initialization.test.mjs`
 
@@ -117,30 +118,57 @@ async function withTempDir(t, prefix) {
 }
 
 function columnNames(db, table) {
-  return db.prepare(`PRAGMA table_info(${table})`).all().map((row) => row.name);
+  return db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all()
+    .map((row) => row.name);
 }
 
 function seedFoundation(db) {
   const now = '2026-07-16T00:00:00.000Z';
-  db.prepare(`INSERT INTO course_instances
-    (id, semester_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`)
-    .run('course-1', 'semester-1', '线性代数', now, now);
-  db.prepare(`INSERT INTO assessment_attempts
+  db.prepare(
+    `INSERT INTO course_instances
+    (id, semester_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`
+  ).run('course-1', 'semester-1', '线性代数', now, now);
+  db.prepare(
+    `INSERT INTO assessment_attempts
     (id, course_instance_id, name, exam_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)`)
-    .run('assessment-1', 'course-1', '期末考试', '2026-08-01T00:00:00.000Z', now, now);
-  db.prepare(`INSERT INTO materials
+    VALUES (?, ?, ?, ?, ?, ?)`
+  ).run('assessment-1', 'course-1', '期末考试', '2026-08-01T00:00:00.000Z', now, now);
+  db.prepare(
+    `INSERT INTO materials
     (id, course_instance_id, file_type, storage_key, status, created_at, updated_at,
      original_filename, title, file_size_bytes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run('material-1', 'course-1', 'text', 'materials/material-1/source.txt', 'completed', now, now,
-      'source.txt', '向量空间', 128);
-  db.prepare(`INSERT INTO knowledge_modules
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    'material-1',
+    'course-1',
+    'text',
+    'materials/material-1/source.txt',
+    'completed',
+    now,
+    now,
+    'source.txt',
+    '向量空间',
+    128
+  );
+  db.prepare(
+    `INSERT INTO knowledge_modules
     (id, course_instance_id, material_id, title, importance, difficulty,
      source_evidence, learn_status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run('module-1', 'course-1', 'material-1', '向量空间', 'high', 'medium',
-      '第 1 节：向量空间定义', 'learning', now, now);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    'module-1',
+    'course-1',
+    'material-1',
+    '向量空间',
+    'high',
+    'medium',
+    '第 1 节：向量空间定义',
+    'learning',
+    now,
+    now
+  );
   return now;
 }
 ```
@@ -161,19 +189,50 @@ function seedFoundation(db) {
 ```js
 assert.equal(getAppliedVersion(db, 'semester'), 4);
 assert.deepEqual(columnNames(db, 'practice_sessions'), [
-  'id', 'course_instance_id', 'assessment_attempt_id', 'status', 'question_count',
-  'time_limit_seconds', 'started_at', 'submitted_at', 'graded_at', 'total_score',
-  'correct_rate', 'overtime', 'total_duration_seconds', 'difficulty_preference',
-  'created_at', 'updated_at'
+  'id',
+  'course_instance_id',
+  'assessment_attempt_id',
+  'status',
+  'question_count',
+  'time_limit_seconds',
+  'started_at',
+  'submitted_at',
+  'graded_at',
+  'total_score',
+  'correct_rate',
+  'overtime',
+  'total_duration_seconds',
+  'difficulty_preference',
+  'created_at',
+  'updated_at',
 ]);
 assert.deepEqual(columnNames(db, 'questions'), [
-  'id', 'practice_session_id', 'course_instance_id', 'knowledge_module_id', 'type',
-  'stem', 'options_json', 'correct_answer', 'acceptable_answers_json', 'difficulty',
-  'explanation', 'source_evidence', 'ai_model', 'prompt_version', 'question_order', 'created_at'
+  'id',
+  'practice_session_id',
+  'course_instance_id',
+  'knowledge_module_id',
+  'type',
+  'stem',
+  'options_json',
+  'correct_answer',
+  'acceptable_answers_json',
+  'difficulty',
+  'explanation',
+  'source_evidence',
+  'ai_model',
+  'prompt_version',
+  'question_order',
+  'created_at',
 ]);
 assert.deepEqual(columnNames(db, 'practice_answers'), [
-  'id', 'session_id', 'question_id', 'student_answer', 'is_correct',
-  'time_spent_seconds', 'answer_order', 'created_at'
+  'id',
+  'session_id',
+  'question_id',
+  'student_answer',
+  'is_correct',
+  'time_spent_seconds',
+  'answer_order',
+  'created_at',
 ]);
 ```
 
@@ -185,10 +244,16 @@ assert.deepEqual(columnNames(db, 'practice_answers'), [
 
 ```js
 assert.equal(getAppliedVersion(db, 'semester'), 4);
-assert.equal(db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count, 1);
+assert.equal(
+  db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count,
+  1
+);
 assert.equal(db.prepare('SELECT title FROM knowledge_modules WHERE id = ?').get('module-1').title, '向量空间');
 migrateSemesterDb(db);
-assert.equal(db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count, 1);
+assert.equal(
+  db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE scope = 'semester' AND version = 4").get().count,
+  1
+);
 ```
 
 - [x] **Step 5：写 session 约束与关联测试**
@@ -230,6 +295,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/practice-
 ### Task 2：实现学期库 migration v4（GREEN 的最小 Schema）
 
 **Files:**
+
 - Create: `packages/backend/src/db/sql/migration-semester-v4.ts`
 - Modify: `packages/backend/src/db/migrations.ts`
 
@@ -509,6 +575,7 @@ pnpm --dir packages/backend exec node --test --test-concurrency=1 test/practice-
 ### Task 3：增加最小 S3 类型基线
 
 **Files:**
+
 - Modify: `packages/shared/src/types.ts`
 
 - [x] **Step 1：增加枚举与记录类型**
@@ -586,6 +653,7 @@ pnpm type-check
 ### Task 4：独立审查与回归修复
 
 **Files:**
+
 - Review only first: all T03A files
 - Modify only if a confirmed defect is found: files already listed in this plan
 
@@ -610,6 +678,7 @@ pnpm type-check
 ### Task 5：全量验证与完成态文档
 
 **Files:**
+
 - Modify after all code verification passes: `docs/04-开发任务清单-Todo-List.md`
 - Modify after all code verification passes: `docs/00-文档索引-Index.md`
 - Modify after all code verification passes: `.plans/phase1-t03a-s3-database-schema-plan.md`

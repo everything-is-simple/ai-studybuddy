@@ -83,7 +83,14 @@ async function setupUploaded() {
       buffer: Buffer.from('旧正文：向量空间的定义与线性组合。'),
     },
   });
-  return { service, MaterialJobWorker, StorageAdapter, semesterId: semester.semesterId, courseId: course.id, materialId: uploaded.id };
+  return {
+    service,
+    MaterialJobWorker,
+    StorageAdapter,
+    semesterId: semester.semesterId,
+    courseId: course.id,
+    materialId: uploaded.id,
+  };
 }
 
 function forceMaterialStatus(service, semesterId, materialId, status, options = {}) {
@@ -91,10 +98,9 @@ function forceMaterialStatus(service, semesterId, materialId, status, options = 
   const db = service.openReadySemesterDb(semesterId);
   try {
     if (options.clearJobs !== false) {
-      db.prepare("UPDATE jobs SET status = 'failed', attempts = max_attempts, completed_at = ? WHERE material_id = ?").run(
-        timestamp,
-        materialId
-      );
+      db.prepare(
+        "UPDATE jobs SET status = 'failed', attempts = max_attempts, completed_at = ? WHERE material_id = ?"
+      ).run(timestamp, materialId);
     }
     if (options.oldAiAttempts) {
       db.prepare(
@@ -119,13 +125,17 @@ function readDbState(service, semesterId, materialId) {
   const db = service.openReadySemesterDb(semesterId);
   try {
     const material = db
-      .prepare('SELECT storage_key, status, conversion_error_message, ai_generation_error_message, truncated FROM materials WHERE id = ?')
+      .prepare(
+        'SELECT storage_key, status, conversion_error_message, ai_generation_error_message, truncated FROM materials WHERE id = ?'
+      )
       .get(materialId);
     const normalized = db
       .prepare('SELECT id, text, char_count, metadata_json FROM normalized_texts WHERE material_id = ?')
       .get(materialId);
     const jobs = db
-      .prepare('SELECT job_type, status, attempts, max_attempts, payload_json FROM jobs WHERE material_id = ? ORDER BY created_at')
+      .prepare(
+        'SELECT job_type, status, attempts, max_attempts, payload_json FROM jobs WHERE material_id = ? ORDER BY created_at'
+      )
       .all(materialId);
     return { material, normalized, jobs };
   } finally {
@@ -162,7 +172,12 @@ async function drainWorker(worker, service, semesterId, materialId) {
 
 test('S2 manual text replacement accepts only terminal recovery states and records new text version metadata', async () => {
   const conversionFailed = await setupUploaded();
-  forceMaterialStatus(conversionFailed.service, conversionFailed.semesterId, conversionFailed.materialId, 'conversion_failed');
+  forceMaterialStatus(
+    conversionFailed.service,
+    conversionFailed.semesterId,
+    conversionFailed.materialId,
+    'conversion_failed'
+  );
   const before = readDbState(conversionFailed.service, conversionFailed.semesterId, conversionFailed.materialId);
 
   const result = conversionFailed.service.replaceText(
@@ -194,9 +209,15 @@ test('S2 manual text replacement accepts only terminal recovery states and recor
   assert.equal(JSON.parse(after.jobs.at(-1).payload_json).normalizedTextId, result.normalizedTextId);
 
   const pendingQuality = await setupUploaded();
-  forceMaterialStatus(pendingQuality.service, pendingQuality.semesterId, pendingQuality.materialId, 'pending_quality_check', {
-    oldAiAttempts: true,
-  });
+  forceMaterialStatus(
+    pendingQuality.service,
+    pendingQuality.semesterId,
+    pendingQuality.materialId,
+    'pending_quality_check',
+    {
+      oldAiAttempts: true,
+    }
+  );
   const recovered = pendingQuality.service.replaceText(
     pendingQuality.semesterId,
     pendingQuality.materialId,
@@ -255,9 +276,13 @@ test('S2 manual text replacement after AI failure can generate note, module, and
   const db = service.openReadySemesterDb(semesterId);
   try {
     const note = db.prepare('SELECT markdown FROM structured_notes WHERE material_id = ?').get(materialId);
-    const module = db.prepare('SELECT title, source_evidence FROM knowledge_modules WHERE material_id = ?').get(materialId);
+    const module = db
+      .prepare('SELECT title, source_evidence FROM knowledge_modules WHERE material_id = ?')
+      .get(materialId);
     const event = db
-      .prepare("SELECT event_type, evidence_ref, quality_gate FROM study_events WHERE event_type = 'material_note_completed'")
+      .prepare(
+        "SELECT event_type, evidence_ref, quality_gate FROM study_events WHERE event_type = 'material_note_completed'"
+      )
       .get();
     assert.match(note.markdown, /人工补文笔记/);
     assert.equal(module.title, '人工补文知识点');

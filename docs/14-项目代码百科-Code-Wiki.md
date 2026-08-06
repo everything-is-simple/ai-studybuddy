@@ -43,15 +43,15 @@
 
 系统由 **1 个共同底座 + 7 个场景子系统** 组成：
 
-| 编号 | 子系统 | 英文代号 | 当前状态 |
-| ---- | ------ | -------- | -------- |
-| S1 | 学习节奏子系统 | StudyRhythm | 已完成主线复验 |
-| S2 | 资料笔记子系统 | NoteBuilder | 已完成主线复验 |
-| S3 | 限时练习子系统 | PracticeRunner | 已完成主线复验 |
-| S4 | 错题改错子系统 | ErrorFixer | 已完成主线复验 |
-| S5 | 期末冲刺子系统 | ExamCrammer | 已完成主线复验 |
-| S6 | 家长观察子系统 | ParentReport | 已完成主线复验 |
-| S7 | 课堂采集子系统 | ClassCapture | S7-MVP 已完成主线复验 |
+| 编号 | 子系统         | 英文代号       | 当前状态              |
+| ---- | -------------- | -------------- | --------------------- |
+| S1   | 学习节奏子系统 | StudyRhythm    | 已完成主线复验        |
+| S2   | 资料笔记子系统 | NoteBuilder    | 已完成主线复验        |
+| S3   | 限时练习子系统 | PracticeRunner | 已完成主线复验        |
+| S4   | 错题改错子系统 | ErrorFixer     | 已完成主线复验        |
+| S5   | 期末冲刺子系统 | ExamCrammer    | 已完成主线复验        |
+| S6   | 家长观察子系统 | ParentReport   | 已完成主线复验        |
+| S7   | 课堂采集子系统 | ClassCapture   | S7-MVP 已完成主线复验 |
 
 ### 1.4 开发阶段总览
 
@@ -67,15 +67,15 @@
 
 ### 2.1 仓库列表
 
-| 仓库路径 | 用途 | 角色 |
-| -------- | ---- | ---- |
-| `h:\ai-studybuddy` | **主系统 Git 仓库** | 源码、文档、测试、计划 |
-| `h:\StudyBuddy` | **Windows 部署包仓库** | 编译后产物、部署脚本、用户文档 |
-| `h:\ai-studybuddy-composer` | 组件试炼场 | 独立验证开源组件，不进入主仓库 |
-| `h:\ai-studybuddy-tmp` | 隔离验证目录 | 临时运行数据、测试隔离根 |
-| `h:\ai-studybuddy-worktrees` | 并行任务 worktree 根 | 唯一合法的任务 worktree 目录 |
-| `h:\ai-studybuddy-backup` | 历史备份 | 旧归档、草稿、外部参考 |
-| `h:\KaoBuddy-Windows` | 外部参考 | 只读参考，不复制源码 |
+| 仓库路径                     | 用途                   | 角色                           |
+| ---------------------------- | ---------------------- | ------------------------------ |
+| `h:\ai-studybuddy`           | **主系统 Git 仓库**    | 源码、文档、测试、计划         |
+| `h:\StudyBuddy`              | **Windows 部署包仓库** | 编译后产物、部署脚本、用户文档 |
+| `h:\ai-studybuddy-composer`  | 组件试炼场             | 独立验证开源组件，不进入主仓库 |
+| `h:\ai-studybuddy-tmp`       | 隔离验证目录           | 临时运行数据、测试隔离根       |
+| `h:\ai-studybuddy-worktrees` | 并行任务 worktree 根   | 唯一合法的任务 worktree 目录   |
+| `h:\ai-studybuddy-backup`    | 历史备份               | 旧归档、草稿、外部参考         |
+| `h:\KaoBuddy-Windows`        | 外部参考               | 只读参考，不复制源码           |
 
 ### 2.2 仓库边界规则
 
@@ -327,56 +327,56 @@ StudyBuddy/
 
 ### 5.1 运行时环境
 
-| 组件 | 选型 | 版本 |
-| ---- | ---- | ---- |
-| 运行时 | Node.js | 20/22/24 LTS (不支持 Node 25) |
-| 包管理 | pnpm | workspace monorepo |
-| 语言 | TypeScript | 5.3+ |
-| Python | Python 3.10+ x64 | OCR 子进程 |
+| 组件   | 选型             | 版本                          |
+| ------ | ---------------- | ----------------------------- |
+| 运行时 | Node.js          | 20/22/24 LTS (不支持 Node 25) |
+| 包管理 | pnpm             | workspace monorepo            |
+| 语言   | TypeScript       | 5.3+                          |
+| Python | Python 3.10+ x64 | OCR 子进程                    |
 
 ### 5.2 后端核心依赖
 
-| 包名 | 用途 | 版本 |
-| ---- | ---- | ---- |
-| `express` | Web 框架 | ^4.18.2 |
-| `better-sqlite3` | SQLite 数据库 | ^12.11.1 |
-| `openai` | AI Provider SDK | ^6.46.0 |
-| `pdf-parse` | PDF 文本提取 | 2.4.5 |
-| `mammoth` | DOCX 转换 | ^1.12.0 |
-| `jszip` | PPTX/OOXML 解析 | ^3.10.1 |
-| `jsdom` | HTML 解析 | ^29.1.1 |
-| `@mozilla/readability` | 网页正文提取 | ^0.6.0 |
-| `undici` | HTTP 客户端 | ^8.7.0 |
-| `nodemailer` | SMTP 邮件 | ^7.0.13 |
-| `multer` | 文件上传 | ^2.2.0 |
-| `dotenv` | 环境变量加载 | ^16.3.1 |
-| `@primno/dpapi` | Windows DPAPI 加密 | 2.0.1 |
+| 包名                   | 用途               | 版本     |
+| ---------------------- | ------------------ | -------- |
+| `express`              | Web 框架           | ^4.18.2  |
+| `better-sqlite3`       | SQLite 数据库      | ^12.11.1 |
+| `openai`               | AI Provider SDK    | ^6.46.0  |
+| `pdf-parse`            | PDF 文本提取       | 2.4.5    |
+| `mammoth`              | DOCX 转换          | ^1.12.0  |
+| `jszip`                | PPTX/OOXML 解析    | ^3.10.1  |
+| `jsdom`                | HTML 解析          | ^29.1.1  |
+| `@mozilla/readability` | 网页正文提取       | ^0.6.0   |
+| `undici`               | HTTP 客户端        | ^8.7.0   |
+| `nodemailer`           | SMTP 邮件          | ^7.0.13  |
+| `multer`               | 文件上传           | ^2.2.0   |
+| `dotenv`               | 环境变量加载       | ^16.3.1  |
+| `@primno/dpapi`        | Windows DPAPI 加密 | 2.0.1    |
 
 ### 5.3 前端核心依赖
 
-| 包名 | 用途 | 版本 |
-| ---- | ---- | ---- |
-| `react` / `react-dom` | UI 框架 | ^18.3.1 |
-| `react-router-dom` | 路由 | ^6.24.1 |
-| `react-markdown` | Markdown 渲染 | ^9.0.1 |
-| `remark-gfm` | GFM 扩展 | ^4.0.0 |
-| `remark-math` | 数学公式解析 | ^6.0.0 |
-| `rehype-katex` | KaTeX 渲染 | ^7.0.1 |
-| `katex` | 数学公式样式 | ^0.16.11 |
-| `markmap-lib` | 思维导图数据 | ^0.18.9 |
-| `markmap-view` | 思维导图渲染 | ^0.18.9 |
-| `vite` | 构建工具 | ^5.3.3 |
-| `vitest` | 测试框架 | ^2.0.2 |
+| 包名                  | 用途          | 版本     |
+| --------------------- | ------------- | -------- |
+| `react` / `react-dom` | UI 框架       | ^18.3.1  |
+| `react-router-dom`    | 路由          | ^6.24.1  |
+| `react-markdown`      | Markdown 渲染 | ^9.0.1   |
+| `remark-gfm`          | GFM 扩展      | ^4.0.0   |
+| `remark-math`         | 数学公式解析  | ^6.0.0   |
+| `rehype-katex`        | KaTeX 渲染    | ^7.0.1   |
+| `katex`               | 数学公式样式  | ^0.16.11 |
+| `markmap-lib`         | 思维导图数据  | ^0.18.9  |
+| `markmap-view`        | 思维导图渲染  | ^0.18.9  |
+| `vite`                | 构建工具      | ^5.3.3   |
+| `vitest`              | 测试框架      | ^2.0.2   |
 
 ### 5.4 外部组件
 
-| 组件 | 用途 | 调用方式 |
-| ---- | ---- | -------- |
-| RapidOCR | 图片 OCR 识别 | Python 子进程 (用完退出) |
-| whisper.cpp | 本机语音转文字 | 配置化 CLI 子进程 |
-| GPT/Claude (中转) | 默认 AI Provider | OpenAI-compatible API |
-| QQ SMTP | 家长报告邮件 | nodemailer 出站 |
-| 飞书 Webhook | 家长报告卡片 | HTTP POST |
+| 组件              | 用途             | 调用方式                 |
+| ----------------- | ---------------- | ------------------------ |
+| RapidOCR          | 图片 OCR 识别    | Python 子进程 (用完退出) |
+| whisper.cpp       | 本机语音转文字   | 配置化 CLI 子进程        |
+| GPT/Claude (中转) | 默认 AI Provider | OpenAI-compatible API    |
+| QQ SMTP           | 家长报告邮件     | nodemailer 出站          |
+| 飞书 Webhook      | 家长报告卡片     | HTTP POST                |
 
 ---
 
@@ -387,6 +387,7 @@ StudyBuddy/
 #### 6.1.1 入口与启动 (`server.ts` / `bootstrap.ts` / `app.ts`)
 
 启动流程：
+
 1. `server.ts` 调用 `bootstrapBackend()`
 2. `bootstrap.ts` 初始化配置 → 创建 Express App → 启动 MaterialJobWorker → 监听端口
 3. `app.ts` 组装中间件 (Origin 策略 → JSON 解析 → 路由 → 静态文件 → 错误处理)
@@ -419,10 +420,12 @@ initializeConfiguration()  // 读取配置
 #### 6.1.4 数据库层 (`db/`)
 
 **双库模型**：
+
 - `studybuddy.db`（全局库）：配置、学期索引、备份记录
 - `semester.db`（学期库）：课程实例、考试、任务、事件、资料等
 
 **连接管理** (`connection.ts`)：
+
 - `openDbAtPath()` — 打开并启用 WAL + foreign_keys
 - `openExistingDbAtPath()` — 仅打开已存在库
 - `openReadOnlyExistingDbAtPath()` — 只读打开
@@ -431,10 +434,12 @@ initializeConfiguration()  // 读取配置
 - `backupDb()` — 备份
 
 **路径安全** (`paths.ts`)：
+
 - `resolveAppDataPath()` — 校验路径必须在 `APP_DATA_ROOT` 内，拒绝 `..` 逃逸
 - `resolveStorageKeyToPath()` — 解析 `storage_key` 为物理路径，强校验格式
 
 **Migration 系统** (`migrations.ts`)：
+
 - `schema_migrations` 表记录已执行版本
 - 版本连续递增，缺口必须失败
 - Migration SQL 与其版本记录在同一事务内提交
@@ -454,14 +459,14 @@ initializeConfiguration()  // 读取配置
 
 #### 6.1.6 格式转换 Adapter
 
-| Adapter | 输入 | 输出 | 实现 |
-| ------- | ---- | ---- | ---- |
-| `PdfConverter` | PDF | `{ok, text, metadata}` | pdf-parse |
-| `OcrConverter` | 图片 | `{ok, text, warnings}` | RapidOCR Python 子进程 |
-| `DocxConverter` | DOCX | `{ok, text, metadata}` | mammoth.js |
-| `PptxConverter` | PPTX | `{ok, text, metadata}` | JSZip + OOXML |
-| `UrlFetcher` | URL/HTML | `{ok, text, metadata}` | undici + Readability |
-| `WhisperCppAuralConverter` | PCM WAV | `{ok, text}` | whisper.cpp CLI |
+| Adapter                    | 输入     | 输出                   | 实现                   |
+| -------------------------- | -------- | ---------------------- | ---------------------- |
+| `PdfConverter`             | PDF      | `{ok, text, metadata}` | pdf-parse              |
+| `OcrConverter`             | 图片     | `{ok, text, warnings}` | RapidOCR Python 子进程 |
+| `DocxConverter`            | DOCX     | `{ok, text, metadata}` | mammoth.js             |
+| `PptxConverter`            | PPTX     | `{ok, text, metadata}` | JSZip + OOXML          |
+| `UrlFetcher`               | URL/HTML | `{ok, text, metadata}` | undici + Readability   |
+| `WhisperCppAuralConverter` | PCM WAV  | `{ok, text}`           | whisper.cpp CLI        |
 
 统一输出：`ConverterResult { ok, sourceType, text, metadata, warnings, error }`
 
@@ -476,53 +481,53 @@ initializeConfiguration()  // 读取配置
 
 20 个路由，按学期上下文分组：
 
-| 路由 | 页面 | 子系统 |
-| ---- | ---- | ------ |
-| `/` | 每日学习首页 | S1 |
-| `/courses` | 课程与考试目标 | S1 |
-| `/materials` | 资料上传 | S2 |
-| `/notes/:noteId` | 笔记详情 | S2 |
-| `/exams/:examId` | 考试工作台 | S1/S5 |
-| `/exams/:examId/practice` | 练习发起 | S3 |
-| `/practice-sessions/:sessionId` | 练习作答 | S3 |
-| `/practice-sessions/:sessionId/result` | 练习结果 | S3 |
-| `/semesters/:semesterId/practice-history` | 练习历史 | S3 |
-| `/exams/:examId/mistakes` | 错题列表 | S4 |
-| `/mistakes/:mistakeId` | 错题详情 | S4 |
-| `/exams/:examId/mock-exam` | 模拟考入口 | S5 |
-| `/mock-exam-papers/:paperId` | 模拟卷详情 | S5 |
-| `/mock-exam-attempts/:attemptId` | 模拟考作答 | S5 |
-| `/mock-exam-attempts/:attemptId/result` | 模拟考结果 | S5 |
-| `/exams/:examId/cram` | 临考速背 | S5 |
-| `/exams/:examId/cram-plan` | 冲刺计划 | S5 |
-| `/semesters` | 学期管理 | 共同 |
-| `/settings` | 配置中心 | 共同 |
+| 路由                                      | 页面           | 子系统 |
+| ----------------------------------------- | -------------- | ------ |
+| `/`                                       | 每日学习首页   | S1     |
+| `/courses`                                | 课程与考试目标 | S1     |
+| `/materials`                              | 资料上传       | S2     |
+| `/notes/:noteId`                          | 笔记详情       | S2     |
+| `/exams/:examId`                          | 考试工作台     | S1/S5  |
+| `/exams/:examId/practice`                 | 练习发起       | S3     |
+| `/practice-sessions/:sessionId`           | 练习作答       | S3     |
+| `/practice-sessions/:sessionId/result`    | 练习结果       | S3     |
+| `/semesters/:semesterId/practice-history` | 练习历史       | S3     |
+| `/exams/:examId/mistakes`                 | 错题列表       | S4     |
+| `/mistakes/:mistakeId`                    | 错题详情       | S4     |
+| `/exams/:examId/mock-exam`                | 模拟考入口     | S5     |
+| `/mock-exam-papers/:paperId`              | 模拟卷详情     | S5     |
+| `/mock-exam-attempts/:attemptId`          | 模拟考作答     | S5     |
+| `/mock-exam-attempts/:attemptId/result`   | 模拟考结果     | S5     |
+| `/exams/:examId/cram`                     | 临考速背       | S5     |
+| `/exams/:examId/cram-plan`                | 冲刺计划       | S5     |
+| `/semesters`                              | 学期管理       | 共同   |
+| `/settings`                               | 配置中心       | 共同   |
 
 #### 6.2.2 核心组件
 
-| 组件 | 功能 |
-| ---- | ---- |
-| `AppNavigation` | 全局导航 |
-| `ExamContextNav` | 考试上下文导航 |
-| `PageState` | 统一 loading/empty/error 状态 |
-| `MarkdownNote` | Markdown + KaTeX 安全渲染 |
-| `LazyMindMap` / `MindMap` | Markmap 思维导图（按需加载） |
-| `FileDropzone` | 文件拖拽上传 |
-| `MaterialStatus` | 资料处理状态 |
-| `PracticeQuestion` | 练习题目展示 |
-| `MockExamQuestion` | 模拟考题目展示 |
-| `FeedbackMessage` | 操作反馈 |
+| 组件                      | 功能                          |
+| ------------------------- | ----------------------------- |
+| `AppNavigation`           | 全局导航                      |
+| `ExamContextNav`          | 考试上下文导航                |
+| `PageState`               | 统一 loading/empty/error 状态 |
+| `MarkdownNote`            | Markdown + KaTeX 安全渲染     |
+| `LazyMindMap` / `MindMap` | Markmap 思维导图（按需加载）  |
+| `FileDropzone`            | 文件拖拽上传                  |
+| `MaterialStatus`          | 资料处理状态                  |
+| `PracticeQuestion`        | 练习题目展示                  |
+| `MockExamQuestion`        | 模拟考题目展示                |
+| `FeedbackMessage`         | 操作反馈                      |
 
 #### 6.2.3 自定义 Hooks
 
-| Hook | 功能 |
-| ---- | ---- |
-| `useApiRequest` | 可取消请求、loading/error 状态 |
-| `useMaterialPolling` | 资料处理状态轮询（指数退避） |
-| `usePracticeTimer` | 练习计时器 |
-| `usePracticeDraft` | 练习作答草稿 |
-| `useMockExamDraft` | 模拟考作答草稿 |
-| `useCramSession` | 冲刺会话状态 |
+| Hook                 | 功能                           |
+| -------------------- | ------------------------------ |
+| `useApiRequest`      | 可取消请求、loading/error 状态 |
+| `useMaterialPolling` | 资料处理状态轮询（指数退避）   |
+| `usePracticeTimer`   | 练习计时器                     |
+| `usePracticeDraft`   | 练习作答草稿                   |
+| `useMockExamDraft`   | 模拟考作答草稿                 |
+| `useCramSession`     | 冲刺会话状态                   |
 
 ### 6.3 共享类型 (`packages/shared`)
 
@@ -586,13 +591,13 @@ class MaterialJobWorker {
 #### 数据库连接函数 (`db/connection.ts`)
 
 ```typescript
-function openDbAtPath(dbPath: string): DatabaseType;       // 创建/打开 + WAL + FK
+function openDbAtPath(dbPath: string): DatabaseType; // 创建/打开 + WAL + FK
 function openExistingDbAtPath(dbPath: string): DatabaseType; // 仅打开已存在
 function openReadOnlyExistingDbAtPath(dbPath: string): DatabaseType; // 只读
-function openGlobalDb(): DatabaseType;                     // 打开全局库
-function openSemesterDb(semesterId: string): DatabaseType;  // 打开学期库
-function runIntegrityCheck(db: DatabaseType): string;       // PRAGMA integrity_check
-function checkpointAndClose(db: DatabaseType): void;        // WAL checkpoint + 关闭
+function openGlobalDb(): DatabaseType; // 打开全局库
+function openSemesterDb(semesterId: string): DatabaseType; // 打开学期库
+function runIntegrityCheck(db: DatabaseType): string; // PRAGMA integrity_check
+function checkpointAndClose(db: DatabaseType): void; // WAL checkpoint + 关闭
 function backupDb(db: DatabaseType, destination: string): void; // 备份
 ```
 
@@ -604,8 +609,8 @@ function getSemesterDbPath(semesterId: string): string;
 function getSemesterFilesDir(semesterId: string): string;
 function getSemesterTmpDir(semesterId: string): string;
 function resolveStorageKeyToPath(storageKey: string): string; // 强校验格式
-function getClassCaptureTmpDir(): string;                    // S7 临时音频
-function getConfigDir(): string;                             // DPAPI 加密配置
+function getClassCaptureTmpDir(): string; // S7 临时音频
+function getConfigDir(): string; // DPAPI 加密配置
 ```
 
 ### 7.2 前端核心类/函数
@@ -759,11 +764,13 @@ pending → confirmed / rejected / superseded
 ### 9.2 核心 API 端点
 
 #### 健康检查
+
 ```
 GET /api/health → { version, timestamp }
 ```
 
 #### 学习节奏 (S1)
+
 ```
 POST   /api/courses              创建课程
 GET    /api/courses               课程列表
@@ -778,6 +785,7 @@ GET    /api/timeline              学习时间线
 ```
 
 #### 资料笔记 (S2)
+
 ```
 POST   /api/materials/upload      上传资料
 GET    /api/materials              资料列表
@@ -789,6 +797,7 @@ GET    /api/knowledge-modules      知识模块列表
 ```
 
 #### 限时练习 (S3)
+
 ```
 POST   /api/practice-sessions      创建练习
 GET    /api/practice-sessions/:id  获取练习详情（作答前不含答案）
@@ -798,6 +807,7 @@ GET    /api/semesters/:id/practice-history 练习历史
 ```
 
 #### 错题改错 (S4)
+
 ```
 GET    /api/mistakes               错题列表
 GET    /api/mistakes/:id           错题详情
@@ -808,6 +818,7 @@ GET    /api/weak-points            薄弱点列表
 ```
 
 #### 期末冲刺 (S5)
+
 ```
 POST   /api/mock-exam-papers            生成模拟卷
 GET    /api/mock-exam-papers/:id        获取模拟卷（作答前不含答案）
@@ -820,11 +831,13 @@ GET    /api/assessment-attempts/:id/cram-plan   冲刺计划
 ```
 
 #### 每日首页 (S1)
+
 ```
 GET    /api/daily-study-home?semesterId=...  每日学习首页数据
 ```
 
 #### 学期管理
+
 ```
 POST   /api/semesters/preview      课表预览
 POST   /api/semesters/confirm      确认创建学期
@@ -834,12 +847,14 @@ GET    /api/semesters              学期列表
 ```
 
 #### 课堂采集 (S7)
+
 ```
 POST   /api/class-capture/transcribe  上传 WAV 转写
 POST   /api/class-capture/save        保存为 S2 资料
 ```
 
 #### 配置中心
+
 ```
 GET    /api/config/status                    配置状态
 POST   /api/config/:channel/test-and-activate 测试并激活配置
@@ -852,28 +867,28 @@ POST   /api/config/:channel/retest           重新测试
 
 ### 10.1 完整路由表
 
-| 路由 | 页面组件 | 子系统 | 加载方式 |
-| ---- | -------- | ------ | -------- |
-| `/` | `DailyStudyHomePage` | S1 | 同步 |
-| `/courses` | `CoursePage` | S1 | 同步 |
-| `/materials` | `MaterialUploadPage` | S2 | 同步 |
-| `/notes/:noteId` | `NotePage` | S2 | 懒加载 |
-| `/exams/:examId` | `ExamWorkbenchPage` | S1/S5 | 懒加载 |
-| `/exams/:examId/practice` | `PracticeStartPage` | S3 | 懒加载 |
-| `/practice-sessions/:sessionId` | `PracticeSessionPage` | S3 | 懒加载 |
-| `/practice-sessions/:sessionId/result` | `PracticeResultPage` | S3 | 懒加载 |
-| `/semesters/:semesterId/practice-history` | `PracticeHistoryPage` | S3 | 懒加载 |
-| `/semesters/:semesterId/practice-history/:sessionId` | `PracticeHistoryResultPage` | S3 | 懒加载 |
-| `/exams/:examId/mistakes` | `MistakeListPage` | S4 | 懒加载 |
-| `/mistakes/:mistakeId` | `MistakeDetailPage` | S4 | 懒加载 |
-| `/exams/:examId/mock-exam` | `MockExamStartPage` | S5 | 懒加载 |
-| `/mock-exam-papers/:paperId` | `MockExamPaperPage` | S5 | 懒加载 |
-| `/mock-exam-attempts/:attemptId` | `MockExamSessionPage` | S5 | 懒加载 |
-| `/mock-exam-attempts/:attemptId/result` | `MockExamResultPage` | S5 | 懒加载 |
-| `/exams/:examId/cram` | `CramCardsPage` | S5 | 懒加载 |
-| `/exams/:examId/cram-plan` | `CramPlanPage` | S5 | 懒加载 |
-| `/semesters` | `SemesterPage` | 共同 | 同步 |
-| `/settings` | `SettingsPage` | 共同 | 懒加载 |
+| 路由                                                 | 页面组件                    | 子系统 | 加载方式 |
+| ---------------------------------------------------- | --------------------------- | ------ | -------- |
+| `/`                                                  | `DailyStudyHomePage`        | S1     | 同步     |
+| `/courses`                                           | `CoursePage`                | S1     | 同步     |
+| `/materials`                                         | `MaterialUploadPage`        | S2     | 同步     |
+| `/notes/:noteId`                                     | `NotePage`                  | S2     | 懒加载   |
+| `/exams/:examId`                                     | `ExamWorkbenchPage`         | S1/S5  | 懒加载   |
+| `/exams/:examId/practice`                            | `PracticeStartPage`         | S3     | 懒加载   |
+| `/practice-sessions/:sessionId`                      | `PracticeSessionPage`       | S3     | 懒加载   |
+| `/practice-sessions/:sessionId/result`               | `PracticeResultPage`        | S3     | 懒加载   |
+| `/semesters/:semesterId/practice-history`            | `PracticeHistoryPage`       | S3     | 懒加载   |
+| `/semesters/:semesterId/practice-history/:sessionId` | `PracticeHistoryResultPage` | S3     | 懒加载   |
+| `/exams/:examId/mistakes`                            | `MistakeListPage`           | S4     | 懒加载   |
+| `/mistakes/:mistakeId`                               | `MistakeDetailPage`         | S4     | 懒加载   |
+| `/exams/:examId/mock-exam`                           | `MockExamStartPage`         | S5     | 懒加载   |
+| `/mock-exam-papers/:paperId`                         | `MockExamPaperPage`         | S5     | 懒加载   |
+| `/mock-exam-attempts/:attemptId`                     | `MockExamSessionPage`       | S5     | 懒加载   |
+| `/mock-exam-attempts/:attemptId/result`              | `MockExamResultPage`        | S5     | 懒加载   |
+| `/exams/:examId/cram`                                | `CramCardsPage`             | S5     | 懒加载   |
+| `/exams/:examId/cram-plan`                           | `CramPlanPage`              | S5     | 懒加载   |
+| `/semesters`                                         | `SemesterPage`              | 共同   | 同步     |
+| `/settings`                                          | `SettingsPage`              | 共同   | 懒加载   |
 
 ### 10.2 页面加载策略
 
@@ -888,6 +903,7 @@ POST   /api/config/:channel/retest           重新测试
 ### 11.1 开发环境
 
 **前置条件**：
+
 - Windows 10/11
 - Node.js 20/22/24 LTS
 - pnpm
@@ -1050,18 +1066,18 @@ $installRoot = Join-Path $env:LOCALAPPDATA 'AIStudyBuddy'
 
 ### 13.2 跨子系统共享对象
 
-| 对象 | 创建者 | 消费者 |
-| ---- | ------ | ------ |
-| `CourseInstance` | S1 | S1-S6 |
-| `AssessmentAttempt` | S1 | S1/S5/S6 |
-| `KnowledgeModule` | S2 | S1/S3/S4/S5 |
-| `StudyTask` | S1 | S1/S6 |
-| `StudyEvent` | S1/S2/S3/S4 | S1/S6 |
-| `Material` | S2/S7 | S2 |
-| `Question` | S3 | S3/S4/S5 |
-| `PracticeSession` | S3 | S3/S4/S6 |
-| `Mistake` | S4 | S4/S5/S6 |
-| `WeakPoint` | S4 | S4/S5 |
+| 对象                | 创建者      | 消费者      |
+| ------------------- | ----------- | ----------- |
+| `CourseInstance`    | S1          | S1-S6       |
+| `AssessmentAttempt` | S1          | S1/S5/S6    |
+| `KnowledgeModule`   | S2          | S1/S3/S4/S5 |
+| `StudyTask`         | S1          | S1/S6       |
+| `StudyEvent`        | S1/S2/S3/S4 | S1/S6       |
+| `Material`          | S2/S7       | S2          |
+| `Question`          | S3          | S3/S4/S5    |
+| `PracticeSession`   | S3          | S3/S4/S6    |
+| `Mistake`           | S4          | S4/S5/S6    |
+| `WeakPoint`         | S4          | S4/S5       |
 
 ### 13.3 开发顺序
 
@@ -1080,64 +1096,64 @@ Phase 3:   安全、性能与运维增强 (进行中)
 
 ### 必读文档
 
-| 文档 | 路径 | 用途 |
-| ---- | ---- | ---- |
-| 文档索引 | `docs/00-文档索引-Index.md` | 文档导航与门禁 |
-| 总 PRD | `docs/01-总PRD-产品需求-Product-Requirements.md` | 产品目标与边界 |
-| 子系统地图 | `docs/02-七子系统地图-Scenario-Systems.md` | 七个子系统边界 |
-| 架构文档 | `docs/08-共同底座架构-Architecture.md` | 共同底座设计 |
-| 任务清单 | `docs/04-开发任务清单-Todo-List.md` | 开发任务与状态 |
-| 开发规范 | `docs/12-开发规范-Dev-Rules.md` | 16 步协作流程 |
-| 后端规范 | `docs/10-后端开发规范-Backend-Guidelines.md` | 后端编码约定 |
-| 前端规范 | `docs/11-前端开发规范-Frontend-Guidelines.md` | 前端编码约定 |
-| 部署指南 | `docs/13-部署运维指南-Deployment.md` | 部署与运维 |
-| 组件清单 | `docs/05-开源组件装配-Open-Source-Foundation.md` | 开源组件 |
+| 文档       | 路径                                             | 用途           |
+| ---------- | ------------------------------------------------ | -------------- |
+| 文档索引   | `docs/00-文档索引-Index.md`                      | 文档导航与门禁 |
+| 总 PRD     | `docs/01-总PRD-产品需求-Product-Requirements.md` | 产品目标与边界 |
+| 子系统地图 | `docs/02-七子系统地图-Scenario-Systems.md`       | 七个子系统边界 |
+| 架构文档   | `docs/08-共同底座架构-Architecture.md`           | 共同底座设计   |
+| 任务清单   | `docs/04-开发任务清单-Todo-List.md`              | 开发任务与状态 |
+| 开发规范   | `docs/12-开发规范-Dev-Rules.md`                  | 16 步协作流程  |
+| 后端规范   | `docs/10-后端开发规范-Backend-Guidelines.md`     | 后端编码约定   |
+| 前端规范   | `docs/11-前端开发规范-Frontend-Guidelines.md`    | 前端编码约定   |
+| 部署指南   | `docs/13-部署运维指南-Deployment.md`             | 部署与运维     |
+| 组件清单   | `docs/05-开源组件装配-Open-Source-Foundation.md` | 开源组件       |
 
 ### 子系统 PRD
 
-| 子系统 | 文档 |
-| ------ | ---- |
-| S1 | `docs/subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md` |
-| S2 | `docs/subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md` |
-| S3 | `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` |
-| S4 | `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md` |
-| S5 | `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md` |
-| S6 | `docs/subsystems/06-S6-家长观察子系统PRD-ParentReport.md` |
-| S7 | `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md` |
+| 子系统 | 文档                                                        |
+| ------ | ----------------------------------------------------------- |
+| S1     | `docs/subsystems/03-S1学习节奏子系统PRD-StudyRhythm.md`     |
+| S2     | `docs/subsystems/03-S2-资料笔记子系统PRD-NoteBuilder.md`    |
+| S3     | `docs/subsystems/03-S3-限时练习子系统PRD-PracticeRunner.md` |
+| S4     | `docs/subsystems/03-S4-错题改错子系统PRD-ErrorFixer.md`     |
+| S5     | `docs/subsystems/08-S5-期末冲刺子系统PRD-ExamCrammer.md`    |
+| S6     | `docs/subsystems/06-S6-家长观察子系统PRD-ParentReport.md`   |
+| S7     | `docs/subsystems/07-S7-课堂录音子系统PRD-ClassCapture.md`   |
 
 ### 核心源码入口
 
-| 文件 | 作用 |
-| ---- | ---- |
-| `packages/backend/src/server.ts` | 后端入口 |
-| `packages/backend/src/bootstrap.ts` | 启动引导 |
-| `packages/backend/src/app.ts` | Express 应用组装 |
-| `packages/backend/src/config/env.ts` | 环境变量 |
-| `packages/backend/src/db/connection.ts` | 数据库连接 |
-| `packages/backend/src/db/paths.ts` | 路径生成 |
-| `packages/backend/src/adapters/ai/router.ts` | AI Provider Router |
-| `packages/backend/src/config/configuration-service.ts` | 配置中心 |
-| `packages/shared/src/types.ts` | 共享类型 |
-| `packages/frontend/src/app.tsx` | 前端路由壳 |
-| `packages/frontend/src/main.tsx` | 前端入口 |
-| `packages/frontend/src/api/api-client.ts` | API 客户端 |
+| 文件                                                   | 作用               |
+| ------------------------------------------------------ | ------------------ |
+| `packages/backend/src/server.ts`                       | 后端入口           |
+| `packages/backend/src/bootstrap.ts`                    | 启动引导           |
+| `packages/backend/src/app.ts`                          | Express 应用组装   |
+| `packages/backend/src/config/env.ts`                   | 环境变量           |
+| `packages/backend/src/db/connection.ts`                | 数据库连接         |
+| `packages/backend/src/db/paths.ts`                     | 路径生成           |
+| `packages/backend/src/adapters/ai/router.ts`           | AI Provider Router |
+| `packages/backend/src/config/configuration-service.ts` | 配置中心           |
+| `packages/shared/src/types.ts`                         | 共享类型           |
+| `packages/frontend/src/app.tsx`                        | 前端路由壳         |
+| `packages/frontend/src/main.tsx`                       | 前端入口           |
+| `packages/frontend/src/api/api-client.ts`              | API 客户端         |
 
 ---
 
 ## 附录 B：测试覆盖
 
-| 层级 | 测试框架 | 文件数 | 说明 |
-| ---- | -------- | ------ | ---- |
-| 后端 | Node.js Test Runner | ~70 | 集成测试，不 mock DB |
-| 前端 | Vitest | ~26 | 组件/API 客户端测试 |
-| E2E | Playwright | 15 | 浏览器端到端验收 |
+| 层级 | 测试框架            | 文件数 | 说明                 |
+| ---- | ------------------- | ------ | -------------------- |
+| 后端 | Node.js Test Runner | ~70    | 集成测试，不 mock DB |
+| 前端 | Vitest              | ~26    | 组件/API 客户端测试  |
+| E2E  | Playwright          | 15     | 浏览器端到端验收     |
 
 ---
 
 ## 附录 C：当前状态与下一步
 
 - **已完成**：S1-S6 主线、S7-MVP、Phase 2 S5、POST-PHASE2 全系统验证、**开发机 P0 验收全绿（2026-07-30 r6）**
-- **进行中**：Phase 3 高权重必做项恢复规划（T02-R1~R4、T04-1~T04-3、T05-1~T05-3）
+- **进行中**：Phase 3 高权重必做项恢复规划（T02-R1~~R4、T04-1~~T04-3、T05-1~T05-3）
 - **下一步**：2026-08-01 使用电脑空数据迁移与重复验收
 - **未开始**：完整 S7、S3 Worker、P1 外部能力配置、真实备份恢复
 
@@ -1151,28 +1167,28 @@ Phase 3:   安全、性能与运维增强 (进行中)
 
 #### 部署仓库 (`h:\StudyBuddy`) 实际包含
 
-| 内容 | 状态 |
-| ---- | ---- |
+| 内容                                        | 状态 |
+| ------------------------------------------- | ---- |
 | `app/backend/`（编译后 Express + 内嵌 SPA） | 存在 |
-| `app/shared/`（编译后共享类型） | 存在 |
-| `app/requirements-ocr.txt` | 存在 |
-| `scripts/`（11 个部署脚本 + lib 库） | 存在 |
+| `app/shared/`（编译后共享类型）             | 存在 |
+| `app/requirements-ocr.txt`                  | 存在 |
+| `scripts/`（11 个部署脚本 + lib 库）        | 存在 |
 | `deployment/`（runtime-compatibility.json） | 存在 |
-| `docs/`（6 份用户文档） | 存在 |
-| `deployment-manifest.json` | 存在 |
-| `README-Windows.md` | 存在 |
+| `docs/`（6 份用户文档）                     | 存在 |
+| `deployment-manifest.json`                  | 存在 |
+| `README-Windows.md`                         | 存在 |
 
 #### 未打包到部署仓库的内容（预期内）
 
-| 内容 | 原因 |
-| ---- | ---- |
-| 前端源码 (`packages/frontend/src/`) | 已编译为 `public/` SPA |
-| 后端源码 (`packages/backend/src/`) | 已编译为 `dist/` JS |
-| 测试文件（后端 65+、前端 27、E2E 15） | 部署包不需要测试 |
-| `.plans/` 计划文档 | 仅开发用 |
-| `pnpm-workspace.yaml` | 部署包用 npm ci |
-| 设计文档 (`docs/subsystems/` 等) | 部署包有精简用户文档 |
-| `.git` | 不应打包 |
+| 内容                                  | 原因                   |
+| ------------------------------------- | ---------------------- |
+| 前端源码 (`packages/frontend/src/`)   | 已编译为 `public/` SPA |
+| 后端源码 (`packages/backend/src/`)    | 已编译为 `dist/` JS    |
+| 测试文件（后端 65+、前端 27、E2E 15） | 部署包不需要测试       |
+| `.plans/` 计划文档                    | 仅开发用               |
+| `pnpm-workspace.yaml`                 | 部署包用 npm ci        |
+| 设计文档 (`docs/subsystems/` 等)      | 部署包有精简用户文档   |
+| `.git`                                | 不应打包               |
 
 **结论**：部署仓库内容完整，缺失项是预期内的设计选择，不是遗漏。
 
@@ -1201,59 +1217,59 @@ APP_DATA_ROOT/
 
 #### 全局库 (studybuddy.db) 的表
 
-| 表 | 数据 |
-| -- | ---- |
-| `app_meta` | 系统配置键值对 |
-| `students` | 学生档案 |
-| `parent_report_targets` | 家长报告渠道 |
-| `semesters` | 学期索引（含 `db_relative_path`、`ready` 标志） |
-| `backup_records` | 备份记录 |
-| `schema_migrations` | 迁移版本 |
+| 表                      | 数据                                            |
+| ----------------------- | ----------------------------------------------- |
+| `app_meta`              | 系统配置键值对                                  |
+| `students`              | 学生档案                                        |
+| `parent_report_targets` | 家长报告渠道                                    |
+| `semesters`             | 学期索引（含 `db_relative_path`、`ready` 标志） |
+| `backup_records`        | 备份记录                                        |
+| `schema_migrations`     | 迁移版本                                        |
 
 #### 学期库 (semester.db) 的表
 
-| 表 | 数据 |
-| -- | ---- |
-| `course_instances` | 课程实例（含重修关系） |
-| `assessment_attempts` | 考试目标（含确认状态） |
-| `study_tasks` | 学习任务 |
-| `study_events` | 学习时间线/报告证据 |
-| `jobs` | 后台持久化作业 |
-| `materials` | 资料文件索引 |
-| `normalized_texts` | 格式转换后的纯文本 |
-| `structured_notes` | AI 生成的结构化笔记（Markdown） |
-| `mind_maps` | 思维导图数据（Markmap JSON） |
-| `knowledge_modules` | 可考知识模块 |
-| `parent_reports` | 家长报告脱敏冻结快照 |
-| `report_deliveries` | 报告渠道发送状态 |
-| `schema_migrations` | 迁移版本 |
+| 表                    | 数据                            |
+| --------------------- | ------------------------------- |
+| `course_instances`    | 课程实例（含重修关系）          |
+| `assessment_attempts` | 考试目标（含确认状态）          |
+| `study_tasks`         | 学习任务                        |
+| `study_events`        | 学习时间线/报告证据             |
+| `jobs`                | 后台持久化作业                  |
+| `materials`           | 资料文件索引                    |
+| `normalized_texts`    | 格式转换后的纯文本              |
+| `structured_notes`    | AI 生成的结构化笔记（Markdown） |
+| `mind_maps`           | 思维导图数据（Markmap JSON）    |
+| `knowledge_modules`   | 可考知识模块                    |
+| `parent_reports`      | 家长报告脱敏冻结快照            |
+| `report_deliveries`   | 报告渠道发送状态                |
+| `schema_migrations`   | 迁移版本                        |
 
 #### 数据库损坏防护机制
 
 **已有的保护**：
 
-| 机制 | 实现位置 | 说明 |
-| ---- | -------- | ---- |
-| WAL 模式 | `connection.ts` 第 21 行 | 所有库打开即启用 `PRAGMA journal_mode = WAL`，写操作不阻塞读 |
-| 外键约束 | `connection.ts` 第 22 行 | `PRAGMA foreign_keys = ON` |
-| integrity_check | `connection.ts` 第 71 行 | `runIntegrityCheck()` 可随时调用 `PRAGMA integrity_check` |
-| 备份前 checkpoint | `connection.ts` 第 104 行 | `backupDb()` 先 `wal_checkpoint(TRUNCATE)` 再复制，确保 WAL 内容写入主文件 |
-| 备份后 integrity 验证 | `backups.ts` 第 67 行 | 备份副本立即做 integrity_check，失败则删除备份 |
-| 恢复前 integrity 验证 | `backups.ts` 第 92 行 | 恢复前对备份副本做 integrity_check |
-| 恢复后 integrity 验证 | `backups.ts` 第 102 行 | 恢复后对目标库做 integrity_check |
-| 恢复时清除 WAL/SHM | `backups.ts` 第 97 行 | 删除旧 `-wal`/`-shm` 防止旁路日志污染 |
-| 安装检查 | `check-installation.ps1` 第 96 行 | `sqlite-precheck` 做 quick_check + 版本比对 |
-| 数据完整性测试 | `test-data-integrity.ps1` | 可单独验证数据文件完整性 |
-| 学期初始化补偿 | `semester-initializer.ts` | 跨文件系统操作失败时执行补偿清理，不留半成品 |
+| 机制                  | 实现位置                          | 说明                                                                       |
+| --------------------- | --------------------------------- | -------------------------------------------------------------------------- |
+| WAL 模式              | `connection.ts` 第 21 行          | 所有库打开即启用 `PRAGMA journal_mode = WAL`，写操作不阻塞读               |
+| 外键约束              | `connection.ts` 第 22 行          | `PRAGMA foreign_keys = ON`                                                 |
+| integrity_check       | `connection.ts` 第 71 行          | `runIntegrityCheck()` 可随时调用 `PRAGMA integrity_check`                  |
+| 备份前 checkpoint     | `connection.ts` 第 104 行         | `backupDb()` 先 `wal_checkpoint(TRUNCATE)` 再复制，确保 WAL 内容写入主文件 |
+| 备份后 integrity 验证 | `backups.ts` 第 67 行             | 备份副本立即做 integrity_check，失败则删除备份                             |
+| 恢复前 integrity 验证 | `backups.ts` 第 92 行             | 恢复前对备份副本做 integrity_check                                         |
+| 恢复后 integrity 验证 | `backups.ts` 第 102 行            | 恢复后对目标库做 integrity_check                                           |
+| 恢复时清除 WAL/SHM    | `backups.ts` 第 97 行             | 删除旧 `-wal`/`-shm` 防止旁路日志污染                                      |
+| 安装检查              | `check-installation.ps1` 第 96 行 | `sqlite-precheck` 做 quick_check + 版本比对                                |
+| 数据完整性测试        | `test-data-integrity.ps1`         | 可单独验证数据文件完整性                                                   |
+| 学期初始化补偿        | `semester-initializer.ts`         | 跨文件系统操作失败时执行补偿清理，不留半成品                               |
 
 **没有的保护**：
 
-| 缺失 | 影响 |
-| ---- | ---- |
-| 自动定期备份 | 备份需手动执行 `backup-data.ps1` |
-| 损坏自动修复 | 没有自动回滚到最近备份的机制 |
-| 启动前自动 integrity_check | 启动时不会自动检查数据库完整性 |
-| SQLite 文件被外部进程锁定的处理 | 没有文件锁检测或重试 |
+| 缺失                            | 影响                             |
+| ------------------------------- | -------------------------------- |
+| 自动定期备份                    | 备份需手动执行 `backup-data.ps1` |
+| 损坏自动修复                    | 没有自动回滚到最近备份的机制     |
+| 启动前自动 integrity_check      | 启动时不会自动检查数据库完整性   |
+| SQLite 文件被外部进程锁定的处理 | 没有文件锁检测或重试             |
 
 ---
 
@@ -1261,13 +1277,13 @@ APP_DATA_ROOT/
 
 #### 已有的备份/导出能力
 
-| 能力 | 实现 | 粒度 |
-| ---- | ---- | ---- |
-| 整库备份 | `backup-data.ps1` | 整个 `APP_DATA_ROOT` 目录 |
-| 编程式备份 | `backups.ts` `createDatabaseBackup()` | 全局库或学期库 |
-| 备份记录 | `backup_records` 表 | 每次备份登记 |
-| 备份验证 | `test-data-integrity.ps1 -BackupPath` | 验证备份 manifest |
-| 备份 SHA-256 | `backup-data.ps1` 第 39 行 | 每个文件计算哈希 |
+| 能力         | 实现                                  | 粒度                      |
+| ------------ | ------------------------------------- | ------------------------- |
+| 整库备份     | `backup-data.ps1`                     | 整个 `APP_DATA_ROOT` 目录 |
+| 编程式备份   | `backups.ts` `createDatabaseBackup()` | 全局库或学期库            |
+| 备份记录     | `backup_records` 表                   | 每次备份登记              |
+| 备份验证     | `test-data-integrity.ps1 -BackupPath` | 验证备份 manifest         |
+| 备份 SHA-256 | `backup-data.ps1` 第 39 行            | 每个文件计算哈希          |
 
 #### 恢复能力：**写入被故意禁用**
 
@@ -1280,12 +1296,12 @@ New-AIStudyBuddyDataBoundaryError 'RESTORE_WRITE_DISABLED'
 
 #### **缺失的能力**
 
-| 缺失 | 说明 |
-| ---- | ---- |
-| **按学期导出笔记** | 没有导出某学期/某课程全部笔记为 Markdown/PDF 的功能 |
-| **按课程导出资料** | 没有导出某课程全部资料和笔记的打包功能 |
-| **恢复写入** | `RESTORE_WRITE_DISABLED`，Phase 3 未完成 |
-| **笔记单独备份** | 笔记存储在 `structured_notes` 表的 Markdown 字段中，没有独立文件导出 |
+| 缺失               | 说明                                                                 |
+| ------------------ | -------------------------------------------------------------------- |
+| **按学期导出笔记** | 没有导出某学期/某课程全部笔记为 Markdown/PDF 的功能                  |
+| **按课程导出资料** | 没有导出某课程全部资料和笔记的打包功能                               |
+| **恢复写入**       | `RESTORE_WRITE_DISABLED`，Phase 3 未完成                             |
+| **笔记单独备份**   | 笔记存储在 `structured_notes` 表的 Markdown 字段中，没有独立文件导出 |
 
 ---
 
@@ -1322,13 +1338,13 @@ powershell -ExecutionPolicy Bypass -File scripts/build-deployment-package.ps1 -O
 
 #### 改进建议
 
-| 改进 | 难度 | 效果 |
-| ---- | ---- | ---- |
-| 内嵌 Node.js portable 到 ZIP | 中 | 消除 Node 手动安装 |
-| 内嵌 Python embeddable 到 ZIP | 中 | 消除 Python 手动安装 |
-| 预编译 native `.node` 模块 | 低 | 消除 `npm ci` 网络依赖 |
-| 一键安装脚本（自动检测+安装运行时） | 中 | 真正的一键安装 |
-| 静默安装模式 | 低 | 减少交互 |
+| 改进                                | 难度 | 效果                   |
+| ----------------------------------- | ---- | ---------------------- |
+| 内嵌 Node.js portable 到 ZIP        | 中   | 消除 Node 手动安装     |
+| 内嵌 Python embeddable 到 ZIP       | 中   | 消除 Python 手动安装   |
+| 预编译 native `.node` 模块          | 低   | 消除 `npm ci` 网络依赖 |
+| 一键安装脚本（自动检测+安装运行时） | 中   | 真正的一键安装         |
+| 静默安装模式                        | 低   | 减少交互               |
 
 ---
 
@@ -1336,12 +1352,12 @@ powershell -ExecutionPolicy Bypass -File scripts/build-deployment-package.ps1 -O
 
 #### 当前状态：开发机 P0 已通过
 
-| 层次 | 状态 | 证据 |
-| ---- | ---- | ---- |
-| 开发机构建 | 通过 | `assemble-production.ps1` 成功，`build-deployment-package.ps1` 成功 |
+| 层次           | 状态                      | 证据                                                                                                                              |
+| -------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 开发机构建     | 通过                      | `assemble-production.ps1` 成功，`build-deployment-package.ps1` 成功                                                               |
 | 开发机 P0 验收 | **通过（2026-07-30 r6）** | 17 项 P0 全部通过：安装、启停、学期、课程、资料、OCR、笔记、练习、错题、模拟考、速背、冲刺、重启读回、AI 降级、密钥边界、网络边界 |
-| P1 外部能力 | 暂未配置 | DeepSeek、Kimi K3、SMTP、飞书、计划任务均未配置 |
-| 用户电脑验收 | 未开始 | 2026-08-01 计划执行 | |
+| P1 外部能力    | 暂未配置                  | DeepSeek、Kimi K3、SMTP、飞书、计划任务均未配置                                                                                   |
+| 用户电脑验收   | 未开始                    | 2026-08-01 计划执行                                                                                                               |     |
 
 #### 功能验收清单
 
@@ -1364,83 +1380,83 @@ powershell -ExecutionPolicy Bypass -File scripts/build-deployment-package.ps1 -O
 
 #### 测试文件统计
 
-| 层级 | 框架 | 文件数 | 覆盖范围 |
-| ---- | ---- | ------ | -------- |
+| 层级 | 框架                | 文件数    | 覆盖范围                                  |
+| ---- | ------------------- | --------- | ----------------------------------------- |
 | 后端 | Node.js Test Runner | **65 个** | 所有子系统 API、配置、安全、边界、Adapter |
-| 前端 | Vitest | **27 个** | 所有页面组件、API 客户端、Hooks、导航 |
-| E2E | Playwright | **15 个** | 所有子系统 UI 流程、响应式、导航 |
+| 前端 | Vitest              | **27 个** | 所有页面组件、API 客户端、Hooks、导航     |
+| E2E  | Playwright          | **15 个** | 所有子系统 UI 流程、响应式、导航          |
 
 #### 后端测试覆盖详细
 
-| 子系统 | 测试文件 |
-| ------ | -------- |
-| S1 学习节奏 | `study-rhythm-api.test.mjs`、`daily-study-home-api.test.mjs` |
-| S2 资料笔记 | `note-builder-api.test.mjs`、`note-generation-parsing.test.mjs`、`converter.test.mjs`、`docx-converter.test.mjs`、`pptx-converter.test.mjs`、`storage-adapter.test.mjs`、`url-fetcher.test.mjs`、`manual-text-recovery-api.test.mjs`、`manual-text-recovery-worker.test.mjs` |
-| S3 限时练习 | `practice-generation-api.test.mjs`、`practice-submit-api.test.mjs`、`practice-schema.test.mjs` |
-| S4 错题改错 | `error-fixer-archive-api.test.mjs`、`error-fixer-schema.test.mjs`、`error-fixer-t04b-api.test.mjs`、`feedback-rules-service.test.mjs` |
-| S5 期末冲刺 | `mock-exam-api.test.mjs`、`mock-exam-schema.test.mjs`、`cram-cards-api.test.mjs`、`cram-plan-api.test.mjs` |
-| S6 家长报告 | `parent-report-service.test.mjs`、`parent-report-delivery-service.test.mjs`、`parent-report-runner.test.mjs`、`parent-report-scheduler-script.test.mjs` |
-| S7 课堂采集 | `s7-class-capture-api.test.mjs` |
-| 配置中心 | `configuration-service.test.mjs`、`config-api.test.mjs`、`config-registry.test.mjs`、`config-source-governance.test.mjs`、`config-validation-redaction.test.mjs`、`connection-tester.test.mjs`、`runtime-configuration.test.mjs`、`secure-store.test.mjs` |
-| 安全/边界 | `secret-scan-boundary.test.mjs`、`trust-anchor-contract.test.mjs`、`trusted-approval-contract.test.mjs`、`trusted-approval-test-seam-isolation.test.mjs`、`verifier-integrity-gate.test.mjs`、`nofollow-contract.test.mjs`、`production-attack-surface-error-boundary.test.mjs`、`env-boundary.test.mjs`、`env-error-redaction.test.mjs`、`subprocess-environment-boundary.test.mjs`、`runtime-log-boundary.test.mjs`、`api-origin-policy.test.mjs`、`db-readonly-no-create.test.mjs` |
-| 部署 | `deployment-output-delete-boundary.test.mjs`、`deployment-powershell-compatibility.test.mjs`、`production-static-host.test.mjs`、`app-bootstrap.test.mjs` |
-| 其他 | `ai-router.test.mjs`、`ocr-converter-runtime.test.mjs`、`semester-initialization.test.mjs`、`semester-selector-api.test.mjs`、`semester-archive-api.test.mjs`、`semester-ocr-runtime-config.test.mjs`、`dev-converter-api.test.mjs`、`dev-storage-api.test.mjs` |
+| 子系统      | 测试文件                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1 学习节奏 | `study-rhythm-api.test.mjs`、`daily-study-home-api.test.mjs`                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| S2 资料笔记 | `note-builder-api.test.mjs`、`note-generation-parsing.test.mjs`、`converter.test.mjs`、`docx-converter.test.mjs`、`pptx-converter.test.mjs`、`storage-adapter.test.mjs`、`url-fetcher.test.mjs`、`manual-text-recovery-api.test.mjs`、`manual-text-recovery-worker.test.mjs`                                                                                                                                                                                                          |
+| S3 限时练习 | `practice-generation-api.test.mjs`、`practice-submit-api.test.mjs`、`practice-schema.test.mjs`                                                                                                                                                                                                                                                                                                                                                                                        |
+| S4 错题改错 | `error-fixer-archive-api.test.mjs`、`error-fixer-schema.test.mjs`、`error-fixer-t04b-api.test.mjs`、`feedback-rules-service.test.mjs`                                                                                                                                                                                                                                                                                                                                                 |
+| S5 期末冲刺 | `mock-exam-api.test.mjs`、`mock-exam-schema.test.mjs`、`cram-cards-api.test.mjs`、`cram-plan-api.test.mjs`                                                                                                                                                                                                                                                                                                                                                                            |
+| S6 家长报告 | `parent-report-service.test.mjs`、`parent-report-delivery-service.test.mjs`、`parent-report-runner.test.mjs`、`parent-report-scheduler-script.test.mjs`                                                                                                                                                                                                                                                                                                                               |
+| S7 课堂采集 | `s7-class-capture-api.test.mjs`                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 配置中心    | `configuration-service.test.mjs`、`config-api.test.mjs`、`config-registry.test.mjs`、`config-source-governance.test.mjs`、`config-validation-redaction.test.mjs`、`connection-tester.test.mjs`、`runtime-configuration.test.mjs`、`secure-store.test.mjs`                                                                                                                                                                                                                             |
+| 安全/边界   | `secret-scan-boundary.test.mjs`、`trust-anchor-contract.test.mjs`、`trusted-approval-contract.test.mjs`、`trusted-approval-test-seam-isolation.test.mjs`、`verifier-integrity-gate.test.mjs`、`nofollow-contract.test.mjs`、`production-attack-surface-error-boundary.test.mjs`、`env-boundary.test.mjs`、`env-error-redaction.test.mjs`、`subprocess-environment-boundary.test.mjs`、`runtime-log-boundary.test.mjs`、`api-origin-policy.test.mjs`、`db-readonly-no-create.test.mjs` |
+| 部署        | `deployment-output-delete-boundary.test.mjs`、`deployment-powershell-compatibility.test.mjs`、`production-static-host.test.mjs`、`app-bootstrap.test.mjs`                                                                                                                                                                                                                                                                                                                             |
+| 其他        | `ai-router.test.mjs`、`ocr-converter-runtime.test.mjs`、`semester-initialization.test.mjs`、`semester-selector-api.test.mjs`、`semester-archive-api.test.mjs`、`semester-ocr-runtime-config.test.mjs`、`dev-converter-api.test.mjs`、`dev-storage-api.test.mjs`                                                                                                                                                                                                                       |
 
 #### 前端测试覆盖详细
 
-| 类型 | 测试文件 |
-| ---- | -------- |
-| 页面组件 | `daily-study-home-page.test.tsx`、`course-page.test.tsx`、`material-upload-page.test.tsx`、`note-page.test.tsx`、`exam-workbench-page.test.tsx`、`practice-pages.test.tsx`、`practice-history-pages.test.tsx`、`mistake-pages.test.tsx`、`mock-exam-pages.test.tsx`、`cram-cards-page.test.tsx`、`cram-plan-page.test.tsx`、`semester-page.test.tsx`、`settings-page.test.tsx` |
-| 通用组件 | `app-navigation.test.tsx`、`exam-context-nav.test.tsx`、`page-state.test.tsx`、`lazy-mind-map.test.tsx` |
-| API 客户端 | `api-client.test.ts`、`study-rhythm-api.test.ts`、`practice-runner-api.test.ts`、`cram-cards-api.test.ts`、`cram-plan-api.test.ts`、`mock-exam-api.test.ts`、`daily-study-home-api.test.ts`、`semester-api.test.ts` |
-| Hooks | `use-material-polling.test.ts` |
-| 应用级 | `app-semester.test.tsx` |
+| 类型       | 测试文件                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 页面组件   | `daily-study-home-page.test.tsx`、`course-page.test.tsx`、`material-upload-page.test.tsx`、`note-page.test.tsx`、`exam-workbench-page.test.tsx`、`practice-pages.test.tsx`、`practice-history-pages.test.tsx`、`mistake-pages.test.tsx`、`mock-exam-pages.test.tsx`、`cram-cards-page.test.tsx`、`cram-plan-page.test.tsx`、`semester-page.test.tsx`、`settings-page.test.tsx` |
+| 通用组件   | `app-navigation.test.tsx`、`exam-context-nav.test.tsx`、`page-state.test.tsx`、`lazy-mind-map.test.tsx`                                                                                                                                                                                                                                                                        |
+| API 客户端 | `api-client.test.ts`、`study-rhythm-api.test.ts`、`practice-runner-api.test.ts`、`cram-cards-api.test.ts`、`cram-plan-api.test.ts`、`mock-exam-api.test.ts`、`daily-study-home-api.test.ts`、`semester-api.test.ts`                                                                                                                                                            |
+| Hooks      | `use-material-polling.test.ts`                                                                                                                                                                                                                                                                                                                                                 |
+| 应用级     | `app-semester.test.tsx`                                                                                                                                                                                                                                                                                                                                                        |
 
 #### E2E 测试覆盖
 
-| Spec | 覆盖流程 |
-| ---- | -------- |
-| `student-journey.spec.ts` | 完整学生旅程 |
-| `daily-study-home.spec.ts` | 每日首页 |
-| `course-schedule-exam-goals.spec.ts` | 课程与考试目标 |
-| `practice-runner.spec.ts` | 练习 |
-| `practice-history-archive.spec.ts` | 练习历史 |
-| `error-fixer.spec.ts` | 错题改错 |
-| `mock-exam.spec.ts` | 模拟考 |
-| `cram-cards.spec.ts` | 临考速背 |
-| `cram-plan.spec.ts` | 冲刺计划 |
-| `exam-workbench.spec.ts` | 考试工作台 |
-| `semester-selector.spec.ts` | 学期管理 |
-| `settings-provider-presets.spec.ts` | 配置中心 |
-| `global-navigation-responsive.spec.ts` | 导航与响应式 |
-| `markmap-lazy-load.spec.ts` | 思维导图懒加载 |
-| `timeline.spec.ts` | 学习时间线 |
+| Spec                                   | 覆盖流程       |
+| -------------------------------------- | -------------- |
+| `student-journey.spec.ts`              | 完整学生旅程   |
+| `daily-study-home.spec.ts`             | 每日首页       |
+| `course-schedule-exam-goals.spec.ts`   | 课程与考试目标 |
+| `practice-runner.spec.ts`              | 练习           |
+| `practice-history-archive.spec.ts`     | 练习历史       |
+| `error-fixer.spec.ts`                  | 错题改错       |
+| `mock-exam.spec.ts`                    | 模拟考         |
+| `cram-cards.spec.ts`                   | 临考速背       |
+| `cram-plan.spec.ts`                    | 冲刺计划       |
+| `exam-workbench.spec.ts`               | 考试工作台     |
+| `semester-selector.spec.ts`            | 学期管理       |
+| `settings-provider-presets.spec.ts`    | 配置中心       |
+| `global-navigation-responsive.spec.ts` | 导航与响应式   |
+| `markmap-lazy-load.spec.ts`            | 思维导图懒加载 |
+| `timeline.spec.ts`                     | 学习时间线     |
 
 #### 测试覆盖评估结论
 
-| 维度 | 评估 |
-| ---- | ---- |
-| 子系统覆盖 | 全部 7 个子系统 + 共同底座 + 配置中心有独立测试 |
-| 测试层次 | 单元/集成（后端）、组件（前端）、端到端（E2E）三层覆盖 |
-| 边界测试 | 安全边界、环境变量、路径逃逸、API Origin、日志脱敏均有专项测试 |
-| 测试独立性 | 后端集成测试不 mock DB，前端组件测试不依赖后端 |
-| 待确认 | 测试通过率（最近一次全量 `pnpm test` 结果） |
-| 缺失 | 没有性能测试、没有压力测试、没有长时间运行稳定性测试 |
+| 维度       | 评估                                                           |
+| ---------- | -------------------------------------------------------------- |
+| 子系统覆盖 | 全部 7 个子系统 + 共同底座 + 配置中心有独立测试                |
+| 测试层次   | 单元/集成（后端）、组件（前端）、端到端（E2E）三层覆盖         |
+| 边界测试   | 安全边界、环境变量、路径逃逸、API Origin、日志脱敏均有专项测试 |
+| 测试独立性 | 后端集成测试不 mock DB，前端组件测试不依赖后端                 |
+| 待确认     | 测试通过率（最近一次全量 `pnpm test` 结果）                    |
+| 缺失       | 没有性能测试、没有压力测试、没有长时间运行稳定性测试           |
 
 ---
 
 ## 附录 E：总览表
 
-| 问题 | 现状 | 评级 |
-| ---- | ---- | ---- |
-| 部署仓库内容完整性 | 完整，缺失项是设计选择 | 正常 |
-| SQLite 数据存储 | 双库模型，全局+学期，结构清晰 | 正常 |
-| 数据库损坏防护 | WAL+FK+integrity_check+backup 校验，但无自动定期备份 | 基本够用 |
-| 备份导出 | 整库备份可用，但无按学期/课程导出笔记功能 | 有缺口 |
-| 恢复导入 | 写入被故意禁用，Phase 3 待实现 | 未完成 |
-| 一键打包 ZIP | `build-deployment-package.ps1` 已实现 | 正常 |
-| 一键解压安装 | 需手动安装 Node+Python 前置 | 有摩擦 |
-| 组件功能 | 开发机 P0 全绿（2026-07-30 r6），P1 未配置 | 良好 |
-| 测试覆盖 | 65+27+15=107 个测试文件，覆盖所有子系统 | 良好 |
-| 测试通过率 | 后端 237/237、前端 137/137、E2E 21/21（POST-PHASE2 全量） | 通过 |
-| 文档同步 | 开发系统 22 份 + 部署系统 7 份，定位不同，无冲突 | 正常 |
+| 问题               | 现状                                                      | 评级     |
+| ------------------ | --------------------------------------------------------- | -------- |
+| 部署仓库内容完整性 | 完整，缺失项是设计选择                                    | 正常     |
+| SQLite 数据存储    | 双库模型，全局+学期，结构清晰                             | 正常     |
+| 数据库损坏防护     | WAL+FK+integrity_check+backup 校验，但无自动定期备份      | 基本够用 |
+| 备份导出           | 整库备份可用，但无按学期/课程导出笔记功能                 | 有缺口   |
+| 恢复导入           | 写入被故意禁用，Phase 3 待实现                            | 未完成   |
+| 一键打包 ZIP       | `build-deployment-package.ps1` 已实现                     | 正常     |
+| 一键解压安装       | 需手动安装 Node+Python 前置                               | 有摩擦   |
+| 组件功能           | 开发机 P0 全绿（2026-07-30 r6），P1 未配置                | 良好     |
+| 测试覆盖           | 65+27+15=107 个测试文件，覆盖所有子系统                   | 良好     |
+| 测试通过率         | 后端 237/237、前端 137/137、E2E 21/21（POST-PHASE2 全量） | 通过     |
+| 文档同步           | 开发系统 22 份 + 部署系统 7 份，定位不同，无冲突          | 正常     |

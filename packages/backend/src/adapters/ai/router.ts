@@ -179,9 +179,7 @@ export class AiProviderRouter implements AiProvider {
     }
 
     if (actualAttempts === 0 && coolingProviders.length === this.providers.length) {
-      const retryAt = new Date(
-        Math.min(...coolingProviders.map(({ cooldownUntil }) => cooldownUntil))
-      ).toISOString();
+      const retryAt = new Date(Math.min(...coolingProviders.map(({ cooldownUntil }) => cooldownUntil))).toISOString();
       throw new AllProvidersCoolingDownError(
         coolingProviders.map(({ provider }) => provider),
         retryAt

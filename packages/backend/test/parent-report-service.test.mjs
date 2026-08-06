@@ -78,7 +78,17 @@ function insertPracticeSession(db, courseId, overrides = {}) {
       correct_rate, overtime, total_duration_seconds, difficulty_preference,
       created_at, updated_at
     ) VALUES (?, ?, NULL, ?, 5, 600, ?, ?, ?, 4, ?, 0, 360, 'mixed', ?, ?)`
-  ).run(id, courseId, status, gradedAt, gradedAt, status === 'graded' ? gradedAt : null, overrides.correctRate ?? 0.8, gradedAt, gradedAt);
+  ).run(
+    id,
+    courseId,
+    status,
+    gradedAt,
+    gradedAt,
+    status === 'graded' ? gradedAt : null,
+    overrides.correctRate ?? 0.8,
+    gradedAt,
+    gradedAt
+  );
   return id;
 }
 
@@ -121,7 +131,14 @@ function seedPrivateS2S3S4Data(db, semesterId) {
       id, course_instance_id, assessment_attempt_id, knowledge_module_id, type, title,
       status, estimated_minutes, deadline_at, completed_at, created_at, updated_at
     ) VALUES (?, ?, NULL, NULL, 'custom', '完成函数复习', 'done', 30, ?, ?, ?, ?)`
-  ).run(crypto.randomUUID(), courseId, '2026-06-01T18:00:00.000Z', '2026-06-01T17:00:00.000Z', '2026-06-01T08:00:00.000Z', NOW);
+  ).run(
+    crypto.randomUUID(),
+    courseId,
+    '2026-06-01T18:00:00.000Z',
+    '2026-06-01T17:00:00.000Z',
+    '2026-06-01T08:00:00.000Z',
+    NOW
+  );
   db.prepare(
     `INSERT INTO study_tasks (
       id, course_instance_id, assessment_attempt_id, knowledge_module_id, type, title,
@@ -266,9 +283,24 @@ test('T06A honors daily, weekly, and monthly evidence windows', async () => {
     }
   });
   const service = new ParentReportService({ now: () => NOW });
-  const daily = await service.generateReport({ semesterId: semester.semesterId, reportType: 'daily', periodStart: '2026-06-01', periodEnd: '2026-06-01' });
-  const weekly = await service.generateReport({ semesterId: semester.semesterId, reportType: 'weekly', periodStart: '2026-05-26', periodEnd: '2026-06-01' });
-  const monthly = await service.generateReport({ semesterId: semester.semesterId, reportType: 'monthly', periodStart: '2026-05-01', periodEnd: '2026-06-01' });
+  const daily = await service.generateReport({
+    semesterId: semester.semesterId,
+    reportType: 'daily',
+    periodStart: '2026-06-01',
+    periodEnd: '2026-06-01',
+  });
+  const weekly = await service.generateReport({
+    semesterId: semester.semesterId,
+    reportType: 'weekly',
+    periodStart: '2026-05-26',
+    periodEnd: '2026-06-01',
+  });
+  const monthly = await service.generateReport({
+    semesterId: semester.semesterId,
+    reportType: 'monthly',
+    periodStart: '2026-05-01',
+    periodEnd: '2026-06-01',
+  });
 
   assert.equal(findSection(daily, 'practice').metrics.gradedSessions, 1);
   assert.equal(findSection(weekly, 'practice').metrics.gradedSessions, 2);
@@ -321,7 +353,13 @@ test('T06A AI summary only receives sanitized rule sections and appends successf
     now: () => NOW,
     summarizeWithAi: async (payload) => {
       seen.push(payload);
-      return { content: '今天节奏稳定，建议继续完成查漏补缺任务。', provider: 'fake', model: 'fake-parent-report', tokenUsed: 12, latencyMs: 1 };
+      return {
+        content: '今天节奏稳定，建议继续完成查漏补缺任务。',
+        provider: 'fake',
+        model: 'fake-parent-report',
+        tokenUsed: 12,
+        latencyMs: 1,
+      };
     },
   }).generateReport({
     semesterId: semester.semesterId,
@@ -353,7 +391,12 @@ test('T06A preserves the rule report when AI is not configured', async () => {
 });
 test('T06A preserves the rule report when AI throws or returns empty content', async () => {
   const semester = createReadySemester();
-  for (const summarizeWithAi of [async () => { throw new Error('provider timeout with secret details'); }, async () => ({ content: '   ', provider: 'fake', model: 'fake', tokenUsed: 0, latencyMs: 1 })]) {
+  for (const summarizeWithAi of [
+    async () => {
+      throw new Error('provider timeout with secret details');
+    },
+    async () => ({ content: '   ', provider: 'fake', model: 'fake', tokenUsed: 0, latencyMs: 1 }),
+  ]) {
     const report = await new ParentReportService({ now: () => NOW, summarizeWithAi }).generateReport({
       semesterId: semester.semesterId,
       reportType: 'daily',

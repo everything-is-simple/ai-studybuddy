@@ -2,18 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { AssessmentAttemptDto, MockExamAttemptDetailDto, MockExamPaperDetailDto, MockExamQuestionForStudentDto, SubmitMockExamAttemptResponse } from '@ai-studybuddy/shared';
+import type {
+  AssessmentAttemptDto,
+  MockExamAttemptDetailDto,
+  MockExamPaperDetailDto,
+  MockExamQuestionForStudentDto,
+  SubmitMockExamAttemptResponse,
+} from '@ai-studybuddy/shared';
 import { MockExamStartPage } from '../src/pages/mock-exam-start-page';
 import { MockExamPaperPage } from '../src/pages/mock-exam-paper-page';
 import { MockExamSessionPage } from '../src/pages/mock-exam-session-page';
 import { MockExamResultPage } from '../src/pages/mock-exam-result-page';
 import { MockExamQuestion } from '../src/components/mock-exam-question';
 import { ApiClientError } from '../src/api/api-client';
-import {
-  readMockExamDraft,
-  writeMockExamDraft,
-  type MockExamDraft,
-} from '../src/hooks/use-mock-exam-draft';
+import { readMockExamDraft, writeMockExamDraft, type MockExamDraft } from '../src/hooks/use-mock-exam-draft';
 
 const getExamMock = vi.fn();
 const createMockExamPaperMock = vi.fn();
@@ -55,7 +57,6 @@ const confirmedExam: AssessmentAttemptDto = {
   examAt: '2026-07-25T09:00:00.000Z',
   confirmationStatus: 'confirmed',
 };
-
 
 const paper: MockExamPaperDetailDto = {
   id: 'paper-1',
@@ -232,7 +233,9 @@ describe('T03 模拟考入口', () => {
     });
     await flush();
 
-    const createButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '生成模拟卷');
+    const createButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
+      (item) => item.textContent === '生成模拟卷'
+    );
     expect(createButton).not.toBeNull();
     await click(createButton!);
     await flush();
@@ -259,7 +262,9 @@ describe('T03 模拟考入口', () => {
     await flush();
 
     expect(container.textContent).toContain('请先确认考试信息');
-    expect([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '生成模拟卷')).toBeUndefined();
+    expect(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '生成模拟卷')
+    ).toBeUndefined();
     expect(createMockExamPaperMock).not.toHaveBeenCalled();
   });
 });
@@ -280,7 +285,9 @@ describe('T03 模拟卷详情', () => {
 
     expect(container.textContent).toContain('期末模拟卷');
     expect(container.textContent).toContain('1 题');
-    const startButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '开始答题');
+    const startButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
+      (item) => item.textContent === '开始答题'
+    );
     expect(startButton).not.toBeNull();
     await click(startButton!);
     await flush();
@@ -308,7 +315,9 @@ describe('T03 模拟卷详情', () => {
     });
     await flush();
 
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '开始答题')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '开始答题')!
+    );
     await flush();
 
     expect(readMockExamDraft('semester-1', 'attempt-1', ['question-1'])).toEqual(emptyDraft);
@@ -318,15 +327,16 @@ describe('T03 模拟卷详情', () => {
 describe('T03 模拟考会话与结果', () => {
   it('确认后提交作答并在结果页显示成绩和模块分析', async () => {
     getMockExamAttemptMock.mockReset();
-    getMockExamAttemptMock
-      .mockResolvedValueOnce(attempt)
-      .mockResolvedValueOnce({ ...attempt, status: 'graded' });
+    getMockExamAttemptMock.mockResolvedValueOnce(attempt).mockResolvedValueOnce({ ...attempt, status: 'graded' });
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
-            <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
+            <Route
+              path="/mock-exam-attempts/:attemptId/result"
+              element={<MockExamResultPage semesterId="semester-1" />}
+            />
           </Routes>
         </MemoryRouter>
       );
@@ -334,14 +344,21 @@ describe('T03 模拟考会话与结果', () => {
     await flush();
 
     await click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!
+    );
     expect(container.textContent).toContain('确认提交');
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!
+    );
     await flush();
 
     expect(submitMockExamAttemptMock).toHaveBeenCalledWith(
       'attempt-1',
-      expect.objectContaining({ semesterId: 'semester-1', answers: [expect.objectContaining({ questionId: 'question-1', answer: 'A' })] })
+      expect.objectContaining({
+        semesterId: 'semester-1',
+        answers: [expect.objectContaining({ questionId: 'question-1', answer: 'A' })],
+      })
     );
     expect(container.textContent).toContain('2 / 2');
     expect(container.textContent).toContain('模块分析');
@@ -351,23 +368,33 @@ describe('T03 模拟考会话与结果', () => {
   it('确认提交在同一渲染帧内重复点击时只请求一次', async () => {
     let resolveSubmission: ((value: SubmitMockExamAttemptResponse) => void) | null = null;
     submitMockExamAttemptMock.mockImplementation(
-      () => new Promise<SubmitMockExamAttemptResponse>((resolve) => { resolveSubmission = resolve; })
+      () =>
+        new Promise<SubmitMockExamAttemptResponse>((resolve) => {
+          resolveSubmission = resolve;
+        })
     );
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
-            <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
+            <Route
+              path="/mock-exam-attempts/:attemptId/result"
+              element={<MockExamResultPage semesterId="semester-1" />}
+            />
           </Routes>
         </MemoryRouter>
       );
     });
     await flush();
     await click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!
+    );
 
-    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交');
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
+      (item) => item.textContent === '确认提交'
+    );
     expect(confirmButton).not.toBeNull();
     await act(async () => {
       confirmButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -388,7 +415,7 @@ describe('T03 模拟考会话与结果', () => {
     });
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+<MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes><Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} /></Routes>
         </MemoryRouter>
       );
@@ -411,17 +438,27 @@ describe('T03 模拟考会话与结果', () => {
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
-            <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
+            <Route
+              path="/mock-exam-attempts/:attemptId/result"
+              element={<MockExamResultPage semesterId="semester-1" />}
+            />
           </Routes>
         </MemoryRouter>
       );
     });
     await flush();
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!
+    );
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!
+    );
     await flush();
 
-    const [, payload] = submitMockExamAttemptMock.mock.calls[0] as [string, { totalDurationSeconds: number; answers: Array<{ timeSpentSeconds: number }> }];
+    const [, payload] = submitMockExamAttemptMock.mock.calls[0] as [
+      string,
+      { totalDurationSeconds: number; answers: Array<{ timeSpentSeconds: number }> },
+    ];
     expect(payload.totalDurationSeconds).toBeGreaterThanOrEqual(17);
     expect(payload.answers[0].timeSpentSeconds).toBeGreaterThanOrEqual(13);
   });
@@ -444,22 +481,29 @@ describe('T03 模拟考会话与结果', () => {
     });
     await flush();
 
-    expect(readMockExamDraft('semester-1', 'attempt-1', ['question-1'])).toEqual({ ...emptyDraft, result: gradedResult });
+    expect(readMockExamDraft('semester-1', 'attempt-1', ['question-1'])).toEqual({
+      ...emptyDraft,
+      result: gradedResult,
+    });
   });
 
   it('普通提交失败时保留答案草稿并允许重试', async () => {
     submitMockExamAttemptMock.mockRejectedValue(new Error('网络暂不可用'));
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+<MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes><Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} /></Routes>
         </MemoryRouter>
       );
     });
     await flush();
     await click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!
+    );
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!
+    );
     await flush();
 
     expect(container.textContent).toContain('网络暂不可用');
@@ -469,28 +513,37 @@ describe('T03 模拟考会话与结果', () => {
 
   it('提交冲突后刷新为已批改尝试时锁定输入并提供结果入口', async () => {
     getMockExamAttemptMock.mockReset();
-    getMockExamAttemptMock
-      .mockResolvedValueOnce(attempt)
-      .mockResolvedValueOnce({ ...attempt, status: 'graded' });
-    submitMockExamAttemptMock.mockRejectedValue(new ApiClientError('MOCK_EXAM_ATTEMPT_STATE_INVALID', '模拟考状态已变化'));
+    getMockExamAttemptMock.mockResolvedValueOnce(attempt).mockResolvedValueOnce({ ...attempt, status: 'graded' });
+    submitMockExamAttemptMock.mockRejectedValue(
+      new ApiClientError('MOCK_EXAM_ATTEMPT_STATE_INVALID', '模拟考状态已变化')
+    );
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/mock-exam-attempts/:attemptId" element={<MockExamSessionPage semesterId="semester-1" />} />
-            <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
+            <Route
+              path="/mock-exam-attempts/:attemptId/result"
+              element={<MockExamResultPage semesterId="semester-1" />}
+            />
           </Routes>
         </MemoryRouter>
       );
     });
     await flush();
     await click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!);
-    await click([...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!);
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '提交模拟考')!
+    );
+    await click(
+      [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent === '确认提交')!
+    );
     await flush();
 
     expect(container.textContent).toContain('该模拟考已提交，不能再次修改答案。');
-    expect([...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) => item.textContent === '查看结果')).toBe(true);
+    expect(
+      [...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) => item.textContent === '查看结果')
+    ).toBe(true);
     expect(container.querySelector('input[type="checkbox"]')).toBeNull();
   });
 
@@ -500,7 +553,10 @@ describe('T03 模拟考会话与结果', () => {
       root.render(
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
-            <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
+            <Route
+              path="/mock-exam-attempts/:attemptId/result"
+              element={<MockExamResultPage semesterId="semester-1" />}
+            />
           </Routes>
         </MemoryRouter>
       );
@@ -518,7 +574,10 @@ describe('T03 模拟考会话与结果', () => {
       root.render(
         <MemoryRouter initialEntries={['/mock-exam-attempts/attempt-1/result']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
-            <Route path="/mock-exam-attempts/:attemptId/result" element={<MockExamResultPage semesterId="semester-1" />} />
+            <Route
+              path="/mock-exam-attempts/:attemptId/result"
+              element={<MockExamResultPage semesterId="semester-1" />}
+            />
           </Routes>
         </MemoryRouter>
       );

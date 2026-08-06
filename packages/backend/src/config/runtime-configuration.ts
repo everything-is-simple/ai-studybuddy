@@ -73,9 +73,7 @@ export async function initializeRuntimeConfiguration(): Promise<ConfigurationSer
   return service;
 }
 
-function getEnvironmentFallback<C extends ConfigChannel>(
-  channel: C
-): ChannelConfigMap[C] | null {
+function getEnvironmentFallback<C extends ConfigChannel>(channel: C): ChannelConfigMap[C] | null {
   if (channel === 'ai') {
     const providers =
       config.aiProviders.length > 0
@@ -94,16 +92,18 @@ function getEnvironmentFallback<C extends ConfigChannel>(
     return (providers.length > 0 ? { providers } : null) as ChannelConfigMap[C] | null;
   }
   if (channel === 'smtp') {
-    return (config.smtpHost && config.smtpUser && config.smtpAuthCode && config.smtpTo
-      ? {
-          host: config.smtpHost,
-          port: config.smtpPort,
-          secure: config.smtpSecure,
-          user: config.smtpUser,
-          authCode: config.smtpAuthCode,
-          to: config.smtpTo,
-        }
-      : null) as ChannelConfigMap[C] | null;
+    return (
+      config.smtpHost && config.smtpUser && config.smtpAuthCode && config.smtpTo
+        ? {
+            host: config.smtpHost,
+            port: config.smtpPort,
+            secure: config.smtpSecure,
+            user: config.smtpUser,
+            authCode: config.smtpAuthCode,
+            to: config.smtpTo,
+          }
+        : null
+    ) as ChannelConfigMap[C] | null;
   }
   return (config.feishuWebhookUrl ? { webhookUrl: config.feishuWebhookUrl } : null) as ChannelConfigMap[C] | null;
 }

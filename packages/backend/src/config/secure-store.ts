@@ -107,11 +107,7 @@ export class SecureStore {
     return JSON.parse(this.protector.decrypt(ciphertext).toString('utf8')) as T;
   }
 
-  private async restorePrevious(
-    channel: ConfigChannel,
-    prevPath: string,
-    activePath: string
-  ): Promise<void> {
+  private async restorePrevious(channel: ConfigChannel, prevPath: string, activePath: string): Promise<void> {
     const temporaryPath = this.filePath(channel, `${crypto.randomUUID()}.tmp`);
     try {
       await fs.promises.copyFile(prevPath, temporaryPath);
@@ -128,7 +124,5 @@ export class SecureStore {
 }
 
 function isDpapiUnavailable(error: unknown): boolean {
-  return (
-    error instanceof SecretProtectionError && error.code === 'CONFIG_DPAPI_UNAVAILABLE'
-  );
+  return error instanceof SecretProtectionError && error.code === 'CONFIG_DPAPI_UNAVAILABLE';
 }

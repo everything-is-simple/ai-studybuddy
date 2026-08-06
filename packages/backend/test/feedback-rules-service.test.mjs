@@ -137,7 +137,9 @@ function readFeedbackState(db, moduleId) {
   return {
     module: db.prepare('SELECT * FROM knowledge_modules WHERE id = ?').get(moduleId),
     tasks: db.prepare('SELECT * FROM study_tasks WHERE knowledge_module_id = ? ORDER BY created_at ASC').all(moduleId),
-    events: db.prepare('SELECT * FROM study_events WHERE evidence_ref = ? ORDER BY created_at ASC').all(`km:${moduleId}`),
+    events: db
+      .prepare('SELECT * FROM study_events WHERE evidence_ref = ? ORDER BY created_at ASC')
+      .all(`km:${moduleId}`),
     weakPoint: db.prepare('SELECT * FROM weak_points WHERE knowledge_module_id = ?').get(moduleId),
   };
 }

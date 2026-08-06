@@ -71,8 +71,40 @@ test('T09E 归档非当前学期并只读查看练习历史结果', async ({ pag
     }
     if (request.method() === 'GET' && url.pathname === '/api/practice-sessions/history') {
       expect(url.searchParams.get('semesterId')).toBe(semesterB.id);
-      return json(success({
-        items: [{
+      return json(
+        success({
+          items: [
+            {
+              id: sessionId,
+              semesterId: semesterB.id,
+              courseInstanceId: 'course-1',
+              courseName: '数学',
+              assessmentAttemptId: 'exam-1',
+              assessmentName: '期末考试',
+              status: 'graded',
+              sessionKind: 'practice',
+              originMistakeId: null,
+              questionCount: 2,
+              totalScore: 1,
+              correctRate: 0.5,
+              overtime: false,
+              totalDurationSeconds: 120,
+              timeLimitSeconds: 300,
+              startedAt: '2026-01-10T08:00:00.000Z',
+              submittedAt: '2026-01-10T08:02:00.000Z',
+              gradedAt: '2026-01-10T08:02:01.000Z',
+              createdAt: '2026-01-10T08:00:00.000Z',
+              updatedAt: '2026-01-10T08:02:01.000Z',
+            },
+          ],
+          pagination: { page: 1, pageSize: 20, total: 1, hasMore: false },
+        })
+      );
+    }
+    if (request.method() === 'GET' && url.pathname === `/api/practice-sessions/${sessionId}/history-result`) {
+      expect(url.searchParams.get('semesterId')).toBe(semesterB.id);
+      return json(
+        success({
           id: sessionId,
           semesterId: semesterB.id,
           courseInstanceId: 'course-1',
@@ -93,59 +125,47 @@ test('T09E 归档非当前学期并只读查看练习历史结果', async ({ pag
           gradedAt: '2026-01-10T08:02:01.000Z',
           createdAt: '2026-01-10T08:00:00.000Z',
           updatedAt: '2026-01-10T08:02:01.000Z',
-        }],
-        pagination: { page: 1, pageSize: 20, total: 1, hasMore: false },
-      }));
-    }
-    if (request.method() === 'GET' && url.pathname === `/api/practice-sessions/${sessionId}/history-result`) {
-      expect(url.searchParams.get('semesterId')).toBe(semesterB.id);
-      return json(success({
-        id: sessionId,
-        semesterId: semesterB.id,
-        courseInstanceId: 'course-1',
-        courseName: '数学',
-        assessmentAttemptId: 'exam-1',
-        assessmentName: '期末考试',
-        status: 'graded',
-        sessionKind: 'practice',
-        originMistakeId: null,
-        questionCount: 2,
-        totalScore: 1,
-        correctRate: 0.5,
-        overtime: false,
-        totalDurationSeconds: 120,
-        timeLimitSeconds: 300,
-        startedAt: '2026-01-10T08:00:00.000Z',
-        submittedAt: '2026-01-10T08:02:00.000Z',
-        gradedAt: '2026-01-10T08:02:01.000Z',
-        createdAt: '2026-01-10T08:00:00.000Z',
-        updatedAt: '2026-01-10T08:02:01.000Z',
-        answers: [{
-          questionId: 'question-1',
-          answerOrder: 1,
-          knowledgeModuleId: 'module-1',
-          knowledgeModuleTitle: '函数基础',
-          stem: '一次函数图像是什么？',
-          type: 'single_choice',
-          difficulty: 'easy',
-          sourceEvidence: '课堂笔记',
-          studentAnswer: 'A',
-          correctAnswer: 'B',
-          isCorrect: false,
-          explanation: '一次函数图像是一条直线。',
-          timeSpentSeconds: 45,
-        }],
-      }));
+          answers: [
+            {
+              questionId: 'question-1',
+              answerOrder: 1,
+              knowledgeModuleId: 'module-1',
+              knowledgeModuleTitle: '函数基础',
+              stem: '一次函数图像是什么？',
+              type: 'single_choice',
+              difficulty: 'easy',
+              sourceEvidence: '课堂笔记',
+              studentAnswer: 'A',
+              correctAnswer: 'B',
+              isCorrect: false,
+              explanation: '一次函数图像是一条直线。',
+              timeSpentSeconds: 45,
+            },
+          ],
+        })
+      );
     }
     if (request.method() === 'GET' && url.pathname === '/api/configuration/status') {
-      return json(success({
-        ai: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        smtp: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        feishu: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
-        runtime: { dataDir: true, aiAvailable: true, smtpAvailable: true, feishuAvailable: true, uptime: 1, nodeVersion: 'v-test' },
-      }));
+      return json(
+        success({
+          ai: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
+          smtp: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
+          feishu: { status: 'verified_pass', lastVerified: null, summary: null, errorCode: null },
+          runtime: {
+            dataDir: true,
+            aiAvailable: true,
+            smtpAvailable: true,
+            feishuAvailable: true,
+            uptime: 1,
+            nodeVersion: 'v-test',
+          },
+        })
+      );
     }
-    return json({ success: false, error: { code: 'UNEXPECTED_REQUEST', message: `${request.method()} ${url.pathname}` } }, 500);
+    return json(
+      { success: false, error: { code: 'UNEXPECTED_REQUEST', message: `${request.method()} ${url.pathname}` } },
+      500
+    );
   });
 
   await page.goto('/semesters');

@@ -118,7 +118,6 @@ export class NoteBuilderService {
     }
   }
 
-
   private assertWritableSemester(semesterId: unknown): void {
     try {
       assertSemesterWritable(semesterId);
@@ -342,9 +341,8 @@ export class NoteBuilderService {
     const db = this.openReadySemesterDb(semesterId);
     let storageKey: string | undefined;
     try {
-      const material = db
-        .prepare('SELECT file_type, storage_key FROM materials WHERE id = ?')
-        .get(materialId) as { file_type: MaterialFileType; storage_key: string } | undefined;
+      const material = db.prepare('SELECT file_type, storage_key FROM materials WHERE id = ?').get(materialId) as
+        { file_type: MaterialFileType; storage_key: string } | undefined;
       if (!material) throw new NoteBuilderError('MATERIAL_NOT_FOUND', 404, '资料不存在');
       if (material.file_type !== 'pdf')
         throw new NoteBuilderError('ORIGINAL_PDF_NOT_AVAILABLE', 409, '仅支持重新打开 PDF 资料');
@@ -593,10 +591,15 @@ export class NoteBuilderService {
     this.assertWritableSemester(semesterId);
     const db = this.openReadySemesterDb(semesterId);
     try {
-      const exists = db.prepare('SELECT id FROM structured_notes WHERE id = ?').get(noteId) as { id: string } | undefined;
+      const exists = db.prepare('SELECT id FROM structured_notes WHERE id = ?').get(noteId) as
+        { id: string } | undefined;
       if (!exists) throw new NoteBuilderError('NOTE_NOT_FOUND', 404, '笔记不存在');
       const updatedAt = now();
-      db.prepare('UPDATE structured_notes SET markdown = ?, updated_at = ? WHERE id = ?').run(markdown, updatedAt, noteId);
+      db.prepare('UPDATE structured_notes SET markdown = ?, updated_at = ? WHERE id = ?').run(
+        markdown,
+        updatedAt,
+        noteId
+      );
       return { id: noteId, updatedAt };
     } finally {
       db.close();

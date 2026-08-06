@@ -34,6 +34,7 @@
 ### Task 1：建立可测试的跨 shell 运行时检查契约
 
 **Files:**
+
 - Create: `scripts/lib/AIStudyBuddy.RuntimeChecks.py`
 - Create: `scripts/lib/AIStudyBuddy.RuntimeChecks.cjs`
 - Modify: `scripts/lib/AIStudyBuddy.Deployment.psm1`
@@ -48,6 +49,7 @@
 ### Task 2：替换 P0 脚本调用点并补 PowerShell 5.1 回归入口
 
 **Files:**
+
 - Modify: `scripts/start-production.ps1`
 - Modify: `scripts/bootstrap-runtime.ps1`
 - Modify: `scripts/check-installation.ps1`
@@ -63,6 +65,7 @@
 ### Task 3：重建干净安装根，完成 P0/P1 真实验证
 
 **Evidence roots (repository external):**
+
 - `H:\ai-studybuddy-runtime\install-smoke-ps51-20260724-<id>`：只用于 bootstrap/start/stop/persistence。
 - `H:\ai-studybuddy-runtime\backup-smoke-20260724-<id>`：只用于备份夹具。
 - `H:\ai-studybuddy-tmp\runs\process-runtime-deploy06-<id>`：测试、部署包与 E2E 证据。
@@ -76,6 +79,7 @@
 ### Task 4：如实回填文档与重新建立后续验收队列
 
 **Files:**
+
 - Modify: `docs/04-开发任务清单-Todo-List.md`
 - Modify as evidence requires: `docs/09-测试验收计划-Test-Plan.md`, `docs/13-部署运维指南-Deployment.md`
 - Create: `.plans/evidence/process-runtime-deploy06-20260724.md`

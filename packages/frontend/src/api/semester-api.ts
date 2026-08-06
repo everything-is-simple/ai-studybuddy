@@ -11,7 +11,6 @@ export function listSemesters(signal?: AbortSignal): Promise<SemesterSummaryDto[
   return request<SemesterSummaryDto[]>('/semesters', { signal });
 }
 
-
 export function listArchivedSemesters(signal?: AbortSignal): Promise<SemesterSummaryDto[]> {
   return request<SemesterSummaryDto[]>('/semesters/archived', { signal });
 }
@@ -36,14 +35,17 @@ export function selectCurrentSemester(semesterId: string, signal?: AbortSignal):
   });
 }
 
-export function previewSemesterTimetable(data: {
-  semesterCode: string;
-  teachingStartDate: string;
-  teachingEndDate: string;
-  finalArchiveDate?: string;
-  studentName?: string;
-  timetableImage: File;
-}, signal?: AbortSignal): Promise<SemesterPreviewDto> {
+export function previewSemesterTimetable(
+  data: {
+    semesterCode: string;
+    teachingStartDate: string;
+    teachingEndDate: string;
+    finalArchiveDate?: string;
+    studentName?: string;
+    timetableImage: File;
+  },
+  signal?: AbortSignal
+): Promise<SemesterPreviewDto> {
   const form = new FormData();
   form.set('semesterCode', data.semesterCode);
   form.set('teachingStartDate', data.teachingStartDate);
@@ -54,7 +56,10 @@ export function previewSemesterTimetable(data: {
   return upload<SemesterPreviewDto>('/semesters/preview', form, signal);
 }
 
-export function confirmSemester(data: ConfirmSemesterRequest, signal?: AbortSignal): Promise<CreateSemesterResponseDto> {
+export function confirmSemester(
+  data: ConfirmSemesterRequest,
+  signal?: AbortSignal
+): Promise<CreateSemesterResponseDto> {
   return request<CreateSemesterResponseDto>('/semesters', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

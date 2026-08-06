@@ -308,9 +308,7 @@ test('confirms a pending exam once and immediately updates task priority', async
   assert.equal(refreshedTask.priorityBucket, 1);
 
   const timeline = await requestJson(backend.port, 'GET', `/api/timeline?semesterId=${semesterId}`);
-  const confirmationEvents = timeline.json.data.filter(
-    (event) => event.eventType === 'assessment_attempt_confirmed'
-  );
+  const confirmationEvents = timeline.json.data.filter((event) => event.eventType === 'assessment_attempt_confirmed');
   assert.equal(confirmationEvents.length, 1);
   assert.equal(confirmationEvents[0].title, '考试日期已确认');
   assert.equal(confirmationEvents[0].courseInstanceId, course.json.data.id);
@@ -519,25 +517,13 @@ test('active weak point raises error_review task priority without overriding ove
         id, course_instance_id, knowledge_module_id, type, title, status,
         estimated_minutes, deadline_at, created_at, updated_at
       ) VALUES (?, ?, ?, 'error_review', '复习薄弱点：向量空间定义', 'todo', 20, NULL, ?, ?)`
-    ).run(
-      crypto.randomUUID(),
-      course.json.data.id,
-      moduleId,
-      '2026-07-17T00:00:00.000Z',
-      '2026-07-17T00:00:00.000Z'
-    );
+    ).run(crypto.randomUUID(), course.json.data.id, moduleId, '2026-07-17T00:00:00.000Z', '2026-07-17T00:00:00.000Z');
     db.prepare(
       `INSERT INTO study_tasks (
         id, course_instance_id, knowledge_module_id, type, title, status,
         estimated_minutes, deadline_at, created_at, updated_at
       ) VALUES (?, ?, ?, 'error_review', '逾期错题复习', 'todo', 20, '2020-01-01T00:00:00.000Z', ?, ?)`
-    ).run(
-      crypto.randomUUID(),
-      course.json.data.id,
-      moduleId,
-      '2026-07-17T00:00:01.000Z',
-      '2026-07-17T00:00:01.000Z'
-    );
+    ).run(crypto.randomUUID(), course.json.data.id, moduleId, '2026-07-17T00:00:01.000Z', '2026-07-17T00:00:01.000Z');
   } finally {
     db.close();
   }
@@ -730,10 +716,7 @@ test('timeline preserves exact event type values, deduplicates identical values,
   exactParams.append('eventType', longType);
   const exact = await requestJson(backend.port, 'GET', `/api/timeline?${exactParams}`);
   assert.equal(exact.status, 200);
-  assert.deepEqual(
-    exact.json.data.map((event) => event.eventType).sort(),
-    [longType, spacedType].sort()
-  );
+  assert.deepEqual(exact.json.data.map((event) => event.eventType).sort(), [longType, spacedType].sort());
 
   const duplicates = new URLSearchParams({ semesterId });
   for (let index = 0; index < 21; index += 1) duplicates.append('eventType', spacedType);
@@ -814,7 +797,10 @@ test('T09C edits courses and keeps schedule entry reads and writes isolated by r
   const crossCourse = await updateCourse(backend.port, semesterB, courseA.json.data.id, { name: '不应跨学期改名' });
   assert.equal(crossCourse.status, 404);
   assert.equal(crossCourse.json.success, false);
-  assert.equal((await requestJson(backend.port, 'GET', `/api/courses?semesterId=${semesterA}`)).json.data[0].name, '有机化学');
+  assert.equal(
+    (await requestJson(backend.port, 'GET', `/api/courses?semesterId=${semesterA}`)).json.data[0].name,
+    '有机化学'
+  );
 
   const empty = await getScheduleEntries(backend.port, semesterA);
   assert.equal(empty.status, 200);

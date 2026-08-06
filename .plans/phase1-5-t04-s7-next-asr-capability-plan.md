@@ -71,15 +71,15 @@ docs/04-开发任务清单-Todo-List.md
 
 未来若用户明确批准执行 T04 后续能力验证，开始前必须只读核对 T02 证据：
 
-| 核对项 | 必须确认的证据 | 缺失或冲突时处理 |
-| --- | --- | --- |
-| 工具链 | Python 3.10.19 独立 `.venv`、FunASR 1.3.22、torch/torchaudio 2.11.0+cpu、ModelScope 1.38.1 | 记录为 `PRECHECK_ASR_RUNTIME_MISSING`，停止执行 |
-| 模型 | 官方 `iic/SenseVoiceSmall`，20 文件、940,019,376 bytes，逐文件 SHA-256 已在 Composer 本机忽略目录 | 记录为 `PRECHECK_MODEL_EVIDENCE_MISSING`，不得下载替代模型 |
-| 许可 | ModelScope API 与下载 README 均标记 Apache License 2.0，FunASR MIT；模型权重与工具包许可分开记录 | 记录为 `PRECHECK_LICENSE_INCOMPLETE`，不得形成再分发结论 |
-| 正向结果 | 中文与中英混合短样例 3/3 非空且哈希稳定；14/14 结果通过 JSON Schema | 缺失则停止，不得补跑 ASR |
-| 负向结果 | 损坏 WAV → `AUDIO_DECODE_FAILED`，非 WAV → `AUDIO_FORMAT_UNSUPPORTED` | 缺失则停止，不得补造错误分类 |
-| `PARTIAL` 缺口 | 静音/轻噪各 3/3 误识别；模型只有 `master` 非 immutable revision；未做防火墙隔离；首次 pip cache 曾误写默认用户 cache | 必须原样保留，不得升级为 PASS |
-| 资源 | 模型加载约 3,342 ms、总进程约 28,056 ms、峰值工作集约 3,125.5 MiB | 仅作短音频开发机事实，未来长音频/16GB 目标机须重测 |
+| 核对项         | 必须确认的证据                                                                                                       | 缺失或冲突时处理                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 工具链         | Python 3.10.19 独立 `.venv`、FunASR 1.3.22、torch/torchaudio 2.11.0+cpu、ModelScope 1.38.1                           | 记录为 `PRECHECK_ASR_RUNTIME_MISSING`，停止执行            |
+| 模型           | 官方 `iic/SenseVoiceSmall`，20 文件、940,019,376 bytes，逐文件 SHA-256 已在 Composer 本机忽略目录                    | 记录为 `PRECHECK_MODEL_EVIDENCE_MISSING`，不得下载替代模型 |
+| 许可           | ModelScope API 与下载 README 均标记 Apache License 2.0，FunASR MIT；模型权重与工具包许可分开记录                     | 记录为 `PRECHECK_LICENSE_INCOMPLETE`，不得形成再分发结论   |
+| 正向结果       | 中文与中英混合短样例 3/3 非空且哈希稳定；14/14 结果通过 JSON Schema                                                  | 缺失则停止，不得补跑 ASR                                   |
+| 负向结果       | 损坏 WAV → `AUDIO_DECODE_FAILED`，非 WAV → `AUDIO_FORMAT_UNSUPPORTED`                                                | 缺失则停止，不得补造错误分类                               |
+| `PARTIAL` 缺口 | 静音/轻噪各 3/3 误识别；模型只有 `master` 非 immutable revision；未做防火墙隔离；首次 pip cache 曾误写默认用户 cache | 必须原样保留，不得升级为 PASS                              |
+| 资源           | 模型加载约 3,342 ms、总进程约 28,056 ms、峰值工作集约 3,125.5 MiB                                                    | 仅作短音频开发机事实，未来长音频/16GB 目标机须重测         |
 
 T02 的任何缺失、冲突或不可追溯证据均阻断未来执行；不得通过重新运行 ASR、下载模型或修改 Composer 在本计划任务内补救。
 
@@ -87,16 +87,16 @@ T02 的任何缺失、冲突或不可追溯证据均阻断未来执行；不得�
 
 未来执行前必须只读核对 T03 证据：
 
-| 核对项 | 必须确认的证据 | 缺失或冲突时处理 |
-| --- | --- | --- |
-| 主线状态 | 提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 已位于 `origin/master` | 若不在主线，停止并修正任务清单事实 |
-| 来源 | Gyan `ffmpeg-8.1.2-essentials_build.zip`，109,728,040 bytes | 来源不可追溯则停止 |
-| SHA-256 | 计划固定 SHA-256、发布方 sidecar、本地 SHA-256 均为 `db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec` | 任一不一致即 `FAIL` |
-| 许可证/构建 | `8.1.2-essentials_build-www.gyan.dev`，含 `--enable-gpl --enable-version3 --enable-static` | 只记录本机试炼事实；不得推导产品再分发授权 |
-| 提取范围 | 仅 `ffmpeg.exe`、`ffprobe.exe`、LICENSE、README | 发现额外二进制或系统 PATH 依赖则停止 |
-| smoke 矩阵 | 19 个 JSONL 用例：15 `PASS`，4 `EXPECTED_FAIL`，0 非预期失败 | 缺失则停止，不得补跑 FFmpeg |
-| 输出事实 | 成功输出均为 PCM WAV / `pcm_s16le`、16 kHz、单声道；长音频 6 秒切片、2 秒重叠 | 仅作为未来 ASR 输入能力事实，不是正式接口契约 |
-| 隔离 | 未写 PATH/注册表/服务/`%LocalAppData%`/未知缓存；无 `ffmpeg`/`ffprobe` 残留 | 任一越权即 `FAIL` |
+| 核对项      | 必须确认的证据                                                                                                         | 缺失或冲突时处理                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| 主线状态    | 提交 `bb080efa304ad03211865bbc4d6a12718b7057d0` 已位于 `origin/master`                                                 | 若不在主线，停止并修正任务清单事实            |
+| 来源        | Gyan `ffmpeg-8.1.2-essentials_build.zip`，109,728,040 bytes                                                            | 来源不可追溯则停止                            |
+| SHA-256     | 计划固定 SHA-256、发布方 sidecar、本地 SHA-256 均为 `db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec` | 任一不一致即 `FAIL`                           |
+| 许可证/构建 | `8.1.2-essentials_build-www.gyan.dev`，含 `--enable-gpl --enable-version3 --enable-static`                             | 只记录本机试炼事实；不得推导产品再分发授权    |
+| 提取范围    | 仅 `ffmpeg.exe`、`ffprobe.exe`、LICENSE、README                                                                        | 发现额外二进制或系统 PATH 依赖则停止          |
+| smoke 矩阵  | 19 个 JSONL 用例：15 `PASS`，4 `EXPECTED_FAIL`，0 非预期失败                                                           | 缺失则停止，不得补跑 FFmpeg                   |
+| 输出事实    | 成功输出均为 PCM WAV / `pcm_s16le`、16 kHz、单声道；长音频 6 秒切片、2 秒重叠                                          | 仅作为未来 ASR 输入能力事实，不是正式接口契约 |
+| 隔离        | 未写 PATH/注册表/服务/`%LocalAppData%`/未知缓存；无 `ffmpeg`/`ffprobe` 残留                                            | 任一越权即 `FAIL`                             |
 
 ### 2.3 T02/T03 与 T04 的边界结论
 
@@ -189,19 +189,19 @@ I:\ai-studybuddy-composer\asr\T04-next-capability\shared\**
 
 ### 4.2 安全合成验证矩阵
 
-| 编号 | 输入/场景 | 目的 | 期望结果 | 结论边界 |
-| --- | --- | --- | --- | --- |
-| P1 | T03 已规范化的短中文合成 PCM WAV | 验证 ASR 对规范输入的基本可运行性 | 输出非空、JSON Schema 通过、记录短哈希与耗时 | 不代表课堂准确率 SLA |
-| P2 | T03 已规范化的短中英混合合成 PCM WAV | 验证术语/数字混合文本可观测性 | 输出非空、记录语言/分段/时间戳字段是否可用 | 不承诺识别准确率 |
-| P3 | 低采样率/双声道合成样例经 T03 证据路径规范化后的只读引用 | 验证预处理输出与 ASR 输入兼容性 | 输入被识别为 PCM WAV、16 kHz、单声道后再进入 ASR | 不冻结正式输入契约 |
-| N1 | 静音 PCM WAV | 复验 T02 no-speech 风险 | 必须识别为无语音/空文本/固定 no-speech 分类；若仍误识别则 `PARTIAL` 或 `FAIL` | 可关闭 no-speech 门禁需另有明确证据 |
-| N2 | 确定性轻噪声 PCM WAV | 复验轻噪 false positive | 不得把短误识别当成功；记录能量/VAD/阈值事实 | 不承诺修复所有噪声 |
-| N3 | 损坏 WAV | 验证失败分类 | 稳定返回 `AUDIO_DECODE_FAILED`，无堆栈泄漏 | 仅能力错误码，不是 API 契约 |
-| N4 | 非音频文本文件 | 验证格式拒绝 | 稳定返回 `AUDIO_FORMAT_UNSUPPORTED` | 不形成 MIME 白名单 |
-| N5 | 受控超时样例或超短超时阈值 | 验证超时和进程清理 | 返回 `PROCESS_TIMEOUT`，无残留 PID | 不形成生产超时 SLA |
-| R1 | P1/P2 连续 3 次复跑 | 验证可重复性 | 规范化输出短哈希稳定或差异有原因 | 不代表长课堂稳定性 |
-| R2 | 显式本地模型路径 + offline/cache-only 环境 | 验证离线证据强度 | 无下载、无未知缓存写入；若未做防火墙隔离则保持 `OFFLINE_EVIDENCE_PARTIAL` | 不自动关闭离线门禁 |
-| M1 | 资源记录全矩阵 | 验证内存/CPU/磁盘边界 | 每例有耗时、峰值内存、磁盘增量、退出码 | 仅开发机事实 |
+| 编号 | 输入/场景                                                | 目的                              | 期望结果                                                                      | 结论边界                            |
+| ---- | -------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------- |
+| P1   | T03 已规范化的短中文合成 PCM WAV                         | 验证 ASR 对规范输入的基本可运行性 | 输出非空、JSON Schema 通过、记录短哈希与耗时                                  | 不代表课堂准确率 SLA                |
+| P2   | T03 已规范化的短中英混合合成 PCM WAV                     | 验证术语/数字混合文本可观测性     | 输出非空、记录语言/分段/时间戳字段是否可用                                    | 不承诺识别准确率                    |
+| P3   | 低采样率/双声道合成样例经 T03 证据路径规范化后的只读引用 | 验证预处理输出与 ASR 输入兼容性   | 输入被识别为 PCM WAV、16 kHz、单声道后再进入 ASR                              | 不冻结正式输入契约                  |
+| N1   | 静音 PCM WAV                                             | 复验 T02 no-speech 风险           | 必须识别为无语音/空文本/固定 no-speech 分类；若仍误识别则 `PARTIAL` 或 `FAIL` | 可关闭 no-speech 门禁需另有明确证据 |
+| N2   | 确定性轻噪声 PCM WAV                                     | 复验轻噪 false positive           | 不得把短误识别当成功；记录能量/VAD/阈值事实                                   | 不承诺修复所有噪声                  |
+| N3   | 损坏 WAV                                                 | 验证失败分类                      | 稳定返回 `AUDIO_DECODE_FAILED`，无堆栈泄漏                                    | 仅能力错误码，不是 API 契约         |
+| N4   | 非音频文本文件                                           | 验证格式拒绝                      | 稳定返回 `AUDIO_FORMAT_UNSUPPORTED`                                           | 不形成 MIME 白名单                  |
+| N5   | 受控超时样例或超短超时阈值                               | 验证超时和进程清理                | 返回 `PROCESS_TIMEOUT`，无残留 PID                                            | 不形成生产超时 SLA                  |
+| R1   | P1/P2 连续 3 次复跑                                      | 验证可重复性                      | 规范化输出短哈希稳定或差异有原因                                              | 不代表长课堂稳定性                  |
+| R2   | 显式本地模型路径 + offline/cache-only 环境               | 验证离线证据强度                  | 无下载、无未知缓存写入；若未做防火墙隔离则保持 `OFFLINE_EVIDENCE_PARTIAL`     | 不自动关闭离线门禁                  |
+| M1   | 资源记录全矩阵                                           | 验证内存/CPU/磁盘边界             | 每例有耗时、峰值内存、磁盘增量、退出码                                        | 仅开发机事实                        |
 
 本轮只设计矩阵，不生成、下载、运行或执行任何样例。
 

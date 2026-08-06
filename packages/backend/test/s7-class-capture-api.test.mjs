@@ -45,7 +45,9 @@ async function startBackend(t) {
     await rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   });
   let stderr = '';
-  child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+  child.stderr.on('data', (chunk) => {
+    stderr += chunk.toString();
+  });
   for (let attempt = 0; attempt < 80; attempt += 1) {
     try {
       if ((await fetch(`http://127.0.0.1:${port}/api/health`)).ok) return { port, dataRoot };
@@ -102,14 +104,22 @@ async function transcribe(port, fields, file = canonicalWav()) {
   const form = new FormData();
   for (const [key, value] of Object.entries(fields)) form.append(key, String(value));
   form.append('file', new Blob([file], { type: 'audio/wav' }), 'lesson.wav');
-  const response = await fetch(`http://127.0.0.1:${port}/api/class-captures/transcribe`, { method: 'POST', body: form });
+  const response = await fetch(`http://127.0.0.1:${port}/api/class-captures/transcribe`, {
+    method: 'POST',
+    body: form,
+  });
   return { status: response.status, json: await response.json() };
 }
 
 test('S7-MVP requires recording permission before it attempts transcription', async (t) => {
   const { port } = await startBackend(t);
   const { semesterId, courseInstanceId } = await seedCourse(port);
-  const response = await transcribe(port, { semesterId, courseInstanceId, title: '课堂录音', permissionConfirmed: 'false' });
+  const response = await transcribe(port, {
+    semesterId,
+    courseInstanceId,
+    title: '课堂录音',
+    permissionConfirmed: 'false',
+  });
   assert.equal(response.status, 400);
   assert.deepEqual(response.json, {
     success: false,
@@ -120,11 +130,20 @@ test('S7-MVP requires recording permission before it attempts transcription', as
 test('S7-MVP validates WAV contract, and returns runtime unavailable only for a canonical WAV', async (t) => {
   const { port } = await startBackend(t);
   const { semesterId, courseInstanceId } = await seedCourse(port);
-  const invalid = await transcribe(port, { semesterId, courseInstanceId, title: '课堂录音', permissionConfirmed: 'true' }, Buffer.from('not wav'));
+  const invalid = await transcribe(
+    port,
+    { semesterId, courseInstanceId, title: '课堂录音', permissionConfirmed: 'true' },
+    Buffer.from('not wav')
+  );
   assert.equal(invalid.status, 400);
   assert.equal(invalid.json.error.code, 'ASR_INVALID_AUDIO_FORMAT');
 
-  const unavailable = await transcribe(port, { semesterId, courseInstanceId, title: '课堂录音', permissionConfirmed: 'true' });
+  const unavailable = await transcribe(port, {
+    semesterId,
+    courseInstanceId,
+    title: '课堂录音',
+    permissionConfirmed: 'true',
+  });
   assert.equal(unavailable.status, 503);
   assert.equal(unavailable.json.error.code, 'ASR_RUNTIME_UNAVAILABLE');
 });
@@ -152,7 +171,9 @@ test('S7-MVP saves only confirmed text as an S2 material and queues no work unti
   assert.equal(detail.json.data.aiRetryCount, 0);
   assert.equal(detail.json.data.conversionRetryCount, 0);
 
-  const generate = await json(port, 'POST', `/api/materials/${save.json.data.material.id}/generate-note`, { semesterId });
+  const generate = await json(port, 'POST', `/api/materials/${save.json.data.material.id}/generate-note`, {
+    semesterId,
+  });
   assert.equal(generate.status, 200);
   assert.equal(generate.json.success, true);
 });

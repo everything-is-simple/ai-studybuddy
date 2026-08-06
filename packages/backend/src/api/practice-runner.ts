@@ -35,7 +35,6 @@ router.post('/practice-sessions', async (req: Request, res: Response) => {
   }
 });
 
-
 router.get('/practice-sessions/history', (req: Request, res: Response) => {
   try {
     const result: PracticeHistoryListResponseDto = service.listPracticeHistory({

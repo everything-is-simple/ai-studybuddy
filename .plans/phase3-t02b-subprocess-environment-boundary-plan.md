@@ -13,10 +13,10 @@
 
 ## 2. 环境契约
 
-| 子进程 | 允许环境 |
-| --- | --- |
-| OCR | `SYSTEMROOT`、`WINDIR`（宿主存在时）、受控 `TEMP`/`TMP`、`OCR_CACHE_ROOT`、`XDG_CACHE_HOME`；仅 `PYTHON_PATH` 为非绝对命令时复制规范化 `PATH`、`PATHEXT`。 |
-| whisper.cpp | `SYSTEMROOT`、`WINDIR`（宿主存在时）及请求目录的 `TEMP`/`TMP`。CLI 和模型仍只通过显式参数传递，不复制 `PATH`、`PATHEXT` 或 Python 变量。 |
+| 子进程      | 允许环境                                                                                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OCR         | `SYSTEMROOT`、`WINDIR`（宿主存在时）、受控 `TEMP`/`TMP`、`OCR_CACHE_ROOT`、`XDG_CACHE_HOME`；仅 `PYTHON_PATH` 为非绝对命令时复制规范化 `PATH`、`PATHEXT`。 |
+| whisper.cpp | `SYSTEMROOT`、`WINDIR`（宿主存在时）及请求目录的 `TEMP`/`TMP`。CLI 和模型仍只通过显式参数传递，不复制 `PATH`、`PATHEXT` 或 Python 变量。                   |
 
 - Windows 环境键按不区分大小写读取，向子进程统一输出大写键名；不产生 `Path`/`PATH` 双键。
 - `PYTHONPATH`、`PYTHONHOME`、`APP_DATA_ROOT`、`NODE_ENV`、`AI_*`、`SMTP_*`、`FEISHU_WEBHOOK_URL` 及其他未允许宿主变量一律不传递。

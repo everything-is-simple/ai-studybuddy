@@ -125,8 +125,7 @@ export class ErrorFixerQueryService {
     try {
       globalDb = openExistingDbAtPath(getGlobalDbPath());
       const row = globalDb.prepare('SELECT ready FROM semesters WHERE id = ?').get(semesterId) as
-        | { ready: number }
-        | undefined;
+        { ready: number } | undefined;
       if (!row) throw new ErrorFixerApiError('SEMESTER_NOT_FOUND', 404, '学期不存在');
       if (row.ready !== 1) throw new ErrorFixerApiError('SEMESTER_NOT_READY', 409, '学期尚未就绪');
     } catch (error) {
@@ -141,7 +140,6 @@ export class ErrorFixerQueryService {
     migrateSemesterDb(db);
     return db;
   }
-
 
   private assertWritableSemester(semesterId: unknown): void {
     try {
@@ -182,7 +180,11 @@ export class ErrorFixerQueryService {
 
       const conditions = ['m.course_instance_id = ?'];
       const params: unknown[] = [courseInstanceId];
-      if (filters.knowledgeModuleId !== undefined && filters.knowledgeModuleId !== null && filters.knowledgeModuleId !== '') {
+      if (
+        filters.knowledgeModuleId !== undefined &&
+        filters.knowledgeModuleId !== null &&
+        filters.knowledgeModuleId !== ''
+      ) {
         conditions.push('m.knowledge_module_id = ?');
         params.push(requiredUuid(filters.knowledgeModuleId, 'MISTAKE_FILTER_INVALID', 'knowledgeModuleId 不合法'));
       }
@@ -194,7 +196,8 @@ export class ErrorFixerQueryService {
         params.push(status);
       }
 
-      const page = filters.page === undefined || filters.page === null || filters.page === '' ? 1 : Number(filters.page);
+      const page =
+        filters.page === undefined || filters.page === null || filters.page === '' ? 1 : Number(filters.page);
       const pageSize =
         filters.pageSize === undefined || filters.pageSize === null || filters.pageSize === ''
           ? 20
@@ -265,7 +268,11 @@ export class ErrorFixerQueryService {
            WHERE mistake_id = ?
            ORDER BY occurred_at DESC, created_at DESC`
         )
-        .all(mistakeId) as Array<{ id: string; evidence_type: MistakeEvidenceDto['evidenceType']; occurred_at: string }>;
+        .all(mistakeId) as Array<{
+        id: string;
+        evidence_type: MistakeEvidenceDto['evidenceType'];
+        occurred_at: string;
+      }>;
 
       return {
         id: row.id,
@@ -311,9 +318,10 @@ export class ErrorFixerQueryService {
     try {
       const timestamp = this.now();
       db.transaction(() => {
-        const row = db.prepare('SELECT id, status, course_instance_id, knowledge_module_id FROM mistakes WHERE id = ?').get(mistakeId) as
-          | { id: string; status: MistakeStatus; course_instance_id: string; knowledge_module_id: string }
-          | undefined;
+        const row = db
+          .prepare('SELECT id, status, course_instance_id, knowledge_module_id FROM mistakes WHERE id = ?')
+          .get(mistakeId) as
+          { id: string; status: MistakeStatus; course_instance_id: string; knowledge_module_id: string } | undefined;
         if (!row) throw new ErrorFixerApiError('MISTAKE_NOT_FOUND', 404, '错题不存在');
         db.prepare(
           `UPDATE mistakes
@@ -347,18 +355,17 @@ export class ErrorFixerQueryService {
     try {
       const timestamp = this.now();
       db.transaction(() => {
-        const row = db.prepare('SELECT id, status, course_instance_id, knowledge_module_id FROM mistakes WHERE id = ?').get(mistakeId) as
-          | { id: string; status: MistakeStatus; course_instance_id: string; knowledge_module_id: string }
-          | undefined;
+        const row = db
+          .prepare('SELECT id, status, course_instance_id, knowledge_module_id FROM mistakes WHERE id = ?')
+          .get(mistakeId) as
+          { id: string; status: MistakeStatus; course_instance_id: string; knowledge_module_id: string } | undefined;
         if (!row) throw new ErrorFixerApiError('MISTAKE_NOT_FOUND', 404, '错题不存在');
 
         if (input.status === 'mastered') {
           if (row.status !== 'needs_review')
             throw new ErrorFixerApiError('MISTAKE_STATUS_INVALID', 409, '只有需要复习状态的错题可以标记已掌握');
           const hasRedoCorrect = db
-            .prepare(
-              "SELECT 1 FROM mistake_evidence WHERE mistake_id = ? AND evidence_type = 'redo_correct'"
-            )
+            .prepare("SELECT 1 FROM mistake_evidence WHERE mistake_id = ? AND evidence_type = 'redo_correct'")
             .get(mistakeId);
           if (!hasRedoCorrect && input.confirm !== true)
             throw new ErrorFixerApiError(
@@ -532,8 +539,7 @@ export class ErrorFixerQueryService {
 
   private toSessionDto(db: DatabaseType, sessionId: string): PracticeSessionDetailDto {
     const session = db.prepare('SELECT * FROM practice_sessions WHERE id = ?').get(sessionId) as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     if (!session) throw new ErrorFixerApiError('PRACTICE_SESSION_NOT_FOUND', 404, '练习不存在');
     const questions = db
       .prepare('SELECT * FROM questions WHERE practice_session_id = ? ORDER BY question_order ASC')
@@ -553,8 +559,7 @@ export class ErrorFixerQueryService {
           : Number(session.time_limit_seconds),
       difficultyPreference: String(session.difficulty_preference) as PracticeSessionDetailDto['difficultyPreference'],
       sessionKind: (session.session_kind === 'mistake_redo' ? 'mistake_redo' : 'practice') as
-        | 'practice'
-        | 'mistake_redo',
+        'practice' | 'mistake_redo',
       originMistakeId:
         session.origin_mistake_id === null || session.origin_mistake_id === undefined
           ? null

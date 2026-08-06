@@ -19,13 +19,44 @@ const COURSE_ID = '22222222-2222-4222-8222-222222222222';
 const BASE_DTO: DailyStudyHomeDto = {
   semesterId: SEMESTER_ID,
   date: '2026-07-18',
-  todayTasks: [{ id: 'task-1', title: '完成函数练习', courseName: '数学', deadlineAt: '2026-07-18T20:00:00.000Z', type: 'practice' }],
+  todayTasks: [
+    {
+      id: 'task-1',
+      title: '完成函数练习',
+      courseName: '数学',
+      deadlineAt: '2026-07-18T20:00:00.000Z',
+      type: 'practice',
+    },
+  ],
   tomorrowTasks: [],
-  tomorrowSchedule: [{ id: 'schedule-1', courseInstanceId: COURSE_ID, courseName: '数学', startTime: '08:00', endTime: '09:40', location: 'A-101' }],
-  upcomingExams: [{ id: 'exam-1', name: '期中考试', courseName: '数学', examAt: '2026-07-20T08:00:00.000Z', daysUntil: 2 }],
-  pendingQualityMaterials: [{ id: 'material-1', courseInstanceId: COURSE_ID, courseName: '数学', title: '失败讲义', status: 'conversion_failed' }],
+  tomorrowSchedule: [
+    {
+      id: 'schedule-1',
+      courseInstanceId: COURSE_ID,
+      courseName: '数学',
+      startTime: '08:00',
+      endTime: '09:40',
+      location: 'A-101',
+    },
+  ],
+  upcomingExams: [
+    { id: 'exam-1', name: '期中考试', courseName: '数学', examAt: '2026-07-20T08:00:00.000Z', daysUntil: 2 },
+  ],
+  pendingQualityMaterials: [
+    {
+      id: 'material-1',
+      courseInstanceId: COURSE_ID,
+      courseName: '数学',
+      title: '失败讲义',
+      status: 'conversion_failed',
+    },
+  ],
   errorReviews: [],
-  nextAction: { kind: 'quality_material', title: '修正资料：失败讲义', path: `/materials?courseInstanceId=${COURSE_ID}` },
+  nextAction: {
+    kind: 'quality_material',
+    title: '修正资料：失败讲义',
+    path: `/materials?courseInstanceId=${COURSE_ID}`,
+  },
 };
 
 let container: HTMLDivElement;
@@ -67,12 +98,23 @@ describe('DailyStudyHomePage', () => {
     expect(container.textContent).toContain('每日学习首页');
     expect(container.textContent).toContain('资料需要先人工处理');
     expect(container.textContent).toContain('转换失败，待修正');
-    expect(container.querySelector('a[href="/materials?courseInstanceId=22222222-2222-4222-8222-222222222222"]')).not.toBeNull();
+    expect(
+      container.querySelector('a[href="/materials?courseInstanceId=22222222-2222-4222-8222-222222222222"]')
+    ).not.toBeNull();
     expect(container.querySelector('a[href="/courses/22222222-2222-4222-8222-222222222222"]')).not.toBeNull();
   });
 
   it('空 DTO 显示空状态而不是错误', async () => {
-    mocks.getDailyStudyHome.mockResolvedValue({ ...BASE_DTO, todayTasks: [], tomorrowTasks: [], tomorrowSchedule: [], upcomingExams: [], pendingQualityMaterials: [], errorReviews: [], nextAction: null });
+    mocks.getDailyStudyHome.mockResolvedValue({
+      ...BASE_DTO,
+      todayTasks: [],
+      tomorrowTasks: [],
+      tomorrowSchedule: [],
+      upcomingExams: [],
+      pendingQualityMaterials: [],
+      errorReviews: [],
+      nextAction: null,
+    });
     await renderPage();
 
     expect(container.textContent).toContain('当前学期暂时没有待办');

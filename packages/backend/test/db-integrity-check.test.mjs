@@ -120,9 +120,15 @@ test('T04-2-C: getAllActiveSemesterDbPaths 返回活跃学期路径', async (t) 
     const paths = getAllActiveSemesterDbPaths();
 
     assert.strictEqual(paths.length, 2, '应该返回2个活跃学期路径');
-    assert.ok(paths.some(p => p.includes('active-001')), '应该包含 active-001');
-    assert.ok(paths.some(p => p.includes('follow-up-001')), '应该包含 follow-up-001');
-    assert.ok(!paths.some(p => p.includes('archived-001')), '不应该包含 archived-001');
+    assert.ok(
+      paths.some((p) => p.includes('active-001')),
+      '应该包含 active-001'
+    );
+    assert.ok(
+      paths.some((p) => p.includes('follow-up-001')),
+      '应该包含 follow-up-001'
+    );
+    assert.ok(!paths.some((p) => p.includes('archived-001')), '不应该包含 archived-001');
   } finally {
     process.env.APP_DATA_ROOT = originalRoot;
     teardown();

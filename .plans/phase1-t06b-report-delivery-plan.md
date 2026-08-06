@@ -63,6 +63,7 @@
 - [x] runner 采用“到期批次优先”规则：每次被计划任务或登录触发时，先读取失败或发送租约超时的现有批次并只重试其未成功渠道；随后在当前时间已越过 22:30 时处理当日批次，或在登录补发场景处理最近一个错过且尚无已冻结快照的周期。不会批量补发多个陈旧日期。
 - [x] 为 `report_deliveries` 增加最小恢复字段：`attempt_count`、`last_attempt_at`、`next_retry_at`、`updated_at` 与 `lease_expires_at`。状态只允许 `pending`、`sending`、`sent`、`failed`；渠道原子认领 `sending` 租约，超过 5 分钟的未完成租约可恢复为 `failed`。同一 `report_key + channel` 跨 runner、进程和重启累计最多自动尝试 3 次，退避为 5 秒、30 秒；第三次失败后清空 `next_retry_at`，保留脱敏本机留档并等待人工处置，避免延迟数日的自动补发。
 - [x] Windows Task Scheduler 配置必须仅运行已编译的本地 runner，设置每日 22:30、登录触发和 `StartWhenAvailable`；注册脚本不得写入真实凭据，必须从本机 `.env.local` 或环境继承。实现测试只验证脚本/XML 内容和 runner 逻辑，不在普通自动化测试中创建真实计划任务。
+
 ### 1.3 QQ SMTP 与飞书 Adapter
 
 - [x] 在后端依赖中添加 `nodemailer` 及其 TypeScript 类型；仅在完整 SMTP 配置存在时创建 transport。SMTP 发件人使用已有 `SMTP_USER`，收件人使用已有 `SMTP_TO`，认证使用 `SMTP_AUTH_CODE`；缺失任一必需值时该渠道返回 `skipped_unconfigured`，不抛出凭据细节。

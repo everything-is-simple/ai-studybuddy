@@ -60,7 +60,10 @@ interface MockApiState {
   attemptStatus: 'in_progress' | 'submitted' | 'graded';
   submitMode: SubmitMode;
   createPaperCalls: number;
-  lastSubmitPayload: { totalDurationSeconds?: number; answers?: Array<{ questionId?: string; timeSpentSeconds?: number }> } | null;
+  lastSubmitPayload: {
+    totalDurationSeconds?: number;
+    answers?: Array<{ questionId?: string; timeSpentSeconds?: number }>;
+  } | null;
 }
 
 function createState(overrides: Partial<MockApiState> = {}): MockApiState {
@@ -255,14 +258,19 @@ test('确认考试可生成、刷新恢复作答、提交后在宽屏和窄屏�
   await page.getByLabel('A. 正确').check();
   await page.reload();
   await expect(page.getByLabel('A. 正确')).toBeChecked();
-  const restoredDraft = await page.evaluate((key) => JSON.parse(window.sessionStorage.getItem(key) ?? '{}'), `ai-studybuddy:mock-exam:${semesterId}:${attemptId}`);
+  const restoredDraft = await page.evaluate(
+    (key) => JSON.parse(window.sessionStorage.getItem(key) ?? '{}'),
+    `ai-studybuddy:mock-exam:${semesterId}:${attemptId}`
+  );
   expect(restoredDraft.totalDurationSeconds).toBeGreaterThanOrEqual(1);
   expect(restoredDraft.questionSeconds[questions[0].id]).toBeGreaterThanOrEqual(1);
   await page.getByRole('button', { name: '提交模拟考' }).click();
   await page.getByRole('button', { name: '确认提交' }).click();
   await expect(page.getByRole('heading', { name: '2 / 3' })).toBeVisible();
   expect(state.lastSubmitPayload?.totalDurationSeconds).toBeGreaterThanOrEqual(1);
-  expect(state.lastSubmitPayload?.answers?.find((answer) => answer.questionId === questions[0].id)?.timeSpentSeconds).toBeGreaterThanOrEqual(1);
+  expect(
+    state.lastSubmitPayload?.answers?.find((answer) => answer.questionId === questions[0].id)?.timeSpentSeconds
+  ).toBeGreaterThanOrEqual(1);
   await expect(page.getByText('正确答案：A')).toBeVisible();
   await expect(page.getByLabel('模块分析')).toContainText('需要重点复习');
 

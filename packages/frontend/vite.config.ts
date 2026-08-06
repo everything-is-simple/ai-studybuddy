@@ -61,10 +61,7 @@ export default defineConfig({
           ) {
             return 'markmap-transformer';
           }
-          if (
-            normalizedId.includes('/node_modules/markmap-view/') ||
-            /\/node_modules\/d3(?:-|\/)/.test(normalizedId)
-          ) {
+          if (normalizedId.includes('/node_modules/markmap-view/') || /\/node_modules\/d3(?:-|\/)/.test(normalizedId)) {
             return 'markmap-runtime';
           }
           return undefined;

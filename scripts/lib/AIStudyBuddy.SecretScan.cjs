@@ -229,8 +229,6 @@ function formatScanSummary(report) {
   });
 }
 
-
-
 const CONTROLLED_READONLY_CONTRACT_VERSION = 'phase3-p1-controlled-readonly-v1';
 const CONTROLLED_SYNTHETIC_READERS = new WeakSet();
 const CONTROLLED_SYNTHETIC_FAILURE_MODES = new Set(['read-failure', 'replacement']);
@@ -266,7 +264,8 @@ function normalizeControlledCandidates(candidates, errorCode) {
   const result = [];
   for (const candidate of candidates) {
     try {
-      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw createControlledError(errorCode);
+      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate))
+        throw createControlledError(errorCode);
       const relativePath = toRelativePath(candidate.relativePath);
       if (seen.has(relativePath) || typeof candidate.locator !== 'string' || candidate.locator.length === 0) {
         throw createControlledError(errorCode);
@@ -287,7 +286,8 @@ function equalStringSets(left, right) {
 
 function normalizeControlledApproval(approval, trackedFiles, packageIdentityBefore, packageIdentityAfter) {
   try {
-    if (!approval || typeof approval !== 'object' || Array.isArray(approval)) throw createControlledError('P1_APPROVAL_MISSING');
+    if (!approval || typeof approval !== 'object' || Array.isArray(approval))
+      throw createControlledError('P1_APPROVAL_MISSING');
     requireFullHex(approval.fullCommit, 'P1_APPROVAL_MISSING', [40, 64]);
     if (typeof approval.windowId !== 'string' || !/^[A-Za-z0-9_-]{12,128}$/.test(approval.windowId)) {
       throw createControlledError('P1_APPROVAL_MISSING');
@@ -378,25 +378,48 @@ function createControlledRuleCounts(findings) {
     const key = `${finding.ruleId}\0${finding.category}`;
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return Object.freeze([...counts.entries()]
-    .map(([key, count]) => {
-      const [ruleId, category] = key.split('\0');
-      return Object.freeze({ ruleId, category, count });
-    })
-    .sort((left, right) => left.ruleId.localeCompare(right.ruleId)));
+  return Object.freeze(
+    [...counts.entries()]
+      .map(([key, count]) => {
+        const [ruleId, category] = key.split('\0');
+        return Object.freeze({ ruleId, category, count });
+      })
+      .sort((left, right) => left.ruleId.localeCompare(right.ruleId))
+  );
 }
 
 function normalizeControlledReport(report) {
-  if (!report || typeof report !== 'object' || report.status !== 'ok' || report.contractVersion !== CONTROLLED_READONLY_CONTRACT_VERSION) {
+  if (
+    !report ||
+    typeof report !== 'object' ||
+    report.status !== 'ok' ||
+    report.contractVersion !== CONTROLLED_READONLY_CONTRACT_VERSION
+  ) {
     throw createControlledError('R1_OUTPUT_REDACTION_FAILED');
   }
-  if (!isNonNegativeInteger(report.scannedFiles) || !isNonNegativeInteger(report.findingCount) || typeof report.artifactId !== 'string' || !/^[a-f0-9]{36}$/.test(report.artifactId)) {
+  if (
+    !isNonNegativeInteger(report.scannedFiles) ||
+    !isNonNegativeInteger(report.findingCount) ||
+    typeof report.artifactId !== 'string' ||
+    !/^[a-f0-9]{36}$/.test(report.artifactId)
+  ) {
     throw createControlledError('R1_OUTPUT_REDACTION_FAILED');
   }
-  if (!report.skipped || ['sensitive', 'nonText', 'oversize'].some((key) => !isNonNegativeInteger(report.skipped[key]))) {
+  if (
+    !report.skipped ||
+    ['sensitive', 'nonText', 'oversize'].some((key) => !isNonNegativeInteger(report.skipped[key]))
+  ) {
     throw createControlledError('R1_OUTPUT_REDACTION_FAILED');
   }
-  if (!Array.isArray(report.ruleCounts) || report.ruleCounts.some((item) => !RULES.some((rule) => rule.id === item?.ruleId && rule.category === item?.category) || !isNonNegativeInteger(item?.count) || item.count === 0)) {
+  if (
+    !Array.isArray(report.ruleCounts) ||
+    report.ruleCounts.some(
+      (item) =>
+        !RULES.some((rule) => rule.id === item?.ruleId && rule.category === item?.category) ||
+        !isNonNegativeInteger(item?.count) ||
+        item.count === 0
+    )
+  ) {
     throw createControlledError('R1_OUTPUT_REDACTION_FAILED');
   }
   return Object.freeze({
@@ -406,7 +429,11 @@ function normalizeControlledReport(report) {
     scannedFiles: report.scannedFiles,
     findingCount: report.findingCount,
     skipped: normalizeControlledSkipped(report.skipped),
-    ruleCounts: Object.freeze(report.ruleCounts.map((item) => Object.freeze({ ruleId: item.ruleId, category: item.category, count: item.count }))),
+    ruleCounts: Object.freeze(
+      report.ruleCounts.map((item) =>
+        Object.freeze({ ruleId: item.ruleId, category: item.category, count: item.count })
+      )
+    ),
   });
 }
 
@@ -427,9 +454,17 @@ async function scanControlledSecretBoundary({
   if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0) throw createControlledError('R1_NOFOLLOW_RISK');
   const normalizedTrackedFiles = normalizeControlledTrackedFiles(trackedFiles);
   normalizeControlledApproval(approval, normalizedTrackedFiles, packageIdentityBefore, packageIdentityAfter);
-  const normalizedRepositoryCandidates = normalizeControlledCandidates(repositoryCandidates, 'R1_TRACKED_LIST_UNAVAILABLE');
+  const normalizedRepositoryCandidates = normalizeControlledCandidates(
+    repositoryCandidates,
+    'R1_TRACKED_LIST_UNAVAILABLE'
+  );
   const normalizedPackageCandidates = normalizeControlledCandidates(packageCandidates, 'R1_PACKAGE_IDENTITY_INVALID');
-  if (!equalStringSets(normalizedTrackedFiles, normalizedRepositoryCandidates.map((candidate) => candidate.relativePath).sort())) {
+  if (
+    !equalStringSets(
+      normalizedTrackedFiles,
+      normalizedRepositoryCandidates.map((candidate) => candidate.relativePath).sort()
+    )
+  ) {
     throw createControlledError('R1_UNTRACKED_OR_OUT_OF_SCOPE');
   }
   const verifiedReader = assertControlledReader(reader);

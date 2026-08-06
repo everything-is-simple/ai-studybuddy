@@ -42,18 +42,18 @@
 
 ## 3. 精确文件范围
 
-| 文件 | 变更 | 单一责任 |
-| --- | --- | --- |
-| `scripts/lib/AIStudyBuddy.TrustedApproval.cjs` | 新增 | 严格 approval envelope schema、测试闭包内 Ed25519 detached-signature 验证契约；production 不配置任何 trust anchor、固定 fail-closed；purpose/policy/commit/contract/time/scope/content-identity 比对；只返回内部冻结的非序列化 approval capability 或固定错误码。 |
-| `scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs` | 新增 | 验证器完整性 gate；生产 API 不接受 CLI/环境变量/配置或调用参数提供的 identity，缺少外部受认证 provider 时固定拒绝；测试仅通过非契约测试缝直接注入。 |
-| `scripts/lib/AIStudyBuddy.NoFollow.cjs` | 新增 | 平台无关的逐组件 no-follow handle 抽象、Windows 卷类别拒绝策略、同 handle 读/复核状态机与**默认 unsupported backend**；生产 API 无 backend 注入入口，禁止调用 `fs.readFile`、`realpath`、`Get-Acl` 或路径式降级。 |
-| `packages/backend/test/trusted-approval-contract.test.mjs` | 新增 | 内存测试密钥、签名篡改、精确 canonical record、短时窗重复只读、purpose/commit/scope/content-identity、production gate 与脱敏测试。 |
-| `packages/backend/test/verifier-integrity-gate.test.mjs` | 新增 | 验证器身份缺失、版本不符、篡改 provider 结果与测试注入隔离；证明生产默认固定拒绝，并断言伪造/附加调用参数不能绕过。 |
-| `packages/backend/test/nofollow-contract.test.mjs` | 新增 | 合成逐组件 handle backend：UNC/映射盘/`SUBST`/remote/reparse 拒绝、同 handle 读取、打开后替换、对象 ID 与内容身份变化、无 backend fail-closed、无路径泄露及失败零字节交付。 |
-| `packages/backend/test/helpers/trusted-approval-fixture.mjs` | 新增 | 唯一允许导入 `__TEST_ONLY_*` factory 的测试 helper：内存 approval payload、进程内动态测试键、哨兵值、合成 handle/volume/reparse/race 适配器；不得提供真实文件系统 fallback。 |
-| `packages/backend/test/trusted-approval-test-seam-isolation.test.mjs` | 新增 | 只检查 Git 已跟踪源码的静态依赖：仅 allowlist helper 可引用 `__TEST_ONLY_*`，并拒绝生产文件、动态 require、重导出和 test helper/test backend 泄漏。 |
-| `.plans/phase3-t02-common-trusted-approval-nofollow-implementation-20260728-plan.md` | 新增 | 本计划与审查修订记录。 |
-| `docs/04-开发任务清单-Todo-List.md` | 修改 | 在 Phase 3 行动计划索引登记此计划的真实状态；不勾选 R1/R2 实现完成。 |
+| 文件                                                                                 | 变更 | 单一责任                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/lib/AIStudyBuddy.TrustedApproval.cjs`                                       | 新增 | 严格 approval envelope schema、测试闭包内 Ed25519 detached-signature 验证契约；production 不配置任何 trust anchor、固定 fail-closed；purpose/policy/commit/contract/time/scope/content-identity 比对；只返回内部冻结的非序列化 approval capability 或固定错误码。 |
+| `scripts/lib/AIStudyBuddy.VerifierIntegrity.cjs`                                     | 新增 | 验证器完整性 gate；生产 API 不接受 CLI/环境变量/配置或调用参数提供的 identity，缺少外部受认证 provider 时固定拒绝；测试仅通过非契约测试缝直接注入。                                                                                                               |
+| `scripts/lib/AIStudyBuddy.NoFollow.cjs`                                              | 新增 | 平台无关的逐组件 no-follow handle 抽象、Windows 卷类别拒绝策略、同 handle 读/复核状态机与**默认 unsupported backend**；生产 API 无 backend 注入入口，禁止调用 `fs.readFile`、`realpath`、`Get-Acl` 或路径式降级。                                                 |
+| `packages/backend/test/trusted-approval-contract.test.mjs`                           | 新增 | 内存测试密钥、签名篡改、精确 canonical record、短时窗重复只读、purpose/commit/scope/content-identity、production gate 与脱敏测试。                                                                                                                                |
+| `packages/backend/test/verifier-integrity-gate.test.mjs`                             | 新增 | 验证器身份缺失、版本不符、篡改 provider 结果与测试注入隔离；证明生产默认固定拒绝，并断言伪造/附加调用参数不能绕过。                                                                                                                                               |
+| `packages/backend/test/nofollow-contract.test.mjs`                                   | 新增 | 合成逐组件 handle backend：UNC/映射盘/`SUBST`/remote/reparse 拒绝、同 handle 读取、打开后替换、对象 ID 与内容身份变化、无 backend fail-closed、无路径泄露及失败零字节交付。                                                                                       |
+| `packages/backend/test/helpers/trusted-approval-fixture.mjs`                         | 新增 | 唯一允许导入 `__TEST_ONLY_*` factory 的测试 helper：内存 approval payload、进程内动态测试键、哨兵值、合成 handle/volume/reparse/race 适配器；不得提供真实文件系统 fallback。                                                                                      |
+| `packages/backend/test/trusted-approval-test-seam-isolation.test.mjs`                | 新增 | 只检查 Git 已跟踪源码的静态依赖：仅 allowlist helper 可引用 `__TEST_ONLY_*`，并拒绝生产文件、动态 require、重导出和 test helper/test backend 泄漏。                                                                                                               |
+| `.plans/phase3-t02-common-trusted-approval-nofollow-implementation-20260728-plan.md` | 新增 | 本计划与审查修订记录。                                                                                                                                                                                                                                            |
+| `docs/04-开发任务清单-Todo-List.md`                                                  | 修改 | 在 Phase 3 行动计划索引登记此计划的真实状态；不勾选 R1/R2 实现完成。                                                                                                                                                                                              |
 
 除上述文件外一律不改。特别是不得为了“接入验证”修改 R1/R2 现有文件；接入只能留给第 10 节的后续批准切片。
 
@@ -94,7 +94,7 @@
 仅暴露以下内部 API（命名可等价调整，语义不得放宽）：
 
 ```js
-verifyTrustedApproval(input)
+verifyTrustedApproval(input);
 ```
 
 - 生产入口必须是**不解构**的单一 `input` 参数。函数体的第一条有效语句必须是模块内部固定调用 `requireTrustedVerifierIntegrity({ requiredContractVersion: "1" })`；在 gate 成功前不得检查 `input` 类型、枚举/读取其属性、解构、展开、日志化或触碰 `recordBytes`、`signatureBytes`、`expected`。gate 成功后才验证 `input` 的精确字段全集并读取它们。`recordBytes` 和 `signatureBytes` 只能由未来 R1/R2 接入层的 no-follow verified handle 提供；本切片测试只传内存字节，库本身不得按路径打开文件。
@@ -109,7 +109,7 @@ verifyTrustedApproval(input)
 ```js
 requireTrustedVerifierIntegrity({
   requiredContractVersion,
-})
+});
 ```
 
 - 这是 `verifyTrustedApproval` 模块内部无条件执行的必经 gate。生产 API 没有 identity/provider 注入参数；它只接受未来受认证发布/启动边界在独立 adoption 切片中注册的、不可由普通调用者替换的 verifier identity（至少含 contract version 与完整性声明）。
@@ -119,16 +119,16 @@ requireTrustedVerifierIntegrity({
 ### 4.3 `AIStudyBuddy.NoFollow.cjs`
 
 ```js
-createNoFollowReader()
+createNoFollowReader();
 ```
 
 返回的方法仅允许：
 
 ```js
-openVerifiedPath(input)
-readVerifiedFile(input)
-readVerifiedDirectorySecurityDescriptor(input)
-closeVerifiedHandle(input)
+openVerifiedPath(input);
+readVerifiedFile(input);
+readVerifiedDirectorySecurityDescriptor(input);
+closeVerifiedHandle(input);
 ```
 
 - API 将路径视作不可信 locator；生产 API 没有 platform 或 backend 注入参数，平台只能由模块内部确定；且不可在无 backend 时将 locator 交给 `fs.readFile`、`lstat`、`stat`、`realpath`、PowerShell 或其他路径 API。生产 unsupported reader 的四个方法均必须使用不解构的单一 `input`（或等价地完全无参数）；每个方法在任何 `input` 类型检查、属性读取、枚举、解构、展开、日志、错误格式化、backend 调用或路径操作之前，固定抛出 `NOFOLLOW_HANDLE_UNSUPPORTED`。
@@ -142,12 +142,12 @@ closeVerifiedHandle(input)
 
 所有错误 `message` 必须等于 `code`；CLI、日志与测试断言只允许固定码、非敏感布尔值及计数，不得包含输入回显。
 
-| 分类 | 固定码 |
-| --- | --- |
-| approval 格式/签名 | `TRUSTED_APPROVAL_RECORD_INVALID`、`TRUSTED_APPROVAL_SCHEMA_INVALID`、`TRUSTED_APPROVAL_KEY_UNTRUSTED`、`TRUSTED_APPROVAL_SIGNATURE_INVALID`、`TRUSTED_APPROVAL_CANONICALIZATION_INVALID` |
-| approval 绑定 | `TRUSTED_APPROVAL_POLICY_MISMATCH`、`TRUSTED_APPROVAL_PURPOSE_MISMATCH`、`TRUSTED_APPROVAL_COMMIT_MISMATCH`、`TRUSTED_APPROVAL_CONTRACT_MISMATCH`、`TRUSTED_APPROVAL_TIME_WINDOW_INVALID`、`TRUSTED_APPROVAL_SCOPE_MISMATCH`、`TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH` |
-| verifier gate | `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`、`TRUSTED_VERIFIER_CONTRACT_MISMATCH` |
-| no-follow/backend | `NOFOLLOW_HANDLE_UNSUPPORTED`、`NOFOLLOW_LOCAL_VOLUME_UNPROVEN`、`NOFOLLOW_REMOTE_OR_UNPROVEN_VOLUME`、`NOFOLLOW_REPARSE_RISK`、`NOFOLLOW_OBJECT_KIND_MISMATCH`、`NOFOLLOW_HANDLE_IDENTITY_CHANGED`、`NOFOLLOW_READ_LIMIT_EXCEEDED`、`NOFOLLOW_READ_FAILED` |
+| 分类               | 固定码                                                                                                                                                                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| approval 格式/签名 | `TRUSTED_APPROVAL_RECORD_INVALID`、`TRUSTED_APPROVAL_SCHEMA_INVALID`、`TRUSTED_APPROVAL_KEY_UNTRUSTED`、`TRUSTED_APPROVAL_SIGNATURE_INVALID`、`TRUSTED_APPROVAL_CANONICALIZATION_INVALID`                                                                                  |
+| approval 绑定      | `TRUSTED_APPROVAL_POLICY_MISMATCH`、`TRUSTED_APPROVAL_PURPOSE_MISMATCH`、`TRUSTED_APPROVAL_COMMIT_MISMATCH`、`TRUSTED_APPROVAL_CONTRACT_MISMATCH`、`TRUSTED_APPROVAL_TIME_WINDOW_INVALID`、`TRUSTED_APPROVAL_SCOPE_MISMATCH`、`TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH` |
+| verifier gate      | `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`、`TRUSTED_VERIFIER_CONTRACT_MISMATCH`                                                                                                                                                                                                |
+| no-follow/backend  | `NOFOLLOW_HANDLE_UNSUPPORTED`、`NOFOLLOW_LOCAL_VOLUME_UNPROVEN`、`NOFOLLOW_REMOTE_OR_UNPROVEN_VOLUME`、`NOFOLLOW_REPARSE_RISK`、`NOFOLLOW_OBJECT_KIND_MISMATCH`、`NOFOLLOW_HANDLE_IDENTITY_CHANGED`、`NOFOLLOW_READ_LIMIT_EXCEEDED`、`NOFOLLOW_READ_FAILED`                |
 
 不新增 R1/R2 业务结果码；未来接入层可将固定共同码映射到其既有脱敏结果码，但只能在独立 adoption 切片中完成。
 
@@ -155,17 +155,17 @@ closeVerifiedHandle(input)
 
 所有 security 语义夹具均只在测试进程内存中创建；不触碰系统临时目录、仓库未跟踪目录、实际部署包、真实 record、真实 manifest、运行数据或真实 ACL。普通测试框架若自身创建临时目录，该目录不得被共同库读取、不得参与 no-follow/volume/reparse/race 断言，也不得作为安全证明。每个失败用例都以随机哨兵验证错误、序列化结果和测试输出不含路径、文件名、测试私钥、record/signature 原文或哨兵。
 
-| 类别 | 合成用例 | 必须断言 |
-| --- | --- | --- |
-| 签名测试/production 拒绝 | 有效动态测试键；payload/signature 单字节篡改；错误 key ID/算法；试图通过 record/环境/调用参数替换 key，或由非测试文件导入 `__TEST_ONLY_*` factory | 仅精确测试文件可用；production 未配置 key 且固定拒绝；无敏感回显 |
-| 严格 record schema | 第 4.0 节每个字段的缺失/重复/顺序错、非法 ASCII/UTF-8、BOM/CRLF/空白、超长、数字 alias、错误 policy/purpose/commit/contract、非 64-byte signature | 固定 `TRUSTED_APPROVAL_*`，不回显原输入；对每条规范至少一正一反内存 fixture |
-| 时窗与重复语义 | 过期、未生效、不可证明的时间、R1→R2 复用、scope 不同；相同短时窗同 scope 的只读重复 | 前者拒绝；后者明确允许且不创建消费状态 |
-| R1 内容身份 | 算法/version/entry-count/digest 不符；内容 ID 缺失；对象 ID 相同但合成流字节变动 | `TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH`，无部分成功 capability |
-| verifier gate | 生产无注册能力、contract 不符、测试 provider 抛错/返回自由文本；生产调用附加伪造 object/`Symbol`/冻结 capability、`Proxy`、`recordBytes`/`expected` getter 或抛错 getter；仅 `__TEST_ONLY_*` 测试 factory 成功 | 生产默认 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`；不得触发 getter/Proxy；附加调用参数不可改变拒绝；无 provider 数据回显 |
-| 本地卷策略 | UNC/扩展 UNC、mapped remote、`SUBST`、mount point、Mup/Lanman/WebDav/Rdbss、removable/unknown、local fixed | 非 local fixed 一律固定拒绝；不得输出路径/盘符/设备名 |
-| no-follow 组件链 | 中间或最终 reparse、对象种类错、父子关系断裂、打开后替换、读后 ID/`contentVersion` 改变、超限；生产 unsupported reader 收到参数、`Proxy` 或抛错 getter；生产 backend 缺失 | 合成失败清空缓存/结果、关闭合成 handle、固定 `NOFOLLOW_*`；生产 unsupported 不触发 getter/backend 且固定 `NOFOLLOW_HANDLE_UNSUPPORTED`；任何失败均零字节/零 stream/零可复用 handle 交付，且无普通路径 fallback |
-| R2 只读接口 | 合成目录 descriptor 请求、无 backend、试图请求内容读取/递归/ACL 写操作 | 仅接口 contract；无 backend 拒绝；源码静态 denylist 不出现 `Get-Acl`/`Set-Acl`/`icacls`/服务/计划任务/备份恢复命令 |
-| test seam、范围与输出 | 仅 helper allowlist 可导入 `__TEST_ONLY_*`；Git 已跟踪 source 的静态 import/require/re-export/dynamic-require 检查；不改 R1/R2/deployment/packaging 文件；所有错误含哨兵 | 改动集精确、输出无泄露、合成结果不表述为真实证据 |
+| 类别                     | 合成用例                                                                                                                                                                                                       | 必须断言                                                                                                                                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 签名测试/production 拒绝 | 有效动态测试键；payload/signature 单字节篡改；错误 key ID/算法；试图通过 record/环境/调用参数替换 key，或由非测试文件导入 `__TEST_ONLY_*` factory                                                              | 仅精确测试文件可用；production 未配置 key 且固定拒绝；无敏感回显                                                                                                                                               |
+| 严格 record schema       | 第 4.0 节每个字段的缺失/重复/顺序错、非法 ASCII/UTF-8、BOM/CRLF/空白、超长、数字 alias、错误 policy/purpose/commit/contract、非 64-byte signature                                                              | 固定 `TRUSTED_APPROVAL_*`，不回显原输入；对每条规范至少一正一反内存 fixture                                                                                                                                    |
+| 时窗与重复语义           | 过期、未生效、不可证明的时间、R1→R2 复用、scope 不同；相同短时窗同 scope 的只读重复                                                                                                                            | 前者拒绝；后者明确允许且不创建消费状态                                                                                                                                                                         |
+| R1 内容身份              | 算法/version/entry-count/digest 不符；内容 ID 缺失；对象 ID 相同但合成流字节变动                                                                                                                               | `TRUSTED_APPROVAL_CONTENT_IDENTITY_MISMATCH`，无部分成功 capability                                                                                                                                            |
+| verifier gate            | 生产无注册能力、contract 不符、测试 provider 抛错/返回自由文本；生产调用附加伪造 object/`Symbol`/冻结 capability、`Proxy`、`recordBytes`/`expected` getter 或抛错 getter；仅 `__TEST_ONLY_*` 测试 factory 成功 | 生产默认 `TRUSTED_VERIFIER_INTEGRITY_UNPROVEN`；不得触发 getter/Proxy；附加调用参数不可改变拒绝；无 provider 数据回显                                                                                          |
+| 本地卷策略               | UNC/扩展 UNC、mapped remote、`SUBST`、mount point、Mup/Lanman/WebDav/Rdbss、removable/unknown、local fixed                                                                                                     | 非 local fixed 一律固定拒绝；不得输出路径/盘符/设备名                                                                                                                                                          |
+| no-follow 组件链         | 中间或最终 reparse、对象种类错、父子关系断裂、打开后替换、读后 ID/`contentVersion` 改变、超限；生产 unsupported reader 收到参数、`Proxy` 或抛错 getter；生产 backend 缺失                                      | 合成失败清空缓存/结果、关闭合成 handle、固定 `NOFOLLOW_*`；生产 unsupported 不触发 getter/backend 且固定 `NOFOLLOW_HANDLE_UNSUPPORTED`；任何失败均零字节/零 stream/零可复用 handle 交付，且无普通路径 fallback |
+| R2 只读接口              | 合成目录 descriptor 请求、无 backend、试图请求内容读取/递归/ACL 写操作                                                                                                                                         | 仅接口 contract；无 backend 拒绝；源码静态 denylist 不出现 `Get-Acl`/`Set-Acl`/`icacls`/服务/计划任务/备份恢复命令                                                                                             |
+| test seam、范围与输出    | 仅 helper allowlist 可导入 `__TEST_ONLY_*`；Git 已跟踪 source 的静态 import/require/re-export/dynamic-require 检查；不改 R1/R2/deployment/packaging 文件；所有错误含哨兵                                       | 改动集精确、输出无泄露、合成结果不表述为真实证据                                                                                                                                                               |
 
 最低验证命令：新的四组定向 Node 测试（含 test-seam isolation）、`scripts/check-docs-governance.ps1`、`git diff --check`；若实现阶段新增 CJS 模块，再运行 `pnpm type-check`、backend build、frontend build，以及设置隔离 `APP_DATA_ROOT` 的 `pnpm test`。任何运行数据写入命令必须使用隔离根。通过仅构成合成接口证据。
 
@@ -222,7 +222,6 @@ closeVerifiedHandle(input)
 5. **真实 R1 签收** 与 **真实 R2 ACL 采证**：分别需要精确的签名 artifact/机器/实例/窗口批准、接入复审和运行前复核；任何 P1/P0 均另立最小修复或处置计划。
 
 在这些单项批准前，Wave 0 仍不得运行真实秘密扫描、真实 ACL 读取、ACL 修复、备份/恢复或任何 T04/T05 工作。
-
 
 ## 11. 独立审查与修订记录
 

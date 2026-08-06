@@ -181,7 +181,9 @@ describe('SemesterPage', () => {
       previewSetter.call(previewCourseInput, '数学强化');
       previewCourseInput!.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('确认创建并切换'));
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('确认创建并切换')
+    );
     expect(confirmButton).not.toBeNull();
     await act(async () => confirmButton!.click());
     await flush();
@@ -195,7 +197,6 @@ describe('SemesterPage', () => {
     );
     expect(onCurrentChange).toHaveBeenCalledWith({ semester: firstSemester, recoveredFromStaleCurrent: false });
   });
-
 
   it('adds a manual timetable record when OCR preview has no parsed entries', async () => {
     mocks.previewSemesterTimetable.mockResolvedValueOnce({
@@ -220,7 +221,9 @@ describe('SemesterPage', () => {
     await act(async () => createForm!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
     await flush();
 
-    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('新增课程表条目'));
+    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('新增课程表条目')
+    );
     expect(addButton).not.toBeNull();
     await act(async () => addButton!.click());
 
@@ -231,15 +234,21 @@ describe('SemesterPage', () => {
       setter.call(courseInput, '手动补录课程');
       courseInput!.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('确认创建并切换'));
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('确认创建并切换')
+    );
     expect(confirmButton?.disabled).toBe(false);
     await act(async () => confirmButton!.click());
     await flush();
 
-    expect(mocks.confirmSemester).toHaveBeenCalledWith(expect.objectContaining({
-      previewId: 'preview-empty',
-      entries: [expect.objectContaining({ courseName: '手动补录课程', weekday: 1, startTime: '08:00', endTime: '09:00' })],
-    }));
+    expect(mocks.confirmSemester).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previewId: 'preview-empty',
+        entries: [
+          expect.objectContaining({ courseName: '手动补录课程', weekday: 1, startTime: '08:00', endTime: '09:00' }),
+        ],
+      })
+    );
   });
 
   it('keeps a manual timetable row stable while its weekday and time are edited', async () => {
@@ -251,16 +260,18 @@ describe('SemesterPage', () => {
       teachingEndDate: '2026-06-30',
       finalArchiveDate: null,
       requiresStudentName: true,
-      entries: [{
-        clientId: 'parsed-entry',
-        courseName: '自动识别课程',
-        weekday: 3,
-        startTime: '10:00',
-        endTime: '11:00',
-        location: null,
-        parserConfidence: 0.8,
-        warnings: [],
-      }],
+      entries: [
+        {
+          clientId: 'parsed-entry',
+          courseName: '自动识别课程',
+          weekday: 3,
+          startTime: '10:00',
+          endTime: '11:00',
+          location: null,
+          parserConfidence: 0.8,
+          warnings: [],
+        },
+      ],
       warnings: [],
     });
     await renderPage(null);
@@ -274,18 +285,24 @@ describe('SemesterPage', () => {
     await act(async () => createForm!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
     await flush();
 
-    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('新增课程表条目'));
+    const addButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('新增课程表条目')
+    );
     await act(async () => addButton!.click());
 
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
-    const manualInputs = container.querySelectorAll<HTMLDivElement>('.timetable-preview-row')[1].querySelectorAll<HTMLInputElement>('input');
+    const manualInputs = container
+      .querySelectorAll<HTMLDivElement>('.timetable-preview-row')[1]
+      .querySelectorAll<HTMLInputElement>('input');
     await act(async () => {
       setter.call(manualInputs[1], '4');
       manualInputs[1].dispatchEvent(new Event('input', { bubbles: true }));
     });
     await flush();
 
-    const stableManualInputs = container.querySelectorAll<HTMLDivElement>('.timetable-preview-row')[1].querySelectorAll<HTMLInputElement>('input');
+    const stableManualInputs = container
+      .querySelectorAll<HTMLDivElement>('.timetable-preview-row')[1]
+      .querySelectorAll<HTMLInputElement>('input');
     expect(stableManualInputs[0].value).toBe('');
     await act(async () => {
       setter.call(stableManualInputs[0], '手动补录课程');
@@ -294,16 +311,20 @@ describe('SemesterPage', () => {
       stableManualInputs[2].dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('确认创建并切换'));
+    const confirmButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('确认创建并切换')
+    );
     await act(async () => confirmButton!.click());
     await flush();
 
-    expect(mocks.confirmSemester).toHaveBeenCalledWith(expect.objectContaining({
-      entries: expect.arrayContaining([expect.objectContaining({ courseName: '手动补录课程', weekday: 4, startTime: '16:00' })]),
-    }));
+    expect(mocks.confirmSemester).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entries: expect.arrayContaining([
+          expect.objectContaining({ courseName: '手动补录课程', weekday: 4, startTime: '16:00' }),
+        ]),
+      })
+    );
   });
-
-
 
   it('shows archived semesters, history links, and archives only non-current active semesters', async () => {
     mocks.listSemesters.mockResolvedValue([firstSemester, secondSemester]);
@@ -315,17 +336,31 @@ describe('SemesterPage', () => {
 
     expect(container.textContent).toContain('归档学期');
     expect(container.textContent).toContain('2025 秋季学期');
-    expect([...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) => item.href.endsWith(`/semesters/${firstSemester.id}/practice-history`))).toBe(true);
-    expect([...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) => item.href.endsWith(`/semesters/${archivedSemester.id}/practice-history`))).toBe(true);
+    expect(
+      [...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) =>
+        item.href.endsWith(`/semesters/${firstSemester.id}/practice-history`)
+      )
+    ).toBe(true);
+    expect(
+      [...container.querySelectorAll<HTMLAnchorElement>('a')].some((item) =>
+        item.href.endsWith(`/semesters/${archivedSemester.id}/practice-history`)
+      )
+    ).toBe(true);
 
-    const currentItem = [...container.querySelectorAll('li')].find((item) => item.textContent?.includes(firstSemester.semesterCode));
+    const currentItem = [...container.querySelectorAll('li')].find((item) =>
+      item.textContent?.includes(firstSemester.semesterCode)
+    );
     expect(currentItem?.textContent).not.toContain('归档此学期');
 
-    const archivedItem = [...container.querySelectorAll('li')].find((item) => item.textContent?.includes(archivedSemester.semesterCode));
+    const archivedItem = [...container.querySelectorAll('li')].find((item) =>
+      item.textContent?.includes(archivedSemester.semesterCode)
+    );
     expect(archivedItem?.textContent).toContain('只读');
     expect(archivedItem?.textContent).not.toContain('切换到此学期');
 
-    const archiveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('归档此学期'));
+    const archiveButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('归档此学期')
+    );
     expect(archiveButton).not.toBeNull();
     await act(async () => archiveButton!.click());
     await flush();
@@ -344,7 +379,9 @@ describe('SemesterPage', () => {
     expect(container.textContent).toContain('2026 秋季学期');
     expect(container.textContent).not.toContain('首次创建需要填写');
 
-    const switchButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes('切换到此学期'));
+    const switchButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find((item) =>
+      item.textContent?.includes('切换到此学期')
+    );
     expect(switchButton).not.toBeNull();
     await act(async () => switchButton!.click());
     await flush();

@@ -256,7 +256,14 @@ async function setupPractice(t, options = {}) {
   const exam = await createExam(backend.port, semesterId, course.id);
   const moduleId = seedKnowledgeModule(backend.dataRoot, semesterId, course.id);
   const questions = options.questions ?? questionSet(moduleId);
-  const sessionId = seedPracticeSession(backend.dataRoot, semesterId, course.id, exam.id, questions, options.session ?? {});
+  const sessionId = seedPracticeSession(
+    backend.dataRoot,
+    semesterId,
+    course.id,
+    exam.id,
+    questions,
+    options.session ?? {}
+  );
   return { backend, semesterId, course, exam, moduleId, questions, sessionId };
 }
 

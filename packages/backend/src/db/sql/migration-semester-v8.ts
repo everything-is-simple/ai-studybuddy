@@ -9,7 +9,9 @@ function hasTable(db: DatabaseType, table: string): boolean {
 }
 
 function hasColumn(db: DatabaseType, table: string, column: string): boolean {
-  return (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).some((row) => row.name === column);
+  return (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).some(
+    (row) => row.name === column
+  );
 }
 
 export function migrateSemesterV8(db: DatabaseType): void {

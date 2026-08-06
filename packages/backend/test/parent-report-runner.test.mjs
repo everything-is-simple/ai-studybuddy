@@ -159,7 +159,6 @@ test('T06B runner 在同一次运行内按 5 秒、30 秒退避只重试失败�
   ]);
 });
 
-
 test('T06B runner 有多个 ready active 学期时拒绝自动投递，避免跨学期重复发送', async () => {
   updateAllSemesters('follow_up', 0);
   const first = createSemester();
@@ -172,5 +171,8 @@ test('T06B runner 有多个 ready active 学期时拒绝自动投递，避免跨
 
   const result = await runner.run();
   assert.equal(result.status, 'ambiguous_active_semester');
-  assert.deepEqual(calls, [['retryDue', { semesterId: first.semesterId }], ['retryDue', { semesterId: second.semesterId }]]);
+  assert.deepEqual(calls, [
+    ['retryDue', { semesterId: first.semesterId }],
+    ['retryDue', { semesterId: second.semesterId }],
+  ]);
 });

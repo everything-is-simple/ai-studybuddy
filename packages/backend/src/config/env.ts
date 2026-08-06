@@ -162,7 +162,6 @@ try {
   throw createConfigError('DATA_ROOT_NOT_WRITABLE', 'APP_DATA_ROOT');
 }
 
-
 function readParentEnvironmentValue(key: string): string | undefined {
   const sourceKey = Object.keys(process.env).find((candidate) => candidate.toUpperCase() === key.toUpperCase());
   const value = sourceKey ? process.env[sourceKey] : undefined;

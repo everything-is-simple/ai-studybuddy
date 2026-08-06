@@ -59,7 +59,11 @@ export function MockExamPaperPage({ semesterId, onSemesterError }: MockExamPaper
       {paper && (
         <>
           <Link to={`/exams/${encodeURIComponent(paper.assessmentAttemptId)}/mock-exam`}>返回模拟考入口</Link>
-          <ExamContextNav examId={paper.assessmentAttemptId} courseInstanceId={paper.courseInstanceId} active="mock_exam" />
+          <ExamContextNav
+            examId={paper.assessmentAttemptId}
+            courseInstanceId={paper.courseInstanceId}
+            active="mock_exam"
+          />
           <header className="card">
             <p className="workbench-eyebrow">模拟卷</p>
             <h1>{paper.title}</h1>
