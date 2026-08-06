@@ -45,9 +45,9 @@
 
 | # | Gate B 条件 | 证据位置 | 审查结论 |
 |---|---|---|---|
-| G1 | T02-R2 ACL 采证无宽泛/继承异常/未知主体/reparse 阻断 | `.plans/evidence/phase3-wave0-r2-summary.json`（Users 全权继承为 P1 候选，须先修复或确认不阻断） | ⬜ |
-| G2 | 相关 P1 已修复或已有批准的最小修复计划 | T02-R2 发现 Users 全权继承 → 最小 ACL 修复任务 | ⬜ |
-| G3 | Alpha D1 安装/检查/启动/健康/停止证据通过 | （目标机验收记录，待填） | ⬜ |
+| G1 | T02-R2 ACL 采证无宽泛/继承异常/未知主体/reparse 阻断 | `.plans/evidence/phase3-wave0-r2-summary.json`——**已澄清**：初版误报 Users FullControl 为采证脚本归类/位掩码 bug；icacls 权威核对确认六目录为 Windows 标准默认 ACL（Administrators/SYSTEM Modify、AuthenticatedUsers Modify+Delete、Users 仅 Read），无过度授权、0 reparse | ⬜ |
+| G2 | 相关 P1 已修复或已确认不存在 | **无 P1 候选**：ACL 误报已澄清（`719c2d2`），无最小修复计划需要 | ⬜ |
+| G3 | Alpha D1 安装/检查/启动/健康/停止证据通过 | （目标机验收记录，待填——选项 C 隔离安装根已模拟：启动 health 0.8.1、停止无残留） | ⬜ |
 
 ## 4. 停止证据模板（真实写入前必须采集）
 
