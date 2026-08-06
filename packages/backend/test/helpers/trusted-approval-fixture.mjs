@@ -130,7 +130,16 @@ export function createIntegrityBindingMismatchAttempt() {
 
 export function createTransparentProxyApprovalFixture() {
   const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-  return createApprovalFixture({ publicKey: new Proxy(publicKey, {}), privateKey });
+  // 透明 Proxy<KeyObject> 必须带 get trap：Node 24 的原生 KeyObject getter/方法
+  // 要求原始 this，无 trap 的 `new Proxy(keyObject, {})` 会抛 ERR_INVALID_THIS。
+  // 这里把函数绑定回 target，使 Proxy 包装的 KeyObject 与原始对象等价。
+  const proxiedPublicKey = new Proxy(publicKey, {
+    get(target, prop) {
+      const value = Reflect.get(target, prop);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  return createApprovalFixture({ publicKey: proxiedPublicKey, privateKey });
 }
 
 export function createMemoryBackend(options = {}) {

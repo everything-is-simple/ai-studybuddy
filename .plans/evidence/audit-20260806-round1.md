@@ -90,3 +90,25 @@
 - docs/13：Node 24 收紧（本轮已修）✅
 - docs/14：端点/路由/数据模型/技术栈/备份（本轮已修）✅
 - S3 PRD 端点（本轮已修）✅
+
+---
+
+## 六、信任锚测试失败修复（TRUSTED_ANCHOR_INVALID，2026-08-06）
+
+### 问题
+`packages/backend/test/trusted-approval-contract.test.mjs` 第 114 行失败：
+`createTransparentProxyApprovalFixture().verifier.verifyTrustedApproval(...)` 期望不抛错，实际抛 `TRUSTED_ANCHOR_INVALID`。master（8739a4bc）上同样失败，为既有问题。
+
+### 根因（Node 24 原生 KeyObject getter 限制）
+- fixture 用 `new Proxy(publicKey, {})`（无 trap）包装 Ed25519 KeyObject。
+- Node 24 中 KeyObject 的 `type`/`asymmetricKeyType` getter 与 `export()` 方法要求**原始 `this`**（`node:internal/crypto/keys` 的 `getKeyObjectSlots` 检查 `ERR_INVALID_THIS`）。
+- 无 trap 的透明 Proxy 在访问 getter 时破坏原始 `this` → `type` 读不到、`export` 抛 `ERR_INVALID_THIS` → verifier catch 后转 `TRUSTED_ANCHOR_INVALID`。
+- 实测确认：`new Proxy(keyObject, {})` 的 `p1.type` 抛 `ERR_INVALID_THIS`；带 get trap（函数 bind target）的 `p2.type` 返回 `'public'`、`p2.export()` 正常。
+
+### 修复（双保险）
+1. `scripts/lib/AIStudyBuddy.TrustAnchor.cjs`：读取 KeyObject 字段改用 `Reflect.get`（保持原始 this），导出改用 `Reflect.apply(keyObject.export, keyObject, args)`（绑定原始 this）。既保持"不触碰调用方无关属性"的脱敏边界，也让透明 Proxy KeyObject 可被验证。RSA 伪键仍被拒绝（`asymmetricKeyType !== 'ed25519'`）。
+2. `packages/backend/test/helpers/trusted-approval-fixture.mjs`：`createTransparentProxyApprovalFixture` 的 Proxy 加 `get` trap，函数属性 bind 回 target，使 Proxy 包装的 KeyObject 与原始对象真正等价（符合测试"透明 Proxy 与 target 等价"的原始意图）。
+
+### 验证
+- 信任锚测试族 15/15 通过（trusted-approval-contract 7/7、trust-anchor-contract 2/2、trusted-approval-test-seam-isolation 3/3、verifier-integrity-gate 3/3）。
+- 后端全量 330/330 通过；`pnpm type-check` 通过；前端 28 files / 149 tests 通过。

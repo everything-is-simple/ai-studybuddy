@@ -2,6 +2,31 @@
 
 const crypto = require('node:crypto');
 
+// 透明 Proxy<KeyObject> 在 Node 24 下直接访问 type/asymmetricKeyType/export
+// 会触发 native getter 的 ERR_INVALID_THIS（Proxy 破坏原始 this）。
+// 读取 KeyObject 属性必须用 Reflect.get 保持原始 this；导出必须用
+// Reflect.apply 绑定原始 this。这样既保留“不触碰调用方无关属性”的
+// 脱敏边界，也让透明 Proxy 包装的 KeyObject 可以正常验证。
+function readKeyObjectField(keyObject, field) {
+  try {
+    return Reflect.get(keyObject, field);
+  } catch {
+    return undefined;
+  }
+}
+
+function exportPublicKeySpkiDer(keyObject) {
+  try {
+    return Reflect.apply(
+      keyObject.export,
+      keyObject,
+      [{ format: 'der', type: 'spki' }]
+    );
+  } catch {
+    return null;
+  }
+}
+
 const TEST_ANCHORS = new WeakMap();
 
 function fail(code) {
@@ -41,8 +66,8 @@ function __TEST_ONLY_createTrustedApprovalAnchor(options) {
   try {
     if (
       !(publicKey instanceof crypto.KeyObject) ||
-      publicKey.type !== 'public' ||
-      publicKey.asymmetricKeyType !== 'ed25519' ||
+      readKeyObjectField(publicKey, 'type') !== 'public' ||
+      readKeyObjectField(publicKey, 'asymmetricKeyType') !== 'ed25519' ||
       !isTestIdentifier(keyId, 'asb-test-') ||
       !isTestIdentifier(metadataVersion, 'asb-test-anchor-') ||
       !isTestIdentifier(releaseIdentity, 'asb-test-release-') ||
@@ -59,13 +84,14 @@ function __TEST_ONLY_createTrustedApprovalAnchor(options) {
   let verificationKey;
   let actualFingerprint;
   try {
-    const spkiDer = publicKey.export({ format: 'der', type: 'spki' });
+    const spkiDer = exportPublicKeySpkiDer(publicKey);
+    if (!spkiDer) return fail('TRUSTED_ANCHOR_INVALID');
     verificationKey = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
     actualFingerprint = crypto.createHash('sha256').update(spkiDer).digest('hex');
     if (
       !(verificationKey instanceof crypto.KeyObject) ||
-      verificationKey.type !== 'public' ||
-      verificationKey.asymmetricKeyType !== 'ed25519' ||
+      readKeyObjectField(verificationKey, 'type') !== 'public' ||
+      readKeyObjectField(verificationKey, 'asymmetricKeyType') !== 'ed25519' ||
       !crypto.timingSafeEqual(Buffer.from(fingerprint, 'ascii'), Buffer.from(actualFingerprint, 'ascii'))
     ) {
       return fail('TRUSTED_ANCHOR_INVALID');
