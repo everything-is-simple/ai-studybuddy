@@ -94,6 +94,13 @@ test('restore defaults to validation-only and only writes under explicit EnableW
   assert.match(restore, /RESTORE_WRITERS_ACTIVE/);
   assert.match(restore, /RESTORE_RECOVERY_POINT_FAILED/);
   assert.match(restore, /RESTORE_COMPLETED/);
+  // Wave 2 持久化状态机：状态文件、中断标记、重启默认、回滚出口声明
+  assert.match(restore, /restore-state\.json/);
+  assert.match(restore, /interrupt-marker\.json/);
+  assert.match(restore, /RESTORE_RECOVERY_REQUIRED/);
+  assert.match(restore, /CUTOVER_IN_PROGRESS/);
+  assert.match(restore, /ROLLBACK_VERIFIED/);
+  // 完整 ROLLBACK/MANUAL_ESCALATION 流程属目标机演练阶段，脚本已声明状态机契约
 });
 
 test('backup script uses the shared Windows PowerShell 5.1 relative-path helper chain', async () => {
